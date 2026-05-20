@@ -515,12 +515,15 @@ window.renderOts = async function() {
                 $${Math.round(saldo).toLocaleString('es-AR')}
             </td>
             <td class="py-4 px-6 text-center">
-    <select
-    id="estado-ot-${ot.id}"
-    onchange="window._cambiarEstadoOTDesplegable('${ot.id}', this.value)"
-    class="gecko-ot-estado">
-    ${opts}
-</select>
+    <div style="position:relative; display:inline-block;">
+        <select
+            id="estado-ot-${ot.id}"
+            onchange="window._cambiarEstadoOTDesplegable('${ot.id}', this.value)"
+            style="background:rgba(24,24,27,0.5);border:1px solid #27272a;border-radius:12px;color:#a1a1aa;padding:5px 32px 5px 12px;font-size:10px;font-weight:900;text-transform:uppercase;appearance:none;cursor:pointer;outline:none;">
+            ${opts}
+        </select>
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:#a1a1aa;font-size:10px;">▼</span>
+    </div>
 </td>
             <td class="py-4 px-6 text-right">
                 <div class="flex justify-end gap-2">
