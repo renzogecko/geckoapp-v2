@@ -1,0 +1,188 @@
+/**
+ * ================================================================
+ * GECKO API BRIDGE v2.1
+ * ================================================================
+ */
+
+const GECKO_API_URL = '/app/api.php';
+
+const GECKO_KEY_MAP = {
+    'gecko_materiales':        'materiales',
+    'geckoServicios':          'servicios',
+    'clientes':                'clientes',
+    'gecko_listaPresupuestos': 'presupuestos',
+    'gecko_cajas':             'cajas',
+    'gecko_movimientos':       'movimientos',
+    'GECKO_SETTINGS':          'configuracion'
+};
+
+const GECKO_ARRAY_KEYS = [
+    'gecko_materiales', 'geckoServicios', 'clientes',
+    'gecko_listaPresupuestos', 'gecko_cajas', 'gecko_movimientos'
+];
+
+// Campos que MySQL devuelve como string pero deben ser números
+const GECKO_NUMERIC_FIELDS = {
+    'gecko_materiales': ['stock','multiplicador','costoUSD','costoARS','costo','contenidoUnidad','multGremio','precioGremio','precioCorteMl'],
+    'geckoServicios':   ['costo','precio'],
+    'gecko_cajas':      ['saldo'],
+    'gecko_movimientos':['monto'],
+    'gecko_listaPresupuestos': ['total','sena']
+};
+
+const _cache = {};
+let _inicializado = false;
+
+window._localStorage_original = window.localStorage;
+
+function _castearNumeros(lsKey, array) {
+    const campos = GECKO_NUMERIC_FIELDS[lsKey];
+    if (!campos || !Array.isArray(array)) return array;
+    return array.map(item => {
+        const nuevo = { ...item };
+        campos.forEach(campo => {
+            if (nuevo[campo] !== null && nuevo[campo] !== undefined && nuevo[campo] !== '') {
+                nuevo[campo] = parseFloat(nuevo[campo]) || 0;
+            }
+        });
+        if ('incluyeIva' in nuevo) nuevo.incluyeIva = nuevo.incluyeIva == 1 || nuevo.incluyeIva === true;
+        return nuevo;
+    });
+}
+
+function _normalizar(lsKey, datos) {
+    const debeSerArray = GECKO_ARRAY_KEYS.includes(lsKey);
+
+    if (datos && typeof datos === 'object' && !Array.isArray(datos)) {
+        if (Array.isArray(datos.data))  return datos.data;
+        if (Array.isArray(datos.rows))  return datos.rows;
+        if (Array.isArray(datos.items)) return datos.items;
+        if (debeSerArray) {
+            const keys = Object.keys(datos);
+            if (keys.length === 0) return [];
+            if (keys.every(k => !isNaN(k))) return Object.values(datos);
+            if ('success' in datos) return [];
+        }
+    }
+
+    if (Array.isArray(datos)) return datos;
+    return debeSerArray ? [] : (datos || {});
+}
+
+async function _apiGet(endpoint, lsKey) {
+    try {
+        const res = await fetch(`${GECKO_API_URL}?endpoint=${endpoint}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const raw = await res.json();
+        const normalizado = _normalizar(lsKey, raw);
+        return _castearNumeros(lsKey, normalizado);
+    } catch (err) {
+        console.warn(`🦎 GECKO-API: Error GET /${endpoint}:`, err.message);
+        return GECKO_ARRAY_KEYS.includes(lsKey) ? [] : {};
+    }
+}
+
+async function _apiPost(endpoint, method, body) {
+    try {
+        const res = await fetch(`${GECKO_API_URL}?endpoint=${endpoint}`, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+    } catch (err) {
+        console.warn(`🦎 GECKO-API: Error ${method} /${endpoint}:`, err.message);
+        return null;
+    }
+}
+
+async function _inicializarDesdeAPI() {
+    if (_inicializado) return;
+
+    console.log('%c 🦎 GECKO-API: Conectando con MySQL... ', 'background:#F15A24;color:white;font-weight:bold;padding:3px 8px;border-radius:4px;');
+
+    for (const [lsKey, endpoint] of Object.entries(GECKO_KEY_MAP)) {
+        try {
+            const datos = await _apiGet(endpoint, lsKey);
+            _cache[lsKey] = datos;
+            window._localStorage_original.setItem(lsKey, JSON.stringify(datos));
+            const info = Array.isArray(datos) ? `${datos.length} items` : 'objeto config';
+            console.log(`✅ GECKO-API: ${lsKey} → ${info}`);
+        } catch (e) {
+            const fallback = GECKO_ARRAY_KEYS.includes(lsKey) ? [] : {};
+            window._localStorage_original.setItem(lsKey, JSON.stringify(fallback));
+            console.warn(`⚠️ GECKO-API: Falló ${endpoint}`);
+        }
+    }
+
+    _inicializado = true;
+    console.log('%c 🦎 GECKO-API: MySQL sincronizado ✓ ', 'background:#16a34a;color:white;font-weight:bold;padding:3px 8px;border-radius:4px;');
+    document.dispatchEvent(new CustomEvent('geckoDB_ready'));
+    document.dispatchEvent(new CustomEvent('inventoryReady'));
+}
+
+async function _sincronizarArray(lsKey, nuevoArray) {
+    const endpoint = GECKO_KEY_MAP[lsKey];
+    if (!endpoint || !Array.isArray(nuevoArray)) return;
+    const anterior = Array.isArray(_cache[lsKey]) ? _cache[lsKey] : [];
+
+    for (const itemAntiguo of anterior) {
+        if (!nuevoArray.find(n => String(n.id) === String(itemAntiguo.id))) {
+            await _apiPost(endpoint, 'DELETE', { id: itemAntiguo.id });
+        }
+    }
+    for (const item of nuevoArray) {
+        const existia = anterior.find(a => String(a.id) === String(item.id));
+        if (!existia) {
+            await _apiPost(endpoint, 'POST', item);
+        } else if (JSON.stringify(existia) !== JSON.stringify(item)) {
+            await _apiPost(endpoint, 'PUT', item);
+        }
+    }
+    _cache[lsKey] = nuevoArray;
+}
+
+async function _sincronizarObjeto(lsKey, objeto) {
+    const endpoint = GECKO_KEY_MAP[lsKey];
+    if (!endpoint) return;
+    await _apiPost(endpoint, 'PUT', objeto);
+    _cache[lsKey] = objeto;
+}
+
+const _localStorageProxy = {
+    getItem(key)    { return window._localStorage_original.getItem(key); },
+    removeItem(key) { window._localStorage_original.removeItem(key); },
+    clear()         { window._localStorage_original.clear(); },
+    key(index)      { return window._localStorage_original.key(index); },
+    get length()    { return window._localStorage_original.length; },
+
+    setItem(key, value) {
+        window._localStorage_original.setItem(key, value);
+        if (GECKO_KEY_MAP[key] && _inicializado) {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    _sincronizarArray(key, parsed);
+                } else if (typeof parsed === 'object' && parsed !== null) {
+                    _sincronizarObjeto(key, parsed);
+                }
+            } catch (e) { /* JSON inválido */ }
+        }
+    }
+};
+
+try {
+    Object.defineProperty(window, 'localStorage', {
+        value: _localStorageProxy,
+        writable: false,
+        configurable: true
+    });
+    console.log('🦎 GECKO-API: Interceptor activado.');
+} catch (e) {
+    console.warn('🦎 GECKO-API: No se pudo interceptar localStorage.', e);
+}
+
+window._geckoAPIPromise = _inicializarDesdeAPI();
+
+console.log('🦎 GECKO-API Bridge v2.1 cargado.');

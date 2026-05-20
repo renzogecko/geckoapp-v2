@@ -1,0 +1,1840 @@
+        :root {
+            --gecko: #f15a24;
+            --gecko-mate: #f15a24;
+            --dark-bg: #131314;
+            --dark-card: #1e1f20;
+            --dark-input: #131314;
+            --dark-border: #333333;
+            --light-bg: #F9FAFB;
+        }
+
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background-color: var(--light-bg);
+            color: #1a1a1b;
+            /* text-zinc-950 approx */
+        }
+
+        /* Contraste en Modo Claro */
+        h1,
+        h2,
+        h3,
+        .text-xl,
+        .text-2xl,
+        .font-black {
+            color: #09090b !important;
+            /* text-zinc-950 */
+        }
+
+        label,
+        .label-style {
+            color: #3f3f46 !important;
+            /* text-zinc-700 */
+        }
+
+        .text-gray-500,
+        .text-zinc-500,
+        .secondary-text {
+            color: #71717a !important;
+            /* text-zinc-500 */
+        }
+
+        .dark h1,
+        .dark h2,
+        .dark h3,
+        .dark .text-xl,
+        .dark .text-2xl,
+        .dark .font-black {
+            color: white !important;
+        }
+
+        .dark label,
+        .dark .label-style {
+            color: #a1a1aa !important;
+            /* zinc-400 */
+        }
+
+        .dark body {
+            background-color: var(--dark-bg) !important;
+        }
+
+        .dark header {
+            background-color: transparent !important;
+        }
+
+        /* Cajas en Light Mode (Refilled matching dark mode) */
+        .bg-white,
+        .gecko-card-light {
+            background-color: white !important;
+            border: 1px solid #f4f4f5 !important;
+            /* zinc-100 */
+            border-radius: 1rem !important;
+            /* rounded-2xl */
+        }
+
+        .dark .modal-content,
+        .dark .bg-darkCard,
+        .dark .dark\:bg-darkCard,
+        .dark .bg-white,
+        .dark .bg-zinc-950,
+        .dark .bg-zinc-950\/50,
+        .dark #panelConfigurador>div>div {
+            background-color: var(--dark-card) !important;
+            border: 1px solid var(--dark-border) !important;
+            border-radius: 1rem !important;
+            /* rounded-2xl */
+        }
+
+        /* Switches: Estilo Pastilla */
+        input[type="checkbox"].sr-only+div {
+            border-radius: 9999px !important;
+        }
+
+        /* Input Styling: Defined Box Style */
+        input:not([type="checkbox"]):not([type="radio"]),
+        select,
+        textarea {
+            background-color: white !important;
+            border: 1px solid #e4e4e7 !important;
+            /* zinc-200 */
+            border-radius: 0.5rem !important;
+            /* rounded-lg */
+            padding: 0.75rem 1rem !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease;
+            outline: none !important;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--gecko) !important;
+            box-shadow: 0 0 0 1px var(--gecko) !important;
+        }
+
+        .dark input:not([type="checkbox"]):not([type="radio"]),
+        .dark textarea {
+            background-color: var(--dark-input) !important;
+            border: 1px solid var(--dark-border) !important;
+            color: #ffffff !important;
+        }
+
+        /* Selects Unified Style */
+        select,
+        .gecko-select,
+        .gecko-select-pro,
+        #matCat,
+        #matUnidad,
+        #matUnidadVenta {
+            background-color: #131314 !important;
+            border: 1px solid #333333 !important;
+            border-radius: 1rem !important;
+            /* rounded-2xl */
+            color: #ffffff !important;
+            padding: 12px 16px !important;
+            appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f15a24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 1rem center !important;
+            background-size: 1rem !important;
+            cursor: pointer;
+            outline: none !important;
+            font-weight: 600 !important;
+        }
+
+        /* Standard Gecko Modal Header */
+        .modal-header-gecko {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header-gecko h3 {
+            font-size: 1.5rem;
+            /* 24px */
+            font-weight: 900;
+            color: #f4f4f5;
+            /* Zinc-100 */
+            text-transform: uppercase;
+            letter-spacing: -0.05em;
+            font-style: italic;
+        }
+
+        .modal-header-gecko p {
+            font-size: 0.75rem;
+            /* 12px */
+            font-weight: 700;
+            color: #f15a24;
+            /* Gecko Orange */
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Autofill Dark Mode Fix */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px #131314 inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background-color: #131314 !important;
+            color: #ffffff !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Highlight Activo Sidebar */
+        .nav-active {
+            background-color: rgba(241, 90, 36, 0.15) !important;
+            /* Orange tint */
+            border-left: 4px solid var(--gecko) !important;
+            color: white !important;
+            font-weight: 800 !important;
+        }
+
+        /* Utilidades para Scroll Horizontal */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .custom-scrollbar-horizontal {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(241, 90, 36, 0.3) transparent;
+        }
+        .custom-scrollbar-horizontal::-webkit-scrollbar {
+            height: 4px;
+        }
+        .custom-scrollbar-horizontal::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar-horizontal::-webkit-scrollbar-thumb {
+            background: rgba(241, 90, 36, 0.2);
+            border-radius: 10px;
+        }
+        .custom-scrollbar-horizontal:hover::-webkit-scrollbar-thumb {
+            background: rgba(241, 90, 36, 0.5);
+        }
+
+        /* Gecko Accent for Monetary Values */
+        .text-money,
+        #subtotalEstimado,
+        #labelTotalPresupuesto,
+        .price-tag {
+            color: var(--gecko) !important;
+        }
+
+        /* TreeView Sidebar Styles */
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details summary {
+            list-style: none;
+        }
+
+        .sidebar-tree-item {
+            padding-left: 2.5rem;
+            font-size: 13px;
+        }
+
+        .sidebar-tree-sub-item {
+            padding-left: 3.5rem;
+        }
+
+        /* Fix Alineación Buscador y UI de Inventario */
+        #busquedaMateriales,
+        #busquedaServicios {
+            padding-left: 48px !important;
+            background-position: 15px center !important;
+        }
+
+        .table-container-gecko {
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #tablaMaterialesBody, 
+        #tablaTerminacionesBody {
+            min-height: 300px;
+        }
+
+        .sidebar-tree-sub-item-text {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Border Rounding overrides */
+        .rounded-2xl {
+            border-radius: 1rem !important;
+        }
+
+        .rounded-lg {
+            border-radius: 0.5rem !important;
+        }
+
+        /* Shadow md implementation */
+        .shadow-xl,
+        .shadow-lg {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+            /* shadow-md */
+        }
+
+        .dark .shadow-xl,
+        .dark .shadow-lg {
+            box-shadow: none !important;
+        }
+
+        #modalConfig.open {
+            display: flex !important;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-content {
+            animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleUp {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* PREMIUM INPUT ROW STYLE (Tarjeta 02 & 05) */
+        .gecko-input-row {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 1rem !important;
+            align-items: flex-end !important;
+            width: 100% !important;
+            padding: 0.5rem 0 !important;
+        }
+
+        .gecko-input-row input {
+            background-color: transparent !important;
+            border: none !important;
+            border-bottom: 1px solid #333333 !important; /* zinc-800 */
+            border-radius: 0 !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            padding: 0.5rem 0 !important;
+            font-size: 14px !important;
+            width: 100% !important;
+            outline: none !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .gecko-input-row input:focus {
+            border-bottom-color: #f15a24 !important; /* Gecko orange */
+        }
+
+        .gecko-input-row input::placeholder {
+            color: #52525b !important; /* zinc-600/500 */
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+        }
+
+        /* Tarea 3: Estilo Visual Universal de Placeholders */
+        input::placeholder {
+            color: #52525b !important; /* Zinc-600 */
+            opacity: 0.6;
+            font-weight: 500;
+        }
+
+        /* ═══════════════════ PREMIUM DESIGN SYSTEM ═══════════════════ */
+
+        /* Cards & Boxes */
+        .gecko-card {
+            background-color: white !important;
+            border-radius: 1.25rem !important;
+            /* rounded-2xl */
+            border: 1px solid #f1f5f9 !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-gecko {
+            margin-bottom: 12px !important;
+            /* Espacio real y único entre tarjetas */
+            background-color: #1e1f20 !important;
+            padding: 1.25rem !important;
+            /* Bajamos de 2rem a 1.25rem (20px) para alta densidad */
+            border-radius: 1rem !important;
+            border: 1px solid #333 !important;
+            display: block;
+            /* Forzamos comportamiento de bloque para colapso de márgenes */
+        }
+
+        .dark .gecko-card {
+            background-color: var(--dark-card) !important;
+            border-color: var(--dark-border) !important;
+            box-shadow: none !important;
+        }
+
+        /* Inputs Premium (Box Style) */
+        input:not([type="checkbox"]):not([type="radio"]),
+        select,
+        textarea {
+            background-color: #ffffff !important;
+            border: 1px solid #d1d5db !important;
+            /* border-gray-300 sutil */
+            border-radius: 12px !important;
+            padding: 12px 16px !important;
+            font-weight: 600 !important;
+            color: #1f2937 !important;
+            transition: all 0.2s ease !important;
+            outline: none !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .dark input:not([type="checkbox"]):not([type="radio"]),
+        .dark select,
+        .dark textarea {
+            background-color: var(--dark-input) !important;
+            border-color: var(--dark-border) !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--gecko) !important;
+            box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1) !important;
+        }
+
+        .dark input:focus,
+        .dark select:focus,
+        .dark textarea:focus {
+            border-color: var(--gecko-mate) !important;
+            background-color: #2b2b2b !important;
+        }
+
+        /* Custom Scrollbar Global */
+        ::-webkit-scrollbar {
+            width: 8px !important;
+            height: 8px !important;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent !important;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1 !important;
+            border-radius: 10px !important;
+            border: 2px solid transparent !important;
+            background-clip: content-box !important;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #333333 !important;
+        }
+
+        /* ═══════════════════ LIGHT MODE: CENTRO DE MANDOS ═══════════════════ */
+        .light-mode #modalPresupuesto .modal-content {
+            background-color: #ffffff;
+            color: #333333;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 20px 50px -12px rgba(0, 0, 0, 0.15) !important;
+            border: none !important;
+        }
+
+        /* Ajuste de Padding: 12px arriba/abajo, 16px derecha, 24px izquierda */
+        .light-mode #modalPresupuesto .btn-cat {
+            color: #64748b;
+            margin-bottom: 6px;
+            padding: 12px 16px 12px 24px !important;
+            /* <--- Aumentamos el último valor (izquierda) */
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .light-mode #modalPresupuesto .btn-cat:hover {
+            background-color: #f8f9fa;
+        }
+
+        .light-mode #modalPresupuesto .btn-cat-active {
+            background-color: rgba(249, 115, 22, 0.1) !important;
+            border-color: rgba(249, 115, 22, 0.2) !important;
+        }
+
+        /* ... resto de estilos de color de texto e iconos se mantienen igual ... */
+
+        /* ═══════════════════ DARK MODE ADAPTATION ═══════════════════ */
+        /* Aplicamos el mismo aire para el modo oscuro */
+        .dark #modalPresupuesto .btn-cat {
+            padding: 12px 16px 12px 24px !important;
+        }
+
+        .dark #modalPresupuesto .btn-cat-active {
+            background-color: rgba(249, 115, 22, 0.1) !important;
+            border-color: rgba(249, 115, 22, 0.2) !important;
+        }
+
+        /* Layout Hierarchy for Configurators */
+        #panelConfigurador>div {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+        }
+
+        #contenedor-datos-grafica,
+        #contenedor-datos-corte,
+        #contenedor-datos-textil,
+        #graficaMontadoPanel,
+        #panelConfigurador .pt-4.space-y-4,
+        #panelConfigurador .space-y-8>div {
+            background-color: #ffffff;
+            border-radius: 1.25rem !important;
+            padding: 1.5rem !important;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .dark #contenedor-datos-grafica,
+        .dark #contenedor-datos-corte,
+        .dark #contenedor-datos-textil,
+        .dark #graficaMontadoPanel,
+        .dark #panelConfigurador .pt-4.space-y-4,
+        .dark #panelConfigurador .space-y-8>div {
+            background-color: var(--dark-card) !important;
+            border-color: var(--dark-border) !important;
+            box-shadow: none !important;
+        }
+
+        /* Labels Header Style - Minimalista */
+        .text-gecko.uppercase.tracking-\[0\.2em\] {
+            font-size: 11px !important;
+            font-weight: 800 !important;
+        }
+
+        /* Guía Visual Naranja: Solo para encabezados de Card */
+        .guia-naranja {
+            border-left: 3px solid var(--gecko) !important;
+            padding-left: 10px !important;
+            margin-bottom: 1rem !important;
+            color: var(--gecko) !important;
+        }
+
+        /* Specific fix for inputs in dynamic panels */
+        #panelConfigurador input,
+        #panelConfigurador select {
+            margin-top: 4px;
+        }
+
+        .light-mode #modalPresupuesto input::placeholder {
+            color: #adb5bd !important;
+        }
+
+        /* Sidebar y Carrito */
+        .light-mode #modalPresupuesto .border-zinc-900,
+        .light-mode #modalPresupuesto .border-zinc-800 {
+            border-color: #e9ecef !important;
+        }
+
+        .light-mode #modalPresupuesto #labelTotalPresupuesto {
+            color: #f97316;
+        }
+
+        .light-mode #modalPresupuesto #listaItemsPresupuesto>div:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Botón cerrar */
+        .light-mode #modalPresupuesto button[onclick*="closeModal"] {
+            background-color: #f1f3f5;
+            color: #adb5bd;
+        }
+
+        .light-mode #modalPresupuesto button[onclick*="closeModal"]:hover {
+            background-color: #f97316;
+            color: #ffffff;
+        }
+
+        /* Botones Panel Derecho (Resumen) */
+        .light-mode #modalPresupuesto #btnVerPDF {
+            background-color: #f97316 !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3) !important;
+            border: none !important;
+        }
+
+        .light-mode #modalPresupuesto #btnVerPDF:hover {
+            background-color: #ea580c !important;
+        }
+
+        .light-mode #modalPresupuesto #btnEmitirOrden {
+            background-color: rgba(249, 115, 22, 0.15) !important;
+            color: #c2410c !important;
+            /* Texto naranja oscuro para legibilidad pura */
+            border: 1px solid rgba(249, 115, 22, 0.3) !important;
+            box-shadow: none !important;
+        }
+
+        .light-mode #modalPresupuesto #btnEmitirOrden:hover {
+            background-color: rgba(249, 115, 22, 0.25) !important;
+        }
+
+        /* Input Cliente Minimalista */
+        #clienteNombre {
+            background-color: transparent !important;
+            border: none !important;
+            border-bottom: 2px solid #3f3f46 !important;
+            /* zinc-700 approx */
+            border-radius: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        .light-mode #clienteNombre {
+            border-bottom: 2px solid #e2e8f0 !important;
+            /* gray-200 */
+            color: #333333 !important;
+        }
+
+        #clienteNombre:focus {
+            border-bottom-color: #f97316 !important;
+        }
+
+        #clienteNombre::placeholder {
+            color: #52525b !important;
+            /* zinc-600 */
+        }
+
+        .light-mode #clienteNombre::placeholder {
+            color: #94a3b8 !important;
+            /* slate-400 */
+        }
+
+        /* Botón Añadir al Carrito Unificado */
+        .btn-add-carrito {
+            background-color: #f97316 !important;
+            /* orange-500 Naranja Gecko */
+            color: #ffffff !important;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add-carrito:hover {
+            background-color: #ea580c !important;
+            /* orange-600 */
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.4);
+        }
+
+        .btn-add-carrito:active {
+            transform: scale(0.98);
+        }
+
+        /* Columnas de fondo en light mode */
+        .light-mode #modalPresupuesto .bg-gray-50\/50,
+        .light-mode #modalPresupuesto .bg-gray-50\/20 {
+            background-color: #f8f9fa !important;
+        }
+
+        .light-mode #modalPresupuesto .bg-white {
+            background-color: #ffffff !important;
+        }
+
+        /* Unificación de Tablas (Materiales / Stock) */
+        /* Aplicando el estilo limpio de la tabla de Clientes */
+
+        #viewMateriales .bg-white.dark\:bg-white\/5 {
+            background-color: #ffffff !important;
+            border-radius: 28px !important;
+            border: 1px solid #f1f5f9 !important;
+            /* gray-100 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .dark #viewMateriales .bg-white.dark\:bg-white\/5 {
+            background-color: #121212 !important;
+            /* Carbon Gray */
+            border-color: rgba(31, 41, 55, 0.8) !important;
+            /* gray-800 approx */
+        }
+
+        #viewMateriales table thead {
+            background-color: transparent !important;
+        }
+
+        #viewMateriales table thead tr {
+            background-color: #f8fafc !important;
+            /* gray-50/50 approx */
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+
+        .dark #viewMateriales table thead tr {
+            background-color: rgba(18, 18, 18, 0.3) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+
+        #viewMateriales table th {
+            color: #94a3b8 !important;
+            /* gray-400 */
+            text-transform: uppercase !important;
+            font-size: 11px !important;
+            letter-spacing: 0.1em !important;
+            font-weight: 800 !important;
+            padding: 1.25rem 1.5rem !important;
+            /* py-5 px-6 */
+            background: none !important;
+        }
+
+        #viewMateriales table td {
+            padding: 1.25rem 1.5rem !important;
+            border-bottom: 1px solid #f8fafc !important;
+        }
+
+        .dark #viewMateriales table td {
+            border-bottom-color: rgba(255, 255, 255, 0.02) !important;
+        }
+
+        #viewMateriales table tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        #viewMateriales table tbody tr:hover {
+            background-color: rgba(248, 250, 252, 0.8) !important;
+        }
+
+        .dark #viewMateriales table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+
+
+        /* ------------------- REFORMA DE INPUTS: ESTILO MINIMALISTA (Renglones) ------------------- */
+        /* Aplicado GLOBALMENTE para consistencia total en el sistema */
+
+        input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([class*="sr-only"]),
+        select,
+        textarea {
+            background-color: transparent !important;
+            border: none !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            border-radius: 0 !important;
+            padding: 12px 0 6px 0 !important;
+            font-size: 14px !important;
+            color: inherit !important;
+            width: 100% !important;
+            outline: none !important;
+            box-shadow: none !important;
+            transition: border-bottom-color 0.3s ease !important;
+        }
+
+        .dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([class*="sr-only"]),
+        .dark select,
+        .dark textarea {
+            border-bottom: 1px solid #333 !important;
+        }
+
+        /* Estado Focus: Línea en Naranja Gecko (Global) */
+        input:focus:not([type="checkbox"]):not([type="radio"]),
+        select:focus,
+        textarea:focus {
+            border-bottom: 1px solid #f97316 !important;
+        }
+
+        /* Densidad de Información: Labels */
+        #modalPresupuesto .modal-content label {
+            font-size: 12px !important;
+            color: #94a3b8 !important;
+            /* Gris claro sutil */
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            font-weight: 800 !important;
+            margin-bottom: 6px !important;
+            display: block;
+        }
+
+        /* Excepción para labels de Checkbox/Radio para que no se pongan en bloque */
+        #modalPresupuesto label:has(input),
+        #modalPresupuesto label.flex,
+        #modalPresupuesto label.inline-flex {
+            display: flex !important;
+            margin-bottom: 0 !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+        }
+
+        /* Limpieza de contenedores para estilo de renglones limpios */
+        #modalPresupuesto .group,
+        #modalPresupuesto .bg-gray-50\/20,
+        #modalPresupuesto .bg-gray-50\/50,
+        #modalPresupuesto .dark\:bg-zinc-950\/50,
+        #modalPresupuesto .card-style,
+        #modalPresupuesto .rounded-\[32px\] {
+            background-color: transparent !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        /* Ajuste de selects para que el texto resalte */
+        #modalPresupuesto select {
+            cursor: pointer;
+            appearance: none;
+        }
+
+        /* Espaciado y Guía Visual en Sidebar de Modal */
+        #modalPresupuesto .w-20,
+        #modalPresupuesto .md\:w-64 {
+            padding-left: 15px !important;
+            border-right: 1px solid #e5e7eb !important;
+        }
+
+        .dark #modalPresupuesto .w-20,
+        .dark #modalPresupuesto .md\:w-64 {
+            border-right: 1px solid #333 !important;
+        }
+
+        /* ═══════════════════ UNIFICACIÓN DE TABS Y SELECTORES (ACTIVE STYLE) ═══════════════════ */
+        .text-gecko,
+        .btn-cat-active span,
+        .btn-cat-active div,
+        .btn-cat-active svg {
+            color: #f97316 !important;
+            fill: #f97316 !important;
+        }
+
+        .border-gecko,
+        .btn-cat-active {
+            border-color: #f97316 !important;
+        }
+
+        .btn-cat-active span,
+        .text-gecko,
+        [class*="text-gecko"] {
+            color: #f97316 !important;
+            opacity: 1 !important;
+        }
+
+        /* ═══════════════════ REFINAMIENTO MODO CLARO (PREMIUM LOOK) ═══════════════════ */
+        .light-mode body {
+            background-color: #F8F9FA !important;
+        }
+
+        /* Elevación de Tarjetas y Contenedores */
+        .light-mode .bg-white,
+        .light-mode .modal-content,
+        .light-mode #viewDashboard>div,
+        .light-mode #viewMateriales .bg-white,
+        .light-mode #viewFinanzas .bg-white,
+        .light-mode #viewClientes .bg-white,
+        .light-mode .card-float {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+            border: 1px solid #e5e7eb !important;
+        }
+
+        /* Efecto Elevación Botones Naranjas */
+        .light-mode .bg-gecko,
+        .light-mode .btn-add-carrito {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* ------------------- CORRECCI�N QUIR�RGICA DE UI (Holdprint Style) ------------------- */
+        .btn-cat-active,
+        .text-gecko,
+        .border-gecko,
+        .btn-cat-active span,
+        .btn-cat-active div,
+        .btn-cat-active svg {
+            color: #f97316 !important;
+            fill: #f97316 !important;
+            border-color: #f97316 !important;
+            text-shadow: none !important;
+            opacity: 1 !important;
+        }
+
+        .light-mode .modal-content,
+        .light-mode .bg-white,
+        .light-mode .card-float {
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 20px 50px -12px rgba(0, 0, 0, 0.15) !important;
+            border: none !important;
+            border-radius: 40px !important;
+        }
+
+        input:not([type='checkbox']):not([type='radio']):not([type='submit']):not([type='button']),
+        select,
+        textarea {
+            border-bottom: 2px solid #e2e8f0 !important;
+            padding: 14px 0 8px 0 !important;
+            font-size: 15px !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .dark input:not([type='checkbox']),
+        .dark textarea {
+            border-bottom-color: #333 !important;
+        }
+
+        /* Escapamos los dos puntos \: y los corchetes \[ \] para que el CSS no de error */
+        #modalPresupuesto .w-24,
+        #modalPresupuesto .md\:w-\[280px\] {
+            padding-left: 28px !important;
+            border-right: 1px solid #e5e7eb !important;
+        }
+
+        .dark #modalPresupuesto .w-24,
+        .dark #modalPresupuesto .md\:w-\[280px\] {
+            border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+
+        /* ------------------- FUERZA BRUTA VISUAL (Holdprint Force) ------------------- */
+        #modalPresupuesto .modal-content {
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 20px 50px -12px rgba(0, 0, 0, 0.15) !important;
+            border: none !important;
+            background-color: #ffffff !important;
+        }
+
+        .dark #modalPresupuesto .modal-content {
+            background-color: #121212 !important;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 20px 50px -12px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        #modalPresupuesto .modal-content input:not([type='checkbox']):not([type='radio']),
+        #modalPresupuesto .modal-content select,
+        #modalPresupuesto .modal-content textarea {
+            border-bottom: 2px solid #e2e8f0 !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            padding: 12px 0 8px 0 !important;
+        }
+
+        .dark #modalPresupuesto .modal-content input:not([type='checkbox']),
+        .dark #modalPresupuesto .modal-content select,
+        .dark #modalPresupuesto .modal-content textarea {
+            border-bottom-color: #333 !important;
+        }
+
+        #modalPresupuesto .w-24,
+        #modalPresupuesto .md\:w-\[280px\],
+        #modalPresupuesto [style*='min-width: 280px'] {
+            min-width: 280px !important;
+            padding: 24px !important;
+        }
+
+        /* ------------------- AJUSTE DE ALINEACIÓN Y PADDING HOLDPRINT ------------------- */
+        #modalPresupuesto .px-8,
+        #modalPresupuesto .px-10 {
+            padding-left: 32px !important;
+            padding-right: 32px !important;
+        }
+
+        #configuradorCotizacion,
+        .flex-1.px-8.py-10 {
+            padding-left: 32px !important;
+            padding-right: 32px !important;
+        }
+
+        #modalPresupuesto .w-24.p-6,
+        #modalPresupuesto .md\:w-\[280px\],
+        #modalPresupuesto [style*='min-width: 280px'] {
+            padding-left: 32px !important;
+        }
+
+        /* ------------------- INPUTS ESTILO RENGLÓN ------------------- */
+        .light-mode #modalPresupuesto input:not([type='checkbox']),
+        .light-mode #modalPresupuesto select {
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 2px solid #e2e8f0 !important;
+            border-radius: 0 !important;
+        }
+
+        .light-mode #modalPresupuesto input:focus {
+            border-bottom-color: #f97316 !important;
+            outline: none !important;
+        }
+
+        #filtroClienteBusqueda,
+        #filtroOtBusqueda,
+        #filtroPresupuestoBusqueda {
+            padding-left: 2.5rem !important;
+        }
+
+        .lupa-icon {
+            top: -5px !important;
+            margin: 0px !important;
+            position: relative !important;
+        }
+
+        /* Eliminar flechas de subir/bajar en inputs numéricos */
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* Estilo para botones de ancho deshabilitados */
+        .fila-corte button:disabled {
+            cursor: not-allowed;
+            filter: grayscale(1);
+            border-color: #27272a !important;
+            /* zinc-800 */
+            color: #52525b !important;
+            /* zinc-500 */
+        }
+
+        /* Corregir visibilidad de las opciones en los menús desplegables */
+        select option {
+            background-color: #18181b !important;
+            /* Un gris muy oscuro (Zinc-900) */
+            color: white !important;
+            /* Letra siempre blanca */
+            padding: 12px !important;
+        }
+
+        /* Evitar que el sistema les ponga fondo blanco al hacer foco */
+        select:focus option {
+            background-color: #18181b !important;
+        }
+
+        /* Ajuste de selects para que el texto resalte */
+        #modalPresupuesto select,
+        .gecko-select {
+            cursor: pointer;
+            appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a1a1aa' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 1.25rem center !important;
+            background-size: 1em !important;
+            padding-top: 0.8rem !important;
+            padding-bottom: 0.8rem !important;
+            border: 1px solid #27272a !important;
+            /* border-zinc-800 */
+        }
+
+        .gecko-select:hover {
+            border-color: #3f3f46 !important;
+            /* border-zinc-700 */
+        }
+
+        /* Flecha unificada para buscadores (Impresión y Corte) */
+        .input-material,
+        .select-material-corte {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+
+            /* Usamos un color gris más claro para que resalte (#d1d5db) */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d1d5db'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+
+            background-repeat: no-repeat !important;
+            background-position: calc(100% - 8px) center !important;
+            /* La pega al borde derecho */
+            background-size: 14px !important;
+            padding-right: 30px !important;
+            /* Espacio para que el texto no pise la flecha */
+        }
+
+        /* Evita que Chrome oculte la flecha al mostrar el datalist */
+        input::-webkit-calendar-picker-indicator {
+            display: none !important;
+            opacity: 0 !important;
+        }
+
+        /* ☀️ AJUSTES DE RESCATE PARA MODO CLARO (Terminal de Ventas) */
+        .light-mode #modalPresupuesto .modal-content {
+            background-color: #ffffff !important;
+            color: #18181b !important;
+        }
+
+        /* 1. Selector de Modo (Impresión / Corte) */
+        .light-mode #modalPresupuesto .bg-zinc-950 {
+            background-color: #f4f4f5 !important;
+            /* Gris muy claro */
+            border-color: #e4e4e7 !important;
+        }
+
+        .light-mode #modalPresupuesto .bg-zinc-800 {
+            background-color: #ffffff !important;
+            color: #f15a24 !important;
+            /* Naranja Gecko */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .light-mode #modalPresupuesto #btnG-imp:not(.bg-zinc-800),
+        .light-mode #modalPresupuesto #btnG-corte:not(.bg-zinc-800) {
+            color: #71717a !important;
+            /* Texto gris para el botón no activo */
+        }
+
+        /* 2. Barra de "Lleva Montado" y Paneles Internos */
+        .light-mode #modalPresupuesto .bg-zinc-950\/50 {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        .light-mode #modalPresupuesto .bg-zinc-900\/20 {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        .light-mode #modalPresupuesto .text-zinc-300,
+        .light-mode #modalPresupuesto .text-zinc-400 {
+            color: #3f3f46 !important;
+            /* Texto oscuro para legibilidad */
+        }
+
+        /* 3. Inputs y Renglones */
+        .light-mode #modalPresupuesto input,
+        .light-mode #modalPresupuesto select {
+            color: #18181b !important;
+            border-bottom-color: #e2e8f0 !important;
+        }
+
+        .light-mode #modalPresupuesto input::placeholder {
+            color: #a1a1aa !important;
+        }
+
+        /* 4. Terminaciones y Divisores */
+        .light-mode #modalPresupuesto .border-zinc-900,
+        .light-mode #modalPresupuesto .border-zinc-800 {
+            border-color: #f1f5f9 !important;
+        }
+
+        .light-mode #modalPresupuesto .text-zinc-200 {
+            color: #18181b !important;
+        }
+
+        .light-mode #modalPresupuesto .fila-material,
+        .light-mode #modalPresupuesto .fila-corte {
+            border-color: #f1f5f9 !important;
+        }
+
+        /* ☀️ REFUERZO DE VISIBILIDAD MODO CLARO - GRÁFICA */
+
+        /* Botones de Ancho (60/120) con filete naranja GECKO */
+        .fila-corte .btn-60,
+        .fila-corte .btn-120 {
+            background-color: transparent !important;
+            border: 1px solid #f15a24 !important;
+            /* El filete naranja finito */
+            color: #f15a24 !important;
+            /* Texto naranja para hacer juego */
+            transition: all 0.2s ease;
+        }
+
+        /* Cuando el botón está SELECCIONADO (se llena de color) */
+        .fila-corte button.bg-gecko {
+            background-color: #f15a24 !important;
+            color: #ffffff !important;
+            border-color: #f15a24 !important;
+        }
+
+        /* Ajuste para que en Modo Claro el texto no sea tan chillón si no está seleccionado */
+        .light-mode .fila-corte button:not(.bg-gecko) {
+            background-color: #ffffff !important;
+            color: #f15a24 !important;
+        }
+
+        /* Efecto Hover para que se sienta interactivo */
+        .fila-corte button:hover:not(:disabled) {
+            background-color: rgba(241, 90, 36, 0.1) !important;
+        }
+
+        /* 2. Barra de "Lleva Montado sobre Rígido" */
+        .light-mode #modalPresupuesto .bg-zinc-950\/50 {
+            background-color: #eef2ff !important;
+            /* Fondo Índigo muy suave */
+            border-color: #c7d2fe !important;
+            /* Borde Índigo */
+        }
+
+        /* Texto de la barra de Rígidos */
+        .light-mode #modalPresupuesto .bg-zinc-950\/50 p {
+            color: #3730a3 !important;
+            /* Índigo fuerte para legibilidad */
+        }
+
+        /* Icono del Cubo (Rígidos) */
+        .light-mode #modalPresupuesto .bg-indigo-500\/10 {
+            background-color: #c7d2fe !important;
+            color: #3730a3 !important;
+        }
+
+        /* 3. El Switch (Toggle) cuando está apagado */
+        .light-mode #modalPresupuesto .bg-zinc-800 {
+            background-color: #cbd5e1 !important;
+            /* Gris intermedio para el switch */
+        }
+
+        /* 4. Líneas divisorias en los inputs para que no se pierdan */
+        .light-mode #modalPresupuesto input {
+            border-bottom-color: #d1d5db !important;
+        }
+
+        #configuradorSubtotal {
+            letter-spacing: -2px;
+            text-shadow: 0 0 20px rgba(241, 90, 36, 0.2);
+        }
+
+        #detMaterialBase,
+        #detServicio,
+        #detTerminaciones {
+            font-family: 'JetBrains Mono', monospace;
+            /* Para que los números queden alineados */
+            min-width: 80px;
+            text-align: right;
+        }
+
+        /* ------------------- GLOBAL INPUT REFINEMENTS ------------------- */
+        input::placeholder,
+        textarea::placeholder {
+            color: #555555 !important;
+            opacity: 1 !important;
+        }
+
+        select:invalid,
+        select option[value=""] {
+            color: #555555 !important;
+        }
+
+        input,
+        select,
+        textarea {
+            background-color: #131314 !important;
+            color: #ffffff !important;
+        }
+
+        /* Color para valores '0' de sistema */
+        input[value="0"] {
+            color: #555555 !important;
+        }
+
+        .dark input:not([type="checkbox"]):not([type="radio"]),
+        .dark select,
+        .dark textarea {
+            background-color: #131314 !important;
+            color: #ffffff !important;
+            border-color: #333333 !important;
+        }
+
+        /* Fix Autofill background and text color */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0px 1000px #131314 inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* --- CLASE MAESTRA PARA CARDS GECKO --- */
+        .card-gecko {
+            margin-bottom: 8px !important;
+            background-color: #1e1f20 !important;
+            padding: 2rem !important;
+            border-radius: 1rem !important;
+            border: 1px solid #333 !important;
+            display: block;
+            /* Asegurar que se comporte como bloque */
+        }
+
+        /* --- FIX MANUAL GECKO: INPUTS AGRUPADOS --- */
+
+        .grupo-input-gecko {
+            display: flex;
+            align-items: center;
+            background-color: rgba(24, 24, 27, 0.5);
+            /* bg-zinc-900/50 */
+            border: 1px solid #3f3f46;
+            /* border-zinc-700 */
+            border-radius: 12px;
+            /* rounded-2xl */
+            overflow: hidden;
+            transition: all 0.2s;
+            height: 48px;
+        }
+
+        .grupo-input-gecko:focus-within {
+            border-color: #f97316;
+            /* Color naranja Gecko al hacer foco */
+            box-shadow: 0 0 0 1px #f97316;
+        }
+
+        /* El cuadro del símbolo */
+        .prefijo-gecko {
+            background-color: rgba(39, 39, 42, 0.8);
+            /* Un poco más claro para resaltar */
+            color: #f4f4f5;
+            /* Blanco zinc-100 */
+            font-weight: 800;
+            font-size: 14px;
+            padding: 0 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid #3f3f46;
+            min-width: 60px;
+            justify-content: center;
+        }
+
+        /* El campo de texto real */
+        .input-limpio-gecko {
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            color: white !important;
+
+            /* 1. MARGEN IZQUIERDO: El último número es el que aleja el texto de la raya */
+            /* Top(0) - Right(15) - Bottom(0) - IZQUIERDA(35) */
+            padding: 0px 15px 0px 40px !important;
+
+            /* 2. SUBIR EL TEXTO: Esto lo levanta físicamente sin pelear con el padding */
+            transform: translateY(-2px) !important;
+
+            width: 100%;
+            height: 100%;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* --- COLOR DE SUGERENCIAS (PLACEHOLDERS) GECKO --- */
+        input::placeholder {
+            color: #52525b !important;
+            /* Un gris Zinc-600, bien sutil */
+            opacity: 1;
+            /* Asegura que el color se vea sólido en todos los navegadores */
+        }
+
+        /* Para los campos de números que a veces se comportan distinto */
+        input::-webkit-input-placeholder {
+            color: #52525b !important;
+        }
+
+        input:-ms-input-placeholder {
+            color: #52525b !important;
+        }
+
+
+        /* FUERZA BRUTA PARA PLACEHOLDERS EN MODO OSCURO */
+        .dark input::placeholder,
+        .dark input::-webkit-input-placeholder,
+        .dark select::placeholder {
+            color: #414147 !important;
+            /* Un gris zinc-400 que se nota que es guía */
+            opacity: 1 !important;
+            -webkit-text-fill-color: #414147 !important;
+            /* Para navegadores rebeldes */
+        }
+
+        /* Específicamente para tus campos de Rígidos */
+        #matEspesor::placeholder,
+        #matAncho::placeholder,
+        #matLargo::placeholder {
+            color: #414147 !important;
+            -webkit-text-fill-color: #414147 !important;
+        }
+
+        /* --- CONFIG MODAL SPECIFIC FIXES --- */
+        #modalConfig .grupo-input-gecko {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            border-color: #3f3f46 !important;
+        }
+
+        #modalConfig .placeholder-zinc-500::placeholder {
+            color: #71717a !important;
+            opacity: 0.5 !important;
+            font-weight: 500 !important;
+        }
+
+        /* ═══════════════════ ACCESIBILIDAD Y CONTRASTE (FIX DE SPELLCHECK Y AUTOFILL) ═══════════════════ */
+
+        /* Bloqueo total de fondo blanco por Autofill */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-text-fill-color: white !important;
+            /* Usamos el color de fondo exacto de los inputs Gecko */
+            -webkit-box-shadow: 0 0 0px 1000px #131314 inset !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Fix para evitar que el corrector ortográfico cambie el color del texto */
+        input,
+        textarea {
+            color: white !important;
+            -webkit-text-fill-color: white !important;
+        }
+
+        /* Estilo de la ondita de error (sin cambiar el color del texto) */
+        ::spelling-error {
+            text-decoration: underline wavy #ef4444 !important;
+            /* Rojo Gecko para errores */
+            color: white !important;
+        }
+
+        ::grammar-error {
+            text-decoration: underline wavy #f59e0b !important;
+            /* Ámbar para gramática */
+            color: white !important;
+        }
+
+        /* 4. VISIBILIDAD DEL CURSOR (CARET) */
+        input,
+        textarea {
+            caret-color: auto;
+        }
+
+        .dark input,
+        .dark textarea {
+            caret-color: #f97316 !important;
+            /* Naranja GECKO para máxima visibilidad */
+        }
+
+        /* Forzar el color del texto para que no cambie al detectar error */
+        .dark input,
+        .dark textarea,
+        .dark input:focus,
+        .dark textarea:focus {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        /* ──────────────────────────────────────────────────────────────────────────
+   LIMPIEZA DE INPUTS NUMÉRICOS (Ocultar Spinners)
+   ────────────────────────────────────────────────────────────────────────── */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* REGLA MAESTRA: DISEÑO + COLOR + FLECHA */
+        #graficaCat,
+        #graficaMatEspec,
+        #valLaminado,
+        #montadoMat,
+        #corpMat,
+        #filtroPresupuestoArea,
+        #filtroOtArea,
+        #matCat,
+        #matUnidad,
+        #matUnidadVenta,
+        .gecko-select-pro {
+            /* --- COLOR (EL ESCUDO) --- */
+            color: #71717a !important;
+            -webkit-text-fill-color: #71717a !important;
+
+            /* --- ESTRUCTURA Y BORDES --- */
+            background-color: rgba(24, 24, 27, 0.5) !important;
+            border: 1px solid #27272a !important;
+            border-radius: 12px !important;
+            padding: 12px 16px !important;
+            width: 100% !important;
+            font-size: 13px !important;
+            outline: none !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+
+            /* --- LA FLECHITA GECKO --- */
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%236b7280"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/%3E%3C/svg%3E') !important;
+            background-repeat: no-repeat !important;
+            background-position: right 1rem center !important;
+            background-size: 1.25rem !important;
+        }
+
+        /* CUANDO EL USUARIO ELIGE UNA OPCIÓN (SE PONE BLANCO) */
+        #graficaCat:valid,
+        #graficaMatEspec:valid {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        /* BORDE NARANJA AL HACER CLIC */
+        #graficaCat:focus,
+        #graficaMatEspec:focus {
+            border-color: #f15a24 !important;
+        }
+
+        /* CONTENEDOR DE LA SECCIÓN */
+        .seccion-switch-gecko {
+            background: rgba(24, 24, 27, 0.5);
+            border: 1px solid #27272a;
+            border-radius: 16px;
+            padding: 20px;
+            /* Esto despega todo de los bordes */
+            margin-bottom: 24px;
+        }
+
+        /* EL SWITCH (LA PASTILLA) */
+        .switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        /* OCULTAR EL CHECKBOX CUADRADO */
+        .switch-gecko input {
+            display: none;
+        }
+
+        /* EL BOTÓN SLIDER */
+        .switch-gecko {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .slider-gecko {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #3f3f46;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider-gecko:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        /* COLOR NARANJA CUANDO SE ACTIVA */
+        .switch-gecko input:checked+.slider-gecko {
+            background-color: #f15a24;
+        }
+
+        .switch-gecko input:checked+.slider-gecko:before {
+            transform: translateX(20px);
+        }
+
+        /* MULTIFILAS */
+
+        /* TÍTULO CON RAYA */
+        .guia-gecko {
+            border-left: 3px solid #f15a24 !important;
+            padding-left: 12px !important;
+        }
+
+        /* BOTÓN AÑADIR (EL ESTILO UNIFICADO) */
+        .btn-add-fila {
+            display: block !important;
+            width: 100% !important;
+            padding: 12px !important;
+            margin-top: 20px !important;
+            background: rgba(24, 24, 27, 0.2) !important;
+            border: 1px dashed #3f3f46 !important;
+            border-radius: 12px !important;
+            color: #71717a !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .btn-add-fila:hover {
+            border-color: #f15a24 !important;
+            color: #f15a24 !important;
+            background: rgba(241, 90, 36, 0.05) !important;
+        }
+
+        /* FILA Y CRUCES */
+        .multifila-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr 40px !important;
+            gap: 12px !important;
+            align-items: center !important;
+            margin-bottom: 10px !important;
+        }
+
+        .btn-del-fila {
+            color: #52525b !important;
+            font-size: 20px !important;
+            background: none !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: color 0.2s !important;
+            display: flex !important;
+            justify-content: center !important;
+        }
+
+        .btn-del-fila:hover {
+            color: #f15a24 !important;
+        }
+
+        /* Familias de Tags Gecko */
+        .tag-impresion {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Rojo */
+        .tag-corte {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Azul */
+        .tag-liso {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        /* Ámbar */
+
+        .tag-plastico {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Esmeralda: PVC, PAI, Acrilico, Poli */
+        .tag-madera {
+            background: rgba(161, 161, 170, 0.15);
+            color: #a1a1aa;
+            border: 1px solid rgba(161, 161, 170, 0.3);
+        }
+
+        /* Zinc: MDF, Corrugado */
+        .tag-3d {
+            background: rgba(99, 102, 241, 0.15);
+            color: #6366f1;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        /* Indigo: Filamento */
+        .tag-electric {
+            background: rgba(234, 179, yellow, 0.15);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        /* Amarillo: Módulos, Fuentes, Cables */
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: rgba(241, 90, 36, 0.1) !important;
+            border: 1px dashed #f15a24 !important;
+        }
+
+        .gecko-tag {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        /* FEEDBACK VISUAL DE ÉLITE: ÉXITO ANIMADO */
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(9, 9, 11, 0.85);
+            /* Zinc-950 con transparencia */
+            backdrop-filter: blur(12px);
+            /* Desenfoque de fondo para máximo contraste */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .check-animado {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #10b981;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            margin-bottom: 24px;
+            box-shadow: 0 0 60px rgba(16, 185, 129, 0.6);
+            /* Brillo esmeralda intenso */
+            animation: scaleCheck 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success-overlay h2 {
+            color: white !important;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: -0.05em;
+        }
+
+        @keyframes scaleCheck {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .gecko-dialog-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .gecko-dialog-box {
+            background: #1e1f20;
+            border: 1px solid #333;
+            width: 90%;
+            max-width: 400px;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .gecko-dialog-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(241, 90, 36, 0.1);
+            color: #f15a24;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            border: 1px solid rgba(241, 90, 36, 0.2);
+        }
+
+        .gecko-dialog-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke-width: 1.5;
+            /* Ícono lineal fino */
+        }
+
+        /* Ajuste de visibilidad de placeholders */
+        input::placeholder,
+        textarea::placeholder {
+            color: #52525b !important;
+            /* Zinc-600 */
+            opacity: 1 !important;
+        }
+/* 1. Resetear la apariencia para que el navegador muestre los controles */
+input[type="number"] {
+    -moz-appearance: textfield; /* Para Firefox */
+    appearance: auto; 
+}
+
+/* 2. Forzar visibilidad en Chrome, Safari y Edge */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: inner-spin-button !important;
+    opacity: 1 !important;
+    display: block !important;
+    cursor: pointer;
+    /* Invertimos el color para que se vean blancas sobre el fondo oscuro del input */
+    filter: invert(1) brightness(0.8);
+    margin-left: 5px;
+}
+
+/* 3. Ajuste de padding para que el número no pise las flechitas */
+input[type="number"] {
+    padding-right: 5px !important;
+}
+
+/* ── Estado OT — select pill estilo Gecko ── */
+.gecko-ot-estado {
+    color: #71717a !important;
+    -webkit-text-fill-color: #71717a !important;
+    background-color: rgba(24, 24, 27, 0.5) !important;
+    border: 1px solid #27272a !important;
+    border-radius: 12px !important;
+    padding: 6px 32px 6px 12px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    width: auto !important;
+    min-width: 130px !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2352525b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    background-size: 14px !important;
+}
+
+.gecko-ot-estado:focus {
+    border-color: #F15A24 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}

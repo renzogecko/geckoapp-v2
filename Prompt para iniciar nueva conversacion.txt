@@ -1,0 +1,16 @@
+Antes de cerrar esta sesión, necesito que me generes 
+un prompt de continuidad para pasarle a un chat nuevo 
+de Claude. El prompt debe incluir:
+
+1. Contexto completo del proyecto GeckoApp (stack, 
+   archivos, base de datos, entorno de trabajo)
+2. Todo lo que trabajamos en esta sesión: qué 
+   cambiamos, en qué archivo y por qué
+3. Qué funcionó y qué quedó pendiente o con problemas
+4. Próximos pasos concretos en orden de prioridad
+5. Cualquier detalle técnico importante que el nuevo 
+   chat necesite saber para no repetir errores
+
+El prompt debe estar listo para copiar y pegar 
+directamente en un chat nuevo, sin que yo tenga 
+que agregar nada más.
