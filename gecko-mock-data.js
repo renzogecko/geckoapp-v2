@@ -125,7 +125,7 @@
 
     // ── Lógica principal ───────────────────────────────────────────────────
 
-    function cargarMocks() {
+    async function cargarMocks() {
         if (window._geckoMockLoaded) return;
 
         // Condición clave: solo actuar si la sincronización dejó la lista vacía
@@ -148,6 +148,18 @@
         writeIfEmpty('gecko_listaPresupuestos', MOCK_PRESUPUESTOS);
         writeIfEmpty('gecko_cajas',             MOCK_CAJAS);
         writeIfEmpty('gecko_movimientos',        MOCK_MOVIMIENTOS);
+
+        // Materiales y servicios desde el backup local
+        try {
+            const res = await fetch('./gecko_backup_14-5-2026.json');
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data.materiales)     && data.materiales.length     > 0) writeIfEmpty('gecko_materiales', data.materiales);
+                if (Array.isArray(data.geckoServicios) && data.geckoServicios.length > 0) writeIfEmpty('geckoServicios',   data.geckoServicios);
+            }
+        } catch (e) {
+            console.warn('🦎 GECKO MOCK: No se pudo cargar el backup de materiales/servicios', e);
+        }
 
         console.log('🦎 GECKO MOCK: Datos de prueba cargados');
 
