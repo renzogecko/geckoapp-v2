@@ -271,6 +271,21 @@
         // Llamada directa a renders por si no están suscritos al evento aún
         if (typeof window.renderOts          === 'function') window.renderOts();
         if (typeof window.renderPresupuestos === 'function') window.renderPresupuestos();
+
+        // Re-render diferido para cubrir renders que se registran después del evento
+        setTimeout(() => {
+            if (typeof window.renderizarMateriales === 'function') window.renderizarMateriales();
+            if (typeof window.renderizarServicios  === 'function') window.renderizarServicios();
+            if (typeof window.renderPresupuestos   === 'function') window.renderPresupuestos();
+            if (typeof window.renderOts            === 'function') window.renderOts();
+            console.log('🦎 GECKO MOCK: Re-render forzado');
+        }, 1500);
+    }
+
+    // Stub para evitar errores en el onchange de graficaCat (main.js:946)
+    // La función real se define en grafica.js; este fallback previene crashes en mock.
+    if (typeof window.actualizarSubMaterialesGrafica !== 'function') {
+        window.actualizarSubMaterialesGrafica = function () {};
     }
 
     // Escucha el evento que gecko-api.js dispara al terminar la sincronización
