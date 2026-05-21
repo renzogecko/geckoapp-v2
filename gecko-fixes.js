@@ -1223,37 +1223,63 @@ window._renderizarFinanzasCompleto = async function() {
 
     const btnNueva = contenedor.querySelector('button');
 
-    const estilos = {
-        efectivo:            { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', emoji: '💵' },
-        mercado_pago_celeste:{ bg: 'bg-blue-500/10',    text: 'text-blue-400',    border: 'border-blue-500/20',    emoji: '🔵' },
-        banco:               { bg: 'bg-zinc-800',        text: 'text-zinc-300',    border: 'border-zinc-700',        emoji: '🏦' }
+    // Estilos por tipo de caja
+    const _CAJA_EST = {
+        efectivo:            { bg:'rgba(16,185,129,0.07)',  border:'rgba(16,185,129,0.22)',  hoverBorder:'#10b981', iconBg:'rgba(16,185,129,0.12)',  iconColor:'#10b981', balColor:'#34d399' },
+        mercado_pago_celeste:{ bg:'rgba(59,130,246,0.07)',  border:'rgba(59,130,246,0.22)',  hoverBorder:'#3b82f6', iconBg:'rgba(59,130,246,0.12)',  iconColor:'#3b82f6', balColor:'#60a5fa' },
+        banco:               { bg:'rgba(100,116,139,0.07)', border:'rgba(100,116,139,0.22)', hoverBorder:'#64748b', iconBg:'rgba(100,116,139,0.12)', iconColor:'#64748b', balColor:'#94a3b8' }
+    };
+    // Paths SVG lineales por tipo
+    const _CAJA_SVG_PATH = {
+        efectivo: 'M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z',
+        mercado_pago_celeste: 'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z',
+        banco: 'M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z'
     };
 
     Array.from(contenedor.children).forEach(el => { if (el !== btnNueva) el.remove(); });
 
     if (cajas.length === 0) {
         const empty = document.createElement('p');
-        empty.className = 'text-zinc-600 text-[12px] font-bold italic';
+        empty.style.cssText = 'color:#52525b;font-size:12px;font-weight:700;font-style:italic;';
         empty.innerText = 'No hay cajas creadas. Creá una con el botón +.';
         contenedor.insertBefore(empty, btnNueva);
         return;
     }
 
     cajas.forEach(caja => {
-        const est = estilos[caja.icono] || estilos.efectivo;
+        const est   = _CAJA_EST[caja.icono] || _CAJA_EST.efectivo;
+        const path  = _CAJA_SVG_PATH[caja.icono] || _CAJA_SVG_PATH.efectivo;
         const saldo = parseFloat(caja.saldo) || 0;
-        const card = document.createElement('div');
-        card.className = `flex flex-col gap-1 px-5 py-4 rounded-2xl border ${est.bg} ${est.border} min-w-[140px] cursor-pointer hover:scale-105 transition-all group relative`;
+        const card  = document.createElement('div');
+        card.style.cssText = `
+            display:flex;flex-direction:column;gap:0;
+            padding:20px 22px 18px 22px;
+            border-radius:20px;
+            background:${est.bg};
+            border:1px solid ${est.border};
+            min-width:160px;
+            cursor:pointer;
+            transition:transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        `;
+        card.onmouseenter = () => {
+            card.style.transform = 'scale(1.04)';
+            card.style.borderColor = est.hoverBorder;
+            card.style.boxShadow = `0 8px 28px rgba(0,0,0,0.35)`;
+        };
+        card.onmouseleave = () => {
+            card.style.transform = 'scale(1)';
+            card.style.borderColor = est.border;
+            card.style.boxShadow = 'none';
+        };
         card.onclick = () => window.editarCaja(caja.id);
-        card.title = 'Click para editar';
         card.innerHTML = `
-            <div class="flex items-center justify-between gap-3">
-                <span class="text-lg">${est.emoji}</span>
-                <span class="text-[9px] font-black uppercase tracking-widest ${est.text} opacity-70">${caja.icono === 'mercado_pago_celeste' ? 'MP' : caja.icono}</span>
+            <div style="width:36px;height:36px;border-radius:10px;background:${est.iconBg};display:flex;align-items:center;justify-content:center;margin-bottom:14px;flex-shrink:0;">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="${est.iconColor}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="${path}"/>
+                </svg>
             </div>
-            <p class="text-[11px] font-black text-zinc-300 uppercase tracking-tight mt-1">${caja.nombre}</p>
-            <p class="text-[18px] font-black ${saldo >= 0 ? est.text : 'text-red-400'} leading-none">$${Math.round(saldo).toLocaleString('es-AR')}</p>
-            <span class="text-[8px] text-zinc-600 group-hover:text-zinc-400 transition-all uppercase tracking-widest mt-1">✏ editar</span>
+            <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:0 0 5px 0;line-height:1;">${caja.nombre}</p>
+            <p style="font-size:22px;font-weight:900;color:${saldo >= 0 ? est.balColor : '#ef4444'};margin:0;line-height:1.15;letter-spacing:-0.3px;">$${Math.round(saldo).toLocaleString('es-AR')}</p>
         `;
         contenedor.insertBefore(card, btnNueva);
     });
@@ -1263,6 +1289,138 @@ window._renderizarFinanzasCompleto = async function() {
 };
 
 window.renderizarFinanzas = window._renderizarFinanzasCompleto;
+
+// ── guardarNuevaCaja: disponible inmediatamente (sin esperar geckoDB_ready)
+//    para que funcione también en entorno local sin backend
+window.guardarNuevaCaja = function() {
+    const nombre = document.getElementById('nombreNuevaCaja')?.value?.trim();
+    const icono  = document.getElementById('iconoNuevaCaja')?.value || 'efectivo';
+    const saldo  = parseFloat(document.getElementById('saldoInicialCaja')?.value) || 0;
+
+    if (!nombre) { alert('Ingresá un nombre para la caja.'); return; }
+
+    const id  = 'caja_' + Date.now();
+    const _ls = window._localStorage_original || localStorage;
+    const cajas = JSON.parse(_ls.getItem('gecko_cajas') || '[]');
+    cajas.push({ id, nombre, saldo, icono });
+    _ls.setItem('gecko_cajas', JSON.stringify(cajas));
+    window.LISTA_CAJAS = cajas;
+
+    // Sincronizar con API si está disponible (falla silenciosa en local)
+    fetch('/app/api.php?endpoint=cajas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, nombre, saldo, icono })
+    }).catch(() => {});
+
+    if (saldo !== 0) {
+        const movId = 'mov_' + Date.now();
+        const mov = {
+            id: movId,
+            fecha: new Date().toLocaleDateString('es-AR'),
+            detalle: 'Saldo inicial de caja',
+            caja: nombre,
+            tipo: saldo > 0 ? 'Ingreso' : 'Egreso',
+            monto: Math.abs(saldo),
+            categoria: 'Sistema'
+        };
+        const movimientos = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+        movimientos.push(mov);
+        _ls.setItem('gecko_movimientos', JSON.stringify(movimientos));
+        window.LISTA_MOVIMIENTOS = movimientos;
+        fetch('/app/api.php?endpoint=movimientos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mov)
+        }).catch(() => {});
+    }
+
+    document.getElementById('modalNuevaCaja').style.display = 'none';
+    document.getElementById('nombreNuevaCaja').value = '';
+    document.getElementById('saldoInicialCaja').value = '0';
+
+    if (typeof window.mostrarExito === 'function') {
+        window.mostrarExito(`Caja "${nombre}" creada con $${saldo.toLocaleString('es-AR')}.`, '¡Hecho!');
+    }
+    setTimeout(() => {
+        const movsActualizados = JSON.parse((_ls).getItem('gecko_movimientos') || '[]');
+        window.LISTA_MOVIMIENTOS = movsActualizados;
+        if (typeof LISTA_MOVIMIENTOS !== 'undefined') {
+            LISTA_MOVIMIENTOS.length = 0;
+            movsActualizados.forEach(m => LISTA_MOVIMIENTOS.push(m));
+        }
+        window.renderizarFinanzas();
+        if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        if (typeof window.renderizarFiltrosCajas === 'function') window.renderizarFiltrosCajas();
+    }, 200);
+};
+
+// ── _selectNuevaCajaTipo: maneja el selector visual en modalNuevaCaja
+window._selectNuevaCajaTipo = function(tipo) {
+    const el = document.getElementById('iconoNuevaCaja');
+    if (el) el.value = tipo;
+    const ACTIVE = {
+        efectivo:            { border:'rgba(16,185,129,0.8)',  bg:'rgba(16,185,129,0.15)',  shadow:'rgba(16,185,129,0.25)'  },
+        mercado_pago_celeste:{ border:'rgba(59,130,246,0.8)',  bg:'rgba(59,130,246,0.15)',  shadow:'rgba(59,130,246,0.25)'  },
+        banco:               { border:'rgba(100,116,139,0.8)', bg:'rgba(100,116,139,0.15)', shadow:'rgba(100,116,139,0.25)' }
+    };
+    const IDLE = {
+        efectivo:            { border:'rgba(16,185,129,0.35)',  bg:'rgba(16,185,129,0.07)'  },
+        mercado_pago_celeste:{ border:'rgba(59,130,246,0.35)',  bg:'rgba(59,130,246,0.07)'  },
+        banco:               { border:'rgba(100,116,139,0.35)', bg:'rgba(100,116,139,0.07)' }
+    };
+    const IDS = { efectivo:'nuevaCajaTipoEfectivo', mercado_pago_celeste:'nuevaCajaTipoMp', banco:'nuevaCajaTipoBanco' };
+    Object.keys(IDS).forEach(t => {
+        const btn = document.getElementById(IDS[t]);
+        if (!btn) return;
+        if (t === tipo) {
+            btn.style.borderColor = ACTIVE[t].border;
+            btn.style.background  = ACTIVE[t].bg;
+            btn.style.boxShadow   = `0 0 12px ${ACTIVE[t].shadow}`;
+        } else {
+            btn.style.borderColor = IDLE[t].border;
+            btn.style.background  = IDLE[t].bg;
+            btn.style.boxShadow   = 'none';
+        }
+    });
+};
+
+// ── toggleListaCajas: muestra cajas existentes en el modal de nueva caja
+window.toggleListaCajas = function() {
+    const container = document.getElementById('listaGestionCajas');
+    const arrow     = document.getElementById('arrowListaCajas');
+    if (!container) return;
+    const isHidden = container.classList.contains('hidden');
+    if (isHidden) {
+        const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+        const _CAJA_COLORS = {
+            efectivo:             '#34d399',
+            mercado_pago_celeste: '#60a5fa',
+            banco:                '#94a3b8'
+        };
+        if (!cajas.length) {
+            container.innerHTML = '<div style="padding:16px;text-align:center;color:#71717a;font-size:12px;font-weight:700;">No hay cajas creadas aún.</div>';
+        } else {
+            container.innerHTML = cajas.map(c => {
+                const col = _CAJA_COLORS[c.icono] || '#F15A24';
+                const saldo = parseFloat(c.saldo) || 0;
+                return `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1f1f23;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>
+                        <span style="font-size:12px;font-weight:900;text-transform:uppercase;color:white;letter-spacing:0.5px;">${c.nombre}</span>
+                    </div>
+                    <span style="font-size:13px;font-weight:900;color:${saldo >= 0 ? col : '#ef4444'};">$${Math.round(saldo).toLocaleString('es-AR')}</span>
+                </div>`;
+            }).join('');
+        }
+        container.classList.remove('hidden');
+        if (arrow) arrow.style.transform = 'rotate(180deg)';
+    } else {
+        container.classList.add('hidden');
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+    }
+};
 
 // Sistema de cajas — se inicializa con geckoDB_ready
 document.addEventListener('geckoDB_ready', () => {
@@ -1329,39 +1487,120 @@ document.addEventListener('geckoDB_ready', () => {
         }, 200);
     };
 
-    // Modal editar caja
+    // Modal editar caja — MODAL-GECKO-PRO style
     if (!document.getElementById('modalEditarCaja')) {
         const modal = document.createElement('div');
         modal.id = 'modalEditarCaja';
-        modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;';
+        modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
         modal.innerHTML = `
-            <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:420px;padding:32px;position:relative;">
-                <h2 style="color:#F15A24;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 24px 0;">Editar Caja</h2>
+            <div class="mgp-card" style="width:100%;max-width:480px;">
+
+                <!-- Header -->
+                <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin:0 0 6px 0;">Finanzas / Cajas</p>
+                <h2 style="color:white;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 32px 0;">Editar Caja</h2>
+
+                <!-- Cerrar -->
+                <button onclick="document.getElementById('modalEditarCaja').style.display='none'"
+                    style="position:absolute;top:24px;right:24px;width:32px;height:32px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#666;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
+                    onmouseover="this.style.color='white';this.style.borderColor='#555'"
+                    onmouseout="this.style.color='#666';this.style.borderColor='#333'">✕</button>
+
                 <input type="hidden" id="editCajaId">
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Nombre</label>
-                    <input type="text" id="editCajaNombre" style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
+
+                <!-- Tipo de caja — 3 botones, seleccionado en verde -->
+                <div style="margin-bottom:20px;">
+                    <label class="mgp-label accent">Tipo de caja</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                        <button id="cajaTipoEfectivo" onclick="window._selectCajaTipo('efectivo')" class="mgp-type-btn active">
+                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/>
+                            </svg>
+                            <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#10b981;">Efectivo</span>
+                        </button>
+                        <button id="cajaTipoMp" onclick="window._selectCajaTipo('mercado_pago_celeste')" class="mgp-type-btn">
+                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
+                            </svg>
+                            <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#3b82f6;">Billeteras</span>
+                        </button>
+                        <button id="cajaTipoBanco" onclick="window._selectCajaTipo('banco')" class="mgp-type-btn">
+                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#64748b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z"/>
+                            </svg>
+                            <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#64748b;">Banco</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="editCajaIcono" value="efectivo">
                 </div>
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Estilo de Icono</label>
-                    <select id="editCajaIcono" style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:13px;font-weight:600;outline:none;cursor:pointer;">
-                        <option value="efectivo">💵 Verde (Efectivo)</option>
-                        <option value="mercado_pago_celeste">🔵 Azul MP (Billeteras)</option>
-                        <option value="banco">🏦 Gris (Bancos)</option>
-                    </select>
+
+                <!-- Nombre -->
+                <div style="margin-bottom:20px;">
+                    <label class="mgp-label">Nombre de la caja</label>
+                    <input type="text" id="editCajaNombre" class="mgp-input"
+                        placeholder="Ej: Efectivo, Banco Galicia, MP Principal..."
+                        onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333'">
                 </div>
-                <div style="margin-bottom:24px;">
-                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Saldo Actual ($)</label>
-                    <input type="number" id="editCajaSaldo" style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#F15A24;font-size:18px;font-weight:900;outline:none;box-sizing:border-box;">
+
+                <!-- Saldo -->
+                <div style="margin-bottom:32px;">
+                    <label class="mgp-label">Saldo actual</label>
+                    <div id="editCajaSaldoWrap" style="display:flex;align-items:center;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:12px 16px;gap:8px;">
+                        <span style="color:#ffffff;font-weight:600;flex-shrink:0;vertical-align:middle;line-height:normal;">$</span>
+                        <input type="number" id="editCajaSaldo" placeholder="0"
+                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:16px;width:100%;padding:0;margin:0;vertical-align:middle;line-height:normal;"
+                            onfocus="document.getElementById('editCajaSaldoWrap').style.borderColor='#F15A24'"
+                            onblur="document.getElementById('editCajaSaldoWrap').style.borderColor='#444'">
+                    </div>
                 </div>
-                <div style="display:flex;gap:12px;">
-                    <button onclick="window._eliminarCaja()" style="padding:12px 16px;background:transparent;border:1px solid #ef4444;color:#ef4444;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;flex-shrink:0;">🗑 Eliminar</button>
-                    <button onclick="document.getElementById('modalEditarCaja').style.display='none'" style="flex:1;padding:12px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;cursor:pointer;">Cancelar</button>
-                    <button onclick="window._guardarEdicionCaja()" style="flex:1;padding:12px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;cursor:pointer;">Guardar</button>
+
+                <!-- Botones -->
+                <div style="display:flex;gap:10px;align-items:stretch;">
+                    <button onclick="window._eliminarCaja()"
+                        style="padding:14px 18px;background:transparent;border:1px solid #ef4444;color:#ef4444;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:7px;transition:all 0.2s;"
+                        onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(239,68,68,0.4)';this.style.background='rgba(239,68,68,0.1)'"
+                        onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none';this.style.background='transparent'">
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Eliminar
+                    </button>
+                    <button onclick="document.getElementById('modalEditarCaja').style.display='none'"
+                        style="flex:1;padding:14px;background:transparent;border:1px solid #444;color:#888;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;"
+                        onmouseover="this.style.borderColor='#666';this.style.color='white'"
+                        onmouseout="this.style.borderColor='#444';this.style.color='#888'">
+                        Cancelar
+                    </button>
+                    <button onclick="window._guardarEdicionCaja()"
+                        style="flex:2;padding:14px;background:#F15A24;border:none;color:white;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;"
+                        onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(241,90,36,0.4)'"
+                        onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                        Guardar Cambios
+                    </button>
                 </div>
             </div>`;
         document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
     }
+
+    // Helper: seleccionar tipo de caja visualmente (verde para todos — MODAL-GECKO-PRO)
+    window._selectCajaTipo = function(tipo) {
+        document.getElementById('editCajaIcono').value = tipo;
+        const IDS = { efectivo:'cajaTipoEfectivo', mercado_pago_celeste:'cajaTipoMp', banco:'cajaTipoBanco' };
+        Object.keys(IDS).forEach(t => {
+            const btn = document.getElementById(IDS[t]);
+            if (!btn) return;
+            if (t === tipo) {
+                // Verde universal para el estado activo
+                btn.classList.add('active');
+                btn.style.borderColor = '#22c55e';
+                btn.style.background  = 'rgba(34,197,94,0.15)';
+                btn.style.boxShadow   = '0 0 0 2px rgba(34,197,94,0.25)';
+            } else {
+                btn.classList.remove('active');
+                btn.style.borderColor = '#333';
+                btn.style.background  = '#222';
+                btn.style.boxShadow   = 'none';
+            }
+        });
+    };
 
     window.editarCaja = function(id) {
         const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
@@ -1369,8 +1608,9 @@ document.addEventListener('geckoDB_ready', () => {
         if (!caja) return;
         document.getElementById('editCajaId').value = id;
         document.getElementById('editCajaNombre').value = caja.nombre;
-        document.getElementById('editCajaIcono').value = caja.icono || 'efectivo';
         document.getElementById('editCajaSaldo').value = caja.saldo || 0;
+        // Activar el botón de tipo correcto
+        if (typeof window._selectCajaTipo === 'function') window._selectCajaTipo(caja.icono || 'efectivo');
         document.getElementById('modalEditarCaja').style.display = 'flex';
     };
 
@@ -1451,38 +1691,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 window.filtroActual      = window.filtroActual      || 'mes';
 window.filtroCajaActual  = window.filtroCajaActual  || 'todas';
 
-// ── Render Movimientos (5 columnas, con filtro fecha + caja) ──
+// ── Render Movimientos (5 columnas, filtro por categoría) ──
+// NOTA: main.js tiene 'defer' y sobreescribe esta función. El override definitivo
+// está en el window.addEventListener('load') al final del archivo.
 window.renderizarMovimientos = function() {
     const tbody = document.getElementById('tbodyMovimientos');
     if (!tbody) return;
 
-    const ahora = new Date();
-    const hoy = ahora.toDateString();
-
     let movs = [...(window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]'))];
 
-    // Filtro de fecha
+    // Filtro por categoría
+    const catEl   = document.getElementById('filterCategoriaMov');
+    const catFilt = catEl?.value || '';
     movs = movs.filter(m => {
-        const partes = (m.fecha || '').split('/');
-        if (partes.length < 3) return true;
-        const fechaMov = new Date(+partes[2], +partes[1] - 1, +partes[0]);
-        if (window.filtroActual === 'dia') {
-            return fechaMov.toDateString() === hoy;
-        } else if (window.filtroActual === 'semana') {
-            const diff = (ahora - fechaMov) / (1000 * 60 * 60 * 24);
-            return diff >= 0 && diff < 7;
-        } else { // mes
-            return fechaMov.getMonth() === ahora.getMonth() && fechaMov.getFullYear() === ahora.getFullYear();
-        }
+        if (catFilt && m.categoria !== catFilt) return false;
+        return true;
     });
 
-    // Filtro de caja
-    if (window.filtroCajaActual && window.filtroCajaActual !== 'todas') {
-        movs = movs.filter(m => m.caja === window.filtroCajaActual);
-    }
-
     // Más recientes primero
-    movs = movs.reverse();
+    movs = movs.slice().reverse();
 
     if (!movs.length) {
         tbody.innerHTML = `<tr><td colspan="5" class="py-20 text-center text-zinc-500 font-bold italic text-[13px]">Sin movimientos para este periodo.</td></tr>`;
@@ -1491,9 +1718,9 @@ window.renderizarMovimientos = function() {
 
     const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
     const CAJA_STYLES = {
-        efectivo:             { pill: 'background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34d399;', dot: '#10b981' },
-        mercado_pago_celeste: { pill: 'background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;', dot: '#3b82f6' },
-        banco:                { pill: 'background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.25);color:#94a3b8;', dot: '#64748b' }
+        efectivo:             { dot: '#10b981', color: '#34d399', border: 'rgba(16,185,129,0.35)' },
+        mercado_pago_celeste: { dot: '#3b82f6', color: '#60a5fa', border: 'rgba(59,130,246,0.35)'  },
+        banco:                { dot: '#64748b', color: '#94a3b8', border: 'rgba(100,116,139,0.35)' }
     };
 
     tbody.innerHTML = movs.map(m => {
@@ -1504,25 +1731,25 @@ window.renderizarMovimientos = function() {
         const cat = m.categoria || 'Varios';
 
         return `
-        <tr style="border-bottom:1px solid rgba(39,39,42,0.6);" class="hover:bg-zinc-900/30 transition-colors">
-            <td class="py-4 px-6">
-                <span style="color:#71717a;font-size:11px;font-weight:800;letter-spacing:1px;">${m.fecha}</span>
+        <tr style="border-bottom:1px solid rgba(39,39,42,0.5);" onmouseover="this.style.background='rgba(24,24,27,0.4)'" onmouseout="this.style.background='transparent'">
+            <td style="padding:14px 24px;">
+                <span style="color:#71717a;font-size:11px;font-weight:800;letter-spacing:1px;">${m.fecha || '—'}</span>
             </td>
-            <td class="py-4 px-6">
+            <td style="padding:14px 24px;">
                 <span style="color:white;font-size:13px;font-weight:800;text-transform:uppercase;">${detalle}</span>
             </td>
-            <td class="py-4 px-6">
+            <td style="padding:14px 24px;">
                 <span style="display:inline-block;padding:2px 10px;background:rgba(63,63,70,0.5);border:1px solid #3f3f46;border-radius:6px;color:#a1a1aa;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">${cat}</span>
             </td>
-            <td class="py-4 px-6">
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;${cs.pill}border-radius:20px;">
+            <td style="padding:14px 24px;">
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:transparent;border:1px solid ${cs.border};border-radius:20px;">
                     <span style="width:6px;height:6px;border-radius:50%;background:${cs.dot};flex-shrink:0;"></span>
-                    <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;">${m.caja || '—'}</span>
+                    <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;color:${cs.color};">${m.caja || '—'}</span>
                 </div>
             </td>
-            <td class="py-4 px-6 text-right">
+            <td style="padding:14px 24px;text-align:right;">
                 <span style="font-size:15px;font-weight:900;color:${esIngreso ? '#22c55e' : '#ef4444'};">
-                    ${esIngreso ? '+' : '-'}$${Math.round(m.monto).toLocaleString('es-AR')}
+                    ${esIngreso ? '+' : '-'}$${Math.round(m.monto || 0).toLocaleString('es-AR')}
                 </span>
                 <div style="font-size:9px;font-weight:900;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${m.tipo}</div>
             </td>
@@ -1745,6 +1972,118 @@ window.renderReportesDashboard = function() {
     const totalCajas = cajas.reduce((a, c) => a + (parseFloat(c.saldo) || 0), 0);
     const elCajas = document.getElementById('metricCajas');
     if (elCajas) elCajas.innerText = `$${Math.round(totalCajas).toLocaleString('es-AR')}`;
+
+    // Por cobrar (saldos pendientes de OTs activas)
+    const porCobrar = lista.filter(p => p.status === 'OT' && p.estado_ot !== 'Entregado')
+        .reduce((a, p) => a + Math.max(0, (p.total || 0) - (p.sena || 0)), 0);
+    const elCobrar = document.getElementById('metricCobrar');
+    if (elCobrar) elCobrar.innerText = `$${Math.round(porCobrar).toLocaleString('es-AR')}`;
+
+    // ── Gráfico de líneas: Ingresos por Categoría (últimos 6 meses) ──
+    const svgChart = document.getElementById('svgIngresosCategoria');
+    const labelsContainer = document.getElementById('chartIngresosLabels');
+    if (svgChart) {
+        const MESES_NOM = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const meses6 = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+            meses6.push({ m: d.getMonth(), y: d.getFullYear(), label: MESES_NOM[d.getMonth()] });
+        }
+
+        // Sample baseline — displayed only when real data is all-zero
+        const SAMPLE_GRAF = [85000, 120000, 95000, 160000, 130000, 195000];
+        const SAMPLE_IND  = [35000, 48000,  62000,  52000, 80000,  95000];
+
+        const data6raw = meses6.map(mes => {
+            const otsDelMes = lista.filter(p => {
+                if (p.status !== 'OT') return false;
+                const pts = (p.fecha || '').split('/');
+                if (pts.length < 3) return false;
+                return parseInt(pts[1]) - 1 === mes.m && parseInt(pts[2]) === mes.y;
+            });
+            const graf = otsDelMes
+                .filter(p => (p.categoria || (typeof window._detectarCategoria === 'function' ? window._detectarCategoria(p) : 'Gráfica')) === 'Gráfica')
+                .reduce((a, p) => a + (p.total || 0), 0);
+            const ind  = otsDelMes
+                .filter(p => (p.categoria || (typeof window._detectarCategoria === 'function' ? window._detectarCategoria(p) : 'Gráfica')) === 'Industrial')
+                .reduce((a, p) => a + (p.total || 0), 0);
+            return { ...mes, graf, ind };
+        });
+
+        const hasRealData = data6raw.some(d => d.graf > 0 || d.ind > 0);
+        const data6 = hasRealData
+            ? data6raw
+            : data6raw.map((d, i) => ({ ...d, graf: SAMPLE_GRAF[i] || 0, ind: SAMPLE_IND[i] || 0, isSample: true }));
+
+        const W = 400, H = 130;
+        const padL = 10, padR = 10, padT = 12, padB = 18;
+        const maxVal = Math.max(...data6.map(d => Math.max(d.graf, d.ind)), 1);
+        const xStep = (W - padL - padR) / (meses6.length - 1);
+        const toX = i => padL + i * xStep;
+        const toY = v => H - padB - ((v / maxVal) * (H - padT - padB));
+
+        const ptsGraf = data6.map((d, i) => `${toX(i).toFixed(1)},${toY(d.graf).toFixed(1)}`).join(' ');
+        const ptsInd  = data6.map((d, i) => `${toX(i).toFixed(1)},${toY(d.ind).toFixed(1)}`).join(' ');
+        const dotsGraf = data6.map((d, i) => `<circle cx="${toX(i).toFixed(1)}" cy="${toY(d.graf).toFixed(1)}" r="3.5" fill="#3b82f6" stroke="#141417" stroke-width="1.5"/>`).join('');
+        const dotsInd  = data6.map((d, i) => `<circle cx="${toX(i).toFixed(1)}" cy="${toY(d.ind).toFixed(1)}" r="3.5" fill="#a855f7" stroke="#141417" stroke-width="1.5"/>`).join('');
+
+        // Watermark text if sample data
+        const sampleNote = !hasRealData
+            ? `<text x="200" y="68" text-anchor="middle" fill="#3f3f46" font-size="9" font-weight="900" font-family="sans-serif" letter-spacing="2" text-transform="uppercase">DATOS DE EJEMPLO</text>`
+            : '';
+
+        svgChart.innerHTML =
+            `<polyline points="${ptsGraf}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>` +
+            `<polyline points="${ptsInd}"  fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>` +
+            dotsGraf + dotsInd + sampleNote;
+
+        if (labelsContainer) {
+            labelsContainer.innerHTML = meses6.map(mes =>
+                `<span style="font-size:9px;color:#52525b;font-weight:900;text-transform:uppercase;letter-spacing:1px;">${mes.label}</span>`
+            ).join('');
+            labelsContainer.style.cssText = 'display:flex;justify-content:space-between;padding:0 10px;margin-top:4px;';
+        }
+    }
+
+    // ── Barras de Liquidez por caja ──
+    const liquidezBarsEl = document.getElementById('liquidezBarsContainer');
+    if (liquidezBarsEl && cajas.length > 0) {
+        const maxSaldo = Math.max(...cajas.map(c => Math.max(0, parseFloat(c.saldo) || 0)), porCobrar, 1);
+        const CAJA_COLORS = {
+            efectivo:             { bar: '#10b981', label: '#34d399' },
+            mercado_pago_celeste: { bar: '#3b82f6', label: '#60a5fa' },
+            banco:                { bar: '#64748b', label: '#94a3b8' }
+        };
+
+        const barsCajas = cajas.map(caja => {
+            const saldo = parseFloat(caja.saldo) || 0;
+            const pct   = Math.min(100, (Math.max(0, saldo) / maxSaldo) * 100);
+            const cc    = CAJA_COLORS[caja.icono] || CAJA_COLORS.efectivo;
+            return `
+            <div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <span style="color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;">${caja.nombre}</span>
+                    <span style="color:${cc.label};font-size:12px;font-weight:900;">$${Math.round(saldo).toLocaleString('es-AR')}</span>
+                </div>
+                <div style="width:100%;height:8px;background:#1f1f23;border-radius:4px;overflow:hidden;">
+                    <div style="width:${pct.toFixed(1)}%;height:100%;background:${cc.bar};border-radius:4px;transition:width 0.5s ease;"></div>
+                </div>
+            </div>`;
+        }).join('');
+
+        const barCobrar = porCobrar > 0 ? `
+            <div style="margin-bottom:4px;border-top:1px solid #27272a;padding-top:10px;margin-top:4px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <span style="color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;">Por Cobrar (OTs)</span>
+                    <span style="color:#f59e0b;font-size:12px;font-weight:900;">$${Math.round(porCobrar).toLocaleString('es-AR')}</span>
+                </div>
+                <div style="width:100%;height:8px;background:#1f1f23;border-radius:4px;overflow:hidden;">
+                    <div style="width:${Math.min(100,(porCobrar/maxSaldo)*100).toFixed(1)}%;height:100%;background:#f59e0b;border-radius:4px;transition:width 0.5s ease;"></div>
+                </div>
+            </div>` : '';
+
+        liquidezBarsEl.innerHTML = barsCajas + barCobrar;
+    }
 };
 
 // ── Cierre mensual con modal Gecko ──
@@ -1906,7 +2245,162 @@ window.addEventListener('load', function() {
             window.renderOts();
         }
 
-        console.log('🦎 GECKO-FIXES: renderOts parcheada con desplegable y botones.');
-    }, 800); // 800ms — espera que main.js termine todo
+        // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
+        // main.js corre DESPUÉS de gecko-fixes.js (por defer), por eso hacemos el override aquí.
+        window.renderizarMovimientos = function() {
+            const tbody = document.getElementById('tbodyMovimientos');
+            if (!tbody) return;
+
+            let movs = [...(window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]'))];
+
+            // Filtro por categoría
+            const catEl  = document.getElementById('filterCategoriaMov');
+            const catFilt = catEl?.value || '';
+            movs = movs.filter(m => {
+                if (catFilt && m.categoria !== catFilt) return false;
+                return true;
+            });
+
+            // Más recientes primero
+            movs = movs.slice().reverse();
+
+            if (!movs.length) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding:60px;text-align:center;color:#52525b;font-weight:700;font-style:italic;font-size:13px;">Sin movimientos registrados.</td></tr>`;
+                return;
+            }
+
+            const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const CAJA_STYLES = {
+                efectivo:             { dot: '#10b981', color: '#34d399', border: 'rgba(16,185,129,0.35)' },
+                mercado_pago_celeste: { dot: '#3b82f6', color: '#60a5fa', border: 'rgba(59,130,246,0.35)'  },
+                banco:                { dot: '#64748b', color: '#94a3b8', border: 'rgba(100,116,139,0.35)' }
+            };
+
+            tbody.innerHTML = movs.map(m => {
+                const infoCaja = cajas.find(c => c.nombre === m.caja);
+                const cs  = CAJA_STYLES[infoCaja?.icono] || CAJA_STYLES.efectivo;
+                const esIngreso = m.tipo === 'Ingreso';
+                const detalle   = m.otDetalle || m.detalle || m.concepto || 'Sin detalle';
+                const cat       = m.categoria || 'Varios';
+
+                return `
+                <tr style="border-bottom:1px solid rgba(39,39,42,0.5);" onmouseover="this.style.background='rgba(24,24,27,0.4)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding:14px 24px;">
+                        <span style="color:#71717a;font-size:11px;font-weight:800;letter-spacing:1px;">${m.fecha || '—'}</span>
+                    </td>
+                    <td style="padding:14px 24px;">
+                        <span style="color:white;font-size:13px;font-weight:800;text-transform:uppercase;">${detalle}</span>
+                    </td>
+                    <td style="padding:14px 24px;">
+                        <span style="display:inline-block;padding:2px 10px;background:rgba(63,63,70,0.5);border:1px solid #3f3f46;border-radius:6px;color:#a1a1aa;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">${cat}</span>
+                    </td>
+                    <td style="padding:14px 24px;">
+                        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:transparent;border:1px solid ${cs.border};border-radius:20px;">
+                            <span style="width:6px;height:6px;border-radius:50%;background:${cs.dot};flex-shrink:0;"></span>
+                            <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;color:${cs.color};">${m.caja || '—'}</span>
+                        </div>
+                    </td>
+                    <td style="padding:14px 24px;text-align:right;">
+                        <span style="font-size:15px;font-weight:900;color:${esIngreso ? '#22c55e' : '#ef4444'};">
+                            ${esIngreso ? '+' : '-'}$${Math.round(m.monto || 0).toLocaleString('es-AR')}
+                        </span>
+                        <div style="font-size:9px;font-weight:900;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${m.tipo}</div>
+                    </td>
+                </tr>`;
+            }).join('');
+        };
+
+        // ── Poblar selects de cajas al abrir modales ──
+        window.abrirModalNuevoMovimiento = function() {
+            // Intentar updateCajaSelectors de main.js primero; si no existe, usar fallback propio
+            if (typeof updateCajaSelectors === 'function') {
+                updateCajaSelectors();
+            } else {
+                window._geckoPopulateCajaSelect('movCaja');
+            }
+            const m = document.getElementById('modalNuevoMovimiento');
+            if (m) { m.style.display = 'flex'; }
+            const desc  = document.getElementById('movDescripcion');
+            const monto = document.getElementById('movMonto');
+            if (desc)  desc.value  = '';
+            if (monto) monto.value = '';
+        };
+
+        window.abrirModalTransferencia = function() {
+            if (typeof updateCajaSelectors === 'function') {
+                updateCajaSelectors();
+            } else {
+                window._geckoPopulateCajaSelect('transfOrigen');
+                window._geckoPopulateCajaSelect('transfDestino');
+            }
+            const m = document.getElementById('modalTransferencia');
+            if (m) { m.style.display = 'flex'; }
+            const monto = document.getElementById('transfMonto');
+            if (monto) monto.value = '';
+        };
+
+        // Poblar selects una vez más ahora que main.js ya corrió
+        if (typeof updateCajaSelectors === 'function') updateCajaSelectors();
+
+        // Re-render si finanzas está activa
+        const viewFin = document.getElementById('viewFinanzas');
+        if (viewFin && !viewFin.classList.contains('hidden')) {
+            window.renderizarMovimientos();
+        }
+
+        console.log('🦎 GECKO-FIXES: renderOts + renderizarMovimientos parcheados post-main.js.');
+    }, 1000); // 1000ms — espera que main.js (defer) termine todo
 });
+// ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──
+window.filtrarMovimientos = function() {
+    if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+};
+
+// ── limpiarFiltrosMovimientos: resetea el filtro de categoría y re-renderiza ──
+window.limpiarFiltrosMovimientos = function() {
+    const cat = document.getElementById('filterCategoriaMov');
+    if (cat) cat.value = '';
+    if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+};
+
+// ── cerrarModalMovimiento: cierra sin disparar el aviso de "cambios pendientes" ──
+window.cerrarModalMovimiento = function() {
+    const modal = document.getElementById('modalNuevoMovimiento');
+    if (!modal) return;
+    modal.style.display = 'none';
+    // Limpiar campos para que no queden con datos sucios
+    ['movFecha','movMonto','movDescripcion'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const movTipo = document.getElementById('movTipo');
+    if (movTipo) movTipo.value = 'Ingreso';
+    const movCategoria = document.getElementById('movCategoria');
+    if (movCategoria) movCategoria.value = movCategoria.options[0]?.value || '';
+    const movCaja = document.getElementById('movCaja');
+    if (movCaja) movCaja.value = movCaja.options[0]?.value || '';
+};
+
+// ── window.geckoDB — objeto de acceso unificado a datos locales
+//    Compatible con referencia window.geckoDB.cajas mencionada en MODAL-GECKO-PRO
+window.geckoDB = window.geckoDB || {};
+Object.defineProperty(window.geckoDB, 'cajas', {
+    get: function() {
+        return window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+    },
+    configurable: true
+});
+
+// ── _geckoPopulateCajaSelect: puebla un <select> con las cajas disponibles
+window._geckoPopulateCajaSelect = function(selectId) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    const cajas = window.geckoDB.cajas;
+    const current = sel.value;
+    sel.innerHTML = cajas.length
+        ? cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')
+        : '<option value="">Sin cajas disponibles</option>';
+    if (current && cajas.find(c => c.nombre === current)) sel.value = current;
+};
+
 console.log('🦎 GECKO-FIXES v2.0 cargado — preview, desplegable OT, seña multi-caja, botones presupuestos.');

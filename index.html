@@ -1022,42 +1022,34 @@
             <div id="contentFin-movimientos" class="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
 
 
-                <div class="space-y-6">
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-
-                        <div
-                            class="flex items-center bg-white dark:bg-darkCard p-1 rounded-2xl border border-gray-200 dark:border-darkBorder shadow-sm w-fit shrink-0">
-                            <button onclick="filtrarMovimientos('dia')" id="filterDia"
-                                class="px-4 py-2 rounded-xl text-[11px] font-bold uppercase text-gray-400 transition-all whitespace-nowrap">Día</button>
-                            <button onclick="filtrarMovimientos('semana')" id="filterSemana"
-                                class="px-4 py-2 rounded-xl text-[11px] font-bold uppercase text-gray-400 transition-all whitespace-nowrap">Semana</button>
-                            <button onclick="filtrarMovimientos('mes')" id="filterMes"
-                                class="px-4 py-2 rounded-xl text-[11px] font-bold uppercase text-gray-400 transition-all whitespace-nowrap">Mes</button>
-                        </div>
-
-                        <div class="flex gap-3 w-full lg:w-auto">
-                            <button onclick="abrirModalTransferencia()"
-                                class="flex-1 lg:flex-none px-5 py-3 bg-indigo-500 text-white rounded-2xl font-bold text-[11px] uppercase tracking-wider shadow-lg shadow-indigo-500/20 hover:scale-[1.02] transition-all">
-                                Transferencia
-                            </button>
-                            <button onclick="abrirModalNuevoMovimiento()"
-                                class="flex-1 lg:flex-none px-5 py-3 bg-gecko text-white rounded-2xl font-bold text-[11px] uppercase tracking-wider shadow-lg shadow-orange-500/20 hover:scale-[1.02] transition-all">
-                                Nuevo Movimiento
-                            </button>
-                        </div>
-                    </div>
-
-                    <div
-                        class="flex flex-col gap-3 bg-gray-50/50 dark:bg-darkBg/20 p-4 rounded-2xl border border-gray-100 dark:border-darkBorder/50">
-                        <div class="flex items-center gap-2 ml-1">
-                            <span class="w-1 h-3 bg-blue-500 rounded-full"></span>
-                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Filtrar
-                                por
-                                origen de fondos</span>
-                        </div>
-                        <div id="filtrosCajas" class="flex flex-wrap gap-2">
-                        </div>
-                    </div>
+                <!-- Barra de filtros + acciones (una sola fila) -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <select id="filterCategoriaMov" onchange="window.filtrarMovimientos()" class="gecko-select-pro"
+                        style="flex:1;min-width:160px;padding:10px 14px;font-size:12px;font-weight:700;color:white;">
+                        <option value="">Todas las categorías</option>
+                        <option value="Ventas">Ventas</option>
+                        <option value="Seña">Seña</option>
+                        <option value="Cobro Final">Cobro Final</option>
+                        <option value="Insumos">Insumos</option>
+                        <option value="Servicios">Servicios</option>
+                        <option value="Sueldos">Sueldos</option>
+                        <option value="Alquiler">Alquiler</option>
+                        <option value="Gastos Fijos">Gastos Fijos</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Varios">Varios</option>
+                    </select>
+                    <button onclick="window.limpiarFiltrosMovimientos()"
+                        class="shrink-0 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500 border border-zinc-800 hover:text-white hover:border-zinc-600 transition-all">
+                        Limpiar
+                    </button>
+                    <button onclick="abrirModalTransferencia()"
+                        class="shrink-0 px-5 py-2.5 bg-indigo-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-wider shadow-lg shadow-indigo-500/20 hover:scale-[1.02] hover:shadow-xl transition-all">
+                        Transferencia
+                    </button>
+                    <button onclick="abrirModalNuevoMovimiento()"
+                        class="shrink-0 px-5 py-2.5 bg-gecko text-white rounded-2xl font-black text-[11px] uppercase tracking-wider shadow-lg shadow-orange-500/20 hover:scale-[1.02] hover:shadow-xl transition-all">
+                        Nuevo Movimiento
+                    </button>
                 </div>
 
                 <div
@@ -1088,7 +1080,7 @@
             </div>
 
             <!-- CONTENIDO TAB: GASTOS FIJOS -->
-            <div id="contentFin-gastos" class="hidden space-y-6 px-2 md:px-8 mt-8">
+            <div id="contentFin-gastos" class="hidden space-y-6 mt-6">
                 <!-- Botón Añadir Gasto Fijo -->
                 <div class="flex justify-end">
                     <button onclick="abrirModalNuevoGastoFijo()"
@@ -1130,7 +1122,7 @@
 
             <!-- CONTENIDO TAB: REPORTES -->
             <div id="contentFin-reportes"
-                class="hidden space-y-8 overflow-y-auto pr-2 custom-scrollbar px-2 md:px-8 mt-8">
+                class="hidden space-y-8 overflow-y-auto pr-2 custom-scrollbar mt-6">
 
                 <!-- 🔹 Dashboard de Métricas Avanzadas (Grid 2x2) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1193,89 +1185,72 @@
                     </div>
 
                     <!-- Liquidez -->
-                    <div
-                        class="bg-white dark:bg-darkCard p-8 rounded-[40px] border border-gray-100 dark:border-darkBorder shadow-sm card-float">
+                    <div class="bg-white dark:bg-darkCard p-8 rounded-[40px] border border-gray-100 dark:border-darkBorder shadow-sm card-float">
                         <div class="flex items-center justify-between mb-6">
-                            <div
-                                class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
-                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm1-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm1-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
                             </div>
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Estado
-                                de
-                                Liquidez</span>
+                            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Estado de Liquidez</span>
                         </div>
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-end">
-                                <div>
-                                    <p id="metricCajas" class="text-2xl font-black dark:text-zinc-100">$0
-                                    </p>
-                                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
-                                        Saldo en
-                                        Cajas</p>
-                                </div>
-                                <div class="text-right">
-                                    <p id="metricCobrar" class="text-2xl font-black text-amber-500">$0
-                                    </p>
-                                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
-                                        Pendiente
-                                        Cobro</p>
-                                </div>
+                        <!-- Barras visuales por caja + pendiente (inyectadas por JS) -->
+                        <div id="liquidezBarsContainer" class="space-y-3 mb-4">
+                            <!-- JS renders here -->
+                        </div>
+                        <!-- Totales -->
+                        <div class="pt-4 border-t border-zinc-800 flex justify-between items-center">
+                            <div>
+                                <p id="metricCajas" class="text-xl font-black dark:text-zinc-100">$0</p>
+                                <p class="text-[9px] text-zinc-500 font-black uppercase tracking-widest">En cajas</p>
                             </div>
-                            <div class="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
-                                <div id="barLiquidezCajas" class="h-full bg-blue-500" style="width: 50%"></div>
-                                <div id="barLiquidezCobrar" class="h-full bg-amber-500/50" style="width: 50%"></div>
+                            <div class="text-right">
+                                <p id="metricCobrar" class="text-xl font-black text-amber-400">$0</p>
+                                <p class="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Por cobrar</p>
                             </div>
+                        </div>
+                        <!-- Hidden compat bars (kept for existing JS that sets their width) -->
+                        <div class="hidden">
+                            <div id="barLiquidezCajas"></div>
+                            <div id="barLiquidezCobrar"></div>
                         </div>
                     </div>
 
-                    <!-- Eficiencia -->
-                    <!-- Eficiencia Operativa -->
-                    <div
-                        class="bg-white dark:bg-darkCard p-8 rounded-[40px] border border-gray-100 dark:border-darkBorder shadow-sm card-float">
-                        <div class="flex items-center justify-between mb-6">
-                            <div
-                                class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600">
-                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <!-- Ingresos por Categoría — Line Chart -->
+                    <div class="bg-white dark:bg-darkCard p-8 rounded-[40px] border border-gray-100 dark:border-darkBorder shadow-sm card-float">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
                                 </svg>
                             </div>
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Eficiencia
-                                por
-                                Sector</span>
+                            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Ingresos por Categoría</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div
-                                class="p-4 bg-gray-50 dark:bg-darkBg rounded-2xl border border-gray-100 dark:border-darkBorder">
-                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                                    Sector
-                                    Gráfica</p>
-                                <div class="flex items-end justify-between">
-                                    <p id="metricEficienciaGrafica" class="text-2xl font-black dark:text-zinc-100">0d
-                                    </p>
-                                    <span id="badgeEficienciaGrafica"
-                                        class="text-[8px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-600">--</span>
-                                </div>
+                        <!-- Leyenda -->
+                        <div class="flex gap-4 mb-3">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>
+                                <span class="text-[10px] font-black text-zinc-400 uppercase tracking-wide">Gráfica</span>
                             </div>
-                            <div
-                                class="p-4 bg-gray-50 dark:bg-darkBg rounded-2xl border border-gray-100 dark:border-darkBorder">
-                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                                    Sector
-                                    Industrial</p>
-                                <div class="flex items-end justify-between">
-                                    <p id="metricEficienciaIndustrial" class="text-2xl font-black dark:text-zinc-100">0d
-                                    </p>
-                                    <span id="badgeEficienciaIndustrial"
-                                        class="text-[8px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-600">--</span>
-                                </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span>
+                                <span class="text-[10px] font-black text-zinc-400 uppercase tracking-wide">Industrial</span>
                             </div>
                         </div>
-                        <p class="text-[9px] text-gray-400 mt-4 font-bold italic tracking-tight">
-                            Promedio de días desde
-                            recepción hasta entrega final.</p>
+                        <!-- Chart container (rendered via JS) -->
+                        <div id="chartIngresosCategoria" style="width:100%;height:130px;">
+                            <svg id="svgIngresosCategoria" width="100%" height="130" viewBox="0 0 400 130" preserveAspectRatio="none">
+                                <text x="200" y="70" text-anchor="middle" fill="#52525b" font-size="11" font-weight="700" font-family="sans-serif">Sin datos aún</text>
+                            </svg>
+                        </div>
+                        <!-- Etiquetas de meses inyectadas por JS -->
+                        <div id="chartIngresosLabels" class="flex justify-between mt-1 px-1">
+                        </div>
+                        <!-- Hidden compat IDs for existing renderReportesDashboard calls -->
+                        <span id="metricEficienciaGrafica" class="hidden"></span>
+                        <span id="badgeEficienciaGrafica" class="hidden"></span>
+                        <span id="metricEficienciaIndustrial" class="hidden"></span>
+                        <span id="badgeEficienciaIndustrial" class="hidden"></span>
                     </div>
 
                     <!-- Crecimiento -->
@@ -2305,189 +2280,227 @@
         </div>
     </div>
 
-    <div id="modalNuevaCaja" style="display:none;"
-        class="fixed inset-0 z-[70] bg-gray-900/60 backdrop-blur-sm items-center justify-center p-4">
-        <div
-            class="modal-content bg-white dark:bg-darkCard rounded-2xl p-8 md:p-10 w-full max-w-lg shadow-2xl border border-gray-100 dark:border-darkBorder relative max-h-[90vh] overflow-y-auto">
+    <!-- ═══════════════════ MODAL NUEVA CAJA — GECKO STYLE ═══════════════════ -->
+    <div id="modalNuevaCaja" style="display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
+        <div class="gecko-modal-card" style="width:100%;max-width:500px;max-height:92vh;overflow-y:auto;position:relative;">
 
+            <!-- Header -->
+            <div style="margin-bottom:32px;">
+                <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin:0 0 6px 0;">Configuración</p>
+                <h2 style="color:white;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:0;">Nueva Caja</h2>
+            </div>
             <button onclick="intentarCerrarModal('modalNuevaCaja')"
-                class="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-50 dark:bg-darkBg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gecko transition-all">✕</button>
+                style="position:absolute;top:28px;right:28px;width:34px;height:34px;border-radius:10px;background:#1a1a1f;border:1px solid #27272a;color:#52525b;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
+                onmouseover="this.style.color='white';this.style.borderColor='#3f3f46'"
+                onmouseout="this.style.color='#52525b';this.style.borderColor='#27272a'">✕</button>
 
-            <div class="mb-8">
-                <p class="text-[11px] font-bold text-gecko uppercase tracking-widest mb-1.5">Configuración</p>
-                <h2 class="text-2xl font-extrabold dark:text-zinc-100 tracking-tight">Gestión de Cajas</h2>
-            </div>
-
-            <div class="mb-8 border border-gray-100 dark:border-darkBorder rounded-2xl overflow-hidden">
+            <!-- Ver cajas existentes -->
+            <div style="margin-bottom:28px;border:1px solid #1f1f23;border-radius:16px;overflow:hidden;">
                 <button onclick="toggleListaCajas()"
-                    class="w-full p-4 bg-gray-50 dark:bg-darkBg flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                        <span class="text-[10px] font-black dark:text-zinc-100 uppercase tracking-widest">Ver Cajas
-                            Existentes</span>
+                    style="width:100%;padding:14px 18px;background:#111114;border:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background 0.15s;"
+                    onmouseover="this.style.background='#17171b'"
+                    onmouseout="this.style.background='#111114'">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="width:7px;height:7px;border-radius:50%;background:#3b82f6;animation:pulse 2s infinite;flex-shrink:0;"></span>
+                        <span style="color:#a1a1aa;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;">Ver Cajas Existentes</span>
                     </div>
-                    <svg id="arrowListaCajas" class="w-4 h-4 text-gray-400 transition-transform duration-300"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    <svg id="arrowListaCajas" style="width:14px;height:14px;color:#52525b;transition:transform 0.25s;" fill="none" viewBox="0 0 24 24" stroke="#52525b" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
+                <div id="listaGestionCajas" class="hidden" style="max-height:200px;overflow-y:auto;background:#0a0a0d;"></div>
+            </div>
 
-                <div id="listaGestionCajas"
-                    class="hidden max-h-60 overflow-y-auto bg-white dark:bg-darkCard divide-y divide-gray-50 dark:divide-gray-800">
+            <!-- Tipo de caja (segmented) -->
+            <div style="margin-bottom:28px;">
+                <label class="gecko-field-label">Tipo de caja</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                    <button id="nuevaCajaTipoEfectivo" onclick="window._selectNuevaCajaTipo('efectivo')"
+                        style="padding:14px 8px;border-radius:14px;border:1.5px solid rgba(16,185,129,0.8);background:rgba(16,185,129,0.15);cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 0 12px rgba(16,185,129,0.25);">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/>
+                        </svg>
+                        <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#10b981;">Efectivo</span>
+                    </button>
+                    <button id="nuevaCajaTipoMp" onclick="window._selectNuevaCajaTipo('mercado_pago_celeste')"
+                        style="padding:14px 8px;border-radius:14px;border:1.5px solid rgba(59,130,246,0.35);background:rgba(59,130,246,0.07);cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:8px;">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
+                        </svg>
+                        <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#3b82f6;">Billeteras</span>
+                    </button>
+                    <button id="nuevaCajaTipoBanco" onclick="window._selectNuevaCajaTipo('banco')"
+                        style="padding:14px 8px;border-radius:14px;border:1.5px solid rgba(100,116,139,0.35);background:rgba(100,116,139,0.07);cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:8px;">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#64748b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z"/>
+                        </svg>
+                        <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#64748b;">Banco</span>
+                    </button>
+                </div>
+                <input type="hidden" id="iconoNuevaCaja" value="efectivo">
+            </div>
+
+            <!-- Nombre -->
+            <div style="margin-bottom:22px;">
+                <label class="gecko-field-label">Nombre de la caja</label>
+                <input type="text" id="nombreNuevaCaja" class="gecko-input" placeholder="Ej: Efectivo, Banco Galicia, MP Principal...">
+            </div>
+
+            <!-- Saldo inicial -->
+            <div style="margin-bottom:36px;">
+                <label class="gecko-field-label">Saldo inicial ($)</label>
+                <div class="gecko-input-money-wrap">
+                    <span class="gecko-input-money-prefix">$</span>
+                    <input type="number" id="saldoInicialCaja" placeholder="0"
+                        style="flex:1;background:transparent;border:none;padding:14px 12px 14px 20px;color:#F15A24;font-size:18px;font-weight:900;outline:none;font-family:inherit;min-width:0;">
                 </div>
             </div>
 
-            <div class="border-t border-gray-100 dark:border-darkBorder pt-8">
-                <h3 class="text-sm font-bold dark:text-zinc-100 mb-6 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-gecko"></span>
-                    Datos de la Caja
-                </h3>
+            <!-- Botón guardar -->
+            <button id="btnGuardarCaja" onclick="guardarNuevaCaja()"
+                style="width:100%;padding:16px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;transition:all 0.2s;"
+                onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='0 8px 24px rgba(241,90,36,0.35)'"
+                onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                Crear Caja y Guardar
+            </button>
+        </div>
+    </div>
 
-                <div class="space-y-6">
-                    <div>
-                        <label
-                            class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1">Nombre
-                            de la Caja</label>
-                        <input type="text" id="nombreNuevaCaja" placeholder="Ej: Caja Fuerte"
-                            class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold transition-all">
+    <!-- ═══════════════════ MODAL NUEVO MOVIMIENTO — MODAL-GECKO-PRO ═══════════════════ -->
+    <div id="modalNuevoMovimiento" style="display:none;position:fixed;inset:0;z-index:75;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
+        <div class="mgp-card" style="width:100%;max-width:480px;">
+
+            <!-- Header -->
+            <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin:0 0 6px 0;">Registro Financiero</p>
+            <h2 style="color:white;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 32px 0;">Nuevo Movimiento</h2>
+            <button onclick="window.cerrarModalMovimiento()"
+                style="position:absolute;top:24px;right:24px;width:32px;height:32px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#666;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
+                onmouseover="this.style.color='white';this.style.borderColor='#555'"
+                onmouseout="this.style.color='#666';this.style.borderColor='#333'">✕</button>
+
+            <!-- Descripción -->
+            <div style="margin-bottom:20px;">
+                <label class="mgp-label">Descripción</label>
+                <input type="text" id="movDescripcion" class="mgp-input" placeholder="Ej: Compra de insumos"
+                    onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333'">
+            </div>
+
+            <!-- Monto + Categoría (fila) -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                <div>
+                    <label class="mgp-label">Monto ($)</label>
+                    <div id="movMontoWrap" style="display:flex;align-items:center;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:12px 16px;gap:8px;">
+                        <span style="color:#ffffff;font-weight:600;flex-shrink:0;vertical-align:middle;line-height:normal;">$</span>
+                        <input type="number" id="movMonto" placeholder="0"
+                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:16px;width:100%;padding:0;margin:0;vertical-align:middle;line-height:normal;"
+                            onfocus="document.getElementById('movMontoWrap').style.borderColor='#F15A24'"
+                            onblur="document.getElementById('movMontoWrap').style.borderColor='#444'">
                     </div>
-
-                    <div>
-                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 ml-1">Estilo de
-                            Icono</label>
-                        <select id="iconoNuevaCaja" class="gecko-select-pro w-full h-12 px-4 bg-zinc-900/50 border border-zinc-700 rounded-2xl focus:border-orange-500 outline-none text-white font-bold cursor-pointer transition-all">
-                            <option value="efectivo">Verde (Efectivo)</option>
-                            <option value="mercado_pago_celeste">Azul MP (Billeteras)</option>
-                            <option value="banco">Gris (Bancos)</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1">Saldo
-                            Inicial ($)</label>
-                        <input type="number" id="saldoInicialCaja" value="0"
-                            class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold transition-all">
-                    </div>
-
-                    <button id="btnGuardarCaja" onclick="guardarNuevaCaja()"
-                        class="w-full py-5 bg-gecko text-white font-bold rounded-2xl hover:shadow-xl shadow-orange-500/30 transition-all uppercase tracking-widest text-sm active:scale-[0.98]">
-                        Crear Caja y Guardar
-                    </button>
                 </div>
+                <div>
+                    <label class="mgp-label">Categoría</label>
+                    <select id="movCategoria" class="gecko-select-pro">
+                        <option value="Ventas">Ventas</option>
+                        <option value="Seña">Seña</option>
+                        <option value="Cobro Final">Cobro Final</option>
+                        <option value="Insumos">Insumos</option>
+                        <option value="Servicios">Servicios</option>
+                        <option value="Sueldos">Sueldos</option>
+                        <option value="Alquiler">Alquiler</option>
+                        <option value="Gastos Fijos">Gastos Fijos</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Varios">Varios</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Caja -->
+            <div style="margin-bottom:32px;">
+                <label class="mgp-label">Caja</label>
+                <select id="movCaja" class="gecko-select-pro">
+                    <!-- Dinámico vía updateCajaSelectors() -->
+                </select>
+            </div>
+
+            <!-- Botones Ingreso / Egreso -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <button onclick="registrarMovimientoManual('Ingreso')"
+                    style="padding:14px 16px;background:#22c55e;border:none;color:white;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
+                    onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(34,197,94,0.4)'"
+                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    Registrar Ingreso
+                </button>
+                <button onclick="registrarMovimientoManual('Egreso')"
+                    style="padding:14px 16px;background:#ef4444;border:none;color:white;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
+                    onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(239,68,68,0.4)'"
+                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/></svg>
+                    Registrar Egreso
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════════ MODAL NUEVO MOVIMIENTO ═══════════════════ -->
-    <div id="modalNuevoMovimiento" style="display:none;"
-        class="fixed inset-0 z-[75] bg-gray-900/60 backdrop-blur-sm items-center justify-center p-4">
-        <div
-            class="modal-content bg-white dark:bg-darkCard rounded-2xl p-8 md:p-10 w-full max-w-lg shadow-2xl border border-gray-100 dark:border-darkBorder relative">
-            <button onclick="intentarCerrarModal('modalNuevoMovimiento')"
-                class="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-50 dark:bg-darkBg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gecko transition-all">✕</button>
-            <div class="mb-8">
-                <p class="text-[11px] font-bold text-gecko uppercase tracking-widest mb-1.5">Registro Financiero
-                </p>
-                <h2 class="text-2xl font-extrabold dark:text-zinc-100 tracking-tight">Nuevo Movimiento</h2>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label
-                        class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Descripción</label>
-                    <input type="text" id="movDescripcion" placeholder="Ej: Compra de insumos"
-                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-sm font-bold">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Monto
-                            ($)</label>
-                        <input type="number" id="movMonto" value="0"
-                            class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-sm font-bold">
-                    </div>
-                    <div>
-                        <label
-                            class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Categoría</label>
-                        <select id="movCategoria"
-                            class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold">
-                            <option value="Ventas">Ventas</option>
-                            <option value="Insumos">Insumos</option>
-                            <option value="Servicios">Servicios</option>
-                            <option value="Sueldos">Sueldos</option>
-                            <option value="Alquiler">Alquiler</option>
-                            <option value="Varios">Varios</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Caja</label>
-                    <select id="movCaja"
-                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold">
-                        <!-- Dinámico -->
-                    </select>
-                </div>
+    <!-- ═══════════════════ MODAL TRANSFERENCIA — MODAL-GECKO-PRO ═══════════════════ -->
+    <div id="modalTransferencia" style="display:none;position:fixed;inset:0;z-index:75;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
+        <div class="mgp-card" style="width:100%;max-width:460px;">
 
-                <div class="grid grid-cols-2 gap-4 pt-4">
-                    <button onclick="registrarMovimientoManual('Ingreso')"
-                        class="py-5 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-600 transition-all text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/20">
-                        Registrar Ingreso
-                    </button>
-                    <button onclick="registrarMovimientoManual('Egreso')"
-                        class="py-5 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition-all text-sm uppercase tracking-widest shadow-lg shadow-red-500/20">
-                        Registrar Egreso
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+            <!-- Header -->
+            <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin:0 0 6px 0;">Finanzas / Cajas</p>
+            <h2 style="color:white;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 32px 0;">Transferencia</h2>
+            <button onclick="document.getElementById('modalTransferencia').style.display='none'"
+                style="position:absolute;top:24px;right:24px;width:32px;height:32px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#666;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
+                onmouseover="this.style.color='white';this.style.borderColor='#555'"
+                onmouseout="this.style.color='#666';this.style.borderColor='#333'">✕</button>
 
-    <!-- ═══════════════════ MODAL TRANSFERENCIA ═══════════════════ -->
-    <div id="modalTransferencia" style="display:none;"
-        class="fixed inset-0 z-[75] bg-gray-900/60 backdrop-blur-sm items-center justify-center p-4">
-        <div
-            class="modal-content bg-white dark:bg-darkCard rounded-2xl p-8 md:p-10 w-full max-w-md shadow-2xl border border-gray-100 dark:border-darkBorder relative">
-            <button onclick="intentarCerrarModal('modalTransferencia')"
-                class="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-50 dark:bg-darkBg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gecko transition-all">✕</button>
-            <div class="mb-8 text-center">
-                <div
-                    class="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            <!-- Caja Origen -->
+            <div style="margin-bottom:20px;">
+                <label class="mgp-label">Caja Origen</label>
+                <select id="transfOrigen" class="gecko-select-pro">
+                    <!-- Dinámico vía updateCajaSelectors() -->
+                </select>
+            </div>
+
+            <!-- Separador visual con flecha -->
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                <div style="height:1px;flex:1;background:#333;"></div>
+                <div style="width:30px;height:30px;border-radius:50%;background:#2a2a2a;border:1px solid #444;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#F15A24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
                     </svg>
                 </div>
-                <h2 class="text-2xl font-extrabold dark:text-zinc-100 tracking-tight">Transferencia</h2>
-                <p class="text-xs text-gray-400 mt-1 uppercase font-bold tracking-widest">Entre cajas internas
-                </p>
+                <div style="height:1px;flex:1;background:#333;"></div>
             </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Caja
-                        Origen</label>
-                    <select id="transfOrigen"
-                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold">
-                        <!-- Dinámico -->
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Caja
-                        Destino</label>
-                    <select id="transfDestino"
-                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold">
-                        <!-- Dinámico -->
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Monto a
-                        Transferir ($)</label>
-                    <input type="number" id="transfMonto" value="0"
-                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-sm font-black">
-                </div>
-                <button onclick="ejecutarTransferencia()"
-                    class="w-full py-5 bg-indigo-500 text-white font-bold rounded-2xl hover:shadow-xl transition-all uppercase tracking-widest text-sm mt-4">
-                    Confirmar Envío
-                </button>
+
+            <!-- Caja Destino -->
+            <div style="margin-bottom:20px;">
+                <label class="mgp-label">Caja Destino</label>
+                <select id="transfDestino" class="gecko-select-pro">
+                    <!-- Dinámico vía updateCajaSelectors() -->
+                </select>
             </div>
+
+            <!-- Monto -->
+            <div style="margin-bottom:32px;">
+                <label class="mgp-label">Monto a Transferir ($)</label>
+                <div id="transfMontoWrap" style="display:flex;align-items:center;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:12px 16px;gap:8px;">
+                    <span style="color:#ffffff;font-weight:600;flex-shrink:0;vertical-align:middle;line-height:normal;">$</span>
+                    <input type="number" id="transfMonto" placeholder="0"
+                        style="background:transparent;border:none;outline:none;color:#ffffff;font-size:16px;width:100%;padding:0;margin:0;vertical-align:middle;line-height:normal;"
+                        onfocus="document.getElementById('transfMontoWrap').style.borderColor='#F15A24'"
+                        onblur="document.getElementById('transfMontoWrap').style.borderColor='#444'">
+                </div>
+            </div>
+
+            <!-- Botón confirmar — naranja -->
+            <button onclick="ejecutarTransferencia()"
+                style="width:100%;padding:14px 24px;background:#F15A24;border:none;color:white;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
+                onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(241,90,36,0.4)'"
+                onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                Confirmar Transferencia
+            </button>
         </div>
     </div>
 

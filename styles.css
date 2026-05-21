@@ -1576,6 +1576,211 @@
             padding-left: 12px !important;
         }
 
+        /* ══════════════════════════════════════════════════
+           GECKO MODAL STANDARD — estilo insumos (dark, neon)
+           ══════════════════════════════════════════════════ */
+
+        /* Tarjeta del modal */
+        .gecko-modal-card {
+            background: #0d0d10;
+            border: 1px solid #1f1f23;
+            border-radius: 28px;
+            padding: 40px;
+            position: relative;
+        }
+
+        /* Separador horizontal */
+        .gecko-modal-divider {
+            border: none;
+            border-top: 1px solid #1a1a1f;
+            margin: 24px 0;
+        }
+
+        /* Etiqueta de campo */
+        .gecko-field-label {
+            display: block;
+            color: #52525b;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            margin-bottom: 9px;
+        }
+
+        /* Input estándar con foco neon naranja */
+        .gecko-input {
+            width: 100%;
+            background: #0a0a0d;
+            border: 1.5px solid #1f1f23;
+            border-radius: 13px;
+            padding: 14px 16px;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            outline: none;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .gecko-input:focus {
+            border-color: #F15A24;
+            box-shadow: 0 0 0 4px rgba(241,90,36,0.10), 0 0 16px rgba(241,90,36,0.08);
+        }
+        .gecko-input::placeholder { color: #3f3f46; }
+
+        /* Wrapper de input con prefijo monetario */
+        .gecko-input-money-wrap {
+            display: flex;
+            align-items: center;
+            background: #0a0a0d;
+            border: 1.5px solid #1f1f23;
+            border-radius: 13px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .gecko-input-money-wrap:focus-within {
+            border-color: #F15A24;
+            box-shadow: 0 0 0 4px rgba(241,90,36,0.10), 0 0 16px rgba(241,90,36,0.08);
+        }
+        .gecko-input-money-prefix {
+            background: #141417;
+            border-right: 1.5px solid #1f1f23;
+            padding: 14px 16px;
+            color: #52525b;
+            font-size: 14px;
+            font-weight: 900;
+            flex-shrink: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .gecko-input-money-wrap input::placeholder { color: #3f3f46; }
+
+        /* Select dentro de modales gecko */
+        .gecko-modal-card select {
+            width: 100%;
+            background: #0a0a0d;
+            border: 1.5px solid #1f1f23;
+            border-radius: 13px;
+            padding: 14px 16px;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23F15A24' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .gecko-modal-card select:focus {
+            border-color: #F15A24;
+        }
+        .gecko-modal-card select option {
+            background: #0d0d10;
+            color: white;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           MODAL GECKO PRO (MGP) — Estilo unificado basado en Insumos
+           Usar: class="mgp-card" en el contenedor principal
+        ═══════════════════════════════════════════════════════ */
+
+        .mgp-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 36px;
+            position: relative;
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+
+        .mgp-label {
+            display: block;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            margin-bottom: 8px;
+            color: #888;
+            font-family: inherit;
+        }
+
+        .mgp-label.accent { color: #F15A24; }
+
+        .mgp-input {
+            width: 100%;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .mgp-input:focus { border-color: #F15A24; }
+        .mgp-input::placeholder { color: #555; }
+
+        .mgp-money-wrap {
+            display: flex;
+            align-items: center;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .mgp-money-wrap:focus-within { border-color: #F15A24; }
+
+        .mgp-money-prefix {
+            padding: 12px 16px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 900;
+            border-right: 1px solid #444;
+            background: #222;
+            font-family: inherit;
+            flex-shrink: 0;
+            margin-right: 0;
+            letter-spacing: 0.5px;
+        }
+
+        /* Selects dentro de mgp-card: override de gecko-select-pro */
+        .mgp-card select,
+        .mgp-card .gecko-select-pro {
+            background-color: #2a2a2a !important;
+            border: 1px solid #333 !important;
+            border-radius: 8px !important;
+            padding: 12px 16px !important;
+        }
+        .mgp-card select:focus,
+        .mgp-card .gecko-select-pro:focus { border-color: #F15A24 !important; }
+
+        /* Botón de tipo en modales MGP (Efectivo / Billeteras / Banco) */
+        .mgp-type-btn {
+            padding: 14px 8px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            background: #222;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .mgp-type-btn.active {
+            border-color: #22c55e !important;
+            background: rgba(34, 197, 94, 0.15) !important;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+        }
+
         /* BOTÓN AÑADIR (EL ESTILO UNIFICADO) */
         .btn-add-fila {
             display: block !important;
