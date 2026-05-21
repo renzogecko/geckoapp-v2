@@ -1443,6 +1443,365 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 200);
 });
+// ══════════════════════════════════════════════════════
+// FINANZAS — Movimientos, Gastos Fijos, Reportes
+// ══════════════════════════════════════════════════════
+
+// Globals de filtro
+window.filtroActual      = window.filtroActual      || 'mes';
+window.filtroCajaActual  = window.filtroCajaActual  || 'todas';
+
+// ── Render Movimientos (5 columnas, con filtro fecha + caja) ──
+window.renderizarMovimientos = function() {
+    const tbody = document.getElementById('tbodyMovimientos');
+    if (!tbody) return;
+
+    const ahora = new Date();
+    const hoy = ahora.toDateString();
+
+    let movs = [...(window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]'))];
+
+    // Filtro de fecha
+    movs = movs.filter(m => {
+        const partes = (m.fecha || '').split('/');
+        if (partes.length < 3) return true;
+        const fechaMov = new Date(+partes[2], +partes[1] - 1, +partes[0]);
+        if (window.filtroActual === 'dia') {
+            return fechaMov.toDateString() === hoy;
+        } else if (window.filtroActual === 'semana') {
+            const diff = (ahora - fechaMov) / (1000 * 60 * 60 * 24);
+            return diff >= 0 && diff < 7;
+        } else { // mes
+            return fechaMov.getMonth() === ahora.getMonth() && fechaMov.getFullYear() === ahora.getFullYear();
+        }
+    });
+
+    // Filtro de caja
+    if (window.filtroCajaActual && window.filtroCajaActual !== 'todas') {
+        movs = movs.filter(m => m.caja === window.filtroCajaActual);
+    }
+
+    // Más recientes primero
+    movs = movs.reverse();
+
+    if (!movs.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-20 text-center text-zinc-500 font-bold italic text-[13px]">Sin movimientos para este periodo.</td></tr>`;
+        return;
+    }
+
+    const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+    const CAJA_STYLES = {
+        efectivo:             { pill: 'background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34d399;', dot: '#10b981' },
+        mercado_pago_celeste: { pill: 'background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;', dot: '#3b82f6' },
+        banco:                { pill: 'background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.25);color:#94a3b8;', dot: '#64748b' }
+    };
+
+    tbody.innerHTML = movs.map(m => {
+        const infoCaja = cajas.find(c => c.nombre === m.caja);
+        const cs = CAJA_STYLES[infoCaja?.icono] || CAJA_STYLES.efectivo;
+        const esIngreso = m.tipo === 'Ingreso';
+        const detalle = m.otDetalle || m.detalle || m.concepto || 'Sin detalle';
+        const cat = m.categoria || 'Varios';
+
+        return `
+        <tr style="border-bottom:1px solid rgba(39,39,42,0.6);" class="hover:bg-zinc-900/30 transition-colors">
+            <td class="py-4 px-6">
+                <span style="color:#71717a;font-size:11px;font-weight:800;letter-spacing:1px;">${m.fecha}</span>
+            </td>
+            <td class="py-4 px-6">
+                <span style="color:white;font-size:13px;font-weight:800;text-transform:uppercase;">${detalle}</span>
+            </td>
+            <td class="py-4 px-6">
+                <span style="display:inline-block;padding:2px 10px;background:rgba(63,63,70,0.5);border:1px solid #3f3f46;border-radius:6px;color:#a1a1aa;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">${cat}</span>
+            </td>
+            <td class="py-4 px-6">
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;${cs.pill}border-radius:20px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:${cs.dot};flex-shrink:0;"></span>
+                    <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;">${m.caja || '—'}</span>
+                </div>
+            </td>
+            <td class="py-4 px-6 text-right">
+                <span style="font-size:15px;font-weight:900;color:${esIngreso ? '#22c55e' : '#ef4444'};">
+                    ${esIngreso ? '+' : '-'}$${Math.round(m.monto).toLocaleString('es-AR')}
+                </span>
+                <div style="font-size:9px;font-weight:900;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${m.tipo}</div>
+            </td>
+        </tr>`;
+    }).join('');
+};
+
+// ── Gastos Fijos ──
+window.renderGastosFijos = function() {
+    const tbody = document.getElementById('tbodyGastosFijos');
+    if (!tbody) return;
+
+    const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = lista;
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-16 text-center text-zinc-500 font-bold italic text-[13px]">Sin gastos fijos registrados.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map((g, idx) => {
+        const pagado = g.estado === 'Pagado';
+        return `
+        <tr style="border-bottom:1px solid rgba(39,39,42,0.5);" class="hover:bg-zinc-900/20 transition-colors">
+            <td class="py-4 px-6">
+                <span style="color:white;font-size:13px;font-weight:800;text-transform:uppercase;">${g.concepto}</span>
+                ${g.categoria ? `<div style="font-size:9px;color:#71717a;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${g.categoria}</div>` : ''}
+            </td>
+            <td class="py-4 px-6">
+                <span style="color:#F15A24;font-size:14px;font-weight:900;">$${Math.round(g.monto).toLocaleString('es-AR')}</span>
+            </td>
+            <td class="py-4 px-6">
+                <span style="color:#a1a1aa;font-size:12px;font-weight:700;">Día ${g.vencimiento} de cada mes</span>
+            </td>
+            <td class="py-4 px-6">
+                <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;
+                    ${pagado ? 'background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#22c55e;' : 'background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;'}">
+                    ${pagado ? 'Pagado' : 'Pendiente'}
+                </span>
+            </td>
+            <td class="py-4 px-6 text-right">
+                <div style="display:flex;justify-content:flex-end;gap:8px;">
+                    ${!pagado ? `<button onclick="window.pagarGastoFijo(${idx})" title="Marcar como pagado"
+                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-emerald-400 transition-all duration-150 hover:scale-110 hover:bg-emerald-500/10 hover:border-emerald-500/30">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>` : ''}
+                    <button onclick="window.eliminarGastoFijo(${idx})" title="Eliminar"
+                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-red-400 hover:border-red-500/30">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+};
+
+window.pagarGastoFijo = function(idx) {
+    const lista = window.LISTA_GASTOS_FIJOS;
+    if (!lista || !lista[idx]) return;
+    lista[idx].estado = 'Pagado';
+    localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
+    // Register as expense movement
+    const g = lista[idx];
+    const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+    if (cajas.length > 0 && typeof window.registrarMovimiento === 'function') {
+        window.registrarMovimiento(g.concepto, cajas[0].nombre, g.monto, 'Egreso', g.categoria || 'Gastos Fijos');
+    } else {
+        const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+        movs.push({ fecha: new Date().toLocaleDateString('es-AR'), detalle: g.concepto, caja: cajas[0]?.nombre || '—', tipo: 'Egreso', monto: g.monto, categoria: g.categoria || 'Gastos Fijos' });
+        localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+        window.LISTA_MOVIMIENTOS = movs;
+    }
+    window.renderGastosFijos();
+    if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} marcado como pagado.`, '¡Listo!');
+};
+
+window.eliminarGastoFijo = function(idx) {
+    document.getElementById('_geckoConfirmElimGasto')?.remove();
+    const lista = window.LISTA_GASTOS_FIJOS;
+    if (!lista || !lista[idx]) return;
+    const g = lista[idx];
+    const modal = document.createElement('div');
+    modal.id = '_geckoConfirmElimGasto';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Eliminar gasto fijo</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se eliminará <strong style="color:white;">${g.concepto}</strong> de la lista de gastos fijos.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('_geckoConfirmElimGasto').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button id="_geckoElimGastoOk"
+                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.getElementById('_geckoElimGastoOk').onclick = function() {
+        modal.remove();
+        lista.splice(idx, 1);
+        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
+        window.renderGastosFijos();
+    };
+};
+
+window.abrirModalNuevoGastoFijo = function() {
+    document.getElementById('_geckoModalNuevoGasto')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoModalNuevoGasto';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:32px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                <div>
+                    <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px 0;">Finanzas</p>
+                    <h3 style="color:white;font-size:18px;font-weight:900;margin:0;text-transform:uppercase;letter-spacing:1px;">Nuevo Gasto Fijo</h3>
+                </div>
+                <button onclick="document.getElementById('_geckoModalNuevoGasto').remove()"
+                    style="background:#27272a;border:none;color:#71717a;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div>
+                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Concepto</label>
+                    <input id="_gastoConcepto" type="text" placeholder="Ej: Alquiler, Luz, Sueldos..."
+                        style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Monto ($)</label>
+                        <input id="_gastoMonto" type="number" placeholder="0"
+                            style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#F15A24;font-size:14px;font-weight:900;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Día vencimiento</label>
+                        <input id="_gastoVencimiento" type="number" min="1" max="31" placeholder="1-31"
+                            style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Categoría</label>
+                    <select id="_gastoCategoria" class="gecko-select-pro" style="font-weight:700;">
+                        <option value="Alquiler">Alquiler</option>
+                        <option value="Servicios">Servicios (Luz, Agua, Gas)</option>
+                        <option value="Internet">Internet / Telefonía</option>
+                        <option value="Sueldos">Sueldos</option>
+                        <option value="Impuestos">Impuestos / Monotributo</option>
+                        <option value="Insumos">Insumos recurrentes</option>
+                        <option value="Varios">Varios</option>
+                    </select>
+                </div>
+                <button id="_gastoGuardarBtn"
+                    style="width:100%;padding:14px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;margin-top:4px;">
+                    Guardar Gasto Fijo
+                </button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.getElementById('_gastoGuardarBtn').onclick = function() {
+        const concepto    = document.getElementById('_gastoConcepto').value.trim();
+        const monto       = parseFloat(document.getElementById('_gastoMonto').value) || 0;
+        const vencimiento = document.getElementById('_gastoVencimiento').value.trim() || '1';
+        const categoria   = document.getElementById('_gastoCategoria').value;
+        if (!concepto || monto <= 0) { alert('Completá concepto y monto.'); return; }
+        if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+        window.LISTA_GASTOS_FIJOS.push({ concepto, monto, vencimiento, categoria, estado: 'Pendiente' });
+        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(window.LISTA_GASTOS_FIJOS));
+        modal.remove();
+        window.renderGastosFijos();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '¡Guardado!');
+    };
+};
+
+// ── Reportes: override ranking para usar p.categoria (Gráfica / Industrial) ──
+const _renderReportesOriginal = window.renderReportesDashboard;
+window.renderReportesDashboard = function() {
+    if (typeof _renderReportesOriginal === 'function') _renderReportesOriginal();
+
+    // Sobreescribir sección ranking con 2 categorías
+    const ahora   = new Date();
+    const cajas   = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+    const lista   = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const otsMes  = lista.filter(p => {
+        const pts = (p.fecha || '').split('/');
+        if (pts.length < 3) return false;
+        return p.status === 'OT' && parseInt(pts[1]) - 1 === ahora.getMonth() && parseInt(pts[2]) === ahora.getFullYear();
+    });
+
+    const counts = { 'Gráfica': 0, 'Industrial': 0 };
+    otsMes.forEach(p => {
+        const cat = p.categoria || (typeof window._detectarCategoria === 'function' ? window._detectarCategoria(p) : null) || 'Gráfica';
+        counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    const total = otsMes.length || 1;
+    const ranking = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const COLORS = { 'Gráfica': '#3b82f6', 'Industrial': '#a855f7' };
+
+    const contRanking = document.getElementById('repoRankingProductos');
+    if (contRanking) {
+        contRanking.innerHTML = ranking.map(([cat, count], idx) => `
+            <div class="flex items-center gap-4">
+                <div class="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-xs font-black text-zinc-400">#${idx + 1}</div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-[11px] font-black text-white uppercase tracking-tight">${cat}</span>
+                        <span class="text-[10px] text-zinc-400 font-bold">${count} OTs</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full" style="width:${Math.min(100,(count/total)*100)}%;background:${COLORS[cat]||'#F15A24'};"></div>
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    // Total cajas en reportes
+    const totalCajas = cajas.reduce((a, c) => a + (parseFloat(c.saldo) || 0), 0);
+    const elCajas = document.getElementById('metricCajas');
+    if (elCajas) elCajas.innerText = `$${Math.round(totalCajas).toLocaleString('es-AR')}`;
+};
+
+// ── Cierre mensual con modal Gecko ──
+window.ejecutarCierreMensual = function() {
+    document.getElementById('_geckoConfirmCierre')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoConfirmCierre';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+    const mesNom = meses[new Date().getMonth()];
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:rgba(241,90,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#F15A24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Cerrar mes de ${mesNom}</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se archivará el balance actual y todos los gastos fijos volverán a estado <strong style="color:white;">Pendiente</strong>.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('_geckoConfirmCierre').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button id="_geckoCierreOk"
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar mes</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.getElementById('_geckoCierreOk').onclick = function() {
+        modal.remove();
+        const ahora = new Date();
+        const movs  = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+        const movsMes = movs.filter(m => {
+            const pts = (m.fecha || '').split('/');
+            return pts.length >= 3 && parseInt(pts[1]) - 1 === ahora.getMonth() && parseInt(pts[2]) === ahora.getFullYear();
+        });
+        const ing  = movsMes.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + m.monto, 0);
+        const egr  = movsMes.filter(m => m.tipo === 'Egreso').reduce((a, m) => a + m.monto, 0);
+        const hist = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+        hist.push({ periodo: `${meses[ahora.getMonth()]} ${ahora.getFullYear()}`, ingresos: ing, gastos: egr, balance: ing - egr, fecha_cierre: ahora.toLocaleDateString('es-AR') });
+        window.HISTORICO_CIERRES = hist;
+        localStorage.setItem('gecko_historico_cierres', JSON.stringify(hist));
+        const gastos = window.LISTA_GASTOS_FIJOS || [];
+        gastos.forEach(g => { g.estado = 'Pendiente'; });
+        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(gastos));
+        if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
+        if (typeof window.renderGastosFijos === 'function') window.renderGastosFijos();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`Cierre de ${mesNom} procesado.`, '¡Mes Cerrado!');
+    };
+};
+
+// ── Hook switchTabFinanzas para asegurar que siempre se actualice filtroCajaActual ──
+const _origSwitchTabFin = window.switchTabFinanzas;
+window.switchTabFinanzas = function(tab) {
+    if (typeof _origSwitchTabFin === 'function') _origSwitchTabFin(tab);
+    if (tab === 'gastos') window.renderGastosFijos();
+    if (tab === 'reportes') window.renderReportesDashboard();
+};
+
 // ── PARCHE FINAL: reemplazar renderOts de main.js después de que todo cargue ──
 window.addEventListener('load', function() {
     setTimeout(function() {
