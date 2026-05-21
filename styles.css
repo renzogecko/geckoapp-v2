@@ -1486,14 +1486,18 @@
 
         /* CUANDO EL USUARIO ELIGE UNA OPCIÓN (SE PONE BLANCO) */
         #graficaCat:valid,
-        #graficaMatEspec:valid {
+        #graficaMatEspec:valid,
+        #categoriaPedido,
+        #manualCategoria {
             color: #ffffff !important;
             -webkit-text-fill-color: #ffffff !important;
         }
 
         /* BORDE NARANJA AL HACER CLIC */
         #graficaCat:focus,
-        #graficaMatEspec:focus {
+        #graficaMatEspec:focus,
+        #categoriaPedido:focus,
+        #manualCategoria:focus {
             border-color: #f15a24 !important;
         }
 

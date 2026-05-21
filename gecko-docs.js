@@ -303,14 +303,61 @@ window.verDocumento = async function(id) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const p = lista.find(x => String(x.id) === String(id));
     if (!p) { alert('No se encontró el documento.'); return; }
-    
-    const html = p.status === 'OT'
-        ? await window.generarDocOT({ ...p, imagenes: [] })
+
+    const esOT = p.status === 'OT';
+    const html = esOT
+        ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: [] })
         : await window.generarDocPresupuesto({ ...p, mostrarPrecios: true, imagenes: [] });
-    
-    const win = window.open('', '_blank', 'width=900,height=700');
-    win.document.write(html);
-    win.document.close();
+
+    const htmlPreview = html.replace(
+        '<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>',
+        ''
+    );
+
+    document.getElementById('modalVerDocumento')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'modalVerDocumento';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+
+    const titulo = esOT
+        ? `Orden de Trabajo #${String(id).padStart(4,'0')}`
+        : `Presupuesto #${String(id).padStart(4,'0')}`;
+
+    const btnStyle = 'background:#27272a;border:1.5px solid #F15A24;color:#F15A24;border-radius:12px;padding:12px 32px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.15s;';
+    const btnHoverOn  = "this.style.background='#F15A24';this.style.color='#1a1a1a'";
+    const btnHoverOff = "this.style.background='#27272a';this.style.color='#F15A24'";
+
+    modal.innerHTML = `
+    <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:900px;height:92vh;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #27272a;flex-shrink:0;">
+            <div>
+                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 2px 0;">${titulo}</p>
+                <p style="color:white;font-size:16px;font-weight:900;margin:0;">${p.cliente || 'S/N'}</p>
+            </div>
+            <button onclick="document.getElementById('modalVerDocumento').remove()"
+                style="background:#27272a;border:none;color:#71717a;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>
+        </div>
+        <iframe id="geckoPreviewFrame" style="flex:1;border:none;background:white;"></iframe>
+        <div style="display:flex;gap:12px;padding:16px 24px;border-top:1px solid #27272a;flex-shrink:0;justify-content:center;">
+            <button id="btnDescargaDoc" onmouseover="${btnHoverOn}" onmouseout="${btnHoverOff}" style="${btnStyle}">DESCARGAR</button>
+            <button id="btnImprimirDoc" onmouseover="${btnHoverOn}" onmouseout="${btnHoverOff}" style="${btnStyle}">IMPRIMIR</button>
+        </div>
+    </div>`;
+
+    document.body.appendChild(modal);
+
+    const frame = document.getElementById('geckoPreviewFrame');
+    frame.contentDocument.open();
+    frame.contentDocument.write(htmlPreview);
+    frame.contentDocument.close();
+
+    document.getElementById('btnImprimirDoc').onclick = function() {
+        frame.contentWindow.print();
+    };
+    document.getElementById('btnDescargaDoc').onclick = function() {
+        const winDL = window.open('', '_blank', 'width=960,height=780');
+        if (winDL) { winDL.document.write(htmlPreview); winDL.document.close(); }
+    };
 };
 
 // ══════════════════════════════════════════════════════════════

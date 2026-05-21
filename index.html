@@ -603,22 +603,25 @@
                             <tr class="bg-gray-50/50 dark:bg-darkBg/30 border-b border-gray-100 dark:border-darkBorder">
                                 <th
                                     class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold w-16">
-                                    Prio</th>
+                                    NRO OT</th>
                                 <th
                                     class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold">
-                                    Cliente / Trabajo</th>
+                                    Cliente</th>
+                                <th
+                                    class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold">
+                                    Trabajo</th>
                                 <th
                                     class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold">
                                     Entrega</th>
                                 <th
+                                    class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold text-center">
+                                    Estado</th>
+                                <th
                                     class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold text-right">
-                                    Total ($)</th>
+                                    Presupuesto</th>
                                 <th
                                     class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold text-right">
                                     Saldo</th>
-                                <th
-                                    class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold text-center">
-                                    Producción</th>
                                 <th
                                     class="py-5 px-6 text-[11px] text-gray-400 dark:text-zinc-700 uppercase tracking-widest font-extrabold text-right">
                                     Acciones</th>
@@ -963,6 +966,13 @@
                                 <span id="labelTotalPresupuesto" class="text-3xl font-black text-gecko">$0</span>
                             </div>
                             <input type="hidden" id="precioTotal" value="0">
+                            <div class="mt-4 mb-3">
+                                <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Categoría</label>
+                                <select id="categoriaPedido" class="gecko-select-pro" style="font-weight:700;">
+                                    <option value="Gráfica">Gráfica</option>
+                                    <option value="Industrial">Industrial</option>
+                                </select>
+                            </div>
                             <div class="flex gap-3">
                                 <button onclick="window.abrirModalDoc('Cotizado')"
                                     class="flex-1 py-3 bg-transparent border border-[#f15a24]/50 text-[#f15a24] rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#f15a24]/5 transition-all">

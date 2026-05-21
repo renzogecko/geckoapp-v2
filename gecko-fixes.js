@@ -29,18 +29,47 @@ if (typeof renderizarFinanzas === 'undefined') {
 // ══════════════════════════════════════════════════════
 
 window.procesarGuardado = function(status) {
-    const cliente = document.getElementById('clienteNombre')?.value?.trim() || 'Cliente Genérico';
-    const total   = parseFloat(document.getElementById('precioTotal')?.value) ||
-                    parseFloat(document.getElementById('labelTotalPresupuesto')?.innerText?.replace(/[$.\\s]/g,'').replace(',','.')) || 0;
+    const cliente   = document.getElementById('clienteNombre')?.value?.trim() || 'Cliente Genérico';
+    const total     = parseFloat(document.getElementById('precioTotal')?.value) ||
+                      parseFloat(document.getElementById('labelTotalPresupuesto')?.innerText?.replace(/[$.\\s]/g,'').replace(',','.')) || 0;
+    const categoria = document.getElementById('categoriaPedido')?.value || 'Gráfica';
 
     if (!window.presupuesto || window.presupuesto.length === 0) {
         alert('Agregá al menos un ítem antes de guardar.');
         return;
     }
 
+    let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+
+    const editId = window._editandoPresupuestoId;
+    if (editId) {
+        // UPDATE existing
+        const idx = lista.findIndex(x => String(x.id) === String(editId));
+        if (idx !== -1) {
+            lista[idx] = Object.assign({}, lista[idx], {
+                cliente, total, categoria,
+                items: window.presupuesto.map(it => ({ ...it })),
+                status: lista[idx].status, // preserve OT/Cotizado
+            });
+            localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+            window._editandoPresupuestoId = null;
+
+            const successEl = document.getElementById('successVista');
+            if (successEl) { successEl.classList.remove('hidden'); successEl.classList.add('flex'); }
+            if (typeof window.mostrarExito === 'function') window.mostrarExito(`Presupuesto #${editId} actualizado`, '¡Guardado!');
+            if (typeof window.renderPresupuestos === 'function') window.renderPresupuestos();
+            if (typeof window.renderOts === 'function') window.renderOts();
+            window.presupuesto = [];
+            if (typeof window.renderizarPresupuesto === 'function') window.renderizarPresupuesto();
+            console.log(`✅ GECKO: Presupuesto #${editId} actualizado.`);
+            return;
+        }
+    }
+
+    // INSERT new
     const id = window.nextBudgetId || (parseInt(localStorage.getItem('gecko_nextId')) || 1001);
     const nuevo = {
-        id, cliente,
+        id, cliente, categoria,
         fecha: new Date().toLocaleDateString('es-AR'),
         total, status,
         sena: 0,
@@ -49,24 +78,14 @@ window.procesarGuardado = function(status) {
         metodo_pago: ''
     };
 
-    if (typeof listaPresupuestos !== 'undefined') {
-        listaPresupuestos.push(nuevo);
-    } else {
-        window.listaPresupuestos = window.listaPresupuestos || [];
-        window.listaPresupuestos.push(nuevo);
-    }
-
-    const lista = typeof listaPresupuestos !== 'undefined' ? listaPresupuestos : window.listaPresupuestos;
+    lista.push(nuevo);
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
 
     window.nextBudgetId = id + 1;
     localStorage.setItem('gecko_nextId', window.nextBudgetId);
 
     const successEl = document.getElementById('successVista');
-    if (successEl) {
-        successEl.classList.remove('hidden');
-        successEl.classList.add('flex');
-    }
+    if (successEl) { successEl.classList.remove('hidden'); successEl.classList.add('flex'); }
 
     if (typeof window.mostrarExito === 'function') {
         window.mostrarExito(
@@ -151,6 +170,13 @@ window.abrirCotizadorManual = function() {
                 style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
         </div>
         <div style="margin-bottom:16px;">
+            <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Categoría</label>
+            <select id="manualCategoria" class="gecko-select-pro" style="font-weight:700;">
+                <option value="Gráfica">Gráfica</option>
+                <option value="Industrial">Industrial</option>
+            </select>
+        </div>
+        <div style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                 <label style="color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;">Ítems del trabajo</label>
                 <button onclick="window._agregarFilaManual()"
@@ -218,11 +244,16 @@ window._guardarManual = function(status) {
     if (items.length === 0) { alert('Agregá al menos un ítem con descripción y precio.'); return; }
 
     const total = items.reduce((acc, it) => acc + it.costo, 0);
+    const cat   = document.getElementById('manualCategoria')?.value || 'Gráfica';
+
     window.presupuesto = items;
     if (document.getElementById('precioTotal')) document.getElementById('precioTotal').value = total;
 
     const clienteInput = document.getElementById('clienteNombre');
     if (clienteInput) clienteInput.value = cliente;
+
+    const catSelect = document.getElementById('categoriaPedido');
+    if (catSelect) catSelect.value = cat;
 
     document.getElementById('modalCotizadorManual').style.display = 'none';
     window.procesarGuardado(status);
@@ -237,33 +268,93 @@ window._guardarManual = function(status) {
 // Esta función sobreescribe la versión básica de gecko-docs.js
 // ══════════════════════════════════════════════════════
 
-window.verDocumento = async function(id) {
+window.verDocumento = function(id) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const p = lista.find(x => String(x.id) === String(id));
     if (!p) { alert('No se encontró el documento.'); return; }
+
+    const saldo = (p.total || 0) - (p.sena || 0);
+    const resumenItems = (p.items || []).map(it =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1f1f23;">
+            <span style="color:#a1a1aa;font-size:12px;font-weight:600;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
+            <span style="color:#F15A24;font-size:12px;font-weight:900;font-family:monospace;">$${Math.round(it.costo||0).toLocaleString('es-AR')}</span>
+        </div>`
+    ).join('');
+
+    document.getElementById('modalVerOT')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'modalVerOT';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+    <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">${p.status === 'OT' ? 'Orden de Trabajo' : 'Presupuesto'} #${String(id).padStart(4,'0')}</p>
+                <h2 style="color:white;font-size:20px;font-weight:900;margin:0;">${p.cliente || 'S/N'}</h2>
+            </div>
+            <button onclick="document.getElementById('modalVerOT').remove()" style="background:#27272a;border:none;color:#71717a;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+            <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
+                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Estado</p>
+                <p style="color:white;font-size:14px;font-weight:900;">${p.estado_ot || p.status || '—'}</p>
+            </div>
+            <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
+                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Entrega</p>
+                <p style="color:white;font-size:14px;font-weight:900;">${p.fecha_entrega || 'A confirmar'}</p>
+            </div>
+            <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
+                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Total</p>
+                <p style="color:#F15A24;font-size:16px;font-weight:900;">$${Math.round(p.total||0).toLocaleString('es-AR')}</p>
+            </div>
+            <div style="background:#09090b;border:1px solid ${saldo > 0 ? '#ef4444' : '#10b981'};border-radius:12px;padding:12px;">
+                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Saldo</p>
+                <p style="color:${saldo > 0 ? '#ef4444' : '#10b981'};font-size:16px;font-weight:900;">$${Math.round(saldo).toLocaleString('es-AR')}</p>
+            </div>
+        </div>
+        ${resumenItems ? `<div style="background:#09090b;border:1px solid #27272a;border-radius:14px;padding:16px;margin-bottom:20px;">
+            <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">Trabajo</p>
+            ${resumenItems}
+        </div>` : ''}
+        <div style="display:flex;gap:10px;">
+            <button onclick="window._imprimirDocumento('${id}')"
+                style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Imprimir</button>
+            <button onclick="window._descargarDocumento('${id}')"
+                style="flex:1;padding:13px;background:#1A1A1A;border:1px solid #27272a;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Descargar</button>
+            <button onclick="document.getElementById('modalVerOT').remove()"
+                style="padding:13px 16px;background:transparent;border:1px solid #3f3f46;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar</button>
+        </div>
+    </div>`;
+    document.body.appendChild(modal);
+};
+
+window._imprimirDocumento = async function(id) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const p = lista.find(x => String(x.id) === String(id));
+    if (!p) return;
 
     const esOT = p.status === 'OT';
     const html = esOT
         ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: [] })
         : await window.generarDocPresupuesto({ ...p, mostrarPrecios: true, imagenes: [] });
 
-    // Quitar el script de auto-print y agregar toolbar
-    const htmlPreview = html
+    const htmlFinal = html
         .replace('<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>', '')
         .replace('</body>', `
         <div id="previewToolbar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:9999;background:#141417;border:1px solid #27272a;border-radius:16px;padding:12px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-            <button onclick="window.print()" style="background:#F15A24;border:none;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">🖨 Imprimir</button>
-            <button onclick="window.print()" style="background:#1A1A1A;border:1px solid #27272a;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">⬇ Descargar PDF</button>
-            <button onclick="window.close()" style="background:transparent;border:1px solid #3f3f46;color:#71717a;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">✕ Cerrar</button>
+            <button onclick="window.print()" style="background:#F15A24;border:none;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Imprimir</button>
+            <button onclick="window.close()" style="background:transparent;border:1px solid #3f3f46;color:#71717a;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar</button>
         </div>
         <style>@media print { #previewToolbar { display: none !important; } }</style>
         </body>`);
 
     const win = window.open('', '_blank', 'width=960,height=780');
     if (!win) { alert('Permití las ventanas emergentes.'); return; }
-    win.document.write(htmlPreview);
+    win.document.write(htmlFinal);
     win.document.close();
 };
+
+window._descargarDocumento = function(id) { window._imprimirDocumento(id); };
 
 
 // ══════════════════════════════════════════════════════
@@ -280,27 +371,162 @@ const ESTADO_COLORS = {
     'Entregado':     { bg: '#6b7280', text: 'white' },
 };
 
+// ── Detectar categoría (Gráfica / Industrial) ──
+window._detectarCategoria = function(doc) {
+    // Explicit field wins
+    if (doc.categoria === 'Gráfica' || doc.categoria === 'Industrial') return doc.categoria;
+
+    var area = (doc.area || '');
+    if (/gr[aá]fica/i.test(area))  return 'Gráfica';
+    if (/industrial/i.test(area))  return 'Industrial';
+
+    var texto = (doc.items || []).map(function(it) {
+        return ((it.nombre || '') + ' ' + (it.textoOpciones || '')).toLowerCase();
+    }).join(' ');
+    if (!texto.trim()) return 'Gráfica'; // default for print shops
+
+    var kwGraf = ['banner','flex','lona','vinilo','ploter','plotter','impresión','impresion','folleter','serigraf','dtf','folio','rígido','rigido','cartel','vidriera','textil','estampado','termovinilo','bordado','sublimaci','remera','prenda'];
+    var kwInd  = ['industrial','chapa','acero','led','luminoso'];
+
+    if (kwInd.some(function(k){  return texto.includes(k); })) return 'Industrial';
+    if (kwGraf.some(function(k){ return texto.includes(k); })) return 'Gráfica';
+    return 'Gráfica';
+};
+
+window._tagCategoria = function(doc) {
+    var cat = window._detectarCategoria(doc);
+    if (!cat) return '';
+    var C = {
+        'Gráfica':    'background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;',
+        'Industrial': 'background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);color:#c084fc;'
+    };
+    var s = C[cat] || C['Gráfica'];
+    return '<span style="display:inline-block;padding:1px 7px;' + s + 'border-radius:4px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">' + cat + '</span>';
+};
+
 window._cambiarEstadoOTDesplegable = function(id, nuevoEstado) {
     if (nuevoEstado === 'Entregado') {
-        if (!confirm('¿Confirmar entrega? El trabajo pasará al historial.')) {
-            const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            const ot = lista.find(x => String(x.id) === String(id));
-            const sel = document.getElementById('estado-ot-' + id);
-            if (sel && ot) sel.value = ot.estado_ot || 'En Proceso';
-            return;
-        }
+        if (!confirm('¿Confirmar entrega? El trabajo pasará al historial.')) return;
     }
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const idx = lista.findIndex(x => String(x.id) === String(id));
     if (idx === -1) return;
     lista[idx].estado_ot = nuevoEstado;
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
-    const sel = document.getElementById('estado-ot-' + id);
-    if (sel) {
-        const color = ESTADO_COLORS[nuevoEstado] || ESTADO_COLORS['En Proceso'];
-        sel.style.background = color.bg;
-        sel.style.color = color.text;
+
+    const _C = { 'En Proceso':'#F15A24','En Taller':'#8b5cf6','Impresión':'#3b82f6','Terminaciones':'#f59e0b','Listo':'#10b981','Entregado':'#6b7280' };
+    const color = _C[nuevoEstado] || '#F15A24';
+    const wrapper = document.getElementById('estado-ot-' + id);
+    if (wrapper) {
+        const trigger = wrapper.querySelector('div');
+        if (trigger) {
+            trigger.style.background = color + '22';
+            trigger.style.borderColor = color + '55';
+            trigger.querySelectorAll('span').forEach(s => s.style.color = color);
+        }
+        const label = document.getElementById('estado-ot-label-' + id);
+        if (label) label.textContent = nuevoEstado;
     }
+    if (nuevoEstado === 'Entregado') {
+        setTimeout(() => window.renderOts(), 300);
+    }
+};
+
+window._toggleEstadoDropdown = function(id, event) {
+    event.stopPropagation();
+    document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => {
+        if (d.id !== 'estado-ot-dropdown-' + id) d.style.display = 'none';
+    });
+    const dd = document.getElementById('estado-ot-dropdown-' + id);
+    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+};
+
+window._seleccionarEstadoOT = function(id, estado) {
+    const dd = document.getElementById('estado-ot-dropdown-' + id);
+    if (dd) dd.style.display = 'none';
+    window._cambiarEstadoOTDesplegable(id, estado);
+};
+
+// Cerrar dropdowns al hacer clic fuera
+document.addEventListener('click', function() {
+    document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => d.style.display = 'none');
+    ['sena1Forma-dropdown','sena1Caja-dropdown','sena2Forma-dropdown','sena2Caja-dropdown'].forEach(function(did) {
+        const d = document.getElementById(did);
+        if (d) d.style.display = 'none';
+    });
+});
+
+// ── Eliminar OT con modal Gecko ──
+window.eliminarOT = function(id) {
+    document.getElementById('modalConfirmEliminarOT')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'modalConfirmEliminarOT';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Eliminar OT #${String(id).padStart(4,'0')}</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Esta acción no se puede deshacer. La OT será eliminada permanentemente.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('modalConfirmEliminarOT').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button onclick="window._confirmarEliminarOT('${id}')"
+                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+};
+
+window._confirmarEliminarOT = function(id) {
+    let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    lista = lista.filter(x => String(x.id) !== String(id));
+    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    document.getElementById('modalConfirmEliminarOT')?.remove();
+    if (typeof window.mostrarExito === 'function') window.mostrarExito(`OT #${id} eliminada.`, 'Listo');
+    window.renderOts();
+};
+
+// ── Dropdowns custom para modal de pago ──
+window._htmlDropdownPago = function(inputId, opciones, valorDefault) {
+    const opts = opciones.map(function(op) {
+        return `<div onclick="window._setDropdownPagoValue('${inputId}','${op}');event.stopPropagation()"
+              style="padding:10px 16px;font-size:12px;font-weight:700;color:#a1a1aa;cursor:pointer;border-bottom:1px solid #1a1a1d;"
+              onmouseover="this.style.color='white';this.style.background='#1f1f23'"
+              onmouseout="this.style.color='#a1a1aa';this.style.background='transparent'">${op}</div>`;
+    }).join('');
+    return `<div id="${inputId}-wrapper" style="position:relative;width:100%;">
+        <input type="hidden" id="${inputId}" value="${valorDefault}">
+        <div onclick="window._toggleDropdownPago('${inputId}',event)"
+             style="display:flex;align-items:center;justify-content:space-between;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:10px 14px;cursor:pointer;box-sizing:border-box;width:100%;">
+            <span id="${inputId}-label" style="color:white;font-size:13px;font-weight:700;">${valorDefault}</span>
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#6b7280" stroke-width="2.5" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+        </div>
+        <div id="${inputId}-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#141417;border:1px solid #27272a;border-radius:12px;z-index:1001;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.6);">
+            ${opts}
+        </div>
+    </div>`;
+};
+
+window._toggleDropdownPago = function(id, event) {
+    event.stopPropagation();
+    ['sena1Forma','sena1Caja','sena2Forma','sena2Caja'].forEach(function(did) {
+        if (did !== id) { const d = document.getElementById(did + '-dropdown'); if (d) d.style.display = 'none'; }
+    });
+    const dd = document.getElementById(id + '-dropdown');
+    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+};
+
+window._setDropdownPagoValue = function(id, value) {
+    const input = document.getElementById(id);
+    const label = document.getElementById(id + '-label');
+    const dd    = document.getElementById(id + '-dropdown');
+    if (input) input.value = value;
+    if (label) label.textContent = value;
+    if (dd)    dd.style.display = 'none';
 };
 
 
@@ -349,31 +575,30 @@ window.renderPresupuestos = async function() {
             <td class="py-4 px-6">
                 <span class="font-extrabold dark:text-white text-[14px] uppercase">${p.cliente || 'S/N'}</span>
             </td>
-            <td class="py-4 px-6 text-[11px] text-zinc-500 font-medium max-w-[200px] truncate">${resumen}</td>
+            <td class="py-4 px-6 max-w-[220px]">
+                <div class="flex flex-col">
+                    ${window._tagCategoria(p)}
+                    <span class="text-[11px] text-zinc-500 font-medium truncate">${resumen}</span>
+                </div>
+            </td>
             <td class="py-4 px-6 font-black text-gecko text-[14px]">$${Math.round(p.total || 0).toLocaleString('es-AR')}</td>
             <td class="py-4 px-6 text-right">
                 <div class="flex justify-end gap-2">
-                    <button onclick="window.verDocumento(${p.id})"
-                        title="Ver PDF"
-                        class="px-3 py-1.5 rounded-lg bg-zinc-700/50 text-zinc-300 text-[10px] font-black uppercase tracking-widest border border-zinc-600/30 hover:bg-zinc-600 hover:text-white transition-all">
-                        👁 Ver
+                    <button onclick="window.verDocumento(${p.id})" title="Ver"
+                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
-                    <button onclick="window.editarPresupuesto(${p.id})"
-                        title="Editar presupuesto"
-                        class="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/20 hover:bg-blue-500 hover:text-white transition-all">
-                        ✏ Editar
+                    <button onclick="window.editarPresupuesto(${p.id})" title="Editar"
+                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
-                    <button onclick="window.convertirPresupuestoAOT(${p.id})"
-                        title="Convertir a OT"
-                        class="px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-500 text-[10px] font-black uppercase tracking-widest border border-orange-500/20 hover:bg-orange-500 hover:text-white transition-all">
-                        → OT
+                    <button onclick="window.convertirPresupuestoAOT(${p.id})" title="Convertir a OT"
+                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </button>
-                    <button onclick="window.eliminarPresupuesto(${p.id})"
-                        title="Eliminar"
-                        class="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
+                    <button onclick="window.eliminarPresupuesto(${p.id})" title="Eliminar"
+                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                 </div>
             </td>
@@ -389,18 +614,41 @@ window.toggleHistorialPresupuestos = function() {
 };
 
 window.eliminarPresupuesto = function(id) {
-    if (!confirm('¿Eliminar este presupuesto? Esta acción no se puede deshacer.')) return;
-    let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    lista = lista.filter(x => String(x.id) !== String(id));
-    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
-    window.renderPresupuestos();
+    document.getElementById('_geckoConfirmElimPres')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoConfirmElimPres';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Eliminar presupuesto #${id}</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Esta acción no se puede deshacer. El presupuesto será eliminado permanentemente.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('_geckoConfirmElimPres').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button id="_geckoElimPresOk"
+                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.getElementById('_geckoElimPresOk').onclick = function() {
+        modal.remove();
+        let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+        lista = lista.filter(x => String(x.id) !== String(id));
+        localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+        window.renderPresupuestos();
+    };
 };
 
 // ──────────────────────────────────────────────────────
 // CONVERTIR PRESUPUESTO → OT  (con modal de seña)
 // ──────────────────────────────────────────────────────
-window.convertirPresupuestoAOT = function(id) {
-    if (!confirm('¿Convertir este presupuesto en Orden de Trabajo?')) return;
+window._confirmarConversionOT = function(id) {
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const p = lista.find(x => String(x.id) === String(id));
     if (!p) return;
@@ -410,12 +658,61 @@ window.convertirPresupuestoAOT = function(id) {
     if (typeof window.mostrarExito === 'function') window.mostrarExito(`OT #${id} generada`, '¡Listo!');
     window.renderPresupuestos();
     if (typeof window.renderOts === 'function') window.renderOts();
-    // Preguntar por seña
+    // Ask about deposit with Gecko modal
     setTimeout(() => {
-        if (confirm('¿El cliente pagó una seña o adelanto?')) {
-            window.abrirModalSena(id);
-        }
+        document.getElementById('_geckoConfirmSena')?.remove();
+        const m2 = document.createElement('div');
+        m2.id = '_geckoConfirmSena';
+        m2.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+        m2.innerHTML = `
+            <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+                <div style="width:56px;height:56px;background:rgba(34,197,94,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">OT #${id} generada</h3>
+                <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">¿El cliente realizó un pago de seña o adelanto?</p>
+                <div style="display:flex;gap:10px;">
+                    <button onclick="document.getElementById('_geckoConfirmSena').remove()"
+                        style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">No, después</button>
+                    <button id="_geckoSenaSi"
+                        style="flex:1;padding:13px;background:#22c55e;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Sí, registrar</button>
+                </div>
+            </div>`;
+        document.body.appendChild(m2);
+        m2.addEventListener('click', e => { if (e.target === m2) m2.remove(); });
+        document.getElementById('_geckoSenaSi').onclick = function() { m2.remove(); window.abrirModalSena(id); };
     }, 400);
+};
+
+window.convertirPresupuestoAOT = function(id) {
+    document.getElementById('_geckoConfirmConvOT')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoConfirmConvOT';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:rgba(241,90,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#F15A24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Convertir a OT</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">El presupuesto <strong style="color:white;">#${id}</strong> pasará al tablero de Órdenes de Trabajo.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('_geckoConfirmConvOT').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button id="_geckoConvOTOk"
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Convertir</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.getElementById('_geckoConvOTOk').onclick = function() {
+        modal.remove();
+        window._confirmarConversionOT(id);
+    };
 };
 
 // ──────────────────────────────────────────────────────
@@ -436,9 +733,17 @@ window.editarPresupuesto = function(id) {
     if (typeof window.renderizarPresupuesto === 'function') window.renderizarPresupuesto();
     if (typeof window.switchMenu === 'function') window.switchMenu('cotizadores');
 
-    if (typeof window.mostrarExito === 'function') {
-        window.mostrarExito(`Presupuesto #${id} cargado. Podés agregar o modificar ítems.`, '✏ Editando');
-    }
+    setTimeout(() => {
+        // Restore categoria select
+        const catSelect = document.getElementById('categoriaPedido');
+        if (catSelect && p.categoria) catSelect.value = p.categoria;
+
+        // Ensure the active cotizador form body is rendered
+        const activeCat = localStorage.getItem('gecko_activeCategory') || 'grafica';
+        if (typeof window.cambiarCategoriaCotizador === 'function') {
+            window.cambiarCategoriaCotizador(activeCat);
+        }
+    }, 150);
 };
 
 // Hook switchMenu para auto-render al entrar a pedidos
@@ -480,7 +785,7 @@ window.renderOts = async function() {
     });
 
     if (filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-16 text-center text-zinc-500 font-medium italic">
+        tbody.innerHTML = `<tr><td colspan="8" class="py-16 text-center text-zinc-500 font-medium italic">
             ${mostrarHistorial ? 'Sin historial de OTs.' : 'No hay órdenes de trabajo activas.'}
         </td></tr>`;
         return;
@@ -488,43 +793,45 @@ window.renderOts = async function() {
 
     tbody.innerHTML = filtrados.map(ot => {
         const estado = ot.estado_ot || 'En Proceso';
-        const color = ESTADO_COLORS[estado] || ESTADO_COLORS['En Proceso'];
+        const COLORES_OT = { 'En Proceso':'#F15A24','En Taller':'#8b5cf6','Impresión':'#3b82f6','Terminaciones':'#f59e0b','Listo':'#10b981','Entregado':'#6b7280' };
+        const color = COLORES_OT[estado] || '#F15A24';
         const saldo = (ot.total || 0) - (ot.sena || 0);
-        const selectOpts = ESTADOS_OT.map(e =>
-            `<option value="${e}" ${e === estado ? 'selected' : ''}>${e}</option>`
+        const estadoOpts = ESTADOS_OT.map(e =>
+            `<div onclick="window._seleccionarEstadoOT('${ot.id}','${e}');event.stopPropagation()"
+                  style="padding:8px 14px;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;color:${COLORES_OT[e]||'#F15A24'};letter-spacing:0.5px;"
+                  onmouseover="this.style.background='#1f1f23'" onmouseout="this.style.background='transparent'">${e}</div>`
         ).join('');
 
         return `
         <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800">
             <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500">#${ot.id}</td>
             <td class="py-4 px-6">
-                <div class="flex flex-col">
-                    <span class="text-[14px] font-extrabold dark:text-white uppercase">${ot.cliente || 'S/N'}</span>
-                    <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter mt-0.5">${ot.fecha || ''}</span>
-                </div>
+                <span class="text-[14px] font-extrabold dark:text-white uppercase">${ot.cliente||'S/N'}</span>
             </td>
             <td class="py-4 px-6">
                 <div class="flex flex-wrap gap-1">
-                    ${(ot.items||[]).map(it => `<span class="text-[9px] font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded uppercase">${it.textoOpciones || it.nombre || ''}</span>`).join('')}
+                    ${(ot.items||[]).map(it=>`<span class="text-[9px] font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded uppercase">${it.textoOpciones||it.nombre||''}</span>`).join('')}
+                </div>
+            </td>
+            <td class="py-4 px-6 text-[11px] text-zinc-400 font-bold">${ot.fecha_entrega || '—'}</td>
+            <td class="py-4 px-6 text-center">
+                <div id="estado-ot-${ot.id}" style="position:relative;display:inline-block;">
+                    <div onclick="window._toggleEstadoDropdown('${ot.id}',event)"
+                         style="display:flex;align-items:center;gap:8px;background:${color}22;border:1.5px solid ${color}55;border-radius:20px;padding:6px 10px 6px 12px;cursor:pointer;min-width:115px;">
+                        <span id="estado-ot-label-${ot.id}" style="color:${color};font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;flex:1;">${estado}</span>
+                        <span style="color:${color};font-size:8px;flex-shrink:0;">▼</span>
+                    </div>
+                    <div id="estado-ot-dropdown-${ot.id}" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#141417;border:1px solid #27272a;border-radius:12px;z-index:1000;min-width:140px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+                        ${estadoOpts}
+                    </div>
                 </div>
             </td>
             <td class="py-4 px-6 text-right font-black text-white text-[14px]">
                 $${Math.round(ot.total||0).toLocaleString('es-AR')}
             </td>
-            <td class="py-4 px-6 text-right font-black text-[14px] ${saldo > 0 ? 'text-red-400' : 'text-emerald-400'}">
+            <td class="py-4 px-6 text-right font-black text-[14px] ${saldo>0?'text-red-400':'text-emerald-400'}">
                 $${Math.round(saldo).toLocaleString('es-AR')}
             </td>
-            <td class="py-4 px-6 text-center">
-    <div style="position:relative; display:inline-block;">
-        <select
-            id="estado-ot-${ot.id}"
-            onchange="window._cambiarEstadoOTDesplegable('${ot.id}', this.value)"
-            style="background:rgba(24,24,27,0.5);border:1px solid #27272a;border-radius:12px;color:#a1a1aa;padding:5px 32px 5px 12px;font-size:10px;font-weight:900;text-transform:uppercase;appearance:none;cursor:pointer;outline:none;">
-            ${opts}
-        </select>
-        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:#a1a1aa;font-size:10px;">▼</span>
-    </div>
-</td>
             <td class="py-4 px-6 text-right">
                 <div class="flex justify-end gap-2">
                     <button onclick="window.verDocumento('${ot.id}')"
@@ -536,8 +843,12 @@ window.renderOts = async function() {
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
                     <button onclick="window.abrirModalSena('${ot.id}')"
-                        class="p-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500 hover:text-white transition-all" title="Registrar Seña/Pago">
+                        class="p-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500 hover:text-white transition-all" title="Registrar Pago">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
+                    <button onclick="window.eliminarOT('${ot.id}')"
+                        class="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all" title="Eliminar OT">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                 </div>
             </td>
@@ -655,7 +966,6 @@ window.abrirModalSena = function(id) {
 
     document.getElementById('modalSena')?.remove();
     const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-    const cajaOpts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
     const totalPendiente = (ot.total || 0) - (ot.sena || 0);
 
     const inputStyle = 'width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:10px 14px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;font-family:inherit;';
@@ -665,11 +975,15 @@ window.abrirModalSena = function(id) {
     modal.id = 'modalSena';
     modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
 
+    const formasPago = ['Efectivo','Transferencia','Débito','Crédito','MercadoPago'];
+    const cajasList = cajas.map(c => c.nombre);
+    const cajasDefault = cajasList[0] || '';
+
     modal.innerHTML = `
     <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
             <div>
-                <p style="color:#f59e0b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">💰 Registro de Pago</p>
+                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">Registro de Pago</p>
                 <h2 style="color:white;font-size:18px;font-weight:900;margin:0;">OT #${String(id).padStart(4,'0')} · ${ot.cliente}</h2>
             </div>
             <button onclick="document.getElementById('modalSena').remove()" style="background:#27272a;border:none;color:#71717a;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px;">✕</button>
@@ -682,7 +996,7 @@ window.abrirModalSena = function(id) {
                 <p style="color:white;font-size:16px;font-weight:900;">$${Math.round(ot.total||0).toLocaleString('es-AR')}</p>
             </div>
             <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
-                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Señas prev.</p>
+                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Pagado</p>
                 <p style="color:#10b981;font-size:16px;font-weight:900;">$${Math.round(ot.sena||0).toLocaleString('es-AR')}</p>
             </div>
             <div style="background:#09090b;border:1px solid ${totalPendiente > 0 ? '#ef4444' : '#10b981'};border-radius:12px;padding:12px;">
@@ -696,19 +1010,19 @@ window.abrirModalSena = function(id) {
             <label style="${labelStyle}">Tipo de pago</label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <button id="tipoPagoSeña" onclick="window._toggleTipoPago('seña')"
-                    style="padding:10px;background:#f59e0b;border:none;color:white;border-radius:10px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">
-                    💰 Seña / Parcial
+                    style="padding:10px;background:#1A1A1A;border:1px solid #3f3f46;color:#a1a1aa;border-radius:10px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">
+                    Seña / Parcial
                 </button>
                 <button id="tipoPagoSaldo" onclick="window._toggleTipoPago('saldo')"
                     style="padding:10px;background:#09090b;border:1px solid #27272a;color:#71717a;border-radius:10px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">
-                    ✅ Saldo Final
+                    Saldo Final
                 </button>
             </div>
         </div>
 
         <!-- Pago 1 -->
         <div style="background:#09090b;border:1px solid #27272a;border-radius:14px;padding:16px;margin-bottom:12px;">
-            <p style="color:#f59e0b;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">Pago 1</p>
+            <p style="color:#F15A24;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">Pago 1</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                 <div>
                     <label style="${labelStyle}">Monto</label>
@@ -716,20 +1030,12 @@ window.abrirModalSena = function(id) {
                 </div>
                 <div>
                     <label style="${labelStyle}">Forma de pago</label>
-                    <select id="sena1Forma" style="${inputStyle}cursor:pointer;">
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Débito">Débito</option>
-                        <option value="Crédito">Crédito</option>
-                        <option value="MercadoPago">MercadoPago</option>
-                    </select>
+                    ${window._htmlDropdownPago('sena1Forma', formasPago, 'Efectivo')}
                 </div>
             </div>
             <div>
                 <label style="${labelStyle}">Ingresa a caja</label>
-                <select id="sena1Caja" style="${inputStyle}cursor:pointer;">
-                    ${cajaOpts || '<option value="">Sin cajas creadas</option>'}
-                </select>
+                ${cajasList.length > 0 ? window._htmlDropdownPago('sena1Caja', cajasList, cajasDefault) : '<p style="color:#52525b;font-size:11px;padding:8px 0;">Sin cajas creadas</p><input type="hidden" id="sena1Caja" value="">'}
             </div>
         </div>
 
@@ -743,20 +1049,12 @@ window.abrirModalSena = function(id) {
                 </div>
                 <div>
                     <label style="${labelStyle}">Forma de pago</label>
-                    <select id="sena2Forma" style="${inputStyle}cursor:pointer;">
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Débito">Débito</option>
-                        <option value="Crédito">Crédito</option>
-                        <option value="MercadoPago">MercadoPago</option>
-                    </select>
+                    ${window._htmlDropdownPago('sena2Forma', formasPago, 'Efectivo')}
                 </div>
             </div>
             <div>
                 <label style="${labelStyle}">Ingresa a caja</label>
-                <select id="sena2Caja" style="${inputStyle}cursor:pointer;">
-                    ${cajaOpts || '<option value="">Sin cajas creadas</option>'}
-                </select>
+                ${cajasList.length > 0 ? window._htmlDropdownPago('sena2Caja', cajasList, cajasDefault) : '<p style="color:#52525b;font-size:11px;padding:8px 0;">Sin cajas creadas</p><input type="hidden" id="sena2Caja" value="">'}
             </div>
         </div>
 
@@ -772,7 +1070,7 @@ window.abrirModalSena = function(id) {
 
         <div style="display:flex;gap:10px;">
             <button onclick="document.getElementById('modalSena').remove()" style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
-            <button onclick="window._registrarSena('${id}')" style="flex:2;padding:13px;background:#f59e0b;border:none;color:white;border-radius:12px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">💰 Registrar Pago</button>
+            <button onclick="window._registrarSena('${id}')" style="flex:2;padding:13px;background:#22c55e;border:none;color:white;border-radius:12px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">Registrar Pago</button>
         </div>
     </div>`;
 
@@ -786,12 +1084,11 @@ window._toggleTipoPago = function(tipo) {
     const btnSeña  = document.getElementById('tipoPagoSeña');
     const btnSaldo = document.getElementById('tipoPagoSaldo');
     if (tipo === 'seña') {
-        if (btnSeña)  { btnSeña.style.background  = '#f59e0b'; btnSeña.style.color  = 'white'; }
-        if (btnSaldo) { btnSaldo.style.background = '#09090b'; btnSaldo.style.color = '#71717a'; }
+        if (btnSeña)  { btnSeña.style.background = '#1A1A1A'; btnSeña.style.border = '1px solid #3f3f46'; btnSeña.style.color = '#a1a1aa'; }
+        if (btnSaldo) { btnSaldo.style.background = '#09090b'; btnSaldo.style.border = '1px solid #27272a'; btnSaldo.style.color = '#71717a'; }
     } else {
-        if (btnSaldo) { btnSaldo.style.background = '#10b981'; btnSaldo.style.color = 'white'; }
-        if (btnSeña)  { btnSeña.style.background  = '#09090b'; btnSeña.style.color  = '#71717a'; }
-        // Autocompletar con el saldo pendiente
+        if (btnSaldo) { btnSaldo.style.background = '#10b981'; btnSaldo.style.border = '1px solid #10b981'; btnSaldo.style.color = 'white'; }
+        if (btnSeña)  { btnSeña.style.background = '#09090b'; btnSeña.style.border = '1px solid #27272a'; btnSeña.style.color = '#71717a'; }
         const m1 = document.getElementById('sena1Monto');
         if (m1 && window._senaPendiente > 0) m1.value = window._senaPendiente;
     }
@@ -1154,7 +1451,6 @@ window.addEventListener('load', function() {
             const tbody = document.getElementById('tbodyOts');
             if (!tbody) return;
 
-            // Leer de localStorage (fuente unificada)
             const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
             const ots = lista.filter(p => p.status === 'OT');
             const mostrarHistorial = window._mostrarHistorialOts || false;
@@ -1169,38 +1465,50 @@ window.addEventListener('load', function() {
             });
 
             if (filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-20 text-center text-gray-400 font-medium italic">
+                tbody.innerHTML = `<tr><td colspan="8" class="py-20 text-center text-gray-400 font-medium italic">
                     ${mostrarHistorial ? 'Sin historial de OTs.' : 'No hay órdenes de trabajo activas.'}
                 </td></tr>`;
                 return;
             }
 
-            const ESTADOS_OT = ['En Proceso','En Taller','Impresión','Terminaciones','Listo','Entregado'];
-            const COLORES = {
-                'En Proceso':'#F15A24','En Taller':'#8b5cf6','Impresión':'#3b82f6',
-                'Terminaciones':'#f59e0b','Listo':'#10b981','Entregado':'#6b7280'
-            };
+            const _EST = ['En Proceso','En Taller','Impresión','Terminaciones','Listo','Entregado'];
+            const _COL = { 'En Proceso':'#F15A24','En Taller':'#8b5cf6','Impresión':'#3b82f6','Terminaciones':'#f59e0b','Listo':'#10b981','Entregado':'#6b7280' };
 
             tbody.innerHTML = filtrados.map(ot => {
                 const estado = ot.estado_ot || 'En Proceso';
-                const color  = COLORES[estado] || '#F15A24';
+                const color  = _COL[estado] || '#F15A24';
                 const saldo  = (ot.total||0) - (ot.sena||0);
-                const opts   = ESTADOS_OT.map(e =>
-                    `<option value="${e}" ${e===estado?'selected':''}>${e}</option>`
+                const estadoOpts = _EST.map(e =>
+                    `<div onclick="window._seleccionarEstadoOT('${ot.id}','${e}');event.stopPropagation()"
+                          style="padding:8px 14px;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;color:${_COL[e]||'#F15A24'};letter-spacing:0.5px;"
+                          onmouseover="this.style.background='#1f1f23'" onmouseout="this.style.background='transparent'">${e}</div>`
                 ).join('');
 
                 return `
                 <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800">
                     <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500">#${ot.id}</td>
                     <td class="py-4 px-6">
+                        <span class="text-[14px] font-extrabold dark:text-white uppercase">${ot.cliente||'S/N'}</span>
+                    </td>
+                    <td class="py-4 px-6 max-w-[200px]">
                         <div class="flex flex-col">
-                            <span class="text-[14px] font-extrabold dark:text-white uppercase">${ot.cliente||'S/N'}</span>
-                            <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter mt-0.5">${ot.fecha||''}</span>
+                            ${window._tagCategoria(ot)}
+                            <div class="flex flex-wrap gap-1 mt-0.5">
+                                ${(ot.items||[]).map(it=>`<span class="text-[9px] font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded uppercase">${it.textoOpciones||it.nombre||''}</span>`).join('')}
+                            </div>
                         </div>
                     </td>
-                    <td class="py-4 px-6">
-                        <div class="flex flex-wrap gap-1">
-                            ${(ot.items||[]).map(it=>`<span class="text-[9px] font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded uppercase">${it.textoOpciones||it.nombre||''}</span>`).join('')}
+                    <td class="py-4 px-6 text-[11px] text-zinc-400 font-bold">${ot.fecha_entrega||'—'}</td>
+                    <td class="py-4 px-6 text-center">
+                        <div id="estado-ot-${ot.id}" style="position:relative;display:inline-block;">
+                            <div onclick="window._toggleEstadoDropdown('${ot.id}',event)"
+                                 style="display:flex;align-items:center;gap:8px;background:${color}22;border:1.5px solid ${color}55;border-radius:20px;padding:6px 10px 6px 12px;cursor:pointer;min-width:115px;">
+                                <span id="estado-ot-label-${ot.id}" style="color:${color};font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;flex:1;">${estado}</span>
+                                <span style="color:${color};font-size:8px;flex-shrink:0;">▼</span>
+                            </div>
+                            <div id="estado-ot-dropdown-${ot.id}" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#141417;border:1px solid #27272a;border-radius:12px;z-index:1000;min-width:140px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+                                ${estadoOpts}
+                            </div>
                         </div>
                     </td>
                     <td class="py-4 px-6 text-right font-black text-white text-[14px]">
@@ -1209,30 +1517,23 @@ window.addEventListener('load', function() {
                     <td class="py-4 px-6 text-right font-black text-[14px] ${saldo>0?'text-red-400':'text-emerald-400'}">
                         $${Math.round(saldo).toLocaleString('es-AR')}
                     </td>
-                    <td class="py-4 px-6 text-center">
-    <div style="position:relative;display:inline-block;">
-        <select
-            id="estado-ot-${ot.id}"
-            onchange="window._cambiarEstadoOTDesplegable('${ot.id}', this.value)"
-            style="appearance:none;-webkit-appearance:none;background:${color}22;color:${color};border:1.5px solid ${color}55;padding:5px 28px 5px 12px;border-radius:20px;font-size:10px;font-weight:900;text-transform:uppercase;cursor:pointer;outline:none;letter-spacing:0.5px;font-family:inherit;min-width:110px;">
-            ${opts}
-        </select>
-        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:${color};font-size:8px;pointer-events:none;">▼</span>
-    </div>
-</td>
                     <td class="py-4 px-6 text-right">
                         <div class="flex justify-end gap-2">
-                            <button onclick="window.verDocumento('${ot.id}')"
-                                class="p-2 bg-zinc-700/50 text-zinc-300 rounded-lg hover:bg-zinc-600 hover:text-white transition-all" title="Ver OT">
+                            <button onclick="window.verDocumento('${ot.id}')" title="Ver OT"
+                                class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             </button>
-                            <button onclick="window.editarOT('${ot.id}')"
-                                class="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all" title="Editar OT">
+                            <button onclick="window.editarOT('${ot.id}')" title="Editar OT"
+                                class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </button>
-                            <button onclick="window.abrirModalSena('${ot.id}')"
-                                class="p-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500 hover:text-white transition-all" title="Registrar Pago">
+                            <button onclick="window.abrirModalSena('${ot.id}')" title="Registrar Pago"
+                                class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </button>
+                            <button onclick="window.eliminarOT('${ot.id}')" title="Eliminar OT"
+                                class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </div>
                     </td>
