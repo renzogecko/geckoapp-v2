@@ -1,0 +1,16 @@
+# Credenciales y tokens
+Token github.txt
+*.token
+*.key
+.env
+
+# Backups locales
+gecko_backup_*.json
+
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Prompts y notas locales
+Prompt para iniciar nueva conversacion.txt
