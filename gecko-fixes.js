@@ -1568,12 +1568,12 @@ document.addEventListener('geckoDB_ready', () => {
                 <!-- Saldo -->
                 <div style="margin-bottom:32px;">
                     <label class="mgp-label">Saldo actual</label>
-                    <div id="editCajaSaldoWrap" style="display:flex;align-items:center;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:0 16px;height:52px;gap:8px;box-sizing:border-box;">
-                        <span style="color:#ffffff;font-size:16px;line-height:1;flex-shrink:0;user-select:none;">$</span>
+                    <div style="display:flex;align-items:center;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:0 16px;height:52px;gap:12px;box-sizing:border-box;">
+                        <span style="color:#ffffff;font-size:16px;line-height:52px;flex-shrink:0;user-select:none;">$</span>
                         <input type="number" id="editCajaSaldo" placeholder="0"
-                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:16px;line-height:1;padding:0;margin:0;width:100%;height:100%;"
-                            onfocus="document.getElementById('editCajaSaldoWrap').style.borderColor='#F15A24'"
-                            onblur="document.getElementById('editCajaSaldoWrap').style.borderColor='#444'">
+                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:16px;line-height:52px;padding:0;margin:0;width:100%;box-sizing:border-box;-moz-appearance:textfield;"
+                            onfocus="this.parentElement.style.borderColor='#F15A24'"
+                            onblur="this.parentElement.style.borderColor='#444'">
                     </div>
                 </div>
 
@@ -1604,33 +1604,34 @@ document.addEventListener('geckoDB_ready', () => {
         modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
     }
 
-    // Helper: seleccionar tipo de caja visualmente (naranja para todos — MODAL-GECKO-PRO)
+    // Helper: seleccionar tipo de caja visualmente — mismo esquema de colores que NUEVA CAJA
     window._selectCajaTipo = function(tipo) {
         document.getElementById('editCajaIcono').value = tipo;
-        const IDLE_COLORS = { efectivo:'#10b981', mercado_pago_celeste:'#3b82f6', banco:'#64748b' };
+        const ACTIVE = {
+            efectivo:            { border:'rgba(16,185,129,0.8)',  bg:'rgba(16,185,129,0.15)',  shadow:'0 0 12px rgba(16,185,129,0.25)',  color:'#10b981' },
+            mercado_pago_celeste:{ border:'rgba(59,130,246,0.8)',  bg:'rgba(59,130,246,0.15)',  shadow:'0 0 12px rgba(59,130,246,0.25)',  color:'#3b82f6' },
+            banco:               { border:'rgba(100,116,139,0.8)', bg:'rgba(100,116,139,0.15)', shadow:'0 0 12px rgba(100,116,139,0.25)', color:'#64748b' }
+        };
+        const IDLE = {
+            efectivo:            { border:'rgba(16,185,129,0.35)',  bg:'rgba(16,185,129,0.07)',  color:'#10b981' },
+            mercado_pago_celeste:{ border:'rgba(59,130,246,0.35)',  bg:'rgba(59,130,246,0.07)',  color:'#3b82f6' },
+            banco:               { border:'rgba(100,116,139,0.35)', bg:'rgba(100,116,139,0.07)', color:'#64748b' }
+        };
         const IDS = { efectivo:'cajaTipoEfectivo', mercado_pago_celeste:'cajaTipoMp', banco:'cajaTipoBanco' };
         Object.keys(IDS).forEach(t => {
             const btn = document.getElementById(IDS[t]);
             if (!btn) return;
-            if (t === tipo) {
-                btn.classList.add('active');
-                btn.style.borderColor = '#F15A24';
-                btn.style.background  = 'rgba(241,90,36,0.15)';
-                btn.style.boxShadow   = '0 0 0 2px rgba(241,90,36,0.25)';
-                const svg  = btn.querySelector('svg');
-                const span = btn.querySelector('span');
-                if (svg)  svg.setAttribute('stroke', '#F15A24');
-                if (span) span.style.color = '#F15A24';
-            } else {
-                btn.classList.remove('active');
-                btn.style.borderColor = '#333';
-                btn.style.background  = '#222';
-                btn.style.boxShadow   = 'none';
-                const svg  = btn.querySelector('svg');
-                const span = btn.querySelector('span');
-                if (svg)  svg.setAttribute('stroke', IDLE_COLORS[t]);
-                if (span) span.style.color = IDLE_COLORS[t];
-            }
+            const isActive = (t === tipo);
+            const s = isActive ? ACTIVE[t] : IDLE[t];
+            btn.style.borderColor = s.border;
+            btn.style.background  = s.bg;
+            btn.style.boxShadow   = isActive ? s.shadow : 'none';
+            if (isActive) btn.classList.add('active');
+            else          btn.classList.remove('active');
+            const svg  = btn.querySelector('svg');
+            const span = btn.querySelector('span');
+            if (svg)  svg.setAttribute('stroke', s.color);
+            if (span) span.style.color = s.color;
         });
     };
 
@@ -2427,7 +2428,10 @@ window.addEventListener('load', function() {
             const tbody = document.getElementById('tbodyMovimientos');
             if (!tbody) return;
 
-            let movs = [...(window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]'))];
+            if (!window.LISTA_MOVIMIENTOS) {
+                window.LISTA_MOVIMIENTOS = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+            }
+            let movs = [...window.LISTA_MOVIMIENTOS];
 
             // Filtro por categoría
             const catEl  = document.getElementById('filterCategoriaMov');
@@ -2489,13 +2493,15 @@ window.addEventListener('load', function() {
                 window._geckoDragTable(tbody, function(srcKey, destKey) {
                     const si = parseInt(srcKey), di = parseInt(destKey);
                     const displayed = window._geckoMovsDisplayed || [];
-                    const fullList  = window.LISTA_MOVIMIENTOS;
-                    if (!fullList || !displayed[si] || !displayed[di]) return;
+                    if (!displayed[si] || !displayed[di]) return;
+                    const fullList = window.LISTA_MOVIMIENTOS;
+                    if (!fullList) return;
                     const fo = fullList.indexOf(displayed[si]);
                     const fd = fullList.indexOf(displayed[di]);
                     if (fo < 0 || fd < 0) return;
                     const moved = fullList.splice(fo, 1)[0];
                     fullList.splice(fd, 0, moved);
+                    window.LISTA_MOVIMIENTOS = fullList;
                     localStorage.setItem('gecko_movimientos', JSON.stringify(fullList));
                     window.renderizarMovimientos();
                 });
