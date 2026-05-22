@@ -569,7 +569,7 @@ window.renderPresupuestos = async function() {
     tbody.innerHTML = filtrados.map(p => {
         const resumen = (p.items || []).map(it => it.nombre || it.textoOpciones || '').filter(Boolean).join(' · ') || 'Sin ítems';
         return `
-        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+        <tr draggable="true" data-drag-key="${p.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" style="cursor:grab;">
             <td class="py-4 px-6 font-black text-zinc-400 text-[11px]">#${p.id}</td>
             <td class="py-4 px-6 text-[12px] text-zinc-400 font-bold">${p.fecha || ''}</td>
             <td class="py-4 px-6">
@@ -604,6 +604,18 @@ window.renderPresupuestos = async function() {
             </td>
         </tr>`;
     }).join('');
+    if (typeof window._geckoDragTable === 'function') {
+        window._geckoDragTable(tbody, function(srcId, dstId) {
+            const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            const si = lista.findIndex(x => String(x.id) === String(srcId));
+            const di = lista.findIndex(x => String(x.id) === String(dstId));
+            if (si < 0 || di < 0) return;
+            const moved = lista.splice(si, 1)[0];
+            lista.splice(di, 0, moved);
+            localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+            window.renderPresupuestos();
+        });
+    }
 };
 
 window.toggleHistorialPresupuestos = function() {
@@ -803,7 +815,7 @@ window.renderOts = async function() {
         ).join('');
 
         return `
-        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800">
+        <tr draggable="true" data-drag-key="${ot.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800" style="cursor:grab;">
             <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500">#${ot.id}</td>
             <td class="py-4 px-6">
                 <span class="text-[14px] font-extrabold dark:text-white uppercase">${ot.cliente||'S/N'}</span>
@@ -854,6 +866,18 @@ window.renderOts = async function() {
             </td>
         </tr>`;
     }).join('');
+    if (typeof window._geckoDragTable === 'function') {
+        window._geckoDragTable(tbody, function(srcId, dstId) {
+            const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            const si = lista.findIndex(x => String(x.id) === String(srcId));
+            const di = lista.findIndex(x => String(x.id) === String(dstId));
+            if (si < 0 || di < 0) return;
+            const moved = lista.splice(si, 1)[0];
+            lista.splice(di, 0, moved);
+            localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+            window.renderOts();
+        });
+    }
 };
 
 window.toggleHistorialOts = function() {
@@ -1507,7 +1531,7 @@ document.addEventListener('geckoDB_ready', () => {
 
                 <input type="hidden" id="editCajaId">
 
-                <!-- Tipo de caja — 3 botones, seleccionado en verde -->
+                <!-- Tipo de caja — 3 botones, seleccionado en naranja -->
                 <div style="margin-bottom:20px;">
                     <label class="mgp-label accent">Tipo de caja</label>
                     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
@@ -1544,10 +1568,10 @@ document.addEventListener('geckoDB_ready', () => {
                 <!-- Saldo -->
                 <div style="margin-bottom:32px;">
                     <label class="mgp-label">Saldo actual</label>
-                    <div id="editCajaSaldoWrap" style="display:flex;align-items:center;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:12px 16px;gap:8px;">
-                        <span style="color:#ffffff;font-weight:600;flex-shrink:0;vertical-align:middle;line-height:normal;">$</span>
+                    <div id="editCajaSaldoWrap" style="display:flex;align-items:center;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:0 16px;height:52px;gap:8px;box-sizing:border-box;">
+                        <span style="color:#ffffff;font-size:16px;line-height:1;flex-shrink:0;user-select:none;">$</span>
                         <input type="number" id="editCajaSaldo" placeholder="0"
-                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:16px;width:100%;padding:0;margin:0;vertical-align:middle;line-height:normal;"
+                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:16px;line-height:1;padding:0;margin:0;width:100%;height:100%;"
                             onfocus="document.getElementById('editCajaSaldoWrap').style.borderColor='#F15A24'"
                             onblur="document.getElementById('editCajaSaldoWrap').style.borderColor='#444'">
                     </div>
@@ -1580,24 +1604,32 @@ document.addEventListener('geckoDB_ready', () => {
         modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
     }
 
-    // Helper: seleccionar tipo de caja visualmente (verde para todos — MODAL-GECKO-PRO)
+    // Helper: seleccionar tipo de caja visualmente (naranja para todos — MODAL-GECKO-PRO)
     window._selectCajaTipo = function(tipo) {
         document.getElementById('editCajaIcono').value = tipo;
+        const IDLE_COLORS = { efectivo:'#10b981', mercado_pago_celeste:'#3b82f6', banco:'#64748b' };
         const IDS = { efectivo:'cajaTipoEfectivo', mercado_pago_celeste:'cajaTipoMp', banco:'cajaTipoBanco' };
         Object.keys(IDS).forEach(t => {
             const btn = document.getElementById(IDS[t]);
             if (!btn) return;
             if (t === tipo) {
-                // Verde universal para el estado activo
                 btn.classList.add('active');
-                btn.style.borderColor = '#22c55e';
-                btn.style.background  = 'rgba(34,197,94,0.15)';
-                btn.style.boxShadow   = '0 0 0 2px rgba(34,197,94,0.25)';
+                btn.style.borderColor = '#F15A24';
+                btn.style.background  = 'rgba(241,90,36,0.15)';
+                btn.style.boxShadow   = '0 0 0 2px rgba(241,90,36,0.25)';
+                const svg  = btn.querySelector('svg');
+                const span = btn.querySelector('span');
+                if (svg)  svg.setAttribute('stroke', '#F15A24');
+                if (span) span.style.color = '#F15A24';
             } else {
                 btn.classList.remove('active');
                 btn.style.borderColor = '#333';
                 btn.style.background  = '#222';
                 btn.style.boxShadow   = 'none';
+                const svg  = btn.querySelector('svg');
+                const span = btn.querySelector('span');
+                if (svg)  svg.setAttribute('stroke', IDLE_COLORS[t]);
+                if (span) span.style.color = IDLE_COLORS[t];
             }
         });
     };
@@ -1757,6 +1789,40 @@ window.renderizarMovimientos = function() {
     }).join('');
 };
 
+// ── Helper universal: drag & drop para reordenar filas en tablas ──
+window._geckoDragTable = function(tbody, onDrop) {
+    var _dragKey = null;
+    tbody.querySelectorAll('tr[draggable="true"]').forEach(function(row) {
+        row.addEventListener('dragstart', function(e) {
+            _dragKey = row.dataset.dragKey;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(function() { row.style.opacity = '0.4'; }, 0);
+        });
+        row.addEventListener('dragend', function() {
+            row.style.opacity = '';
+            tbody.querySelectorAll('tr').forEach(function(r) { r.style.borderTop = ''; });
+        });
+        row.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            tbody.querySelectorAll('tr').forEach(function(r) { r.style.borderTop = ''; });
+            row.style.borderTop = '2px solid #F15A24';
+        });
+        row.addEventListener('dragleave', function() {
+            row.style.borderTop = '';
+        });
+        row.addEventListener('drop', function(e) {
+            e.preventDefault();
+            tbody.querySelectorAll('tr').forEach(function(r) { r.style.borderTop = ''; });
+            var destKey = row.dataset.dragKey;
+            if (_dragKey !== null && destKey && _dragKey !== destKey) {
+                onDrop(_dragKey, destKey);
+            }
+            _dragKey = null;
+        });
+    });
+};
+
 // ── Gastos Fijos ──
 window.renderGastosFijos = function() {
     const tbody = document.getElementById('tbodyGastosFijos');
@@ -1773,7 +1839,7 @@ window.renderGastosFijos = function() {
     tbody.innerHTML = lista.map((g, idx) => {
         const pagado = g.estado === 'Pagado';
         return `
-        <tr style="border-bottom:1px solid rgba(39,39,42,0.5);" class="hover:bg-zinc-900/20 transition-colors">
+        <tr draggable="true" data-drag-key="${idx}" style="border-bottom:1px solid rgba(39,39,42,0.5);cursor:grab;" class="hover:bg-zinc-900/20 transition-colors">
             <td class="py-4 px-6">
                 <span style="color:white;font-size:13px;font-weight:800;text-transform:uppercase;">${g.concepto}</span>
                 ${g.categoria ? `<div style="font-size:9px;color:#71717a;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${g.categoria}</div>` : ''}
@@ -1791,19 +1857,46 @@ window.renderGastosFijos = function() {
                 </span>
             </td>
             <td class="py-4 px-6 text-right">
-                <div style="display:flex;justify-content:flex-end;gap:8px;">
+                <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;">
                     ${!pagado ? `<button onclick="window.pagarGastoFijo(${idx})" title="Marcar como pagado"
-                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-emerald-400 transition-all duration-150 hover:scale-110 hover:bg-emerald-500/10 hover:border-emerald-500/30">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#ccc;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;"
+                        onmouseover="this.style.background='rgba(34,197,94,0.2)';this.style.borderColor='#22c55e';this.style.color='#22c55e'"
+                        onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='#ccc'">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </button>` : ''}
+                    <button onclick="window.editarGastoFijo(${idx})" title="Ver/Editar"
+                        style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#ccc;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;"
+                        onmouseover="this.style.background='rgba(241,90,36,0.2)';this.style.borderColor='#F15A24';this.style.color='#F15A24'"
+                        onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='#ccc'">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
                     <button onclick="window.eliminarGastoFijo(${idx})" title="Eliminar"
-                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-red-400 hover:border-red-500/30">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#ccc;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;"
+                        onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.borderColor='#ef4444';this.style.color='#ef4444'"
+                        onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='#ccc'">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6"/><path d="M14 11v6"/>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
                     </button>
                 </div>
             </td>
         </tr>`;
     }).join('');
+    if (typeof window._geckoDragTable === 'function') {
+        window._geckoDragTable(tbody, function(srcKey, destKey) {
+            const si = parseInt(srcKey), di = parseInt(destKey);
+            const arr = window.LISTA_GASTOS_FIJOS;
+            const moved = arr.splice(si, 1)[0];
+            arr.splice(di, 0, moved);
+            localStorage.setItem('gecko_gastos_fijos', JSON.stringify(arr));
+            window.renderGastosFijos();
+        });
+    }
 };
 
 window.pagarGastoFijo = function(idx) {
@@ -1855,6 +1948,77 @@ window.eliminarGastoFijo = function(idx) {
         lista.splice(idx, 1);
         localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
         window.renderGastosFijos();
+    };
+};
+
+window.editarGastoFijo = function(idx) {
+    const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    const g = lista[idx];
+    if (!g) return;
+    document.getElementById('_geckoModalEditGasto')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoModalEditGasto';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    const cats = ['Alquiler','Servicios','Internet','Sueldos','Impuestos','Insumos','Varios'];
+    const catLabels = { Alquiler:'Alquiler', Servicios:'Servicios (Luz, Agua, Gas)', Internet:'Internet / Telefonía', Sueldos:'Sueldos', Impuestos:'Impuestos / Monotributo', Insumos:'Insumos recurrentes', Varios:'Varios' };
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:32px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                <div>
+                    <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px 0;">Finanzas</p>
+                    <h3 style="color:white;font-size:18px;font-weight:900;margin:0;text-transform:uppercase;letter-spacing:1px;">Editar Gasto Fijo</h3>
+                </div>
+                <button onclick="document.getElementById('_geckoModalEditGasto').remove()"
+                    style="background:#27272a;border:none;color:#71717a;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div>
+                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Concepto</label>
+                    <input id="_editGastoConcepto" type="text" value="${(g.concepto||'').replace(/"/g,'&quot;')}"
+                        style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Monto ($)</label>
+                        <input id="_editGastoMonto" type="number" value="${g.monto||0}"
+                            style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#F15A24;font-size:14px;font-weight:900;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Día vencimiento</label>
+                        <input id="_editGastoVencimiento" type="number" min="1" max="31" value="${g.vencimiento||1}"
+                            style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Categoría</label>
+                    <select id="_editGastoCategoria" class="gecko-select-pro" style="font-weight:700;">
+                        ${cats.map(c => `<option value="${c}" ${g.categoria===c?'selected':''}>${catLabels[c]}</option>`).join('')}
+                    </select>
+                </div>
+                <button id="_editGastoGuardarBtn"
+                    style="width:100%;padding:14px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;margin-top:4px;"
+                    onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(241,90,36,0.4)'"
+                    onmouseout="this.style.transform='';this.style.boxShadow=''">
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.getElementById('_editGastoGuardarBtn').onclick = function() {
+        const concepto    = document.getElementById('_editGastoConcepto').value.trim();
+        const monto       = parseFloat(document.getElementById('_editGastoMonto').value) || 0;
+        const vencimiento = document.getElementById('_editGastoVencimiento').value.trim() || '1';
+        const categoria   = document.getElementById('_editGastoCategoria').value;
+        if (!concepto || monto <= 0) { alert('Completá concepto y monto.'); return; }
+        const arr = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+        if (!arr[idx]) return;
+        arr[idx] = { ...arr[idx], concepto, monto, vencimiento, categoria };
+        window.LISTA_GASTOS_FIJOS = arr;
+        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(arr));
+        modal.remove();
+        window.renderGastosFijos();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} actualizado.`, '¡Guardado!');
     };
 };
 
@@ -2183,7 +2347,7 @@ window.addEventListener('load', function() {
                 ).join('');
 
                 return `
-                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800">
+                <tr draggable="true" data-drag-key="${ot.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800" style="cursor:grab;">
                     <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500">#${ot.id}</td>
                     <td class="py-4 px-6">
                         <span class="text-[14px] font-extrabold dark:text-white uppercase">${ot.cliente||'S/N'}</span>
@@ -2237,6 +2401,18 @@ window.addEventListener('load', function() {
                     </td>
                 </tr>`;
             }).join('');
+            if (typeof window._geckoDragTable === 'function') {
+                window._geckoDragTable(tbody, function(srcId, dstId) {
+                    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+                    const si = lista.findIndex(x => String(x.id) === String(srcId));
+                    const di = lista.findIndex(x => String(x.id) === String(dstId));
+                    if (si < 0 || di < 0) return;
+                    const moved = lista.splice(si, 1)[0];
+                    lista.splice(di, 0, moved);
+                    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+                    window.renderOts();
+                });
+            }
         };
 
         // Ejecutar inmediatamente si la tab OT está visible
@@ -2276,7 +2452,8 @@ window.addEventListener('load', function() {
                 banco:                { dot: '#64748b', color: '#94a3b8', border: 'rgba(100,116,139,0.35)' }
             };
 
-            tbody.innerHTML = movs.map(m => {
+            window._geckoMovsDisplayed = movs;
+            tbody.innerHTML = movs.map((m, i) => {
                 const infoCaja = cajas.find(c => c.nombre === m.caja);
                 const cs  = CAJA_STYLES[infoCaja?.icono] || CAJA_STYLES.efectivo;
                 const esIngreso = m.tipo === 'Ingreso';
@@ -2284,7 +2461,7 @@ window.addEventListener('load', function() {
                 const cat       = m.categoria || 'Varios';
 
                 return `
-                <tr style="border-bottom:1px solid rgba(39,39,42,0.5);" onmouseover="this.style.background='rgba(24,24,27,0.4)'" onmouseout="this.style.background='transparent'">
+                <tr draggable="true" data-drag-key="${i}" style="border-bottom:1px solid rgba(39,39,42,0.5);cursor:grab;" onmouseover="this.style.background='rgba(24,24,27,0.4)'" onmouseout="this.style.background='transparent'">
                     <td style="padding:14px 24px;">
                         <span style="color:#71717a;font-size:11px;font-weight:800;letter-spacing:1px;">${m.fecha || '—'}</span>
                     </td>
@@ -2308,6 +2485,21 @@ window.addEventListener('load', function() {
                     </td>
                 </tr>`;
             }).join('');
+            if (typeof window._geckoDragTable === 'function') {
+                window._geckoDragTable(tbody, function(srcKey, destKey) {
+                    const si = parseInt(srcKey), di = parseInt(destKey);
+                    const displayed = window._geckoMovsDisplayed || [];
+                    const fullList  = window.LISTA_MOVIMIENTOS;
+                    if (!fullList || !displayed[si] || !displayed[di]) return;
+                    const fo = fullList.indexOf(displayed[si]);
+                    const fd = fullList.indexOf(displayed[di]);
+                    if (fo < 0 || fd < 0) return;
+                    const moved = fullList.splice(fo, 1)[0];
+                    fullList.splice(fd, 0, moved);
+                    localStorage.setItem('gecko_movimientos', JSON.stringify(fullList));
+                    window.renderizarMovimientos();
+                });
+            }
         };
 
         // ── Poblar selects de cajas al abrir modales ──
@@ -2348,7 +2540,82 @@ window.addEventListener('load', function() {
             window.renderizarMovimientos();
         }
 
-        console.log('🦎 GECKO-FIXES: renderOts + renderizarMovimientos parcheados post-main.js.');
+        // ── Override renderClientes con drag & drop ──
+        (function() {
+            const _origRC = window.renderClientes;
+            window.renderClientes = function() {
+                const tbody = document.getElementById('tbodyClientes');
+                if (!tbody) return;
+                const filtro = document.getElementById('filtroClienteBusqueda')?.value?.toLowerCase() || '';
+                const allClientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+                const filtered = allClientes.filter(c =>
+                    c.nombre.toLowerCase().includes(filtro) ||
+                    (c.cuit && c.cuit.includes(filtro)) ||
+                    (c.rubro && c.rubro.toLowerCase().includes(filtro))
+                );
+                if (!filtered.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="py-10 text-center text-gray-400 font-medium italic">No se encontraron clientes.</td></tr>';
+                    return;
+                }
+                const presupuestos = window.listaPresupuestos || JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+                tbody.innerHTML = filtered.map((c, i) => {
+                    const trabajos = presupuestos.filter(p => p.cliente === c.nombre && p.status === 'OT');
+                    const saldoTotal = trabajos.filter(p => p.estado_ot !== 'Entregado').reduce((acc, p) => acc + (p.total - (p.sena || 0)), 0);
+                    const waLink = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g,'')}" target="_blank" class="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors" title="WhatsApp"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></a>` : '';
+                    const mailLink = c.email ? `<a href="mailto:${c.email}" class="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-colors" title="Email"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
+                    const badge = typeof window.obtenerBadgeScoring === 'function' ? window.obtenerBadgeScoring(c.nombre) : '';
+                    return `<tr draggable="true" data-drag-key="${i}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors group" style="cursor:grab;">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center">
+                                <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
+                                ${badge}
+                            </div>
+                            <div class="flex gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">
+                                <span>${c.cuit || 'Sin CUIT'}</span>
+                                ${c.rubro ? `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg">${c.rubro}</span>` : ''}
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-center hidden md:table-cell">
+                            <div class="flex items-center justify-center gap-2">${waLink}${mailLink}</div>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <span class="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider ${saldoTotal > 0 ? 'bg-red-50 dark:bg-red-900/10 text-red-500 border border-red-100 dark:border-red-900/20' : 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-500 border border-emerald-100 dark:border-emerald-900/20'}">
+                                $${saldoTotal.toLocaleString('es-AR')}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <button onclick="abrirFichaCliente('${c.nombre.replace(/'/g,"\\'")}');event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                Ver Ficha / CC
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('');
+                if (typeof window._geckoDragTable === 'function') {
+                    window._geckoDragTable(tbody, function(srcKey, destKey) {
+                        const si = parseInt(srcKey), di = parseInt(destKey);
+                        const all = JSON.parse(localStorage.getItem('clientes') || '[]');
+                        const filtroNow = document.getElementById('filtroClienteBusqueda')?.value?.toLowerCase() || '';
+                        const filt = all.filter(c =>
+                            c.nombre.toLowerCase().includes(filtroNow) ||
+                            (c.cuit && c.cuit.includes(filtroNow)) ||
+                            (c.rubro && c.rubro.toLowerCase().includes(filtroNow))
+                        );
+                        const srcNom = filt[si]?.nombre, dstNom = filt[di]?.nombre;
+                        if (!srcNom || !dstNom) return;
+                        const fo = all.findIndex(c => c.nombre === srcNom);
+                        const fd = all.findIndex(c => c.nombre === dstNom);
+                        if (fo < 0 || fd < 0) return;
+                        const moved = all.splice(fo, 1)[0];
+                        all.splice(fd, 0, moved);
+                        localStorage.setItem('clientes', JSON.stringify(all));
+                        window.renderClientes();
+                    });
+                }
+            };
+        })();
+
+        console.log('🦎 GECKO-FIXES: renderOts + renderizarMovimientos + renderClientes parcheados post-main.js.');
     }, 1000); // 1000ms — espera que main.js (defer) termine todo
 });
 // ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──

@@ -1776,9 +1776,9 @@
             gap: 8px;
         }
         .mgp-type-btn.active {
-            border-color: #22c55e !important;
-            background: rgba(34, 197, 94, 0.15) !important;
-            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+            border-color: #F15A24 !important;
+            background: rgba(241, 90, 36, 0.15) !important;
+            box-shadow: 0 0 0 2px rgba(241, 90, 36, 0.25);
         }
 
         /* BOTÓN AÑADIR (EL ESTILO UNIFICADO) */
