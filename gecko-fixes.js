@@ -152,7 +152,7 @@ window.abrirCotizadorManual = function() {
 
     const modal = document.createElement('div');
     modal.id = 'modalCotizadorManual';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
 
     modal.innerHTML = `
     <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:32px;position:relative;">
@@ -284,7 +284,7 @@ window.verDocumento = function(id) {
     document.getElementById('modalVerOT')?.remove();
     const modal = document.createElement('div');
     modal.id = 'modalVerOT';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
     modal.innerHTML = `
     <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -461,7 +461,7 @@ window.eliminarOT = function(id) {
     document.getElementById('modalConfirmEliminarOT')?.remove();
     const modal = document.createElement('div');
     modal.id = 'modalConfirmEliminarOT';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
     modal.innerHTML = `
         <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
             <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
@@ -629,7 +629,7 @@ window.eliminarPresupuesto = function(id) {
     document.getElementById('_geckoConfirmElimPres')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmElimPres';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
     modal.innerHTML = `
         <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
             <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
@@ -675,7 +675,7 @@ window._confirmarConversionOT = function(id) {
         document.getElementById('_geckoConfirmSena')?.remove();
         const m2 = document.createElement('div');
         m2.id = '_geckoConfirmSena';
-        m2.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+        m2.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
         m2.innerHTML = `
             <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
                 <div style="width:56px;height:56px;background:rgba(34,197,94,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
@@ -702,7 +702,7 @@ window.convertirPresupuestoAOT = function(id) {
     document.getElementById('_geckoConfirmConvOT')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmConvOT';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
     modal.innerHTML = `
         <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
             <div style="width:56px;height:56px;background:rgba(241,90,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
@@ -900,7 +900,7 @@ window.editarOT = function(id) {
     document.getElementById('modalEditarOT')?.remove();
     const modal = document.createElement('div');
     modal.id = 'modalEditarOT';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
 
     const inputStyle = 'width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:10px 14px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;font-family:inherit;';
     const labelStyle = 'display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:7px;';
@@ -997,7 +997,7 @@ window.abrirModalSena = function(id) {
 
     const modal = document.createElement('div');
     modal.id = 'modalSena';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
 
     const formasPago = ['Efectivo','Transferencia','Débito','Crédito','MercadoPago'];
     const cajasList = cajas.map(c => c.nombre);
@@ -1515,7 +1515,7 @@ document.addEventListener('geckoDB_ready', () => {
     if (!document.getElementById('modalEditarCaja')) {
         const modal = document.createElement('div');
         modal.id = 'modalEditarCaja';
-        modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
+        modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
         modal.innerHTML = `
             <div class="mgp-card" style="width:100%;max-width:480px;">
 
@@ -1568,12 +1568,12 @@ document.addEventListener('geckoDB_ready', () => {
                 <!-- Saldo -->
                 <div style="margin-bottom:32px;">
                     <label class="mgp-label">Saldo actual</label>
-                    <div style="display:flex;align-items:center;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:0 16px;height:52px;gap:12px;box-sizing:border-box;">
-                        <span style="color:#ffffff;font-size:16px;line-height:52px;flex-shrink:0;user-select:none;">$</span>
+                    <div style="display:flex;align-items:center;background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:0 14px;height:48px;gap:10px;box-sizing:border-box;overflow:hidden;">
+                        <span style="display:flex;align-items:center;height:100%;color:#ffffff;font-size:15px;flex-shrink:0;user-select:none;">$</span>
                         <input type="number" id="editCajaSaldo" placeholder="0"
-                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:16px;line-height:52px;padding:0;margin:0;width:100%;box-sizing:border-box;-moz-appearance:textfield;"
+                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:15px;height:100%;display:flex;align-items:center;padding:0;margin:0;width:100%;box-sizing:border-box;-moz-appearance:textfield;appearance:textfield;"
                             onfocus="this.parentElement.style.borderColor='#F15A24'"
-                            onblur="this.parentElement.style.borderColor='#444'">
+                            onblur="this.parentElement.style.borderColor='#333'">
                     </div>
                 </div>
 
@@ -1608,14 +1608,14 @@ document.addEventListener('geckoDB_ready', () => {
     window._selectCajaTipo = function(tipo) {
         document.getElementById('editCajaIcono').value = tipo;
         const ACTIVE = {
-            efectivo:            { border:'rgba(16,185,129,0.8)',  bg:'rgba(16,185,129,0.15)',  shadow:'0 0 12px rgba(16,185,129,0.25)',  color:'#10b981' },
+            efectivo:            { border:'rgba(34,197,94,0.8)',   bg:'rgba(34,197,94,0.15)',   shadow:'0 0 12px rgba(34,197,94,0.25)',   color:'#22c55e' },
             mercado_pago_celeste:{ border:'rgba(59,130,246,0.8)',  bg:'rgba(59,130,246,0.15)',  shadow:'0 0 12px rgba(59,130,246,0.25)',  color:'#3b82f6' },
-            banco:               { border:'rgba(100,116,139,0.8)', bg:'rgba(100,116,139,0.15)', shadow:'0 0 12px rgba(100,116,139,0.25)', color:'#64748b' }
+            banco:               { border:'rgba(148,163,184,0.8)', bg:'rgba(148,163,184,0.15)', shadow:'0 0 12px rgba(148,163,184,0.25)', color:'#94a3b8' }
         };
         const IDLE = {
-            efectivo:            { border:'rgba(16,185,129,0.35)',  bg:'rgba(16,185,129,0.07)',  color:'#10b981' },
+            efectivo:            { border:'rgba(34,197,94,0.35)',   bg:'rgba(34,197,94,0.07)',   color:'#22c55e' },
             mercado_pago_celeste:{ border:'rgba(59,130,246,0.35)',  bg:'rgba(59,130,246,0.07)',  color:'#3b82f6' },
-            banco:               { border:'rgba(100,116,139,0.35)', bg:'rgba(100,116,139,0.07)', color:'#64748b' }
+            banco:               { border:'rgba(148,163,184,0.35)', bg:'rgba(148,163,184,0.07)', color:'#94a3b8' }
         };
         const IDS = { efectivo:'cajaTipoEfectivo', mercado_pago_celeste:'cajaTipoMp', banco:'cajaTipoBanco' };
         Object.keys(IDS).forEach(t => {
@@ -1927,7 +1927,7 @@ window.eliminarGastoFijo = function(idx) {
     const g = lista[idx];
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmElimGasto';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
     modal.innerHTML = `
         <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
             <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
@@ -1959,7 +1959,7 @@ window.editarGastoFijo = function(idx) {
     document.getElementById('_geckoModalEditGasto')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoModalEditGasto';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
     const cats = ['Alquiler','Servicios','Internet','Sueldos','Impuestos','Insumos','Varios'];
     const catLabels = { Alquiler:'Alquiler', Servicios:'Servicios (Luz, Agua, Gas)', Internet:'Internet / Telefonía', Sueldos:'Sueldos', Impuestos:'Impuestos / Monotributo', Insumos:'Insumos recurrentes', Varios:'Varios' };
     modal.innerHTML = `
@@ -2027,7 +2027,7 @@ window.abrirModalNuevoGastoFijo = function() {
     document.getElementById('_geckoModalNuevoGasto')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoModalNuevoGasto';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
     modal.innerHTML = `
         <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:32px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
@@ -2256,7 +2256,7 @@ window.ejecutarCierreMensual = function() {
     document.getElementById('_geckoConfirmCierre')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmCierre';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
     const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     const mesNom = meses[new Date().getMonth()];
     modal.innerHTML = `
