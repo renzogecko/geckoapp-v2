@@ -2281,14 +2281,12 @@
     </div>
 
     <!-- ═══════════════════ MODAL NUEVA CAJA — GECKO STYLE ═══════════════════ -->
-    <div id="modalNuevaCaja" style="display:none;position:fixed;inset:0;z-index:70;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
-        <div class="gecko-modal-card" style="width:100%;max-width:500px;max-height:92vh;overflow-y:auto;position:relative;">
+    <div id="modalNuevaCaja" class="gecko-modal-overlay" style="display:none;z-index:70;">
+        <div class="gecko-modal-box">
 
             <!-- Header -->
-            <div style="margin-bottom:32px;">
-                <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin:0 0 6px 0;">Configuración</p>
-                <h2 style="color:white;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:0;">Nueva Caja</h2>
-            </div>
+            <p class="gecko-modal-subtitle">Configuración</p>
+            <h2 class="gecko-modal-title">Nueva Caja</h2>
             <button onclick="intentarCerrarModal('modalNuevaCaja')"
                 style="position:absolute;top:28px;right:28px;width:34px;height:34px;border-radius:10px;background:#1a1a1f;border:1px solid #27272a;color:#52525b;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
                 onmouseover="this.style.color='white';this.style.borderColor='#3f3f46'"
@@ -2313,7 +2311,7 @@
 
             <!-- Tipo de caja (segmented) -->
             <div style="margin-bottom:28px;">
-                <label class="gecko-field-label">Tipo de caja</label>
+                <label class="gecko-label">Tipo de caja</label>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
                     <button id="nuevaCajaTipoEfectivo" onclick="window._selectNuevaCajaTipo('efectivo')"
                         style="padding:14px 8px;border-radius:14px;border:1.5px solid rgba(16,185,129,0.8);background:rgba(16,185,129,0.15);cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 0 12px rgba(16,185,129,0.25);">
@@ -2342,37 +2340,35 @@
 
             <!-- Nombre -->
             <div style="margin-bottom:22px;">
-                <label class="gecko-field-label">Nombre de la caja</label>
-                <input type="text" id="nombreNuevaCaja" class="gecko-input" placeholder="Ej: Efectivo, Banco Galicia, MP Principal...">
+                <label class="gecko-label">Nombre de la caja</label>
+                <input type="text" id="nombreNuevaCaja" class="gecko-input-line" placeholder="Ej: Efectivo, Banco Galicia, MP Principal...">
             </div>
 
             <!-- Saldo inicial -->
-            <div style="margin-bottom:36px;">
-                <label class="gecko-field-label">Saldo inicial ($)</label>
-                <div class="gecko-input-money-wrap">
-                    <span class="gecko-input-money-prefix">$</span>
-                    <input type="number" id="saldoInicialCaja" placeholder="0"
-                        style="flex:1;background:transparent;border:none;padding:14px 12px 14px 20px;color:#F15A24;font-size:18px;font-weight:900;outline:none;font-family:inherit;min-width:0;">
+            <div style="margin-bottom:28px;">
+                <label class="gecko-label">Saldo inicial ($)</label>
+                <div class="gecko-input-group">
+                    <span class="gecko-input-prefix">$</span>
+                    <input type="number" class="gecko-input-num" id="saldoInicialCaja" placeholder="0">
                 </div>
             </div>
 
             <!-- Botón guardar -->
-            <button id="btnGuardarCaja" onclick="guardarNuevaCaja()"
-                style="width:100%;padding:16px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;transition:all 0.2s;"
-                onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='0 8px 24px rgba(241,90,36,0.35)'"
-                onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
-                Crear Caja y Guardar
-            </button>
+            <div class="gecko-modal-footer">
+                <button id="btnGuardarCaja" onclick="guardarNuevaCaja()" class="gecko-btn-primary" style="flex:1;">
+                    Crear Caja y Guardar
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- ═══════════════════ MODAL NUEVO MOVIMIENTO — MODAL-GECKO-PRO ═══════════════════ -->
-    <div id="modalNuevoMovimiento" style="display:none;position:fixed;inset:0;z-index:75;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
-        <div class="mgp-card" style="width:100%;max-width:480px;">
+    <div id="modalNuevoMovimiento" class="gecko-modal-overlay" style="display:none;z-index:75;">
+        <div class="gecko-modal-box">
 
             <!-- Header -->
-            <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin:0 0 6px 0;">Registro Financiero</p>
-            <h2 style="color:white;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 32px 0;">Nuevo Movimiento</h2>
+            <p class="gecko-modal-subtitle">Registro Financiero</p>
+            <h2 class="gecko-modal-title">Nuevo Movimiento</h2>
             <button onclick="window.cerrarModalMovimiento()"
                 style="position:absolute;top:24px;right:24px;width:32px;height:32px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#666;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
                 onmouseover="this.style.color='white';this.style.borderColor='#555'"
@@ -2380,26 +2376,22 @@
 
             <!-- Descripción -->
             <div style="margin-bottom:20px;">
-                <label class="mgp-label">Descripción</label>
-                <input type="text" id="movDescripcion" class="mgp-input" placeholder="Ej: Compra de insumos"
-                    onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333'">
+                <label class="gecko-label">Descripción</label>
+                <input type="text" id="movDescripcion" class="gecko-input-line" placeholder="Ej: Compra de insumos">
             </div>
 
             <!-- Monto + Categoría (fila) -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
                 <div>
-                    <label class="mgp-label">Monto ($)</label>
-                    <div style="display:flex;align-items:center;background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:0 14px;height:48px;gap:10px;box-sizing:border-box;overflow:hidden;">
-                        <span style="display:flex;align-items:center;height:100%;color:#ffffff;font-size:15px;flex-shrink:0;user-select:none;">$</span>
-                        <input type="number" id="movMonto" placeholder="0"
-                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:15px;height:100%;display:flex;align-items:center;padding:0;margin:0;width:100%;box-sizing:border-box;-moz-appearance:textfield;appearance:textfield;"
-                            onfocus="this.parentElement.style.borderColor='#F15A24'"
-                            onblur="this.parentElement.style.borderColor='#333'">
+                    <label class="gecko-label">Monto ($)</label>
+                    <div class="gecko-input-group">
+                        <span class="gecko-input-prefix">$</span>
+                        <input type="number" class="gecko-input-num" id="movMonto" placeholder="0">
                     </div>
                 </div>
                 <div>
-                    <label class="mgp-label">Categoría</label>
-                    <select id="movCategoria" class="gecko-select-pro">
+                    <label class="gecko-label">Categoría</label>
+                    <select id="movCategoria" class="gecko-select">
                         <option value="Ventas">Ventas</option>
                         <option value="Seña">Seña</option>
                         <option value="Cobro Final">Cobro Final</option>
@@ -2415,26 +2407,20 @@
             </div>
 
             <!-- Caja -->
-            <div style="margin-bottom:32px;">
-                <label class="mgp-label">Caja</label>
-                <select id="movCaja" class="gecko-select-pro">
+            <div style="margin-bottom:28px;">
+                <label class="gecko-label">Caja</label>
+                <select id="movCaja" class="gecko-select">
                     <!-- Dinámico vía updateCajaSelectors() -->
                 </select>
             </div>
 
             <!-- Botones Ingreso / Egreso -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <button onclick="registrarMovimientoManual('Ingreso')"
-                    style="padding:14px 16px;background:#22c55e;border:none;color:white;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
-                    onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(34,197,94,0.4)'"
-                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+            <div class="gecko-modal-footer" style="margin-top:0;">
+                <button onclick="registrarMovimientoManual('Ingreso')" class="gecko-btn-success">
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                     Registrar Ingreso
                 </button>
-                <button onclick="registrarMovimientoManual('Egreso')"
-                    style="padding:14px 16px;background:#ef4444;border:none;color:white;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
-                    onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(239,68,68,0.4)'"
-                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                <button onclick="registrarMovimientoManual('Egreso')" class="gecko-btn-egreso">
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/></svg>
                     Registrar Egreso
                 </button>
@@ -2443,12 +2429,12 @@
     </div>
 
     <!-- ═══════════════════ MODAL TRANSFERENCIA — MODAL-GECKO-PRO ═══════════════════ -->
-    <div id="modalTransferencia" style="display:none;position:fixed;inset:0;z-index:75;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
-        <div class="mgp-card" style="width:100%;max-width:460px;">
+    <div id="modalTransferencia" class="gecko-modal-overlay" style="display:none;z-index:75;">
+        <div class="gecko-modal-box">
 
             <!-- Header -->
-            <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin:0 0 6px 0;">Finanzas / Cajas</p>
-            <h2 style="color:white;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 32px 0;">Transferencia</h2>
+            <p class="gecko-modal-subtitle">Finanzas / Cajas</p>
+            <h2 class="gecko-modal-title">Transferencia</h2>
             <button onclick="document.getElementById('modalTransferencia').style.display='none'"
                 style="position:absolute;top:24px;right:24px;width:32px;height:32px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#666;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
                 onmouseover="this.style.color='white';this.style.borderColor='#555'"
@@ -2456,8 +2442,8 @@
 
             <!-- Caja Origen -->
             <div style="margin-bottom:20px;">
-                <label class="mgp-label">Caja Origen</label>
-                <select id="transfOrigen" class="gecko-select-pro">
+                <label class="gecko-label">Caja Origen</label>
+                <select id="transfOrigen" class="gecko-select">
                     <!-- Dinámico vía updateCajaSelectors() -->
                 </select>
             </div>
@@ -2475,32 +2461,28 @@
 
             <!-- Caja Destino -->
             <div style="margin-bottom:20px;">
-                <label class="mgp-label">Caja Destino</label>
-                <select id="transfDestino" class="gecko-select-pro">
+                <label class="gecko-label">Caja Destino</label>
+                <select id="transfDestino" class="gecko-select">
                     <!-- Dinámico vía updateCajaSelectors() -->
                 </select>
             </div>
 
             <!-- Monto -->
-            <div style="margin-bottom:32px;">
-                <label class="mgp-label">Monto a Transferir ($)</label>
-                <div style="display:flex;align-items:center;background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:0 14px;height:48px;gap:10px;box-sizing:border-box;overflow:hidden;">
-                    <span style="display:flex;align-items:center;height:100%;color:#ffffff;font-size:15px;flex-shrink:0;user-select:none;">$</span>
-                    <input type="number" id="transfMonto" placeholder="0"
-                        style="background:transparent;border:none;outline:none;color:#ffffff;font-size:15px;height:100%;display:flex;align-items:center;padding:0;margin:0;width:100%;box-sizing:border-box;-moz-appearance:textfield;appearance:textfield;"
-                        onfocus="this.parentElement.style.borderColor='#F15A24'"
-                        onblur="this.parentElement.style.borderColor='#333'">
+            <div style="margin-bottom:28px;">
+                <label class="gecko-label">Monto a Transferir ($)</label>
+                <div class="gecko-input-group">
+                    <span class="gecko-input-prefix">$</span>
+                    <input type="number" class="gecko-input-num" id="transfMonto" placeholder="0">
                 </div>
             </div>
 
-            <!-- Botón confirmar — naranja -->
-            <button onclick="ejecutarTransferencia()"
-                style="width:100%;padding:14px 24px;background:#F15A24;border:none;color:white;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
-                onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(241,90,36,0.4)'"
-                onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                Confirmar Transferencia
-            </button>
+            <!-- Botón confirmar -->
+            <div class="gecko-modal-footer">
+                <button onclick="ejecutarTransferencia()" class="gecko-btn-primary" style="flex:1;">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                    Confirmar Transferencia
+                </button>
+            </div>
         </div>
     </div>
 

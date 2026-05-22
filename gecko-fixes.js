@@ -1515,13 +1515,14 @@ document.addEventListener('geckoDB_ready', () => {
     if (!document.getElementById('modalEditarCaja')) {
         const modal = document.createElement('div');
         modal.id = 'modalEditarCaja';
-        modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
+        modal.className = 'gecko-modal-overlay';
+        modal.style.cssText = 'display:none;z-index:10000;';
         modal.innerHTML = `
-            <div class="mgp-card" style="width:100%;max-width:480px;">
+            <div class="gecko-modal-box">
 
                 <!-- Header -->
-                <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin:0 0 6px 0;">Finanzas / Cajas</p>
-                <h2 style="color:white;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 32px 0;">Editar Caja</h2>
+                <p class="gecko-modal-subtitle">Finanzas / Cajas</p>
+                <h2 class="gecko-modal-title">Editar Caja</h2>
 
                 <!-- Cerrar -->
                 <button onclick="document.getElementById('modalEditarCaja').style.display='none'"
@@ -1533,7 +1534,7 @@ document.addEventListener('geckoDB_ready', () => {
 
                 <!-- Tipo de caja — 3 botones, seleccionado en naranja -->
                 <div style="margin-bottom:20px;">
-                    <label class="mgp-label accent">Tipo de caja</label>
+                    <label class="gecko-label">Tipo de caja</label>
                     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
                         <button id="cajaTipoEfectivo" onclick="window._selectCajaTipo('efectivo')" class="mgp-type-btn active">
                             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -1559,43 +1560,30 @@ document.addEventListener('geckoDB_ready', () => {
 
                 <!-- Nombre -->
                 <div style="margin-bottom:20px;">
-                    <label class="mgp-label">Nombre de la caja</label>
-                    <input type="text" id="editCajaNombre" class="mgp-input"
-                        placeholder="Ej: Efectivo, Banco Galicia, MP Principal..."
-                        onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333'">
+                    <label class="gecko-label">Nombre de la caja</label>
+                    <input type="text" id="editCajaNombre" class="gecko-input-line"
+                        placeholder="Ej: Efectivo, Banco Galicia, MP Principal...">
                 </div>
 
                 <!-- Saldo -->
-                <div style="margin-bottom:32px;">
-                    <label class="mgp-label">Saldo actual</label>
-                    <div style="display:flex;align-items:center;background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:0 14px;height:48px;gap:10px;box-sizing:border-box;overflow:hidden;">
-                        <span style="display:flex;align-items:center;height:100%;color:#ffffff;font-size:15px;flex-shrink:0;user-select:none;">$</span>
-                        <input type="number" id="editCajaSaldo" placeholder="0"
-                            style="background:transparent;border:none;outline:none;color:#ffffff;font-size:15px;height:100%;display:flex;align-items:center;padding:0;margin:0;width:100%;box-sizing:border-box;-moz-appearance:textfield;appearance:textfield;"
-                            onfocus="this.parentElement.style.borderColor='#F15A24'"
-                            onblur="this.parentElement.style.borderColor='#333'">
+                <div style="margin-bottom:28px;">
+                    <label class="gecko-label">Saldo actual</label>
+                    <div class="gecko-input-group">
+                        <span class="gecko-input-prefix">$</span>
+                        <input type="number" class="gecko-input-num" id="editCajaSaldo" placeholder="0">
                     </div>
                 </div>
 
                 <!-- Botones -->
-                <div style="display:flex;gap:10px;align-items:stretch;">
-                    <button onclick="window._eliminarCaja()"
-                        style="padding:14px 18px;background:transparent;border:1px solid #ef4444;color:#ef4444;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:7px;transition:all 0.2s;"
-                        onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(239,68,68,0.4)';this.style.background='rgba(239,68,68,0.1)'"
-                        onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none';this.style.background='transparent'">
+                <div class="gecko-modal-footer">
+                    <button onclick="window._eliminarCaja()" class="gecko-btn-danger">
                         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Eliminar
                     </button>
-                    <button onclick="document.getElementById('modalEditarCaja').style.display='none'"
-                        style="flex:1;padding:14px;background:transparent;border:1px solid #444;color:#888;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;"
-                        onmouseover="this.style.borderColor='#666';this.style.color='white'"
-                        onmouseout="this.style.borderColor='#444';this.style.color='#888'">
+                    <button onclick="document.getElementById('modalEditarCaja').style.display='none'" class="gecko-btn-cancel">
                         Cancelar
                     </button>
-                    <button onclick="window._guardarEdicionCaja()"
-                        style="flex:2;padding:14px;background:#F15A24;border:none;color:white;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;"
-                        onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(241,90,36,0.4)'"
-                        onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                    <button onclick="window._guardarEdicionCaja()" class="gecko-btn-primary">
                         Guardar Cambios
                     </button>
                 </div>
