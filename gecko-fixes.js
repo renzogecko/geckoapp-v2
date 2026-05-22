@@ -1516,7 +1516,7 @@ document.addEventListener('geckoDB_ready', () => {
         const modal = document.createElement('div');
         modal.id = 'modalEditarCaja';
         modal.className = 'gecko-modal-overlay';
-        modal.style.cssText = 'display:none;z-index:10000;';
+        modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
         modal.innerHTML = `
             <div class="gecko-modal-box">
 
