@@ -1592,53 +1592,96 @@ document.addEventListener('geckoDB_ready', () => {
         modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
     }
 
-    // Helper: seleccionar tipo de caja visualmente — mismo esquema de colores que NUEVA CAJA
+    // Helper: seleccionar tipo de caja visualmente — Design System gecko-toggle-btn
     window._selectCajaTipo = function(tipo) {
-        document.getElementById('editCajaIcono').value = tipo;
-        const ACTIVE = {
-            efectivo:            { border:'rgba(34,197,94,0.8)',   bg:'rgba(34,197,94,0.15)',   shadow:'0 0 12px rgba(34,197,94,0.25)',   color:'#22c55e' },
-            mercado_pago_celeste:{ border:'rgba(59,130,246,0.8)',  bg:'rgba(59,130,246,0.15)',  shadow:'0 0 12px rgba(59,130,246,0.25)',  color:'#3b82f6' },
-            banco:               { border:'rgba(148,163,184,0.8)', bg:'rgba(148,163,184,0.15)', shadow:'0 0 12px rgba(148,163,184,0.25)', color:'#94a3b8' }
+        const editHidden = document.getElementById('editCajaTipo');
+        if (editHidden) editHidden.value = tipo;
+        const nuevaHidden = document.getElementById('nuevaCajaTipo');
+        if (nuevaHidden) nuevaHidden.value = tipo;
+
+        const colores = {
+            efectivo:   { bg: '#16a34a', border: '#22c55e' },
+            billeteras: { bg: '#1d4ed8', border: '#3b82f6' },
+            banco:      { bg: '#475569', border: '#94a3b8' }
         };
-        const IDLE = {
-            efectivo:            { border:'rgba(34,197,94,0.35)',   bg:'rgba(34,197,94,0.07)',   color:'#22c55e' },
-            mercado_pago_celeste:{ border:'rgba(59,130,246,0.35)',  bg:'rgba(59,130,246,0.07)',  color:'#3b82f6' },
-            banco:               { border:'rgba(148,163,184,0.35)', bg:'rgba(148,163,184,0.07)', color:'#94a3b8' }
-        };
-        const IDS = { efectivo:'cajaTipoEfectivo', mercado_pago_celeste:'cajaTipoMp', banco:'cajaTipoBanco' };
-        Object.keys(IDS).forEach(t => {
-            const btn = document.getElementById(IDS[t]);
-            if (!btn) return;
-            const isActive = (t === tipo);
-            const s = isActive ? ACTIVE[t] : IDLE[t];
-            btn.style.borderColor = s.border;
-            btn.style.background  = s.bg;
-            btn.style.boxShadow   = isActive ? s.shadow : 'none';
-            if (isActive) btn.classList.add('active');
-            else          btn.classList.remove('active');
-            const svg  = btn.querySelector('svg');
-            const span = btn.querySelector('span');
-            if (svg)  svg.setAttribute('stroke', s.color);
-            if (span) span.style.color = s.color;
+
+        const grupos = document.querySelectorAll('#editCajaTipoGroup, #nuevaCajaTipoGroup');
+        grupos.forEach(function(grupo) {
+            grupo.querySelectorAll('.gecko-toggle-btn').forEach(function(btn) {
+                const btnTipo = btn.dataset.tipo;
+                btn.classList.remove('active');
+                if (btnTipo === tipo) {
+                    btn.classList.add('active');
+                    const col = colores[tipo] || colores.efectivo;
+                    btn.style.background  = col.bg;
+                    btn.style.borderColor = col.border;
+                    btn.style.color       = '#fff';
+                } else {
+                    btn.style.background  = '';
+                    btn.style.borderColor = '';
+                    btn.style.color       = '';
+                }
+            });
         });
     };
 
     window.editarCaja = function(id) {
-        const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+        const _ls = window._localStorage_original || localStorage;
+        const cajas = JSON.parse(_ls.getItem('gecko_cajas') || '[]');
         const caja = cajas.find(c => c.id === id);
         if (!caja) return;
-        document.getElementById('editCajaId').value = id;
-        document.getElementById('editCajaNombre').value = caja.nombre;
-        document.getElementById('editCajaSaldo').value = caja.saldo || 0;
-        // Activar el botón de tipo correcto
-        if (typeof window._selectCajaTipo === 'function') window._selectCajaTipo(caja.icono || 'efectivo');
-        document.getElementById('modalEditarCaja').style.display = 'flex';
+        const tipoCaja = caja.icono === 'mercado_pago_celeste' ? 'billeteras' : (caja.icono || 'efectivo');
+        // Recrear siempre para reflejar datos actuales
+        document.getElementById('modalEditarCaja')?.remove();
+        const modal = document.createElement('div');
+        modal.id = 'modalEditarCaja';
+        modal.className = 'gecko-modal-overlay';
+        modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML = `
+            <div class="gecko-modal-box max-w-md w-full mx-4">
+                <p class="gecko-modal-subtitle">Finanzas</p>
+                <h2 class="gecko-modal-title">Editar Caja</h2>
+                <div class="space-y-5 mt-6">
+                    <div>
+                        <label class="gecko-label">Nombre</label>
+                        <input id="editCajaNombre" class="gecko-input-line" type="text" value="${(caja.nombre||'').replace(/"/g,'&quot;')}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Tipo</label>
+                        <div class="gecko-toggle-group mt-2" id="editCajaTipoGroup">
+                            <button class="gecko-toggle-btn ${tipoCaja==='efectivo'?'active':''}" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')">💵 Efectivo</button>
+                            <button class="gecko-toggle-btn ${tipoCaja==='billeteras'?'active':''}" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')">📱 Billeteras</button>
+                            <button class="gecko-toggle-btn ${tipoCaja==='banco'?'active':''}" data-tipo="banco" onclick="_selectCajaTipo('banco')">🏦 Banco</button>
+                        </div>
+                        <input type="hidden" id="editCajaTipo" value="${tipoCaja}">
+                        <input type="hidden" id="editCajaId" value="${id}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Saldo actual</label>
+                        <div class="gecko-input-group mt-1">
+                            <span class="gecko-input-prefix">$</span>
+                            <input id="editCajaSaldo" class="gecko-input-num" type="number" value="${caja.saldo||0}">
+                        </div>
+                    </div>
+                </div>
+                <div class="gecko-modal-footer">
+                    <button class="gecko-btn-danger" onclick="window._eliminarCaja()">
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Eliminar
+                    </button>
+                    <button class="gecko-btn-cancel" onclick="document.getElementById('modalEditarCaja').style.display='none'">Cancelar</button>
+                    <button class="gecko-btn-primary" onclick="window._guardarEdicionCaja()">Guardar</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+        if (typeof window._selectCajaTipo === 'function') window._selectCajaTipo(tipoCaja);
     };
 
     window._guardarEdicionCaja = function() {
         const id     = document.getElementById('editCajaId').value;
         const nombre = document.getElementById('editCajaNombre').value.trim();
-        const icono  = document.getElementById('editCajaIcono').value;
+        const icono  = document.getElementById('editCajaTipo').value;
         const saldo  = parseFloat(document.getElementById('editCajaSaldo').value) || 0;
 
         if (!nombre) { alert('El nombre no puede estar vacío.'); return; }
@@ -2502,12 +2545,12 @@ window.addEventListener('load', function() {
             if (typeof updateCajaSelectors === 'function') {
                 updateCajaSelectors();
             } else {
-                window._geckoPopulateCajaSelect('movCaja');
+                window._geckoPopulateCajaSelect('nuevoMovCaja');
             }
             const m = document.getElementById('modalNuevoMovimiento');
             if (m) { m.style.display = 'flex'; }
-            const desc  = document.getElementById('movDescripcion');
-            const monto = document.getElementById('movMonto');
+            const desc  = document.getElementById('nuevoMovDesc');
+            const monto = document.getElementById('nuevoMovMonto');
             if (desc)  desc.value  = '';
             if (monto) monto.value = '';
         };
@@ -2516,12 +2559,12 @@ window.addEventListener('load', function() {
             if (typeof updateCajaSelectors === 'function') {
                 updateCajaSelectors();
             } else {
-                window._geckoPopulateCajaSelect('transfOrigen');
-                window._geckoPopulateCajaSelect('transfDestino');
+                window._geckoPopulateCajaSelect('transferenciaOrigen');
+                window._geckoPopulateCajaSelect('transferenciaDestino');
             }
             const m = document.getElementById('modalTransferencia');
             if (m) { m.style.display = 'flex'; }
-            const monto = document.getElementById('transfMonto');
+            const monto = document.getElementById('transferenciaMonto');
             if (monto) monto.value = '';
         };
 
@@ -2630,15 +2673,13 @@ window.cerrarModalMovimiento = function() {
     if (!modal) return;
     modal.style.display = 'none';
     // Limpiar campos para que no queden con datos sucios
-    ['movFecha','movMonto','movDescripcion'].forEach(id => {
+    ['nuevoMovFecha','nuevoMovMonto','nuevoMovDesc'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
-    const movTipo = document.getElementById('movTipo');
-    if (movTipo) movTipo.value = 'Ingreso';
-    const movCategoria = document.getElementById('movCategoria');
-    if (movCategoria) movCategoria.value = movCategoria.options[0]?.value || '';
-    const movCaja = document.getElementById('movCaja');
+    const movTipo = document.getElementById('nuevoMovTipo');
+    if (movTipo) movTipo.value = 'ingreso';
+    const movCaja = document.getElementById('nuevoMovCaja');
     if (movCaja) movCaja.value = movCaja.options[0]?.value || '';
 };
 
@@ -2663,5 +2704,225 @@ window._geckoPopulateCajaSelect = function(selectId) {
         : '<option value="">Sin cajas disponibles</option>';
     if (current && cajas.find(c => c.nombre === current)) sel.value = current;
 };
+
+// ══════════════════════════════════════════════════════
+// GECKO DESIGN SYSTEM — Funciones de modales de finanzas
+// ══════════════════════════════════════════════════════
+
+// ── _selectCajaTipo: unificado para editarCaja y nuevaCaja (override final)
+window._selectCajaTipo = function(tipo) {
+    const editHidden = document.getElementById('editCajaTipo');
+    if (editHidden) editHidden.value = tipo;
+    const nuevaHidden = document.getElementById('nuevaCajaTipo');
+    if (nuevaHidden) nuevaHidden.value = tipo;
+    const colores = {
+        efectivo:   { bg: '#16a34a', border: '#22c55e' },
+        billeteras: { bg: '#1d4ed8', border: '#3b82f6' },
+        banco:      { bg: '#475569', border: '#94a3b8' }
+    };
+    document.querySelectorAll('#editCajaTipoGroup, #nuevaCajaTipoGroup').forEach(function(grupo) {
+        grupo.querySelectorAll('.gecko-toggle-btn').forEach(function(btn) {
+            const btnTipo = btn.dataset.tipo;
+            btn.classList.remove('active');
+            if (btnTipo === tipo) {
+                btn.classList.add('active');
+                const col = colores[tipo] || colores.efectivo;
+                btn.style.background  = col.bg;
+                btn.style.borderColor = col.border;
+                btn.style.color       = '#fff';
+            } else {
+                btn.style.background  = '';
+                btn.style.borderColor = '';
+                btn.style.color       = '';
+            }
+        });
+    });
+};
+
+// ── editarCaja: override final — siempre recrea el modal con datos frescos
+window.editarCaja = function(id) {
+    const _ls = window._localStorage_original || localStorage;
+    const cajas = JSON.parse(_ls.getItem('gecko_cajas') || '[]');
+    const caja = cajas.find(function(c) { return c.id === id; });
+    if (!caja) return;
+    const tipoCaja = caja.icono === 'mercado_pago_celeste' ? 'billeteras' : (caja.icono || 'efectivo');
+    document.getElementById('modalEditarCaja')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'modalEditarCaja';
+    modal.className = 'gecko-modal-overlay';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML = `
+        <div class="gecko-modal-box max-w-md w-full mx-4">
+            <p class="gecko-modal-subtitle">Finanzas</p>
+            <h2 class="gecko-modal-title">Editar Caja</h2>
+            <div class="space-y-5 mt-6">
+                <div>
+                    <label class="gecko-label">Nombre</label>
+                    <input id="editCajaNombre" class="gecko-input-line" type="text" value="${(caja.nombre||'').replace(/"/g,'&quot;')}">
+                </div>
+                <div>
+                    <label class="gecko-label">Tipo</label>
+                    <div class="gecko-toggle-group mt-2" id="editCajaTipoGroup">
+                        <button class="gecko-toggle-btn ${tipoCaja==='efectivo'?'active':''}" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')">💵 Efectivo</button>
+                        <button class="gecko-toggle-btn ${tipoCaja==='billeteras'?'active':''}" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')">📱 Billeteras</button>
+                        <button class="gecko-toggle-btn ${tipoCaja==='banco'?'active':''}" data-tipo="banco" onclick="_selectCajaTipo('banco')">🏦 Banco</button>
+                    </div>
+                    <input type="hidden" id="editCajaTipo" value="${tipoCaja}">
+                    <input type="hidden" id="editCajaId" value="${id}">
+                </div>
+                <div>
+                    <label class="gecko-label">Saldo actual</label>
+                    <div class="gecko-input-group mt-1">
+                        <span class="gecko-input-prefix">$</span>
+                        <input id="editCajaSaldo" class="gecko-input-num" type="number" value="${caja.saldo||0}">
+                    </div>
+                </div>
+            </div>
+            <div class="gecko-modal-footer">
+                <button class="gecko-btn-danger" onclick="window._eliminarCaja()">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Eliminar
+                </button>
+                <button class="gecko-btn-cancel" onclick="document.getElementById('modalEditarCaja').style.display='none'">Cancelar</button>
+                <button class="gecko-btn-primary" onclick="window._guardarEdicionCaja()">Guardar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.style.display = 'none'; });
+    if (typeof window._selectCajaTipo === 'function') window._selectCajaTipo(tipoCaja);
+};
+
+// ── crearCaja: nueva caja desde modalNuevaCaja (IDs nuevos)
+window.crearCaja = function() {
+    const nombre = document.getElementById('nuevaCajaNombre')?.value?.trim();
+    const tipo   = document.getElementById('nuevaCajaTipo')?.value || 'efectivo';
+    const saldo  = parseFloat(document.getElementById('nuevaCajaSaldo')?.value) || 0;
+    if (!nombre) { alert('Ingresá un nombre para la caja.'); return; }
+    const _ls = window._localStorage_original || localStorage;
+    const id = 'caja_' + Date.now();
+    const cajas = JSON.parse(_ls.getItem('gecko_cajas') || '[]');
+    cajas.push({ id, nombre, saldo, icono: tipo });
+    _ls.setItem('gecko_cajas', JSON.stringify(cajas));
+    window.LISTA_CAJAS = cajas;
+    fetch('/app/api.php?endpoint=cajas', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id, nombre, saldo, icono: tipo }) }).catch(() => {});
+    if (saldo !== 0) {
+        const mov = { id:'mov_'+Date.now(), fecha:new Date().toLocaleDateString('es-AR'), detalle:'Saldo inicial de caja', caja:nombre, tipo:saldo>0?'Ingreso':'Egreso', monto:Math.abs(saldo), categoria:'Sistema' };
+        const movs = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+        movs.push(mov);
+        _ls.setItem('gecko_movimientos', JSON.stringify(movs));
+        window.LISTA_MOVIMIENTOS = movs;
+        fetch('/app/api.php?endpoint=movimientos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(mov) }).catch(() => {});
+    }
+    document.getElementById('modalNuevaCaja').style.display = 'none';
+    const f = document.getElementById('nuevaCajaNombre'); if (f) f.value = '';
+    const s = document.getElementById('nuevaCajaSaldo');  if (s) s.value = '0';
+    if (typeof window.mostrarExito === 'function') window.mostrarExito(`Caja "${nombre}" creada.`, '¡Hecho!');
+    setTimeout(function() {
+        window.LISTA_MOVIMIENTOS = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+        window.renderizarFinanzas();
+        if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        if (typeof window.renderizarFiltrosCajas === 'function') window.renderizarFiltrosCajas();
+    }, 200);
+};
+
+// ── _geckoSelectTipoMov: toggle Ingreso/Egreso en modalNuevoMovimiento
+window._geckoSelectTipoMov = function(tipo) {
+    const hidden = document.getElementById('nuevoMovTipo');
+    if (hidden) hidden.value = tipo;
+    const group = document.querySelector('#modalNuevoMovimiento .gecko-toggle-group');
+    if (!group) return;
+    group.querySelectorAll('.gecko-toggle-btn').forEach(function(btn) {
+        const btnTipo = btn.dataset.tipo;
+        btn.classList.remove('active');
+        btn.style.background  = '';
+        btn.style.borderColor = '';
+        btn.style.color       = '';
+        if (btnTipo === tipo) {
+            btn.classList.add('active');
+            if (tipo === 'ingreso') { btn.style.background='#16a34a'; btn.style.borderColor='#22c55e'; }
+            else                    { btn.style.background='#dc2626'; btn.style.borderColor='#ef4444'; }
+            btn.style.color = '#fff';
+        }
+    });
+};
+
+// ── guardarNuevoMovimiento: registra movimiento desde modalNuevoMovimiento (IDs nuevos)
+window.guardarNuevoMovimiento = function() {
+    try {
+        const tipo  = document.getElementById('nuevoMovTipo')?.value || 'ingreso';
+        const desc  = document.getElementById('nuevoMovDesc')?.value?.trim();
+        const monto = parseFloat(document.getElementById('nuevoMovMonto')?.value) || 0;
+        const caja  = document.getElementById('nuevoMovCaja')?.value;
+        if (!desc || monto <= 0) { alert('Completá descripción y monto.'); return; }
+        if (!caja) { alert('Seleccioná una caja.'); return; }
+        const tipoCapital = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+        if (typeof registrarMovimiento === 'function') {
+            registrarMovimiento(desc, caja, monto, tipoCapital, 'Varios');
+        } else {
+            const _ls = window._localStorage_original || localStorage;
+            const cajas = window.LISTA_CAJAS || JSON.parse(_ls.getItem('gecko_cajas') || '[]');
+            const cajObj = cajas.find(function(c) { return c.nombre === caja; });
+            if (cajObj) { tipoCapital === 'Ingreso' ? (cajObj.saldo += monto) : (cajObj.saldo -= monto); }
+            _ls.setItem('gecko_cajas', JSON.stringify(cajas));
+            window.LISTA_CAJAS = cajas;
+            const mov = { id:'mov_'+Date.now(), fecha:new Date().toLocaleDateString('es-AR'), detalle:desc, caja, tipo:tipoCapital, monto, categoria:'Varios' };
+            const movs = window.LISTA_MOVIMIENTOS || JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+            movs.push(mov);
+            _ls.setItem('gecko_movimientos', JSON.stringify(movs));
+            window.LISTA_MOVIMIENTOS = movs;
+        }
+        document.getElementById('modalNuevoMovimiento').style.display = 'none';
+        ['nuevoMovDesc','nuevoMovMonto'].forEach(function(id) { const el=document.getElementById(id); if(el) el.value=''; });
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${tipoCapital} de $${monto.toLocaleString('es-AR')} registrado.`, '¡Hecho!');
+        if (typeof window.renderizarFinanzas === 'function') setTimeout(window.renderizarFinanzas, 150);
+        if (typeof window.renderizarMovimientos === 'function') setTimeout(window.renderizarMovimientos, 150);
+    } catch(e) { console.error('Error registrando movimiento:', e); }
+};
+
+// ── ejecutarTransferencia: override — lee IDs nuevos del modal rediseñado
+window.ejecutarTransferencia = function() {
+    const origen  = document.getElementById('transferenciaOrigen')?.value;
+    const destino = document.getElementById('transferenciaDestino')?.value;
+    const monto   = parseFloat(document.getElementById('transferenciaMonto')?.value) || 0;
+    if (!origen || !destino) { alert('Seleccioná cajas de origen y destino.'); return; }
+    if (origen === destino)  { alert('Las cajas deben ser distintas.'); return; }
+    if (monto <= 0)          { alert('Monto inválido.'); return; }
+    const _ls = window._localStorage_original || localStorage;
+    const cajas = window.LISTA_CAJAS || JSON.parse(_ls.getItem('gecko_cajas') || '[]');
+    const cajO = cajas.find(function(c) { return c.nombre === origen; });
+    const cajD = cajas.find(function(c) { return c.nombre === destino; });
+    if (!cajO || !cajD) { alert('Caja no encontrada.'); return; }
+    cajO.saldo -= monto;
+    cajD.saldo += monto;
+    _ls.setItem('gecko_cajas', JSON.stringify(cajas));
+    window.LISTA_CAJAS = cajas;
+    const ts = Date.now();
+    const movs = window.LISTA_MOVIMIENTOS || JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+    movs.push({ id:'mov_'+ts,   fecha:new Date().toLocaleDateString('es-AR'), detalle:`Transferencia a ${destino}`,   caja:origen,  tipo:'Egreso',  monto, categoria:'Transferencia' });
+    movs.push({ id:'mov_'+(ts+1), fecha:new Date().toLocaleDateString('es-AR'), detalle:`Transferencia desde ${origen}`, caja:destino, tipo:'Ingreso', monto, categoria:'Transferencia' });
+    _ls.setItem('gecko_movimientos', JSON.stringify(movs));
+    window.LISTA_MOVIMIENTOS = movs;
+    document.getElementById('modalTransferencia').style.display = 'none';
+    const mEl = document.getElementById('transferenciaMonto'); if (mEl) mEl.value = '';
+    if (typeof window.mostrarExito === 'function') window.mostrarExito(`Transferencia de $${monto.toLocaleString('es-AR')} realizada.`, '¡Listo!');
+    if (typeof window.renderizarFinanzas === 'function') setTimeout(window.renderizarFinanzas, 150);
+    if (typeof window.renderizarMovimientos === 'function') setTimeout(window.renderizarMovimientos, 150);
+};
+
+// ── updateCajaSelectors: override — también puebla selects de nuevos modales
+(function() {
+    const _orig = window.updateCajaSelectors;
+    window.updateCajaSelectors = function() {
+        if (typeof _orig === 'function') _orig();
+        const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+        const opts = cajas.length
+            ? cajas.map(function(c) { return '<option value="' + c.nombre + '">' + c.nombre + '</option>'; }).join('')
+            : '<option value="">Sin cajas disponibles</option>';
+        ['nuevoMovCaja','transferenciaOrigen','transferenciaDestino'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = opts;
+        });
+    };
+})();
 
 console.log('🦎 GECKO-FIXES v2.0 cargado — preview, desplegable OT, seña multi-caja, botones presupuestos.');
