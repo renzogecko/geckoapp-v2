@@ -2166,8 +2166,13 @@ input[type="number"] {
   color: rgba(255,255,255,0.2) !important;
 }
 
-.gecko-select {
-  background: #131314 !important;
+.gecko-select,
+select.gecko-select,
+select.gecko-select option,
+.gecko-modal-overlay select,
+.gecko-modal-box select {
+  background: #1e1f20 !important;
+  background-color: #1e1f20 !important;
   color: #f1f5f9 !important;
   border: 1px solid #333333 !important;
   border-radius: 0.75rem !important;
@@ -2175,13 +2180,20 @@ input[type="number"] {
   width: 100% !important;
   appearance: none !important;
   -webkit-appearance: none !important;
+  -moz-appearance: none !important;
   outline: none !important;
   font-size: 0.95rem !important;
+  cursor: pointer !important;
 }
-.gecko-select option {
-  background: #18181f !important;
+
+.gecko-modal-overlay select option,
+.gecko-modal-box select option,
+select.gecko-select option {
+  background: #1e1f20 !important;
+  background-color: #1e1f20 !important;
   color: #f1f5f9 !important;
 }
+
 .gecko-select:focus {
   border-color: #F15A24 !important;
 }
