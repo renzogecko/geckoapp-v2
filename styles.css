@@ -2053,331 +2053,275 @@ input[type="number"] {
    Referencia: modal "Gestión de Insumo"
    ============================================ */
 
-/* OVERLAY
-   NOTA: display usa flex SIN !important para que el JS pueda
-   controlar visibilidad con style.display = 'none' / 'flex'  */
+/* ── GECKO MODAL DESIGN SYSTEM v2.0 ────────────────────────────────────────
+   Referencia visual: modal "Gestión de Insumo" (modalMaterial)
+   NOTA: display SIN !important — el JS controla visibilidad con
+   element.style.display = 'none' / 'flex'
+   ─────────────────────────────────────────────────────────────────────── */
+
 .gecko-modal-overlay {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 75 !important;
-  background: rgba(10, 12, 20, 0.75) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
+  z-index: 9999 !important;
   display: flex;
   align-items: center !important;
   justify-content: center !important;
-  padding: 20px !important;
+  background: rgba(10, 12, 20, 0.55) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }
 
-/* CONTENEDOR */
 .gecko-modal-box {
-  background: #111113 !important;
-  border: 1px solid #27272a !important;
-  border-radius: 20px !important;
+  background: #18181f !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 1.25rem !important;
+  padding: 2rem !important;
   width: 100% !important;
-  max-width: 540px !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  padding: 28px 32px !important;
-  box-sizing: border-box !important;
   position: relative !important;
 }
 
-/* ENCABEZADO */
 .gecko-modal-subtitle {
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
   color: #F15A24 !important;
-  margin: 0 0 4px 0 !important;
-  display: block !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 0.25rem !important;
 }
 
 .gecko-modal-title {
-  font-size: 1.5rem !important;
-  line-height: 2rem !important;
+  color: #ffffff !important;
+  font-size: 1.75rem !important;
   font-weight: 900 !important;
-  text-transform: uppercase !important;
   letter-spacing: -0.03em !important;
-  color: #f4f4f5 !important;
-  margin: 0 0 24px 0 !important;
-  display: block !important;
+  text-transform: uppercase !important;
+  line-height: 1.1 !important;
+  margin-bottom: 1.75rem !important;
 }
 
 /* SEPARADOR */
 .gecko-modal-hr {
   border: none !important;
-  border-top: 1px solid #27272a !important;
-  margin: 20px 0 !important;
+  border-top: 1px solid rgba(255,255,255,0.07) !important;
+  margin: 1.25rem 0 !important;
 }
 
-/* LABEL de campo */
 .gecko-label {
-  display: block !important;
-  font-size: 11px !important;
+  color: #64748b !important;
+  font-size: 0.68rem !important;
   font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
-  color: #71717a !important;
-  margin-bottom: 6px !important;
+  display: block !important;
+  margin-bottom: 0.35rem !important;
 }
 
-/* INPUT TEXTO — estilo underline */
 .gecko-input-line {
-  width: 100% !important;
   background: transparent !important;
   border: none !important;
-  border-bottom: 1px solid #333 !important;
+  border-bottom: 1.5px solid rgba(255,255,255,0.12) !important;
   border-radius: 0 !important;
-  padding: 10px 0 !important;
-  font-size: 14px !important;
-  color: #ffffff !important;
+  color: #f1f5f9 !important;
+  padding: 0.5rem 0 !important;
+  width: 100% !important;
   outline: none !important;
-  box-shadow: none !important;
-  transition: border-bottom-color 0.3s ease !important;
-  box-sizing: border-box !important;
+  font-size: 1rem !important;
 }
 .gecko-input-line::placeholder {
-  color: #3f3f46 !important;
-  opacity: 1 !important;
+  color: rgba(255,255,255,0.2) !important;
 }
 .gecko-input-line:focus {
   border-bottom-color: #F15A24 !important;
 }
 
-/* INPUT NUMÉRICO con prefijo — estilo caja con color */
 .gecko-input-group {
   display: flex !important;
   align-items: center !important;
-  border: 1.5px solid rgba(249, 115, 22, 0.5) !important;
-  border-radius: 12px !important;
-  background: rgba(249, 115, 22, 0.04) !important;
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.1) !important;
-  padding: 0 14px !important;
-  height: 52px !important;
-  gap: 8px !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  gap: 0.5rem !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1.5px solid #F15A24 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.6rem 1rem !important;
+  box-shadow: 0 0 0 3px rgba(241,90,36,0.12) !important;
 }
-.gecko-input-group:focus-within {
-  border-color: #F15A24 !important;
-  box-shadow: 0 0 24px rgba(249, 115, 22, 0.2) !important;
-}
-.gecko-input-group.gecko-input-group--indigo {
-  border-color: rgba(99, 102, 241, 0.5) !important;
-  background: rgba(99, 102, 241, 0.04) !important;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.1) !important;
-}
-.gecko-input-group.gecko-input-group--indigo:focus-within {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 24px rgba(99, 102, 241, 0.2) !important;
-}
+
 .gecko-input-prefix {
-  color: #ffffff !important;
-  font-size: 22px !important;
-  font-weight: 900 !important;
+  color: #F15A24 !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
   flex-shrink: 0 !important;
-  line-height: 1 !important;
-  user-select: none !important;
 }
+
 .gecko-input-num {
   background: transparent !important;
   border: none !important;
   outline: none !important;
-  color: #ffffff !important;
-  font-size: 22px !important;
-  font-weight: 900 !important;
-  padding: 0 !important;
-  margin: 0 !important;
+  color: #f1f5f9 !important;
+  font-size: 1.1rem !important;
   width: 100% !important;
-  height: 100% !important;
   -moz-appearance: textfield !important;
   appearance: textfield !important;
 }
 .gecko-input-num::placeholder {
-  color: #3f3f46 !important;
-  font-weight: 400 !important;
+  color: rgba(255,255,255,0.2) !important;
 }
 
-/* SELECT */
 .gecko-select {
+  background: rgba(255,255,255,0.04) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.65rem 1rem !important;
   width: 100% !important;
-  background-color: #131314 !important;
-  border: 1px solid #333333 !important;
-  border-radius: 12px !important;
-  color: #ffffff !important;
-  padding: 12px 16px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  outline: none !important;
-  cursor: pointer !important;
   appearance: none !important;
   -webkit-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 14px center !important;
-  transition: border-color 0.2s ease !important;
-  box-sizing: border-box !important;
+  outline: none !important;
+  font-size: 0.95rem !important;
+}
+.gecko-select option {
+  background: #18181f !important;
+  color: #f1f5f9 !important;
 }
 .gecko-select:focus {
   border-color: #F15A24 !important;
 }
 
-/* BOTONES TOGGLE (ej: DINÁMICA / FIJA) */
 .gecko-toggle-group {
   display: flex !important;
-  gap: 8px !important;
+  gap: 0.5rem !important;
   flex-wrap: wrap !important;
 }
+
 .gecko-toggle-btn {
-  flex: 1 !important;
-  height: 36px !important;
-  border-radius: 12px !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.1em !important;
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: #64748b !important;
+  border-radius: 2rem !important;
+  padding: 0.5rem 1.25rem !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  border: 1.5px solid transparent !important;
-  background: #27272a !important;
-  color: #71717a !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  transition: all 0.2s !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
 }
 .gecko-toggle-btn.active {
+  background: #F15A24 !important;
   border-color: #F15A24 !important;
-  background: transparent !important;
   color: #ffffff !important;
 }
 .gecko-toggle-btn:not(.active):hover {
-  background: #3f3f46 !important;
-  color: #a1a1aa !important;
+  background: rgba(255,255,255,0.1) !important;
+  color: #94a3b8 !important;
 }
 
-/* PIE DEL MODAL — fila de botones */
 .gecko-modal-footer {
   display: flex !important;
+  justify-content: flex-end !important;
   align-items: center !important;
-  gap: 10px !important;
-  margin-top: 28px !important;
+  gap: 0.75rem !important;
+  margin-top: 2rem !important;
+  padding-top: 1.25rem !important;
+  border-top: 1px solid rgba(255,255,255,0.07) !important;
 }
 
-/* BOTÓN CANCELAR */
 .gecko-btn-cancel {
-  flex: 1 !important;
-  height: 48px !important;
-  border-radius: 14px !important;
-  background: #27272a !important;
-  color: #71717a !important;
-  font-size: 10px !important;
+  background: rgba(255,255,255,0.06) !important;
+  color: #64748b !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 2rem !important;
+  padding: 0.65rem 1.75rem !important;
   font-weight: 700 !important;
-  text-transform: uppercase !important;
+  font-size: 0.8rem !important;
   letter-spacing: 0.1em !important;
-  border: none !important;
+  text-transform: uppercase !important;
   cursor: pointer !important;
-  transition: background 0.2s ease !important;
+  transition: all 0.2s !important;
 }
 .gecko-btn-cancel:hover {
-  background: #3f3f46 !important;
-  color: #a1a1aa !important;
+  background: rgba(255,255,255,0.1) !important;
+  color: #94a3b8 !important;
 }
 
-/* BOTÓN PRIMARIO (guardar, confirmar) */
 .gecko-btn-primary {
-  flex: 2 !important;
-  height: 48px !important;
-  border-radius: 14px !important;
   background: #F15A24 !important;
   color: #ffffff !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.15em !important;
   border: none !important;
+  border-radius: 2rem !important;
+  padding: 0.65rem 1.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
   cursor: pointer !important;
-  box-shadow: 0 4px 20px rgba(241, 90, 36, 0.25) !important;
-  transition: all 0.2s ease !important;
+  transition: background 0.2s !important;
   display: inline-flex !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
+  gap: 0.4rem !important;
 }
 .gecko-btn-primary:hover {
-  transform: scale(1.02) !important;
-  box-shadow: 0 6px 24px rgba(241, 90, 36, 0.35) !important;
-}
-.gecko-btn-primary:active {
-  transform: scale(0.98) !important;
+  background: #d94e1a !important;
 }
 
-/* BOTÓN PELIGRO (eliminar) */
 .gecko-btn-danger {
-  height: 48px !important;
-  padding: 0 20px !important;
-  border-radius: 14px !important;
   background: transparent !important;
   color: #ef4444 !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.1em !important;
   border: 1.5px solid #ef4444 !important;
+  border-radius: 2rem !important;
+  padding: 0.65rem 1.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.2s !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 0.4rem !important;
 }
 .gecko-btn-danger:hover {
-  background: rgba(239, 68, 68, 0.1) !important;
-  transform: scale(1.02) !important;
+  background: rgba(239,68,68,0.1) !important;
 }
 
-/* BOTÓN ÉXITO (ingreso, verde) */
 .gecko-btn-success {
-  flex: 1 !important;
-  height: 48px !important;
-  border-radius: 14px !important;
-  background: #22c55e !important;
+  background: #16a34a !important;
   color: #ffffff !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.1em !important;
   border: none !important;
+  border-radius: 2rem !important;
+  padding: 0.65rem 1.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
   cursor: pointer !important;
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2) !important;
-  transition: all 0.2s ease !important;
   display: inline-flex !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
+  gap: 0.4rem !important;
+  transition: background 0.2s !important;
 }
 .gecko-btn-success:hover {
-  transform: scale(1.02) !important;
+  background: #15803d !important;
 }
 
-/* BOTÓN EGRESO (rojo sólido) */
 .gecko-btn-egreso {
-  flex: 1 !important;
-  height: 48px !important;
-  border-radius: 14px !important;
-  background: #ef4444 !important;
+  background: #dc2626 !important;
   color: #ffffff !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.1em !important;
   border: none !important;
+  border-radius: 2rem !important;
+  padding: 0.65rem 1.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
   cursor: pointer !important;
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2) !important;
-  transition: all 0.2s ease !important;
   display: inline-flex !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
+  gap: 0.4rem !important;
+  transition: background 0.2s !important;
 }
 .gecko-btn-egreso:hover {
-  transform: scale(1.02) !important;
+  background: #b91c1c !important;
 }

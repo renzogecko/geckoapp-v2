@@ -1649,9 +1649,9 @@ document.addEventListener('geckoDB_ready', () => {
                     <div>
                         <label class="gecko-label">Tipo</label>
                         <div class="gecko-toggle-group mt-2" id="editCajaTipoGroup">
-                            <button class="gecko-toggle-btn ${tipoCaja==='efectivo'?'active':''}" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')">💵 Efectivo</button>
-                            <button class="gecko-toggle-btn ${tipoCaja==='billeteras'?'active':''}" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')">📱 Billeteras</button>
-                            <button class="gecko-toggle-btn ${tipoCaja==='banco'?'active':''}" data-tipo="banco" onclick="_selectCajaTipo('banco')">🏦 Banco</button>
+                            <button class="gecko-toggle-btn ${tipoCaja==='efectivo'?'active':''}" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M17 12h.01M7 12h.01"/></svg> Efectivo</button>
+                            <button class="gecko-toggle-btn ${tipoCaja==='billeteras'?'active':''}" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg> Billeteras</button>
+                            <button class="gecko-toggle-btn ${tipoCaja==='banco'?'active':''}" data-tipo="banco" onclick="_selectCajaTipo('banco')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M8 10v11M12 10v11M16 10v11M20 10v11"/></svg> Banco</button>
                         </div>
                         <input type="hidden" id="editCajaTipo" value="${tipoCaja}">
                         <input type="hidden" id="editCajaId" value="${id}">
@@ -2763,9 +2763,9 @@ window.editarCaja = function(id) {
                 <div>
                     <label class="gecko-label">Tipo</label>
                     <div class="gecko-toggle-group mt-2" id="editCajaTipoGroup">
-                        <button class="gecko-toggle-btn ${tipoCaja==='efectivo'?'active':''}" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')">💵 Efectivo</button>
-                        <button class="gecko-toggle-btn ${tipoCaja==='billeteras'?'active':''}" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')">📱 Billeteras</button>
-                        <button class="gecko-toggle-btn ${tipoCaja==='banco'?'active':''}" data-tipo="banco" onclick="_selectCajaTipo('banco')">🏦 Banco</button>
+                        <button class="gecko-toggle-btn ${tipoCaja==='efectivo'?'active':''}" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M17 12h.01M7 12h.01"/></svg> Efectivo</button>
+                        <button class="gecko-toggle-btn ${tipoCaja==='billeteras'?'active':''}" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg> Billeteras</button>
+                        <button class="gecko-toggle-btn ${tipoCaja==='banco'?'active':''}" data-tipo="banco" onclick="_selectCajaTipo('banco')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M8 10v11M12 10v11M16 10v11M20 10v11"/></svg> Banco</button>
                     </div>
                     <input type="hidden" id="editCajaTipo" value="${tipoCaja}">
                     <input type="hidden" id="editCajaId" value="${id}">
