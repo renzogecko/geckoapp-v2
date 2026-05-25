@@ -2072,7 +2072,7 @@ input[type="number"] {
 }
 
 .gecko-modal-box {
-  background: #18181f !important;
+  background: #1e1f20 !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
   border-radius: 1.25rem !important;
   padding: 2rem !important;
@@ -2138,7 +2138,7 @@ input[type="number"] {
   display: flex !important;
   align-items: center !important;
   gap: 0.5rem !important;
-  background: rgba(255,255,255,0.04) !important;
+  background: #131314 !important;
   border: 1.5px solid #F15A24 !important;
   border-radius: 0.75rem !important;
   padding: 0.6rem 1rem !important;
@@ -2167,9 +2167,9 @@ input[type="number"] {
 }
 
 .gecko-select {
-  background: rgba(255,255,255,0.04) !important;
+  background: #131314 !important;
   color: #f1f5f9 !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
+  border: 1px solid #333333 !important;
   border-radius: 0.75rem !important;
   padding: 0.65rem 1rem !important;
   width: 100% !important;
@@ -2189,7 +2189,7 @@ input[type="number"] {
 .gecko-toggle-group {
   display: flex !important;
   gap: 0.5rem !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
 }
 
 .gecko-toggle-btn {
