@@ -2303,15 +2303,12 @@
           </div>
 
           <div>
-            <label class="gecko-label">Ícono</label>
-            <input id="nuevaCajaIcono" class="gecko-input-line" type="text" placeholder="💰">
-          </div>
-
-          <div>
             <label class="gecko-label">Saldo inicial</label>
-            <div class="gecko-input-group mt-1">
-              <span class="gecko-input-prefix">$</span>
-              <input id="nuevaCajaSaldo" class="gecko-input-num" type="number" placeholder="0" min="0">
+            <div class="flex items-center h-12 px-4 rounded-xl mt-1 border border-zinc-700 bg-zinc-900/50 focus-within:border-orange-500 transition-colors gap-2">
+              <span class="text-zinc-400 font-bold text-sm flex-shrink-0">$</span>
+              <input id="nuevaCajaSaldo" type="number" placeholder="0" min="0"
+                style="background:transparent;border:none;outline:none;color:#f1f5f9;font-size:1.1rem;flex:1;min-width:0;appearance:textfield;-moz-appearance:textfield;"
+                class="placeholder:text-zinc-600">
             </div>
           </div>
         </div>
