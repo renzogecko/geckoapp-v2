@@ -2286,7 +2286,7 @@
         <p class="gecko-modal-subtitle">Finanzas</p>
         <h2 class="gecko-modal-title">Nueva Caja</h2>
 
-        <div class="space-y-5 mt-6">
+        <div class="space-y-7 mt-8">
           <div>
             <label class="gecko-label">Nombre de la caja</label>
             <input id="nuevaCajaNombre" class="gecko-input-line" type="text" placeholder="Ej: Efectivo mostrador">
@@ -2295,8 +2295,8 @@
           <div>
             <label class="gecko-label">Tipo</label>
             <div class="gecko-toggle-group mt-2" id="nuevaCajaTipoGroup">
-              <button class="gecko-toggle-btn active" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M17 12h.01M7 12h.01"/></svg> Efectivo</button>
-              <button class="gecko-toggle-btn" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg> Billeteras</button>
+              <button class="gecko-toggle-btn active" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Efectivo</button>
+              <button class="gecko-toggle-btn" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg> Billeteras</button>
               <button class="gecko-toggle-btn" data-tipo="banco" onclick="_selectCajaTipo('banco')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M8 10v11M12 10v11M16 10v11M20 10v11"/></svg> Banco</button>
             </div>
             <input type="hidden" id="nuevaCajaTipo" value="efectivo">
@@ -2313,7 +2313,7 @@
           </div>
         </div>
 
-        <div class="gecko-modal-footer">
+        <div class="gecko-modal-footer mt-2">
           <button class="gecko-btn-cancel" onclick="document.getElementById('modalNuevaCaja').style.display='none'">Cancelar</button>
           <button class="gecko-btn-primary" onclick="crearCaja()">Crear Caja</button>
         </div>

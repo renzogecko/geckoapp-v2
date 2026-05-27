@@ -2724,9 +2724,9 @@ window._selectCajaTipo = function(tipo) {
     const nuevaHidden = document.getElementById('nuevaCajaTipo');
     if (nuevaHidden) nuevaHidden.value = tipo;
     const colores = {
-        efectivo:   { bg: '#16a34a', border: '#22c55e' },
+        efectivo:   { bg: '#15803d', border: '#22c55e' },
         billeteras: { bg: '#1d4ed8', border: '#3b82f6' },
-        banco:      { bg: '#475569', border: '#94a3b8' }
+        banco:      { bg: '#5b21b6', border: '#7c3aed' }
     };
     document.querySelectorAll('#editCajaTipoGroup, #nuevaCajaTipoGroup').forEach(function(grupo) {
         grupo.querySelectorAll('.gecko-toggle-btn').forEach(function(btn) {
