@@ -1600,9 +1600,9 @@ document.addEventListener('geckoDB_ready', () => {
         if (nuevaHidden) nuevaHidden.value = tipo;
 
         const colores = {
-            efectivo: { bg: '#15803d', border: '#22c55e' },
-            billeteras: { bg: '#1d4ed8', border: '#3b82f6' },
-            banco: { bg: '#5b21b6', border: '#7c3aed' }
+            efectivo: { bg: 'rgba(16,185,129,0.15)', border: '#10b981', color: '#10b981' },
+            billeteras: { bg: 'rgba(59,130,246,0.15)', border: '#3b82f6', color: '#3b82f6' },
+            banco: { bg: 'rgba(100,116,139,0.15)', border: '#64748b', color: '#94a3b8' }
         };
 
         const grupos = document.querySelectorAll('#editCajaTipoGroup, #nuevaCajaTipoGroup');
@@ -1615,11 +1615,11 @@ document.addEventListener('geckoDB_ready', () => {
                     const col = colores[tipo] || colores.efectivo;
                     btn.style.background = col.bg;
                     btn.style.borderColor = col.border;
-                    btn.style.color = '#fff';
+                    btn.style.color = col.color;
                 } else {
                     btn.style.background = '';
                     btn.style.borderColor = '';
-                    btn.style.color = '';
+                    btn.style.color = '#64748b';
                 }
             });
         });
@@ -1637,26 +1637,43 @@ document.addEventListener('geckoDB_ready', () => {
         modal.id = 'modalEditarCaja';
         modal.className = 'gecko-modal-overlay';
         modal.innerHTML = `
-            <div class="gecko-modal-box max-w-md w-full mx-4">
-                <p class="gecko-modal-subtitle">Finanzas</p>
+            <div class="gecko-modal-box" style="max-width:480px;width:100%;position:relative;">
+
+                <button onclick="this.closest('.gecko-modal-overlay').remove()"
+                    style="position:absolute;top:20px;right:20px;width:32px;height:32px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#666;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;"
+                    onmouseover="this.style.color='white';this.style.borderColor='#555'"
+                    onmouseout="this.style.color='#666';this.style.borderColor='#333'">✕</button>
+
+                <p class="gecko-modal-subtitle">Finanzas / Cajas</p>
                 <h2 class="gecko-modal-title">Editar Caja</h2>
-                <div class="space-y-5 mt-2">
+
+                <div style="margin-top:24px;display:flex;flex-direction:column;gap:20px;">
+
                     <div>
-                        <label class="gecko-label">Nombre</label>
-                        <input id="editCajaNombre" class="gecko-input-line" type="text" value="${(caja.nombre || '').replace(/"/g, '&quot;')}">
+                        <label class="gecko-label">Nombre de la caja</label>
+                        <input id="editCajaNombre" class="gecko-input-line" type="text"
+                            placeholder="Ej: Efectivo, Banco Galicia, MP Principal..."
+                            value="${(caja.nombre || '').replace(/"/g, '&quot;')}">
                     </div>
+
                     <div>
-                        <label class="gecko-label">Tipo</label>
-                        <div class="gecko-toggle-group mt-2" id="editCajaTipoGroup">
-                            <button class="gecko-toggle-btn ${tipoCaja === 'efectivo' ? 'active' : ''}" data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')">
+                        <label class="gecko-label">Tipo de caja</label>
+                        <div class="gecko-toggle-group" style="margin-top:8px;" id="editCajaTipoGroup">
+                            <button class="gecko-toggle-btn ${tipoCaja === 'efectivo' ? 'active' : ''}" 
+                                data-tipo="efectivo" onclick="_selectCajaTipo('efectivo')"
+                                style="${tipoCaja === 'efectivo' ? 'background:rgba(16,185,129,0.15);border-color:#10b981;color:#10b981;' : 'color:#64748b;'}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                                 EFECTIVO
                             </button>
-                            <button class="gecko-toggle-btn ${tipoCaja === 'billeteras' ? 'active' : ''}" data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')">
+                            <button class="gecko-toggle-btn ${tipoCaja === 'billeteras' ? 'active' : ''}" 
+                                data-tipo="billeteras" onclick="_selectCajaTipo('billeteras')"
+                                style="${tipoCaja === 'billeteras' ? 'background:rgba(59,130,246,0.15);border-color:#3b82f6;color:#3b82f6;' : 'color:#64748b;'}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
                                 BILLETERAS
                             </button>
-                            <button class="gecko-toggle-btn ${tipoCaja === 'banco' ? 'active' : ''}" data-tipo="banco" onclick="_selectCajaTipo('banco')">
+                            <button class="gecko-toggle-btn ${tipoCaja === 'banco' ? 'active' : ''}" 
+                                data-tipo="banco" onclick="_selectCajaTipo('banco')"
+                                style="${tipoCaja === 'banco' ? 'background:rgba(100,116,139,0.15);border-color:#64748b;color:#94a3b8;' : 'color:#64748b;'}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 9 12 2 21 9"/><rect x="3" y="9" width="18" height="13"/><line x1="9" y1="22" x2="9" y2="9"/><line x1="15" y1="22" x2="15" y2="9"/></svg>
                                 BANCO
                             </button>
@@ -1664,22 +1681,28 @@ document.addEventListener('geckoDB_ready', () => {
                         <input type="hidden" id="editCajaTipo" value="${tipoCaja}">
                         <input type="hidden" id="editCajaId" value="${id}">
                     </div>
+
                     <div>
                         <label class="gecko-label">Saldo actual</label>
-                        <div class="gecko-input-group mt-1">
-                            <span class="gecko-input-prefix">$</span>
-                            <input id="editCajaSaldo" class="gecko-input-num" type="number" value="${caja.saldo || 0}">
+                        <div style="display:flex;align-items:center;background:#27272a;border:1.5px solid #3f3f46;border-radius:12px;overflow:hidden;transition:border-color 0.2s;margin-top:6px;"
+                             onfocusin="this.style.borderColor='#F15A24'" onfocusout="this.style.borderColor='#3f3f46'">
+                            <span style="padding:12px 16px;color:#ffffff;font-size:14px;font-weight:900;border-right:1.5px solid #3f3f46;background:#222;flex-shrink:0;">$</span>
+                            <input id="editCajaSaldo" type="number" value="${caja.saldo || 0}"
+                                style="background:transparent;border:none;outline:none;color:#ffffff;font-size:15px;font-weight:600;padding:12px 16px;width:100%;-webkit-text-fill-color:#ffffff;">
                         </div>
                     </div>
+
                 </div>
-                <div class="gecko-modal-footer">
+
+                <div class="gecko-modal-footer" style="align-items:center;justify-content:flex-end;">
                     <button class="gecko-btn-danger" onclick="window._eliminarCaja()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                         ELIMINAR
                     </button>
                     <button class="gecko-btn-cancel" onclick="this.closest('.gecko-modal-overlay').remove()">CANCELAR</button>
-                    <button class="gecko-btn-primary" onclick="window._guardarEdicionCaja()">GUARDAR</button>
+                    <button class="gecko-btn-primary" onclick="window._guardarEdicionCaja()" style="white-space:nowrap;">GUARDAR</button>
                 </div>
+
             </div>`;
         document.body.appendChild(modal);
         modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });

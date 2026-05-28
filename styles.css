@@ -202,24 +202,30 @@
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
+
         .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
         .custom-scrollbar-horizontal {
             scrollbar-width: thin;
             scrollbar-color: rgba(241, 90, 36, 0.3) transparent;
         }
+
         .custom-scrollbar-horizontal::-webkit-scrollbar {
             height: 4px;
         }
+
         .custom-scrollbar-horizontal::-webkit-scrollbar-track {
             background: transparent;
         }
+
         .custom-scrollbar-horizontal::-webkit-scrollbar-thumb {
             background: rgba(241, 90, 36, 0.2);
             border-radius: 10px;
         }
+
         .custom-scrollbar-horizontal:hover::-webkit-scrollbar-thumb {
             background: rgba(241, 90, 36, 0.5);
         }
@@ -263,7 +269,7 @@
             flex-direction: column;
         }
 
-        #tablaMaterialesBody, 
+        #tablaMaterialesBody,
         #tablaTerminacionesBody {
             min-height: 300px;
         }
@@ -338,7 +344,8 @@
         .gecko-input-row input {
             background-color: transparent !important;
             border: none !important;
-            border-bottom: 1px solid #333333 !important; /* zinc-800 */
+            border-bottom: 1px solid #333333 !important;
+            /* zinc-800 */
             border-radius: 0 !important;
             color: #ffffff !important;
             font-weight: 700 !important;
@@ -350,11 +357,13 @@
         }
 
         .gecko-input-row input:focus {
-            border-bottom-color: #f15a24 !important; /* Gecko orange */
+            border-bottom-color: #f15a24 !important;
+            /* Gecko orange */
         }
 
         .gecko-input-row input::placeholder {
-            color: #52525b !important; /* zinc-600/500 */
+            color: #52525b !important;
+            /* zinc-600/500 */
             font-size: 10px !important;
             font-weight: 500 !important;
             text-transform: uppercase !important;
@@ -363,7 +372,8 @@
 
         /* Tarea 3: Estilo Visual Universal de Placeholders */
         input::placeholder {
-            color: #52525b !important; /* Zinc-600 */
+            color: #52525b !important;
+            /* Zinc-600 */
             opacity: 0.6;
             font-weight: 500;
         }
@@ -1622,11 +1632,15 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
+
         .gecko-input:focus {
             border-color: #F15A24;
-            box-shadow: 0 0 0 4px rgba(241,90,36,0.10), 0 0 16px rgba(241,90,36,0.08);
+            box-shadow: 0 0 0 4px rgba(241, 90, 36, 0.10), 0 0 16px rgba(241, 90, 36, 0.08);
         }
-        .gecko-input::placeholder { color: #3f3f46; }
+
+        .gecko-input::placeholder {
+            color: #3f3f46;
+        }
 
         /* Wrapper de input con prefijo monetario */
         .gecko-input-money-wrap {
@@ -1638,10 +1652,12 @@
             overflow: hidden;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
+
         .gecko-input-money-wrap:focus-within {
             border-color: #F15A24;
-            box-shadow: 0 0 0 4px rgba(241,90,36,0.10), 0 0 16px rgba(241,90,36,0.08);
+            box-shadow: 0 0 0 4px rgba(241, 90, 36, 0.10), 0 0 16px rgba(241, 90, 36, 0.08);
         }
+
         .gecko-input-money-prefix {
             background: #141417;
             border-right: 1.5px solid #1f1f23;
@@ -1652,7 +1668,10 @@
             flex-shrink: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        .gecko-input-money-wrap input::placeholder { color: #3f3f46; }
+
+        .gecko-input-money-wrap input::placeholder {
+            color: #3f3f46;
+        }
 
         /* Select dentro de modales gecko */
         .gecko-modal-card select {
@@ -1675,9 +1694,11 @@
             box-sizing: border-box;
             transition: border-color 0.2s;
         }
+
         .gecko-modal-card select:focus {
             border-color: #F15A24;
         }
+
         .gecko-modal-card select option {
             background: #0d0d10;
             color: white;
@@ -1708,7 +1729,9 @@
             font-family: inherit;
         }
 
-        .mgp-label.accent { color: #F15A24; }
+        .mgp-label.accent {
+            color: #F15A24;
+        }
 
         .mgp-input {
             width: 100%;
@@ -1724,8 +1747,14 @@
             transition: border-color 0.2s;
             font-family: inherit;
         }
-        .mgp-input:focus { border-color: #F15A24; }
-        .mgp-input::placeholder { color: #555; }
+
+        .mgp-input:focus {
+            border-color: #F15A24;
+        }
+
+        .mgp-input::placeholder {
+            color: #555;
+        }
 
         .mgp-money-wrap {
             display: flex;
@@ -1736,7 +1765,10 @@
             overflow: hidden;
             transition: border-color 0.2s;
         }
-        .mgp-money-wrap:focus-within { border-color: #F15A24; }
+
+        .mgp-money-wrap:focus-within {
+            border-color: #F15A24;
+        }
 
         .mgp-money-prefix {
             padding: 12px 16px;
@@ -1759,8 +1791,11 @@
             border-radius: 8px !important;
             padding: 12px 16px !important;
         }
+
         .mgp-card select:focus,
-        .mgp-card .gecko-select-pro:focus { border-color: #F15A24 !important; }
+        .mgp-card .gecko-select-pro:focus {
+            border-color: #F15A24 !important;
+        }
 
         /* Botón de tipo en modales MGP (Efectivo / Billeteras / Banco) */
         .mgp-type-btn {
@@ -1775,6 +1810,7 @@
             align-items: center;
             gap: 8px;
         }
+
         .mgp-type-btn.active {
             border-color: #F15A24 !important;
             background: rgba(241, 90, 36, 0.15) !important;
@@ -1996,344 +2032,417 @@
             /* Zinc-600 */
             opacity: 1 !important;
         }
-/* 1. Resetear la apariencia para que el navegador muestre los controles */
-input[type="number"] {
-    -moz-appearance: textfield; /* Para Firefox */
-    appearance: auto; 
-}
 
-/* 2. Forzar visibilidad en Chrome, Safari y Edge */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: inner-spin-button !important;
-    opacity: 1 !important;
-    display: block !important;
-    cursor: pointer;
-    /* Invertimos el color para que se vean blancas sobre el fondo oscuro del input */
-    filter: invert(1) brightness(0.8);
-    margin-left: 5px;
-}
+        /* 1. Resetear la apariencia para que el navegador muestre los controles */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            /* Para Firefox */
+            appearance: auto;
+        }
 
-/* 3. Ajuste de padding para que el número no pise las flechitas */
-input[type="number"] {
-    padding-right: 5px !important;
-}
+        /* 2. Forzar visibilidad en Chrome, Safari y Edge */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: inner-spin-button !important;
+            opacity: 1 !important;
+            display: block !important;
+            cursor: pointer;
+            /* Invertimos el color para que se vean blancas sobre el fondo oscuro del input */
+            filter: invert(1) brightness(0.8);
+            margin-left: 5px;
+        }
 
-/* ── Estado OT — select pill estilo Gecko ── */
-.gecko-ot-estado {
-    color: #71717a !important;
-    -webkit-text-fill-color: #71717a !important;
-    background-color: rgba(24, 24, 27, 0.5) !important;
-    border: 1px solid #27272a !important;
-    border-radius: 12px !important;
-    padding: 6px 32px 6px 12px !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    width: auto !important;
-    min-width: 130px !important;
-    outline: none !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2352525b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 8px center !important;
-    background-size: 14px !important;
-}
+        /* 3. Ajuste de padding para que el número no pise las flechitas */
+        input[type="number"] {
+            padding-right: 5px !important;
+        }
 
-.gecko-ot-estado:focus {
-    border-color: #F15A24 !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-}
+        /* ── Estado OT — select pill estilo Gecko ── */
+        .gecko-ot-estado {
+            color: #71717a !important;
+            -webkit-text-fill-color: #71717a !important;
+            background-color: rgba(24, 24, 27, 0.5) !important;
+            border: 1px solid #27272a !important;
+            border-radius: 12px !important;
+            padding: 6px 32px 6px 12px !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            width: auto !important;
+            min-width: 130px !important;
+            outline: none !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2352525b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 8px center !important;
+            background-size: 14px !important;
+        }
 
-/* ============================================
+        .gecko-ot-estado:focus {
+            border-color: #F15A24 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        /* ============================================
    GECKO MODAL DESIGN SYSTEM v1.0
    Referencia: modal "Gestión de Insumo"
    ============================================ */
 
-/* ── GECKO MODAL DESIGN SYSTEM v2.0 ────────────────────────────────────────
+        /* ── GECKO MODAL DESIGN SYSTEM v2.0 ────────────────────────────────────────
    Referencia visual: modal "Gestión de Insumo" (modalMaterial)
    NOTA: display SIN !important — el JS controla visibilidad con
    element.style.display = 'none' / 'flex'
    ─────────────────────────────────────────────────────────────────────── */
 
-.gecko-modal-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 9999 !important;
-  display: flex;
-  align-items: center !important;
-  justify-content: center !important;
-  background: rgba(10, 12, 20, 0.55) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
-}
+        .gecko-modal-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 9999 !important;
+            display: flex;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(10, 12, 20, 0.55) !important;
+            backdrop-filter: blur(4px) !important;
+            -webkit-backdrop-filter: blur(4px) !important;
+        }
 
-.gecko-modal-box {
-  background: #1e1f20 !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  border-radius: 1.25rem !important;
-  padding: 2rem !important;
-  width: 100% !important;
-  position: relative !important;
-}
+        .gecko-modal-box {
+            background: #1e1f20 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 1.25rem !important;
+            padding: 2rem !important;
+            width: 100% !important;
+            position: relative !important;
+        }
 
-.gecko-modal-subtitle {
-  color: #F15A24 !important;
-  font-size: 0.7rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.12em !important;
-  text-transform: uppercase !important;
-  margin-bottom: 0.25rem !important;
-}
+        .gecko-modal-subtitle {
+            color: #F15A24 !important;
+            font-size: 0.7rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
+            margin-bottom: 0.25rem !important;
+        }
 
-.gecko-modal-title {
-  color: #ffffff !important;
-  font-size: 1.75rem !important;
-  font-weight: 900 !important;
-  letter-spacing: -0.03em !important;
-  text-transform: uppercase !important;
-  line-height: 1.1 !important;
-  margin-bottom: 1.75rem !important;
-}
+        .gecko-modal-title {
+            color: #ffffff !important;
+            font-size: 1.75rem !important;
+            font-weight: 900 !important;
+            letter-spacing: -0.03em !important;
+            text-transform: uppercase !important;
+            line-height: 1.1 !important;
+            margin-bottom: 1.75rem !important;
+        }
 
-/* SEPARADOR */
-.gecko-modal-hr {
-  border: none !important;
-  border-top: 1px solid rgba(255,255,255,0.07) !important;
-  margin: 1.25rem 0 !important;
-}
+        /* SEPARADOR */
+        .gecko-modal-hr {
+            border: none !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+            margin: 1.25rem 0 !important;
+        }
 
-.gecko-label {
-  color: #64748b !important;
-  font-size: 0.68rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-  display: block !important;
-  margin-bottom: 0.35rem !important;
-}
+        .gecko-label {
+            color: #64748b !important;
+            font-size: 0.68rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+            display: block !important;
+            margin-bottom: 0.35rem !important;
+        }
 
-.gecko-input-line {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 1.5px solid rgba(255,255,255,0.12) !important;
-  border-radius: 0 !important;
-  color: #f1f5f9 !important;
-  padding: 0.5rem 0 !important;
-  width: 100% !important;
-  outline: none !important;
-  font-size: 1rem !important;
-}
-.gecko-input-line::placeholder {
-  color: rgba(255,255,255,0.2) !important;
-}
-.gecko-input-line:focus {
-  border-bottom-color: #F15A24 !important;
-}
+        .gecko-input-line {
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+            border-radius: 0 !important;
+            color: #f1f5f9 !important;
+            padding: 0.5rem 0 !important;
+            width: 100% !important;
+            outline: none !important;
+            font-size: 1rem !important;
+        }
 
-.gecko-input-group {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.5rem !important;
-  background: #131314 !important;
-  border: 1.5px solid #F15A24 !important;
-  border-radius: 0.75rem !important;
-  padding: 0.6rem 1rem !important;
-  box-shadow: 0 0 0 3px rgba(241,90,36,0.12) !important;
-}
+        .gecko-input-line::placeholder {
+            color: rgba(255, 255, 255, 0.2) !important;
+        }
 
-.gecko-input-prefix {
-  color: #F15A24 !important;
-  font-weight: 700 !important;
-  font-size: 1rem !important;
-  flex-shrink: 0 !important;
-}
+        .gecko-input-line:focus {
+            border-bottom-color: #F15A24 !important;
+        }
 
-.gecko-input-num {
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  color: #f1f5f9 !important;
-  font-size: 1.1rem !important;
-  width: 100% !important;
-  -moz-appearance: textfield !important;
-  appearance: textfield !important;
-}
-.gecko-input-num::placeholder {
-  color: rgba(255,255,255,0.2) !important;
-}
+        .gecko-input-group {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            background: #131314 !important;
+            border: 1.5px solid #F15A24 !important;
+            border-radius: 0.75rem !important;
+            padding: 0.6rem 1rem !important;
+            box-shadow: 0 0 0 3px rgba(241, 90, 36, 0.12) !important;
+        }
 
-.gecko-select,
-select.gecko-select,
-select.gecko-select option,
-.gecko-modal-overlay select,
-.gecko-modal-box select {
-  background: #1e1f20 !important;
-  background-color: #1e1f20 !important;
-  color: #f1f5f9 !important;
-  border: 1px solid #333333 !important;
-  border-radius: 0.75rem !important;
-  padding: 0.65rem 1rem !important;
-  width: 100% !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  outline: none !important;
-  font-size: 0.95rem !important;
-  cursor: pointer !important;
-}
+        .gecko-input-prefix {
+            color: #F15A24 !important;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
+            flex-shrink: 0 !important;
+        }
 
-.gecko-modal-overlay select option,
-.gecko-modal-box select option,
-select.gecko-select option {
-  background: #1e1f20 !important;
-  background-color: #1e1f20 !important;
-  color: #f1f5f9 !important;
-}
+        .gecko-input-num {
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            color: #f1f5f9 !important;
+            font-size: 1.1rem !important;
+            width: 100% !important;
+            -moz-appearance: textfield !important;
+            appearance: textfield !important;
+        }
 
-.gecko-select:focus {
-  border-color: #F15A24 !important;
-}
+        .gecko-input-num::placeholder {
+            color: rgba(255, 255, 255, 0.2) !important;
+        }
 
-.gecko-toggle-group {
-  display: flex !important;
-  gap: 0.5rem !important;
-  flex-wrap: nowrap !important;
-}
+        .gecko-select,
+        select.gecko-select,
+        select.gecko-select option,
+        .gecko-modal-overlay select,
+        .gecko-modal-box select {
+            background: #1e1f20 !important;
+            background-color: #1e1f20 !important;
+            color: #f1f5f9 !important;
+            border: 1px solid #333333 !important;
+            border-radius: 0.75rem !important;
+            padding: 0.65rem 1rem !important;
+            width: 100% !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            outline: none !important;
+            font-size: 0.95rem !important;
+            cursor: pointer !important;
+        }
 
-.gecko-toggle-btn {
-  background: rgba(255,255,255,0.06) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
-  color: #64748b !important;
-  border-radius: 2rem !important;
-  padding: 0.5rem 1.25rem !important;
-  cursor: pointer !important;
-  font-size: 0.78rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
-  transition: all 0.2s !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
-}
-.gecko-toggle-btn.active {
-  background: #F15A24 !important;
-  border-color: #F15A24 !important;
-  color: #ffffff !important;
-}
-.gecko-toggle-btn:not(.active):hover {
-  background: rgba(255,255,255,0.1) !important;
-  color: #94a3b8 !important;
-}
+        .gecko-modal-overlay select option,
+        .gecko-modal-box select option,
+        select.gecko-select option {
+            background: #1e1f20 !important;
+            background-color: #1e1f20 !important;
+            color: #f1f5f9 !important;
+        }
 
-.gecko-modal-footer {
-  display: flex !important;
-  justify-content: flex-end !important;
-  align-items: center !important;
-  gap: 0.75rem !important;
-  margin-top: 2rem !important;
-  padding-top: 1.25rem !important;
-  border-top: 1px solid rgba(255,255,255,0.07) !important;
-}
+        .gecko-select:focus {
+            border-color: #F15A24 !important;
+        }
 
-.gecko-btn-cancel {
-  background: rgba(255,255,255,0.06) !important;
-  color: #64748b !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  border-radius: 2rem !important;
-  padding: 0.65rem 1.75rem !important;
-  font-weight: 700 !important;
-  font-size: 0.8rem !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  transition: all 0.2s !important;
-}
-.gecko-btn-cancel:hover {
-  background: rgba(255,255,255,0.1) !important;
-  color: #94a3b8 !important;
-}
+        .gecko-toggle-group {
+            display: flex !important;
+            gap: 0.5rem !important;
+            flex-wrap: nowrap !important;
+        }
 
-.gecko-btn-primary {
-  background: #F15A24 !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 2rem !important;
-  padding: 0.65rem 1.75rem !important;
-  font-weight: 700 !important;
-  font-size: 0.8rem !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  transition: background 0.2s !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
-}
-.gecko-btn-primary:hover {
-  background: #d94e1a !important;
-}
+        .gecko-toggle-btn {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #64748b !important;
+            border-radius: 2rem !important;
+            padding: 0.5rem 1.25rem !important;
+            cursor: pointer !important;
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.06em !important;
+            text-transform: uppercase !important;
+            transition: all 0.2s !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+        }
 
-.gecko-btn-danger {
-  background: transparent !important;
-  color: #ef4444 !important;
-  border: 1.5px solid #ef4444 !important;
-  border-radius: 2rem !important;
-  padding: 0.65rem 1.75rem !important;
-  font-weight: 700 !important;
-  font-size: 0.8rem !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  transition: all 0.2s !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
-}
-.gecko-btn-danger:hover {
-  background: rgba(239,68,68,0.1) !important;
-}
+        .gecko-toggle-btn.active {
+            background: #F15A24 !important;
+            border-color: #F15A24 !important;
+            color: #ffffff !important;
+        }
 
-.gecko-btn-success {
-  background: #16a34a !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 2rem !important;
-  padding: 0.65rem 1.75rem !important;
-  font-weight: 700 !important;
-  font-size: 0.8rem !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
-  transition: background 0.2s !important;
-}
-.gecko-btn-success:hover {
-  background: #15803d !important;
-}
+        .gecko-toggle-btn:not(.active):hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #94a3b8 !important;
+        }
 
-.gecko-btn-egreso {
-  background: #dc2626 !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 2rem !important;
-  padding: 0.65rem 1.75rem !important;
-  font-weight: 700 !important;
-  font-size: 0.8rem !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
-  transition: background 0.2s !important;
-}
-.gecko-btn-egreso:hover {
-  background: #b91c1c !important;
-}
+        .gecko-modal-footer {
+            display: flex !important;
+            justify-content: flex-end !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+            margin-top: 2rem !important;
+            padding-top: 1.25rem !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+        }
+
+        .gecko-btn-cancel {
+            background: rgba(255, 255, 255, 0.06) !important;
+            color: #64748b !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 2rem !important;
+            padding: 0.65rem 1.75rem !important;
+            font-weight: 700 !important;
+            font-size: 0.8rem !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+        }
+
+        .gecko-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #94a3b8 !important;
+        }
+
+        .gecko-btn-primary {
+            background: #F15A24 !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 2rem !important;
+            padding: 0.65rem 1.75rem !important;
+            font-weight: 700 !important;
+            font-size: 0.8rem !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+            cursor: pointer !important;
+            transition: background 0.2s !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+        }
+
+        .gecko-btn-primary:hover {
+            background: #d94e1a !important;
+        }
+
+        .gecko-btn-danger {
+            background: transparent !important;
+            color: #ef4444 !important;
+            border: 1.5px solid #ef4444 !important;
+            border-radius: 2rem !important;
+            padding: 0.65rem 1.75rem !important;
+            font-weight: 700 !important;
+            font-size: 0.8rem !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+        }
+
+        .gecko-btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .gecko-btn-success {
+            background: #16a34a !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 2rem !important;
+            padding: 0.65rem 1.75rem !important;
+            font-weight: 700 !important;
+            font-size: 0.8rem !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+            transition: background 0.2s !important;
+        }
+
+        .gecko-btn-success:hover {
+            background: #15803d !important;
+        }
+
+        .gecko-btn-egreso {
+            background: #dc2626 !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 2rem !important;
+            padding: 0.65rem 1.75rem !important;
+            font-weight: 700 !important;
+            font-size: 0.8rem !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+            transition: background 0.2s !important;
+        }
+
+        .gecko-btn-egreso:hover {
+            background: #b91c1c !important;
+        }
+
+        /* ── GECKO DESIGN SYSTEM: OVERRIDES FINALES ── */
+        .gecko-input-group input,
+        .gecko-input-group .gecko-input-num,
+        .gecko-modal-box .gecko-input-group input {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            border-bottom: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+
+        .gecko-input-group .gecko-input-prefix,
+        .gecko-modal-box .gecko-input-prefix {
+            color: #F15A24 !important;
+            -webkit-text-fill-color: #F15A24 !important;
+            background: transparent !important;
+            border: none !important;
+            flex-shrink: 0 !important;
+        }
+
+        .gecko-modal-box .gecko-input-line,
+        .gecko-modal-overlay .gecko-input-line {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+            border-radius: 0 !important;
+            padding: 0.5rem 0 !important;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+        }
+
+        .gecko-modal-box .gecko-input-line:focus,
+        .gecko-modal-overlay .gecko-input-line:focus {
+            border-bottom-color: #F15A24 !important;
+            background: transparent !important;
+        }
+
+        .gecko-toggle-btn.active[data-tipo="efectivo"] {
+            background: rgba(16, 185, 129, 0.15) !important;
+            border-color: #10b981 !important;
+            color: #10b981 !important;
+        }
+
+        .gecko-toggle-btn.active[data-tipo="billeteras"] {
+            background: rgba(59, 130, 246, 0.15) !important;
+            border-color: #3b82f6 !important;
+            color: #3b82f6 !important;
+        }
+
+        .gecko-toggle-btn.active[data-tipo="banco"] {
+            background: rgba(100, 116, 139, 0.15) !important;
+            border-color: #64748b !important;
+            color: #94a3b8 !important;
+        }
