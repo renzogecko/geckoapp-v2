@@ -1688,15 +1688,14 @@ document.addEventListener('geckoDB_ready', () => {
                              onfocusin="this.style.borderColor='#F15A24'" onfocusout="this.style.borderColor='#3f3f46'">
                             <span style="padding:12px 16px;color:#ffffff;font-size:14px;font-weight:900;border-right:1.5px solid #3f3f46;background:#222;flex-shrink:0;">$</span>
                             <input id="editCajaSaldo" type="number" value="${caja.saldo || 0}"
-                                style="background:transparent;border:none;outline:none;color:#ffffff;font-size:15px;font-weight:600;padding:12px 16px;width:100%;-webkit-text-fill-color:#ffffff;">
+                                style="background:transparent;border:none;outline:none;color:#ffffff;font-size:15px;font-weight:600;padding:12px 16px !important;width:100%;-webkit-text-fill-color:#ffffff;">
                         </div>
                     </div>
 
                 </div>
 
-                <div class="gecko-modal-footer" style="align-items:center;justify-content:flex-end;">
+                <div class="gecko-modal-footer" style="align-items:center;justify-content:center !important; gap: 1.5rem !important;">
                     <button class="gecko-btn-danger" onclick="window._eliminarCaja()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                         ELIMINAR
                     </button>
                     <button class="gecko-btn-cancel" onclick="this.closest('.gecko-modal-overlay').remove()">CANCELAR</button>
@@ -2818,13 +2817,12 @@ window.editarCaja = function (id) {
                     <label class="gecko-label">Saldo actual</label>
                     <div class="gecko-input-group mt-1">
                         <span class="gecko-input-prefix">$</span>
-                        <input id="editCajaSaldo" class="gecko-input-num" type="number" value="${caja.saldo || 0}">
+                        <input id="editCajaSaldo" class="gecko-input-num" type="number" value="${caja.saldo || 0}" style="padding-left: 12px !important;">
                     </div>
                 </div>
             </div>
-            <div class="gecko-modal-footer">
+            <div class="gecko-modal-footer" style="justify-content: center !important; gap: 1.5rem !important;">
                 <button class="gecko-btn-danger" onclick="window._eliminarCaja()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                     ELIMINAR
                 </button>
                 <button class="gecko-btn-cancel" onclick="this.closest('.gecko-modal-overlay').remove()">CANCELAR</button>

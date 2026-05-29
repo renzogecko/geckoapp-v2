@@ -118,8 +118,6 @@ GeckoApp es una SPA (Single Page Application) de gestión interna para **Gecko E
 - **Materiales:** cambiar botones provisorios por definitivos
 - **Cotizadores Láser / CNC:** por desarrollar
 
-### 🐛 Bug activo — URGENTE
-Al presionar F5 en sección Finanzas, el `modalEditarCaja` aparece ocupando toda la pantalla. El `setTimeout(1500ms)` mejoró pero no resolvió del todo. Causa probable: `main.js` tiene su propia versión del modal que se activa antes del override de `gecko-fixes.js`.
 
 ### ⏳ Pendiente de subir a producción
 Los cambios de Design System (modales de finanzas) están en local y GitHub pero **no en Hostinger**. Hostinger está en el estado anterior.
