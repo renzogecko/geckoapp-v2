@@ -2494,9 +2494,7 @@ window.addEventListener('load', function () {
             const tbody = document.getElementById('tbodyMovimientos');
             if (!tbody) return;
 
-            if (!window.LISTA_MOVIMIENTOS) {
-                window.LISTA_MOVIMIENTOS = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-            }
+            window.LISTA_MOVIMIENTOS = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
             let movs = [...window.LISTA_MOVIMIENTOS];
 
             // Filtro por categoría
@@ -2576,12 +2574,11 @@ window.addEventListener('load', function () {
 
         // ── Poblar selects de cajas al abrir modales ──
         window.abrirModalNuevoMovimiento = function () {
-            // Intentar updateCajaSelectors de main.js primero; si no existe, usar fallback propio
-            if (typeof updateCajaSelectors === 'function') {
-                updateCajaSelectors();
-            } else {
-                window._geckoPopulateCajaSelect('nuevoMovCaja');
-            }
+            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const opts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+            const sel = document.getElementById('nuevoMovCaja');
+            if (sel) sel.innerHTML = `<option value="">Seleccionar caja...</option>` + opts;
+
             const m = document.getElementById('modalNuevoMovimiento');
             if (m) { m.style.display = 'flex'; }
             const desc = document.getElementById('nuevoMovDesc');
@@ -2591,12 +2588,13 @@ window.addEventListener('load', function () {
         };
 
         window.abrirModalTransferencia = function () {
-            if (typeof updateCajaSelectors === 'function') {
-                updateCajaSelectors();
-            } else {
-                window._geckoPopulateCajaSelect('transferenciaOrigen');
-                window._geckoPopulateCajaSelect('transferenciaDestino');
-            }
+            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const opts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+            const selO = document.getElementById('transferenciaOrigen');
+            if (selO) selO.innerHTML = `<option value="">Seleccionar caja origen...</option>` + opts;
+            const selD = document.getElementById('transferenciaDestino');
+            if (selD) selD.innerHTML = `<option value="">Seleccionar caja destino...</option>` + opts;
+
             const m = document.getElementById('modalTransferencia');
             if (m) { m.style.display = 'flex'; }
             const monto = document.getElementById('transferenciaMonto');
