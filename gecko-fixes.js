@@ -1711,7 +1711,8 @@ document.addEventListener('geckoDB_ready', () => {
     window._guardarEdicionCaja = function () {
         const id = document.getElementById('editCajaId').value;
         const nombre = document.getElementById('editCajaNombre').value.trim();
-        const icono = document.getElementById('editCajaTipo').value;
+        let icono = document.getElementById('editCajaTipo').value;
+        if (icono === 'billeteras') icono = 'mercado_pago_celeste';
         const saldo = parseFloat(document.getElementById('editCajaSaldo').value) || 0;
 
         if (!nombre) { alert('El nombre no puede estar vacío.'); return; }
@@ -2837,7 +2838,8 @@ window.editarCaja = function (id) {
 // ── crearCaja: nueva caja desde modalNuevaCaja (IDs nuevos)
 window.crearCaja = function () {
     const nombre = document.getElementById('nuevaCajaNombre')?.value?.trim();
-    const tipo = document.getElementById('nuevaCajaTipo')?.value || 'efectivo';
+    let tipo = document.getElementById('nuevaCajaTipo')?.value || 'efectivo';
+    if (tipo === 'billeteras') tipo = 'mercado_pago_celeste';
     const saldo = parseFloat(document.getElementById('nuevaCajaSaldo')?.value) || 0;
     if (!nombre) { alert('Ingresá un nombre para la caja.'); return; }
     const _ls = window._localStorage_original || localStorage;
