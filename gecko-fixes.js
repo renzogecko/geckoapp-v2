@@ -1965,25 +1965,76 @@ window.renderGastosFijos = function () {
     }
 };
 
-window.pagarGastoFijo = function (idx) {
-    const lista = window.LISTA_GASTOS_FIJOS;
-    if (!lista || !lista[idx]) return;
-    lista[idx].estado = 'Pagado';
-    localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
-    // Register as expense movement
-    const g = lista[idx];
-    const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-    if (cajas.length > 0 && typeof window.registrarMovimiento === 'function') {
-        window.registrarMovimiento(g.concepto, cajas[0].nombre, g.monto, 'Egreso', g.categoria || 'Gastos Fijos');
-    } else {
-        const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-        movs.push({ fecha: new Date().toLocaleDateString('es-AR'), detalle: g.concepto, caja: cajas[0]?.nombre || '—', tipo: 'Egreso', monto: g.monto, categoria: g.categoria || 'Gastos Fijos' });
-        localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
-        window.LISTA_MOVIMIENTOS = movs;
-    }
-    window.renderGastosFijos();
-    if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} marcado como pagado.`, '¡Listo!');
-};
+        window.pagarGastoFijo = function (idx) {
+            const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+            const g = lista[idx];
+            if (!g) return;
+
+            // Guardar el índice globalmente para usarlo en la confirmación
+            window._gastoFijoAPagarIdx = idx;
+
+            // Poblar select
+            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const opts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+            const sel = document.getElementById('pagoGfCaja');
+            if (sel) sel.innerHTML = `<option value="">Seleccionar caja origen...</option>` + opts;
+
+            // Poblar datos visuales
+            const nombreEl = document.getElementById('pagoGfNombre');
+            const montoEl = document.getElementById('pagoGfMonto');
+            if(nombreEl) nombreEl.innerText = g.concepto;
+            if(montoEl) montoEl.innerText = '$' + Math.round(g.monto).toLocaleString('es-AR');
+
+            document.getElementById('modalPagoGastoFijo').style.display = 'flex';
+        };
+
+        window.confirmarPagoGastoFijo = function() {
+            const idx = window._gastoFijoAPagarIdx;
+            if(idx === undefined || idx === null) return;
+
+            const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+            const g = lista[idx];
+            if (!g) return;
+
+            const cajaNombre = document.getElementById('pagoGfCaja').value;
+            if(!cajaNombre) { alert("Seleccion\u00e1 la caja desde donde se pagar\u00e1."); return; }
+
+            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const cajaObj = cajas.find(c => c.nombre === cajaNombre);
+            if(!cajaObj) { alert("Caja no v\u00e1lida."); return; }
+
+            // 1. Restar saldo de la caja seleccionada
+            cajaObj.saldo -= g.monto;
+            localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
+
+            // 2. Crear el movimiento en el historial
+            const mov = {
+                id: 'mov_' + Date.now(),
+                fecha: new Date().toLocaleDateString('es-AR'),
+                detalle: g.concepto,
+                caja: cajaNombre,
+                tipo: 'Egreso',
+                monto: g.monto,
+                categoria: g.categoria || 'Gastos Fijos'
+            };
+            const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+            movs.push(mov);
+            localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+            window.LISTA_MOVIMIENTOS = movs;
+
+            // 3. Actualizar estado del Gasto a "Pagado"
+            g.estado = 'Pagado';
+            localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
+            window.LISTA_GASTOS_FIJOS = lista;
+
+            // 4. Cerrar y Notificar
+            document.getElementById('modalPagoGastoFijo').style.display = 'none';
+            
+            window.renderGastosFijos();
+            if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+            if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+            if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${cajaNombre}.`, '\u00a1Abonado!');
+        };
 
 window.eliminarGastoFijo = function (idx) {
     document.getElementById('_geckoConfirmElimGasto')?.remove();
@@ -2076,10 +2127,10 @@ window.eliminarGastoFijo = function (idx) {
         modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
         
         document.getElementById('_editGastoGuardarBtn').onclick = function () {
-            const concepto = document.getElementById('_editGastoConcepto').value.trim();
-            const monto = parseFloat(document.getElementById('_editGastoMonto').value) || 0;
-            const vencimiento = document.getElementById('_editGastoVencimiento').value.trim() || '1';
-            const categoria = document.getElementById('_editGastoCategoria').value;
+            const concepto = modal.querySelector('#_editGastoConcepto').value.trim();
+            const monto = parseFloat(modal.querySelector('#_editGastoMonto').value) || 0;
+            const vencimiento = modal.querySelector('#_editGastoVencimiento').value.trim() || '1';
+            const categoria = modal.querySelector('#_editGastoCategoria').value;
             if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
             const arr = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
             if (!arr[idx]) return;
@@ -2150,10 +2201,10 @@ window.eliminarGastoFijo = function (idx) {
         modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
         
         document.getElementById('_gastoGuardarBtn').onclick = function () {
-            const concepto = document.getElementById('_gastoConcepto').value.trim();
-            const monto = parseFloat(document.getElementById('_gastoMonto').value) || 0;
-            const vencimiento = document.getElementById('_gastoVencimiento').value.trim() || '1';
-            const categoria = document.getElementById('_gastoCategoria').value;
+            const concepto = modal.querySelector('#_gastoConcepto').value.trim();
+            const monto = parseFloat(modal.querySelector('#_gastoMonto').value) || 0;
+            const vencimiento = modal.querySelector('#_gastoVencimiento').value.trim() || '1';
+            const categoria = modal.querySelector('#_gastoCategoria').value;
             if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
             if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
             window.LISTA_GASTOS_FIJOS.push({ concepto, monto, vencimiento, categoria, estado: 'Pendiente' });
