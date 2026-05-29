@@ -2551,6 +2551,16 @@ window.addEventListener('load', function () {
                         </span>
                         <div style="font-size:9px;font-weight:900;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${m.tipo}</div>
                     </td>
+                    <td style="padding:14px 24px;text-align:right;">
+                        <div style="display:flex;justify-content:flex-end;gap:8px;">
+                            <button onclick="window.editarMovimiento(${i})" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar">
+                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button onclick="window.eliminarMovimiento(${i})" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar">
+                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            </button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
             if (typeof window._geckoDragTable === 'function') {
@@ -2717,6 +2727,73 @@ window.addEventListener('load', function () {
             
             if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
             if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        };
+
+        window.eliminarMovimiento = function(index) {
+            const movs = window._geckoMovsDisplayed || window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+            const mov = movs[index];
+            if(!mov) return;
+            
+            // 1. Crear Modal Dinámico estilo GECKO
+            document.getElementById('_geckoConfirmElimMov')?.remove();
+            const modal = document.createElement('div');
+            modal.id = '_geckoConfirmElimMov';
+            modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+            modal.innerHTML = `
+                <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+                    <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </div>
+                    <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Eliminar movimiento</h3>
+                    <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se eliminará <strong style="color:white;">${mov.detalle}</strong> y se revertirá el saldo en la caja.</p>
+                    <div style="display:flex;gap:10px;">
+                        <button onclick="document.getElementById('_geckoConfirmElimMov').remove()"
+                            style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                        <button id="_geckoElimMovOk"
+                            style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            
+            // Cerrar si hace click afuera
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+            
+            // 2. Ejecutar la lógica de eliminación real si confirma
+            document.getElementById('_geckoElimMovOk').onclick = function () {
+                modal.remove();
+                
+                const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+                const cajaObj = cajas.find(c => c.nombre === mov.caja);
+                
+                // Revertir el saldo en la caja
+                if(cajaObj) {
+                    if(mov.tipo === 'Ingreso') {
+                        cajaObj.saldo -= mov.monto;
+                    } else {
+                        cajaObj.saldo += mov.monto;
+                    }
+                    localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
+                }
+                
+                // Eliminar de la base de datos principal
+                const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+                const dbIndex = dbMovs.findIndex(m => m.id === mov.id || (m.fecha === mov.fecha && m.monto === mov.monto && m.detalle === mov.detalle));
+                if(dbIndex !== -1) {
+                    dbMovs.splice(dbIndex, 1);
+                    localStorage.setItem('gecko_movimientos', JSON.stringify(dbMovs));
+                    window.LISTA_MOVIMIENTOS = dbMovs;
+                }
+                
+                if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+                if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+                if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado', '¡Listo!');
+            };
+        };
+        
+        window.editarMovimiento = function(index) {
+            alert('La edición de movimientos estará disponible próximamente. Por ahora puedes eliminarlo y crearlo de nuevo.');
         };
 
         window.ejecutarTransferencia = function () {
