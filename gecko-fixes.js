@@ -2685,6 +2685,75 @@ window.addEventListener('load', function () {
             };
         })();
 
+        // ── SOBREESCRITURA DEFINITIVA DE MOVIMIENTOS Y TRANSFERENCIAS ──
+        window.guardarNuevoMovimiento = function () {
+            const tipo = document.getElementById('nuevoMovTipo')?.value || 'ingreso';
+            const desc = document.getElementById('nuevoMovDesc')?.value?.trim();
+            const monto = parseFloat(document.getElementById('nuevoMovMonto')?.value) || 0;
+            const caja = document.getElementById('nuevoMovCaja')?.value;
+            if (!desc || monto <= 0) { alert('Completá descripción y monto.'); return; }
+            if (!caja) { alert('Seleccioná una caja.'); return; }
+            
+            const tipoCapital = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+            
+            // Bypass de variables léxicas de main.js -> lectura directa a Base de Datos Local
+            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const cajObj = cajas.find(c => c.nombre === caja);
+            if (cajObj) {
+                tipoCapital === 'Ingreso' ? (cajObj.saldo += monto) : (cajObj.saldo -= monto);
+                localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
+            } else {
+                alert('Caja no encontrada en la base de datos.'); return;
+            }
+
+            const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja: caja, tipo: tipoCapital, monto: monto, categoria: 'Varios' };
+            const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+            movs.push(mov);
+            localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+
+            document.getElementById('modalNuevoMovimiento').style.display = 'none';
+            
+            if (typeof window.mostrarExito === 'function') window.mostrarExito(`${tipoCapital} de $${monto.toLocaleString('es-AR')} registrado.`, '¡Hecho!');
+            
+            if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+            if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        };
+
+        window.ejecutarTransferencia = function () {
+            const origen = document.getElementById('transferenciaOrigen')?.value;
+            const destino = document.getElementById('transferenciaDestino')?.value;
+            const monto = parseFloat(document.getElementById('transferenciaMonto')?.value) || 0;
+            const desc = document.getElementById('transferenciaDesc')?.value || '';
+            
+            if (!origen || !destino) { alert('Seleccioná cajas de origen y destino.'); return; }
+            if (origen === destino) { alert('Las cajas deben ser distintas.'); return; }
+            if (monto <= 0) { alert('Monto inválido.'); return; }
+            
+            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const cajO = cajas.find(c => c.nombre === origen);
+            const cajD = cajas.find(c => c.nombre === destino);
+            
+            if (!cajO || !cajD) { alert('Caja no encontrada.'); return; }
+            
+            cajO.saldo -= monto;
+            cajD.saldo += monto;
+            localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
+            
+            const ts = Date.now();
+            const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+            movs.push({ id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}${desc ? ' - ' + desc : ''}`, caja: origen, tipo: 'Egreso', monto: monto, categoria: 'Transferencia' });
+            movs.push({ id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}${desc ? ' - ' + desc : ''}`, caja: destino, tipo: 'Ingreso', monto: monto, categoria: 'Transferencia' });
+            
+            localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+            
+            document.getElementById('modalTransferencia').style.display = 'none';
+            
+            if (typeof window.mostrarExito === 'function') window.mostrarExito(`Transferencia de $${monto.toLocaleString('es-AR')} realizada.`, '¡Listo!');
+            
+            if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+            if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        };
+
         console.log('🦎 GECKO-FIXES: renderOts + renderizarMovimientos + renderClientes parcheados post-main.js.');
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
