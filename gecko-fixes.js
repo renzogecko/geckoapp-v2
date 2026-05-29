@@ -1639,10 +1639,9 @@ document.addEventListener('geckoDB_ready', () => {
         modal.innerHTML = `
             <div class="gecko-modal-box" style="max-width:480px;width:100%;position:relative;">
 
-                <button onclick="this.closest('.gecko-modal-overlay').remove()"
-                    style="position:absolute;top:20px;right:20px;width:32px;height:32px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#666;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;"
-                    onmouseover="this.style.color='white';this.style.borderColor='#555'"
-                    onmouseout="this.style.color='#666';this.style.borderColor='#333'">✕</button>
+                <button onclick="this.closest('.gecko-modal-overlay').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'" onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
 
                 <p class="gecko-modal-subtitle">Finanzas / Cajas</p>
                 <h2 class="gecko-modal-title">Editar Caja</h2>
@@ -2018,144 +2017,152 @@ window.eliminarGastoFijo = function (idx) {
     };
 };
 
-window.editarGastoFijo = function (idx) {
-    const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-    const g = lista[idx];
-    if (!g) return;
-    document.getElementById('_geckoModalEditGasto')?.remove();
-    const modal = document.createElement('div');
-    modal.id = '_geckoModalEditGasto';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
-    const cats = ['Alquiler', 'Servicios', 'Internet', 'Sueldos', 'Impuestos', 'Insumos', 'Varios'];
-    const catLabels = { Alquiler: 'Alquiler', Servicios: 'Servicios (Luz, Agua, Gas)', Internet: 'Internet / Telefonía', Sueldos: 'Sueldos', Impuestos: 'Impuestos / Monotributo', Insumos: 'Insumos recurrentes', Varios: 'Varios' };
-    modal.innerHTML = `
-        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:32px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-                <div>
-                    <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px 0;">Finanzas</p>
-                    <h3 style="color:white;font-size:18px;font-weight:900;margin:0;text-transform:uppercase;letter-spacing:1px;">Editar Gasto Fijo</h3>
-                </div>
-                <button onclick="document.getElementById('_geckoModalEditGasto').remove()"
-                    style="background:#27272a;border:none;color:#71717a;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">✕</button>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:16px;">
-                <div>
-                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Concepto</label>
-                    <input id="_editGastoConcepto" type="text" value="${(g.concepto || '').replace(/"/g, '&quot;')}"
-                        style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div>
-                        <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Monto ($)</label>
-                        <input id="_editGastoMonto" type="number" value="${g.monto || 0}"
-                            style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#F15A24;font-size:14px;font-weight:900;outline:none;box-sizing:border-box;">
-                    </div>
-                    <div>
-                        <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Día vencimiento</label>
-                        <input id="_editGastoVencimiento" type="number" min="1" max="31" value="${g.vencimiento || 1}"
-                            style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
-                    </div>
-                </div>
-                <div>
-                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Categoría</label>
-                    <select id="_editGastoCategoria" class="gecko-select-pro" style="font-weight:700;">
-                        ${cats.map(c => `<option value="${c}" ${g.categoria === c ? 'selected' : ''}>${catLabels[c]}</option>`).join('')}
-                    </select>
-                </div>
-                <button id="_editGastoGuardarBtn"
-                    style="width:100%;padding:14px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;margin-top:4px;"
-                    onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 20px rgba(241,90,36,0.4)'"
-                    onmouseout="this.style.transform='';this.style.boxShadow=''">
-                    Guardar Cambios
+    window.editarGastoFijo = function (idx) {
+        const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+        const g = lista[idx];
+        if (!g) return;
+        document.getElementById('_geckoModalEditGasto')?.remove();
+        const modal = document.createElement('div');
+        modal.id = '_geckoModalEditGasto';
+        modal.className = 'gecko-modal-overlay';
+        modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;';
+        const cats = ['Alquiler', 'Servicios', 'Internet', 'Sueldos', 'Impuestos', 'Insumos', 'Varios'];
+        const catLabels = { Alquiler: 'Alquiler', Servicios: 'Servicios (Luz, Agua, Gas)', Internet: 'Internet / Telefon\u00eda', Sueldos: 'Sueldos', Impuestos: 'Impuestos / Monotributo', Insumos: 'Insumos recurrentes', Varios: 'Varios' };
+        
+        modal.innerHTML = `
+            <div class="gecko-modal-box max-w-md w-full mx-4">
+                <button onclick="document.getElementById('_geckoModalEditGasto').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'" onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
-            </div>
-        </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-    document.getElementById('_editGastoGuardarBtn').onclick = function () {
-        const concepto = document.getElementById('_editGastoConcepto').value.trim();
-        const monto = parseFloat(document.getElementById('_editGastoMonto').value) || 0;
-        const vencimiento = document.getElementById('_editGastoVencimiento').value.trim() || '1';
-        const categoria = document.getElementById('_editGastoCategoria').value;
-        if (!concepto || monto <= 0) { alert('Completá concepto y monto.'); return; }
-        const arr = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-        if (!arr[idx]) return;
-        arr[idx] = { ...arr[idx], concepto, monto, vencimiento, categoria };
-        window.LISTA_GASTOS_FIJOS = arr;
-        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(arr));
-        modal.remove();
-        window.renderGastosFijos();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} actualizado.`, '¡Guardado!');
-    };
-};
 
-window.abrirModalNuevoGastoFijo = function () {
-    document.getElementById('_geckoModalNuevoGasto')?.remove();
-    const modal = document.createElement('div');
-    modal.id = '_geckoModalNuevoGasto';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
-    modal.innerHTML = `
-        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:32px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-                <div>
-                    <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px 0;">Finanzas</p>
-                    <h3 style="color:white;font-size:18px;font-weight:900;margin:0;text-transform:uppercase;letter-spacing:1px;">Nuevo Gasto Fijo</h3>
-                </div>
-                <button onclick="document.getElementById('_geckoModalNuevoGasto').remove()"
-                    style="background:#27272a;border:none;color:#71717a;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">✕</button>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:16px;">
-                <div>
-                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Concepto</label>
-                    <input id="_gastoConcepto" type="text" placeholder="Ej: Alquiler, Luz, Sueldos..."
-                        style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <p class="gecko-modal-subtitle">FINANZAS / GASTOS FIJOS</p>
+                <h2 class="gecko-modal-title">EDITAR GASTO</h2>
+
+                <div class="space-y-5 mt-6">
                     <div>
-                        <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Monto ($)</label>
-                        <input id="_gastoMonto" type="number" placeholder="0"
-                            style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#F15A24;font-size:14px;font-weight:900;outline:none;box-sizing:border-box;">
+                        <label class="gecko-label">Concepto del Gasto</label>
+                        <input id="_editGastoConcepto" type="text" class="gecko-input-line" value="${(g.concepto || '').replace(/"/g, '&quot;')}">
                     </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="gecko-label">Monto ($)</label>
+                            <div class="gecko-input-group mt-1">
+                                <span class="gecko-input-prefix">$</span>
+                                <input id="_editGastoMonto" class="gecko-input-num" type="number" value="${g.monto || 0}" min="0" style="padding-left: 16px !important;">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="gecko-label">D\u00eda vencimiento</label>
+                            <input id="_editGastoVencimiento" type="number" min="1" max="31" class="gecko-input-line mt-1" value="${g.vencimiento || 1}">
+                        </div>
+                    </div>
+
                     <div>
-                        <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Día vencimiento</label>
-                        <input id="_gastoVencimiento" type="number" min="1" max="31" placeholder="1-31"
-                            style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
+                        <label class="gecko-label">Categor\u00eda</label>
+                        <select id="_editGastoCategoria" class="gecko-select-pro">
+                            ${cats.map(c => `<option value="${c}" ${g.categoria === c ? 'selected' : ''}>${catLabels[c]}</option>`).join('')}
+                        </select>
                     </div>
                 </div>
-                <div>
-                    <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Categoría</label>
-                    <select id="_gastoCategoria" class="gecko-select-pro" style="font-weight:700;">
-                        <option value="Alquiler">Alquiler</option>
-                        <option value="Servicios">Servicios (Luz, Agua, Gas)</option>
-                        <option value="Internet">Internet / Telefonía</option>
-                        <option value="Sueldos">Sueldos</option>
-                        <option value="Impuestos">Impuestos / Monotributo</option>
-                        <option value="Insumos">Insumos recurrentes</option>
-                        <option value="Varios">Varios</option>
-                    </select>
+
+                <div class="gecko-modal-footer" style="align-items:center;justify-content:center !important; gap: 1.5rem !important;">
+                    <button class="gecko-btn-cancel" onclick="document.getElementById('_geckoModalEditGasto').remove()">CANCELAR</button>
+                    <button class="gecko-btn-primary" id="_editGastoGuardarBtn">GUARDAR CAMBIOS</button>
                 </div>
-                <button id="_gastoGuardarBtn"
-                    style="width:100%;padding:14px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;margin-top:4px;">
-                    Guardar Gasto Fijo
-                </button>
-            </div>
-        </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-    document.getElementById('_gastoGuardarBtn').onclick = function () {
-        const concepto = document.getElementById('_gastoConcepto').value.trim();
-        const monto = parseFloat(document.getElementById('_gastoMonto').value) || 0;
-        const vencimiento = document.getElementById('_gastoVencimiento').value.trim() || '1';
-        const categoria = document.getElementById('_gastoCategoria').value;
-        if (!concepto || monto <= 0) { alert('Completá concepto y monto.'); return; }
-        if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-        window.LISTA_GASTOS_FIJOS.push({ concepto, monto, vencimiento, categoria, estado: 'Pendiente' });
-        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(window.LISTA_GASTOS_FIJOS));
-        modal.remove();
-        window.renderGastosFijos();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '¡Guardado!');
+            </div>`;
+        
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        
+        document.getElementById('_editGastoGuardarBtn').onclick = function () {
+            const concepto = document.getElementById('_editGastoConcepto').value.trim();
+            const monto = parseFloat(document.getElementById('_editGastoMonto').value) || 0;
+            const vencimiento = document.getElementById('_editGastoVencimiento').value.trim() || '1';
+            const categoria = document.getElementById('_editGastoCategoria').value;
+            if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
+            const arr = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+            if (!arr[idx]) return;
+            arr[idx] = { ...arr[idx], concepto, monto, vencimiento, categoria };
+            window.LISTA_GASTOS_FIJOS = arr;
+            localStorage.setItem('gecko_gastos_fijos', JSON.stringify(arr));
+            modal.remove();
+            window.renderGastosFijos();
+            if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} actualizado.`, '\u00a1Guardado!');
+        };
     };
-};
+
+    window.abrirModalNuevoGastoFijo = function () {
+        document.getElementById('_geckoModalNuevoGasto')?.remove();
+        const modal = document.createElement('div');
+        modal.id = '_geckoModalNuevoGasto';
+        modal.className = 'gecko-modal-overlay';
+        modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;';
+        modal.innerHTML = `
+            <div class="gecko-modal-box max-w-md w-full mx-4">
+                <button onclick="document.getElementById('_geckoModalNuevoGasto').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'" onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+
+                <p class="gecko-modal-subtitle">FINANZAS / GASTOS FIJOS</p>
+                <h2 class="gecko-modal-title">NUEVO GASTO FIJO</h2>
+
+                <div class="space-y-5 mt-6">
+                    <div>
+                        <label class="gecko-label">Concepto del Gasto</label>
+                        <input id="_gastoConcepto" type="text" class="gecko-input-line" placeholder="Ej: Alquiler, Luz, Sueldos...">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="gecko-label">Monto ($)</label>
+                            <div class="gecko-input-group mt-1">
+                                <span class="gecko-input-prefix">$</span>
+                                <input id="_gastoMonto" class="gecko-input-num" type="number" placeholder="0" min="0" style="padding-left: 16px !important;">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="gecko-label">D\u00eda vencimiento</label>
+                            <input id="_gastoVencimiento" type="number" min="1" max="31" class="gecko-input-line mt-1" placeholder="Ej: 15">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="gecko-label">Categor\u00eda</label>
+                        <select id="_gastoCategoria" class="gecko-select-pro">
+                            <option value="Alquiler">Alquiler</option>
+                            <option value="Servicios">Servicios (Luz, Agua, Gas)</option>
+                            <option value="Internet">Internet / Telefon\u00eda</option>
+                            <option value="Sueldos">Sueldos</option>
+                            <option value="Impuestos">Impuestos / Monotributo</option>
+                            <option value="Insumos">Insumos recurrentes</option>
+                            <option value="Varios">Varios</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="gecko-modal-footer" style="align-items:center;justify-content:center !important; gap: 1.5rem !important;">
+                    <button class="gecko-btn-cancel" onclick="document.getElementById('_geckoModalNuevoGasto').remove()">CANCELAR</button>
+                    <button class="gecko-btn-primary" id="_gastoGuardarBtn">GUARDAR GASTO</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        
+        document.getElementById('_gastoGuardarBtn').onclick = function () {
+            const concepto = document.getElementById('_gastoConcepto').value.trim();
+            const monto = parseFloat(document.getElementById('_gastoMonto').value) || 0;
+            const vencimiento = document.getElementById('_gastoVencimiento').value.trim() || '1';
+            const categoria = document.getElementById('_gastoCategoria').value;
+            if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
+            if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+            window.LISTA_GASTOS_FIJOS.push({ concepto, monto, vencimiento, categoria, estado: 'Pendiente' });
+            localStorage.setItem('gecko_gastos_fijos', JSON.stringify(window.LISTA_GASTOS_FIJOS));
+            modal.remove();
+            window.renderGastosFijos();
+            if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '\u00a1Guardado!');
+        };
+    };
 
 // ── Reportes: override ranking para usar p.categoria (Gráfica / Industrial) ──
 const _renderReportesOriginal = window.renderReportesDashboard;
@@ -2703,9 +2710,9 @@ window.addEventListener('load', function () {
             const caja = document.getElementById('nuevoMovCaja')?.value;
             if (!desc || monto <= 0) { alert('Completá descripción y monto.'); return; }
             if (!caja) { alert('Seleccioná una caja.'); return; }
-            
+
             const tipoCapital = tipo.charAt(0).toUpperCase() + tipo.slice(1);
-            
+
             // Bypass de variables léxicas de main.js -> lectura directa a Base de Datos Local
             const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
             const cajObj = cajas.find(c => c.nombre === caja);
@@ -2722,18 +2729,18 @@ window.addEventListener('load', function () {
             localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
 
             document.getElementById('modalNuevoMovimiento').style.display = 'none';
-            
+
             if (typeof window.mostrarExito === 'function') window.mostrarExito(`${tipoCapital} de $${monto.toLocaleString('es-AR')} registrado.`, '¡Hecho!');
-            
+
             if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
             if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
         };
 
-        window.eliminarMovimiento = function(index) {
+        window.eliminarMovimiento = function (index) {
             const movs = window._geckoMovsDisplayed || window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
             const mov = movs[index];
-            if(!mov) return;
-            
+            if (!mov) return;
+
             // 1. Crear Modal Dinámico estilo GECKO
             document.getElementById('_geckoConfirmElimMov')?.remove();
             const modal = document.createElement('div');
@@ -2756,43 +2763,43 @@ window.addEventListener('load', function () {
                     </div>
                 </div>`;
             document.body.appendChild(modal);
-            
+
             // Cerrar si hace click afuera
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-            
+
             // 2. Ejecutar la lógica de eliminación real si confirma
             document.getElementById('_geckoElimMovOk').onclick = function () {
                 modal.remove();
-                
+
                 const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
                 const cajaObj = cajas.find(c => c.nombre === mov.caja);
-                
+
                 // Revertir el saldo en la caja
-                if(cajaObj) {
-                    if(mov.tipo === 'Ingreso') {
+                if (cajaObj) {
+                    if (mov.tipo === 'Ingreso') {
                         cajaObj.saldo -= mov.monto;
                     } else {
                         cajaObj.saldo += mov.monto;
                     }
                     localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
                 }
-                
+
                 // Eliminar de la base de datos principal
                 const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
                 const dbIndex = dbMovs.findIndex(m => m.id === mov.id || (m.fecha === mov.fecha && m.monto === mov.monto && m.detalle === mov.detalle));
-                if(dbIndex !== -1) {
+                if (dbIndex !== -1) {
                     dbMovs.splice(dbIndex, 1);
                     localStorage.setItem('gecko_movimientos', JSON.stringify(dbMovs));
                     window.LISTA_MOVIMIENTOS = dbMovs;
                 }
-                
+
                 if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
                 if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
                 if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado', '¡Listo!');
             };
         };
-        
-        window.editarMovimiento = function(index) {
+
+        window.editarMovimiento = function (index) {
             alert('La edición de movimientos estará disponible próximamente. Por ahora puedes eliminarlo y crearlo de nuevo.');
         };
 
@@ -2801,32 +2808,32 @@ window.addEventListener('load', function () {
             const destino = document.getElementById('transferenciaDestino')?.value;
             const monto = parseFloat(document.getElementById('transferenciaMonto')?.value) || 0;
             const desc = document.getElementById('transferenciaDesc')?.value || '';
-            
+
             if (!origen || !destino) { alert('Seleccioná cajas de origen y destino.'); return; }
             if (origen === destino) { alert('Las cajas deben ser distintas.'); return; }
             if (monto <= 0) { alert('Monto inválido.'); return; }
-            
+
             const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
             const cajO = cajas.find(c => c.nombre === origen);
             const cajD = cajas.find(c => c.nombre === destino);
-            
+
             if (!cajO || !cajD) { alert('Caja no encontrada.'); return; }
-            
+
             cajO.saldo -= monto;
             cajD.saldo += monto;
             localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
-            
+
             const ts = Date.now();
             const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
             movs.push({ id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}${desc ? ' - ' + desc : ''}`, caja: origen, tipo: 'Egreso', monto: monto, categoria: 'Transferencia' });
             movs.push({ id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}${desc ? ' - ' + desc : ''}`, caja: destino, tipo: 'Ingreso', monto: monto, categoria: 'Transferencia' });
-            
+
             localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
-            
+
             document.getElementById('modalTransferencia').style.display = 'none';
-            
+
             if (typeof window.mostrarExito === 'function') window.mostrarExito(`Transferencia de $${monto.toLocaleString('es-AR')} realizada.`, '¡Listo!');
-            
+
             if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
             if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
         };

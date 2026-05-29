@@ -2308,6 +2308,15 @@
     <!-- ═══════════════════ MODAL NUEVA CAJA — GECKO STYLE ═══════════════════ -->
     <div id="modalNuevaCaja" class="gecko-modal-overlay" style="display:none">
         <div class="gecko-modal-box max-w-md w-full mx-4">
+            <button onclick="document.getElementById('modalNuevaCaja').style.display='none'"
+                style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;"
+                onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
+                onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
             <p class="gecko-modal-subtitle">FINANZAS / CAJAS</p>
             <h2 class="gecko-modal-title">NUEVA CAJA</h2>
 
@@ -2379,8 +2388,17 @@
     <!-- ═══════════════════ MODAL NUEVO MOVIMIENTO — MODAL-GECKO-PRO ═══════════════════ -->
     <div id="modalNuevoMovimiento" class="gecko-modal-overlay" style="display:none">
         <div class="gecko-modal-box max-w-md w-full mx-4">
-            <p class="gecko-modal-subtitle">Finanzas</p>
-            <h2 class="gecko-modal-title">Nuevo Movimiento</h2>
+            <button onclick="document.getElementById('modalNuevoMovimiento').style.display='none'"
+                style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;"
+                onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
+                onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <p class="gecko-modal-subtitle">FINANZAS / MOVIMIENTOS</p>
+            <h2 class="gecko-modal-title">NUEVO MOVIMIENTO</h2>
 
             <div class="space-y-5 mt-6">
                 <div>
@@ -2438,8 +2456,17 @@
     <!-- ═══════════════════ MODAL TRANSFERENCIA — MODAL-GECKO-PRO ═══════════════════ -->
     <div id="modalTransferencia" class="gecko-modal-overlay" style="display:none">
         <div class="gecko-modal-box max-w-md w-full mx-4">
-            <p class="gecko-modal-subtitle">Finanzas</p>
-            <h2 class="gecko-modal-title">Transferencia entre Cajas</h2>
+            <button onclick="document.getElementById('modalTransferencia').style.display='none'"
+                style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;"
+                onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
+                onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <p class="gecko-modal-subtitle">FINANZAS / MOVIMIENTOS</p>
+            <h2 class="gecko-modal-title">TRANSFERENCIA</h2>
 
             <div class="space-y-5 mt-6">
                 <div>
@@ -2835,42 +2862,63 @@
     </div>
 
     <!-- ═══════════════════ MODAL NUEVO GASTO FIJO ═══════════════════ -->
-    <div id="modalNuevoGastoFijo" style="display:none;"
-        class="fixed inset-0 z-[70] bg-gray-900/60 backdrop-blur-sm items-center justify-center p-4">
-        <div
-            class="modal-content bg-white dark:bg-darkCard rounded-2xl p-8 md:p-10 w-full max-w-md shadow-2xl border border-gray-100 dark:border-darkBorder relative">
-            <button onclick="intentarCerrarModal('modalNuevoGastoFijo')"
-                class="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-50 dark:bg-darkBg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gecko transition-all">✕</button>
-            <div class="mb-8 text-center sm:text-left">
-                <p class="text-[11px] font-bold text-gecko uppercase tracking-widest mb-1.5">Programación</p>
-                <h2 class="text-2xl font-extrabold dark:text-zinc-100 tracking-tight">Nuevo Gasto Fijo</h2>
-            </div>
-            <div class="space-y-4">
+    <div id="modalNuevoGastoFijo" class="gecko-modal-overlay" style="display:none;">
+        <div class="gecko-modal-box max-w-md w-full mx-4">
+            <button onclick="document.getElementById('modalNuevoGastoFijo').style.display='none'"
+                style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;"
+                onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
+                onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <p class="gecko-modal-subtitle">FINANZAS / GASTOS FIJOS</p>
+            <h2 class="gecko-modal-title">NUEVO GASTO FIJO</h2>
+
+            <div class="space-y-5 mt-6">
                 <div>
-                    <label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Nombre
-                        del
-                        Gasto</label>
-                    <input type="text" id="gfNombre" placeholder="Ej: Alquiler"
-                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold">
+                    <label class="gecko-label">Concepto del Gasto</label>
+                    <input id="_gastoConcepto" type="text" class="gecko-input-line"
+                        placeholder="Ej: Alquiler, Luz, Sueldos...">
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Monto
-                            Estimado</label>
-                        <input type="number" id="gfMonto" value="0"
-                            class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold">
+                        <label class="gecko-label">Monto ($)</label>
+                        <div class="gecko-input-group mt-1">
+                            <span class="gecko-input-prefix">$</span>
+                            <input id="_gastoMonto" class="gecko-input-num" type="number" placeholder="0" min="0"
+                                style="padding-left: 16px !important;">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-2">Día
-                            Vencimiento</label>
-                        <input type="number" id="gfDia" min="1" max="31" placeholder="Ej: 15"
-                            class="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold">
+                        <label class="gecko-label">Día vencimiento</label>
+                        <input id="_gastoVencimiento" type="number" min="1" max="31" class="gecko-input-line mt-1"
+                            placeholder="Ej: 15">
                     </div>
                 </div>
-                <button onclick="guardarNuevoGastoFijo()"
-                    class="w-full py-5 bg-[#F15A24] text-white font-bold rounded-2xl hover:shadow-xl shadow-orange-500/30 transition-all uppercase tracking-widest text-sm mt-4">
-                    Guardar Gasto Fijo
-                </button>
+
+                <div>
+                    <label class="gecko-label">Categoría</label>
+                    <select id="_gastoCategoria" class="gecko-select-pro">
+                        <option value="Alquiler">Alquiler</option>
+                        <option value="Servicios">Servicios (Luz, Agua, Gas)</option>
+                        <option value="Internet">Internet / Telefonía</option>
+                        <option value="Sueldos">Sueldos</option>
+                        <option value="Impuestos">Impuestos / Monotributo</option>
+                        <option value="Insumos">Insumos recurrentes</option>
+                        <option value="Varios">Varios</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="gecko-modal-footer"
+                style="align-items:center;justify-content:center !important; gap: 1.5rem !important;">
+                <button class="gecko-btn-cancel"
+                    onclick="document.getElementById('modalNuevoGastoFijo').style.display='none'">CANCELAR</button>
+                <button class="gecko-btn-primary" onclick="guardarNuevoGastoFijo()">GUARDAR GASTO</button>
             </div>
         </div>
     </div>
