@@ -8,6 +8,128 @@ if (typeof renderizarFinanzas === 'undefined') {
     };
 }
 
+// ── GECKO FIXES: SOBREESCRITURA GLOBAL INMEDIATA (CLIENTES) ──
+window.obtenerBadgeScoring = function(clienteNombre) {
+    const ahora = new Date();
+    const mesActual = ahora.getMonth();
+    const anioActual = ahora.getFullYear();
+    const listaP = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+
+    const totalMes = listaP.filter(p => {
+        if (p.cliente !== clienteNombre || p.status !== 'OT' || !p.fecha) return false;
+        const parts = p.fecha.split('/');
+        if (parts.length < 3) return false;
+        return (parseInt(parts[1]) - 1) === mesActual && parseInt(parts[2]) === anioActual;
+    }).reduce((acc, p) => acc + (parseFloat(p.total) || 0), 0);
+
+    const setG = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
+    const sNivelOro = setG.nivelOro || 250000;
+    const sNivelPlata = setG.nivelPlata || 100000;
+
+    if (totalMes >= sNivelOro) {
+        return `<span class="px-2 py-0.5 rounded-md bg-[#FFD700]/20 text-[#B8860B] border border-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ORO</span>`;
+    } else if (totalMes >= sNivelPlata) {
+        return `<span class="px-2 py-0.5 rounded-md bg-[#C0C0C0]/20 text-[#808080] border border-[#C0C0C0]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">PLATA</span>`;
+    } else {
+        return `<span class="px-2 py-0.5 rounded-md bg-[#CD7F32]/10 text-[#A0522D] border border-[#CD7F32]/30 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">BRONCE</span>`;
+    }
+};
+
+window.renderClientes = function () {
+    const tbody = document.getElementById('listaClientes');
+    if (!tbody) return;
+
+    // Leer ambas posibles claves para evitar vacíos
+    let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    if (bdClientes.length === 0) bdClientes = JSON.parse(localStorage.getItem('gecko_clientes')) || [];
+
+    window.LISTA_CLIENTES = bdClientes;
+    const termino = (document.getElementById('buscadorClientes')?.value || '').toLowerCase();
+    tbody.innerHTML = '';
+
+    if (bdClientes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">No hay clientes.</td></tr>';
+        return;
+    }
+
+    bdClientes.forEach(c => {
+        if (termino && !c.nombre.toLowerCase().includes(termino) && !(c.cuit||'').toLowerCase().includes(termino)) return;
+
+        const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+        let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total)||0) - (parseFloat(o.adelanto)||0)), 0);
+
+        let wp = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
+        let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
+
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
+        tr.onclick = function() { if(typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre); };
+
+        tr.innerHTML = `
+            <td class="py-4 px-6">
+                <div class="flex items-center">
+                    <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
+                    ${window.obtenerBadgeScoring(c.nombre)}
+                </div>
+            </td>
+            <td class="py-4 px-6"><div class="flex gap-2">${wp}${em}</div></td>
+            <td class="py-4 px-6"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
+            <td class="py-4 px-6 text-right">
+                <button onclick="if(typeof abrirFichaCliente === 'function') abrirFichaCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>Ficha / CC
+                </button>
+            </td>
+            <td class="py-4 px-6 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <button onclick="if(typeof window.editarCliente === 'function') window.editarCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button onclick="if(typeof window.eliminarCliente === 'function') window.eliminarCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+                </div>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+};
+
+window.guardarCliente = function() {
+    const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
+    if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
+
+    const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
+    const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
+
+    const nuevoCliente = {
+        id: 'client_' + Date.now(),
+        nombre: nombre,
+        cuits: cuits,
+        cuit: cuits[0] || '',
+        tel: document.getElementById('nuevoClienteTel')?.value || '',
+        emails: emails,
+        email: emails[0] || '',
+        dir: document.getElementById('nuevoClienteDir')?.value || '',
+        loc: document.getElementById('nuevoClienteLoc')?.value || '',
+        rubro: document.getElementById('nuevoClienteRubro')?.value || '',
+    };
+
+    let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    const index = bdClientes.findIndex(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+    if (index !== -1) {
+        bdClientes[index] = nuevoCliente;
+    } else {
+        bdClientes.push(nuevoCliente);
+    }
+
+    localStorage.setItem('clientes', JSON.stringify(bdClientes));
+    localStorage.setItem('gecko_clientes', JSON.stringify(bdClientes));
+    window.LISTA_CLIENTES = bdClientes;
+
+    const modal = document.getElementById('modalNuevoCliente');
+    if (modal) modal.style.display = 'none';
+
+    if(typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
+
+    window.renderClientes();
+    if(typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
+};
+
 /**
  * ================================================================
  * GECKO FIXES v2.0
@@ -2678,34 +2800,10 @@ window.addEventListener('load', function () {
             window.renderizarMovimientos();
         }
 
-        // ── Override Badges (Limpieza de Emojis) ──
-        window.obtenerBadgeScoring = function (clienteNombre) {
-            const ahora = new Date();
-            const mesActual = ahora.getMonth();
-            const anioActual = ahora.getFullYear();
-            const listaP = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            const totalMes = listaP.filter(p => {
-                if (p.cliente !== clienteNombre || p.status !== 'OT' || !p.fecha) return false;
-                const parts = p.fecha.split('/');
-                if (parts.length < 3) return false;
-                return (parseInt(parts[1]) - 1) === mesActual && parseInt(parts[2]) === anioActual;
-            }).reduce((acc, p) => acc + (parseFloat(p.total) || 0), 0);
 
-            const setG = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
-            const sNivelOro = setG.nivelOro || 250000;
-            const sNivelPlata = setG.nivelPlata || 100000;
-
-            if (totalMes >= sNivelOro) {
-                return `<span class="px-2 py-0.5 rounded-md bg-[#FFD700]/20 text-[#B8860B] border border-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ORO</span>`;
-            } else if (totalMes >= sNivelPlata) {
-                return `<span class="px-2 py-0.5 rounded-md bg-[#C0C0C0]/20 text-[#808080] border border-[#C0C0C0]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">PLATA</span>`;
-            } else {
-                return `<span class="px-2 py-0.5 rounded-md bg-[#CD7F32]/10 text-[#A0522D] border border-[#CD7F32]/30 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">BRONCE</span>`;
-            }
-        };
 
         // ── Fase 3: Acciones (Eliminar y Editar Cliente) ──
-        window.eliminarCliente = function(nombre) {
+        window.eliminarCliente = function (nombre) {
             document.getElementById('_geckoConfirmElimCli')?.remove();
             const modal = document.createElement('div');
             modal.id = '_geckoConfirmElimCli';
@@ -2724,58 +2822,58 @@ window.addEventListener('load', function () {
                 </div>`;
             document.body.appendChild(modal);
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-            
+
             document.getElementById('_geckoElimCliOk').onclick = function () {
                 let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
                 bdClientes = bdClientes.filter(c => c.nombre !== nombre);
                 localStorage.setItem('clientes', JSON.stringify(bdClientes));
                 modal.remove();
-                if(typeof window.renderClientes === 'function') window.renderClientes();
+                if (typeof window.renderClientes === 'function') window.renderClientes();
                 if (typeof window.mostrarExito === 'function') window.mostrarExito('Cliente eliminado', '¡Listo!');
             };
         };
 
-        window.agregarEditCampoCuit = function() {
+        window.agregarEditCampoCuit = function () {
             const container = document.getElementById('editContainerCuits');
-            if(!container) return;
+            if (!container) return;
             const row = document.createElement('div');
             row.className = 'flex items-center gap-3 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
             row.innerHTML = `<input type="text" class="edit-cuit-input gecko-input-line w-full" placeholder="Otro CUIT/DNI..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
             container.appendChild(row);
         };
 
-        window.agregarEditCampoEmail = function() {
+        window.agregarEditCampoEmail = function () {
             const container = document.getElementById('editContainerEmails');
-            if(!container) return;
+            if (!container) return;
             const row = document.createElement('div');
             row.className = 'flex items-center gap-3 mb-2 email-row animate-in fade-in slide-in-from-top-1';
             row.innerHTML = `<input type="email" class="edit-email-input gecko-input-line w-full" placeholder="Otro email..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
             container.appendChild(row);
         };
 
-        window.editarCliente = function(nombre) {
+        window.editarCliente = function (nombre) {
             const bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
             const cliente = bdClientes.find(c => c.nombre === nombre);
-            if(!cliente) { alert("Cliente no encontrado."); return; }
-            
+            if (!cliente) { alert("Cliente no encontrado."); return; }
+
             document.getElementById('_geckoModalEditCli')?.remove();
             const modal = document.createElement('div');
             modal.id = '_geckoModalEditCli';
             modal.className = 'gecko-modal-overlay';
             modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;overflow-y:auto;';
-            
+
             let cuitsHtml = '';
             const cuitsArray = cliente.cuits && cliente.cuits.length > 0 ? cliente.cuits : [cliente.cuit || ''];
             cuitsArray.forEach((cuit, idx) => {
-                cuitsHtml += `<div class="flex items-center gap-3 mb-2 cuit-row"><input type="text" class="edit-cuit-input gecko-input-line w-full" value="${cuit}" placeholder="Ej: 20-12345678-9">` + 
-                (idx === 0 ? `<button type="button" onclick="window.agregarEditCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>` : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`) + `</div>`;
+                cuitsHtml += `<div class="flex items-center gap-3 mb-2 cuit-row"><input type="text" class="edit-cuit-input gecko-input-line w-full" value="${cuit}" placeholder="Ej: 20-12345678-9">` +
+                    (idx === 0 ? `<button type="button" onclick="window.agregarEditCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>` : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`) + `</div>`;
             });
 
             let emailsHtml = '';
             const emailsArray = cliente.emails && cliente.emails.length > 0 ? cliente.emails : [cliente.email || ''];
             emailsArray.forEach((em, idx) => {
-                emailsHtml += `<div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="edit-email-input gecko-input-line w-full" value="${em}" placeholder="ejemplo@correo.com">` + 
-                (idx === 0 ? `<button type="button" onclick="window.agregarEditCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>` : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`) + `</div>`;
+                emailsHtml += `<div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="edit-email-input gecko-input-line w-full" value="${em}" placeholder="ejemplo@correo.com">` +
+                    (idx === 0 ? `<button type="button" onclick="window.agregarEditCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>` : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`) + `</div>`;
             });
 
             modal.innerHTML = `
@@ -2823,16 +2921,16 @@ window.addEventListener('load', function () {
                         <button class="gecko-btn-primary" id="_btnGuardarEditCli">GUARDAR CAMBIOS</button>
                     </div>
                 </div>`;
-            
+
             document.body.appendChild(modal);
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-            
-            document.getElementById('_btnGuardarEditCli').onclick = function() {
+
+            document.getElementById('_btnGuardarEditCli').onclick = function () {
                 const cuits = Array.from(document.querySelectorAll('.edit-cuit-input')).map(i => i.value.trim()).filter(v => v);
                 const emails = Array.from(document.querySelectorAll('.edit-email-input')).map(i => i.value.trim()).filter(v => v);
-                
+
                 const idx = bdClientes.findIndex(c => c.nombre === nombre);
-                if(idx !== -1) {
+                if (idx !== -1) {
                     bdClientes[idx] = {
                         ...bdClientes[idx],
                         cuits: cuits,
@@ -2846,93 +2944,14 @@ window.addEventListener('load', function () {
                     };
                     localStorage.setItem('clientes', JSON.stringify(bdClientes));
                 }
-                
+
                 modal.remove();
-                if(typeof window.mostrarExito === 'function') window.mostrarExito("Datos actualizados.", "¡Guardado!");
-                if(typeof window.renderClientes === 'function') window.renderClientes();
+                if (typeof window.mostrarExito === 'function') window.mostrarExito("Datos actualizados.", "¡Guardado!");
+                if (typeof window.renderClientes === 'function') window.renderClientes();
             };
         };
 
-        // ── Override renderClientes con drag & drop ──
-        (function () {
-            const _origRC = window.renderClientes;
-            window.renderClientes = function () {
-                const tbody = document.getElementById('tbodyClientes');
-                if (!tbody) return;
-                const filtro = document.getElementById('filtroClienteBusqueda')?.value?.toLowerCase() || '';
-                const allClientes = JSON.parse(localStorage.getItem('clientes') || '[]');
-                const filtered = allClientes.filter(c =>
-                    c.nombre.toLowerCase().includes(filtro) ||
-                    (c.cuit && c.cuit.includes(filtro)) ||
-                    (c.rubro && c.rubro.toLowerCase().includes(filtro))
-                );
-                if (!filtered.length) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="py-10 text-center text-gray-400 font-medium italic">No se encontraron clientes.</td></tr>';
-                    return;
-                }
-                const presupuestos = window.listaPresupuestos || JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-                tbody.innerHTML = filtered.map((c, i) => {
-                    const trabajos = presupuestos.filter(p => p.cliente === c.nombre && p.status === 'OT');
-                    const saldoTotal = trabajos.filter(p => p.estado_ot !== 'Entregado').reduce((acc, p) => acc + (p.total - (p.sena || 0)), 0);
-                    const waLink = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors" title="WhatsApp"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></a>` : '';
-                    const mailLink = c.email ? `<a href="mailto:${c.email}" class="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-colors" title="Email"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
-                    const badge = typeof window.obtenerBadgeScoring === 'function' ? window.obtenerBadgeScoring(c.nombre) : '';
-                    return `<tr draggable="true" data-drag-key="${i}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors group" style="cursor:grab;">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center">
-                                <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
-                                ${badge}
-                            </div>
-                        </td>
-                        <td class="py-4 px-6 text-center hidden md:table-cell">
-                            <div class="flex items-center justify-center gap-2">${waLink}${mailLink}</div>
-                        </td>
-                        <td class="py-4 px-6 text-right">
-                            <span class="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider ${saldoTotal > 0 ? 'bg-red-50 dark:bg-red-900/10 text-red-500 border border-red-100 dark:border-red-900/20' : 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-500 border border-emerald-100 dark:border-emerald-900/20'}">
-                                $${saldoTotal.toLocaleString('es-AR')}
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 text-right">
-                            <button onclick="abrirFichaCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                Ficha / CC
-                            </button>
-                        </td>
-                        <td class="py-4 px-6 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button onclick="window.editarCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar">
-                                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button onclick="window.eliminarCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar">
-                                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>`;
-                }).join('');
-                if (typeof window._geckoDragTable === 'function') {
-                    window._geckoDragTable(tbody, function (srcKey, destKey) {
-                        const si = parseInt(srcKey), di = parseInt(destKey);
-                        const all = JSON.parse(localStorage.getItem('clientes') || '[]');
-                        const filtroNow = document.getElementById('filtroClienteBusqueda')?.value?.toLowerCase() || '';
-                        const filt = all.filter(c =>
-                            c.nombre.toLowerCase().includes(filtroNow) ||
-                            (c.cuit && c.cuit.includes(filtroNow)) ||
-                            (c.rubro && c.rubro.toLowerCase().includes(filtroNow))
-                        );
-                        const srcNom = filt[si]?.nombre, dstNom = filt[di]?.nombre;
-                        if (!srcNom || !dstNom) return;
-                        const fo = all.findIndex(c => c.nombre === srcNom);
-                        const fd = all.findIndex(c => c.nombre === dstNom);
-                        if (fo < 0 || fd < 0) return;
-                        const moved = all.splice(fo, 1)[0];
-                        all.splice(fd, 0, moved);
-                        localStorage.setItem('clientes', JSON.stringify(all));
-                        window.renderClientes();
-                    });
-                }
-            };
-        })();
+
 
         // ── SOBREESCRITURA DEFINITIVA DE MOVIMIENTOS Y TRANSFERENCIAS ──
         window.guardarNuevoMovimiento = function () {
@@ -3071,18 +3090,18 @@ window.addEventListener('load', function () {
         };
 
         // ── SOBREESCRITURA DEFINITIVA: Múltiples CUITs y Mails ──
-        window.agregarCampoCuit = function() {
+        window.agregarCampoCuit = function () {
             const container = document.getElementById('containerCuits');
-            if(!container) return;
+            if (!container) return;
             const row = document.createElement('div');
             row.className = 'flex items-center gap-3 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
             row.innerHTML = `<input type="text" class="cuit-input gecko-input-line w-full" placeholder="Otro CUIT/DNI..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
             container.appendChild(row);
         };
 
-        window.agregarCampoEmail = function() {
+        window.agregarCampoEmail = function () {
             const container = document.getElementById('containerEmails');
-            if(!container) return;
+            if (!container) return;
             const row = document.createElement('div');
             row.className = 'flex items-center gap-3 mb-2 email-row animate-in fade-in slide-in-from-top-1';
             row.innerHTML = `<input type="email" class="email-input gecko-input-line w-full" placeholder="Otro email..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
@@ -3091,25 +3110,24 @@ window.addEventListener('load', function () {
 
         window.abrirModalNuevoCliente = function () {
             const modal = document.getElementById('modalNuevoCliente');
-            if(modal) {
+            if (modal) {
                 modal.style.display = 'flex';
             }
-            
+
             const ids = ['nuevoClienteNombre', 'nuevoClienteTel', 'nuevoClienteDir', 'nuevoClienteLoc', 'nuevoClienteRubro'];
-            ids.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            
+            ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
             const cCuits = document.getElementById('containerCuits');
-            if(cCuits) cCuits.innerHTML = `<label class="gecko-label">CUIT / DNI</label><div class="flex items-center gap-3 mb-2 cuit-row"><input type="text" class="cuit-input gecko-input-line w-full" placeholder="Ej: 20-12345678-9"><button type="button" onclick="window.agregarCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
-            
+            if (cCuits) cCuits.innerHTML = `<label class="gecko-label">CUIT / DNI</label><div class="flex items-center gap-3 mb-2 cuit-row"><input type="text" class="cuit-input gecko-input-line w-full" placeholder="Ej: 20-12345678-9"><button type="button" onclick="window.agregarCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
+
             const cEmails = document.getElementById('containerEmails');
-            if(cEmails) cEmails.innerHTML = `<label class="gecko-label">Email</label><div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="email-input gecko-input-line w-full" placeholder="ejemplo@correo.com"><button type="button" onclick="window.agregarCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
+            if (cEmails) cEmails.innerHTML = `<label class="gecko-label">Email</label><div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="email-input gecko-input-line w-full" placeholder="ejemplo@correo.com"><button type="button" onclick="window.agregarCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
         };
 
-        window.guardarCliente = function() {
+        window.guardarCliente = function () {
             const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
             if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
 
-            // Recopilar arrays de los campos dinámicos
             const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
             const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
 
@@ -3117,7 +3135,7 @@ window.addEventListener('load', function () {
                 id: 'client_' + Date.now(),
                 nombre: nombre,
                 cuits: cuits,
-                cuit: cuits[0] || '', 
+                cuit: cuits[0] || '',
                 tel: document.getElementById('nuevoClienteTel')?.value || '',
                 emails: emails,
                 email: emails[0] || '',
@@ -3127,18 +3145,192 @@ window.addEventListener('load', function () {
             };
 
             let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
-            bdClientes.push(nuevoCliente);
+            const index = bdClientes.findIndex(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+            if (index !== -1) {
+                bdClientes[index] = nuevoCliente;
+            } else {
+                bdClientes.push(nuevoCliente);
+            }
+
+            // Guardado doble para evitar conflictos con scripts antiguos
             localStorage.setItem('clientes', JSON.stringify(bdClientes));
+            localStorage.setItem('gecko_clientes', JSON.stringify(bdClientes));
+
+            // Actualización de variables globales
+            window.LISTA_CLIENTES = bdClientes;
+            if (typeof window.datosPrueba !== 'undefined') window.datosPrueba.clientes = bdClientes;
 
             const modal = document.getElementById('modalNuevoCliente');
-            if (modal) {
+            if (modal) modal.style.display = 'none';
+
+            if (typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
+
+            setTimeout(() => { window.renderClientes(); }, 100);
+            if (typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
+        };
+
+        // ── Lógica Modal Cobro ──
+        window.abrirModalCobro = function () {
+            const modal = document.getElementById('modalCobro');
+            if (modal) modal.style.display = 'flex';
+
+            const montoInput = document.getElementById('cobroMonto');
+            if (montoInput) montoInput.value = '';
+
+            const sel = document.getElementById('cobroCaja');
+            if (sel) {
+                const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+                const opts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+                sel.innerHTML = `<option value="">Seleccionar caja...</option>` + opts;
+            }
+        };
+
+        // Alias para compatibilidad con el código existente que use abrirModalPagoGlobal
+        window.abrirModalPagoGlobal = window.abrirModalCobro;
+
+        // confirmarCobro: delega en la función original si existe, o ejecuta lógica propia
+        window.confirmarCobro = function () {
+            if (typeof window.confirmarPagoGlobalCliente === 'function') {
+                // Sincronizar valores a los IDs viejos por si la función original los lee
+                const monto = document.getElementById('cobroMonto')?.value;
+                const caja = document.getElementById('cobroCaja')?.value;
+                const mOld = document.getElementById('inputMontoPagoGlobal');
+                const cOld = document.getElementById('selectCajaPagoGlobal');
+                if (mOld) mOld.value = monto;
+                if (cOld) cOld.value = caja;
+                window.confirmarPagoGlobalCliente();
+            }
+            document.getElementById('modalCobro').style.display = 'none';
+        };
+
+        // ── Sistema Unificado de Cierre de Modales (Evita el bug del ESC) ──
+        window.modalActualEnPeligro = null;
+
+        window.intentarCerrarModal = function (modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            window.modalActualEnPeligro = modal;
+
+            const advertencia = document.getElementById('modalAdvertencia');
+            if (advertencia) {
+                advertencia.style.display = 'flex';
+
+                const btnContinuar = advertencia.querySelector('.gecko-btn-primary') || advertencia.querySelector('.btn-naranja');
+                const btnCancelar = advertencia.querySelector('.gecko-btn-cancel') || advertencia.querySelector('.btn-gris');
+
+                if (btnContinuar) {
+                    btnContinuar.onclick = function () {
+                        advertencia.style.display = 'none';
+                        if (window.modalActualEnPeligro) window.modalActualEnPeligro.style.display = 'none';
+                        window.modalActualEnPeligro = null;
+                    };
+                }
+                if (btnCancelar) {
+                    btnCancelar.onclick = function () {
+                        advertencia.style.display = 'none';
+                        window.modalActualEnPeligro = null;
+                    };
+                }
+            } else {
                 modal.style.display = 'none';
             }
-            
-            if(typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
-            if(typeof window.renderClientes === 'function') window.renderClientes();
-            if(typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
         };
+
+        // Interceptar ESC globalmente para usar el mismo circuito
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const modalesAbiertos = Array.from(document.querySelectorAll('.gecko-modal-overlay, [id^="modal"]'))
+                    .filter(m => m.style.display === 'flex' && m.id !== 'modalAdvertencia');
+                if (modalesAbiertos.length > 0) {
+                    const modalActivo = modalesAbiertos[modalesAbiertos.length - 1];
+                    window.intentarCerrarModal(modalActivo.id);
+                }
+            }
+        });
+
+        // ── SOBREESCRITURA BLINDADA: GUARDADO Y RENDERIZADO CLIENTES ──
+        window.obtenerBadgeScoring = function (clienteNombre) {
+            const ahora = new Date();
+            const mesActual = ahora.getMonth();
+            const anioActual = ahora.getFullYear();
+            const listaP = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+
+            const totalMes = listaP.filter(p => {
+                if (p.cliente !== clienteNombre || p.status !== 'OT' || !p.fecha) return false;
+                const parts = p.fecha.split('/');
+                if (parts.length < 3) return false;
+                return (parseInt(parts[1]) - 1) === mesActual && parseInt(parts[2]) === anioActual;
+            }).reduce((acc, p) => acc + (parseFloat(p.total) || 0), 0);
+
+            const setG = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
+            const sNivelOro = setG.nivelOro || 250000;
+            const sNivelPlata = setG.nivelPlata || 100000;
+
+            if (totalMes >= sNivelOro) {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#FFD700]/20 text-[#B8860B] border border-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ORO</span>`;
+            } else if (totalMes >= sNivelPlata) {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#C0C0C0]/20 text-[#808080] border border-[#C0C0C0]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">PLATA</span>`;
+            } else {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#CD7F32]/10 text-[#A0522D] border border-[#CD7F32]/30 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">BRONCE</span>`;
+            }
+        };
+
+        window.renderClientes = function () {
+            const tbody = document.getElementById('listaClientes');
+            if (!tbody) return;
+
+            let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            if (bdClientes.length === 0) bdClientes = JSON.parse(localStorage.getItem('gecko_clientes')) || [];
+
+            window.LISTA_CLIENTES = bdClientes;
+
+            const termino = (document.getElementById('buscadorClientes')?.value || '').toLowerCase();
+            tbody.innerHTML = '';
+
+            if (bdClientes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">No hay clientes.</td></tr>';
+                return;
+            }
+
+            bdClientes.forEach(c => {
+                if (termino && !c.nombre.toLowerCase().includes(termino) && !(c.cuit || '').toLowerCase().includes(termino)) return;
+
+                const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+                let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);
+
+                let wp = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
+                let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
+                tr.onclick = function () { abrirFichaCliente(c.nombre); };
+
+                tr.innerHTML = `
+                    <td class="py-4 px-6">
+                        <div class="flex items-center">
+                            <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
+                            ${window.obtenerBadgeScoring(c.nombre)}
+                        </div>
+                    </td>
+                    <td class="py-4 px-6"><div class="flex gap-2">${wp}${em}</div></td>
+                    <td class="py-4 px-6"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
+                    <td class="py-4 px-6 text-right">
+                        <button onclick="abrirFichaCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>Ficha / CC
+                        </button>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="window.editarCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                            <button onclick="window.eliminarCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+                        </div>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        };
+
+        setTimeout(() => { window.renderClientes(); }, 200);
 
         console.log('🦎 GECKO-FIXES: renderOts + renderizarMovimientos + renderClientes parcheados post-main.js.');
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
@@ -3424,3 +3616,6 @@ window.ejecutarTransferencia = function () {
 
 
 console.log('🦎 GECKO-FIXES v2.0 cargado — preview, desplegable OT, seña multi-caja, botones presupuestos.');
+
+// Disparo inmediato para asegurar la vista limpia
+setTimeout(() => { if (typeof window.renderClientes === 'function') window.renderClientes(); }, 100);
