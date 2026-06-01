@@ -8,128 +8,6 @@ if (typeof renderizarFinanzas === 'undefined') {
     };
 }
 
-// ── GECKO FIXES: SOBREESCRITURA GLOBAL INMEDIATA (CLIENTES) ──
-window.obtenerBadgeScoring = function(clienteNombre) {
-    const ahora = new Date();
-    const mesActual = ahora.getMonth();
-    const anioActual = ahora.getFullYear();
-    const listaP = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-
-    const totalMes = listaP.filter(p => {
-        if (p.cliente !== clienteNombre || p.status !== 'OT' || !p.fecha) return false;
-        const parts = p.fecha.split('/');
-        if (parts.length < 3) return false;
-        return (parseInt(parts[1]) - 1) === mesActual && parseInt(parts[2]) === anioActual;
-    }).reduce((acc, p) => acc + (parseFloat(p.total) || 0), 0);
-
-    const setG = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
-    const sNivelOro = setG.nivelOro || 250000;
-    const sNivelPlata = setG.nivelPlata || 100000;
-
-    if (totalMes >= sNivelOro) {
-        return `<span class="px-2 py-0.5 rounded-md bg-[#FFD700]/20 text-[#B8860B] border border-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ORO</span>`;
-    } else if (totalMes >= sNivelPlata) {
-        return `<span class="px-2 py-0.5 rounded-md bg-[#C0C0C0]/20 text-[#808080] border border-[#C0C0C0]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">PLATA</span>`;
-    } else {
-        return `<span class="px-2 py-0.5 rounded-md bg-[#CD7F32]/10 text-[#A0522D] border border-[#CD7F32]/30 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">BRONCE</span>`;
-    }
-};
-
-window.renderClientes = function () {
-    const tbody = document.getElementById('listaClientes');
-    if (!tbody) return;
-
-    // Leer ambas posibles claves para evitar vacíos
-    let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
-    if (bdClientes.length === 0) bdClientes = JSON.parse(localStorage.getItem('gecko_clientes')) || [];
-
-    window.LISTA_CLIENTES = bdClientes;
-    const termino = (document.getElementById('buscadorClientes')?.value || '').toLowerCase();
-    tbody.innerHTML = '';
-
-    if (bdClientes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">No hay clientes.</td></tr>';
-        return;
-    }
-
-    bdClientes.forEach(c => {
-        if (termino && !c.nombre.toLowerCase().includes(termino) && !(c.cuit||'').toLowerCase().includes(termino)) return;
-
-        const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-        let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total)||0) - (parseFloat(o.adelanto)||0)), 0);
-
-        let wp = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
-        let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
-
-        const tr = document.createElement('tr');
-        tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
-        tr.onclick = function() { if(typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre); };
-
-        tr.innerHTML = `
-            <td class="py-4 px-6">
-                <div class="flex items-center">
-                    <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
-                    ${window.obtenerBadgeScoring(c.nombre)}
-                </div>
-            </td>
-            <td class="py-4 px-6"><div class="flex gap-2">${wp}${em}</div></td>
-            <td class="py-4 px-6"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
-            <td class="py-4 px-6 text-right">
-                <button onclick="if(typeof abrirFichaCliente === 'function') abrirFichaCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>Ficha / CC
-                </button>
-            </td>
-            <td class="py-4 px-6 text-center">
-                <div class="flex items-center justify-center gap-2">
-                    <button onclick="if(typeof window.editarCliente === 'function') window.editarCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                    <button onclick="if(typeof window.eliminarCliente === 'function') window.eliminarCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
-                </div>
-            </td>`;
-        tbody.appendChild(tr);
-    });
-};
-
-window.guardarCliente = function() {
-    const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
-    if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
-
-    const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
-    const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
-
-    const nuevoCliente = {
-        id: 'client_' + Date.now(),
-        nombre: nombre,
-        cuits: cuits,
-        cuit: cuits[0] || '',
-        tel: document.getElementById('nuevoClienteTel')?.value || '',
-        emails: emails,
-        email: emails[0] || '',
-        dir: document.getElementById('nuevoClienteDir')?.value || '',
-        loc: document.getElementById('nuevoClienteLoc')?.value || '',
-        rubro: document.getElementById('nuevoClienteRubro')?.value || '',
-    };
-
-    let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
-    const index = bdClientes.findIndex(c => c.nombre.toLowerCase() === nombre.toLowerCase());
-    if (index !== -1) {
-        bdClientes[index] = nuevoCliente;
-    } else {
-        bdClientes.push(nuevoCliente);
-    }
-
-    localStorage.setItem('clientes', JSON.stringify(bdClientes));
-    localStorage.setItem('gecko_clientes', JSON.stringify(bdClientes));
-    window.LISTA_CLIENTES = bdClientes;
-
-    const modal = document.getElementById('modalNuevoCliente');
-    if (modal) modal.style.display = 'none';
-
-    if(typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
-
-    window.renderClientes();
-    if(typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
-};
-
 /**
  * ================================================================
  * GECKO FIXES v2.0
@@ -3617,5 +3495,137 @@ window.ejecutarTransferencia = function () {
 
 console.log('🦎 GECKO-FIXES v2.0 cargado — preview, desplegable OT, seña multi-caja, botones presupuestos.');
 
-// Disparo inmediato para asegurar la vista limpia
-setTimeout(() => { if (typeof window.renderClientes === 'function') window.renderClientes(); }, 100);
+// ── BÚNKER DE PRODUCCIÓN: sobrescritura tardía de funciones de clientes ──
+window.addEventListener('load', function () {
+    setTimeout(function () {
+
+        // ── SOBREESCRITURA DEFINITIVA (PRODUCCIÓN) ──
+        window.obtenerBadgeScoring = function(clienteNombre) {
+            const ahora = new Date();
+            const mesActual = ahora.getMonth();
+            const anioActual = ahora.getFullYear();
+            const listaP = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+
+            const totalMes = listaP.filter(p => {
+                if (p.cliente !== clienteNombre || p.status !== 'OT' || !p.fecha) return false;
+                const parts = p.fecha.split('/');
+                if (parts.length < 3) return false;
+                return (parseInt(parts[1]) - 1) === mesActual && parseInt(parts[2]) === anioActual;
+            }).reduce((acc, p) => acc + (parseFloat(p.total) || 0), 0);
+
+            const setG = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
+            const sNivelOro = setG.nivelOro || 250000;
+            const sNivelPlata = setG.nivelPlata || 100000;
+
+            if (totalMes >= sNivelOro) {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#FFD700]/20 text-[#B8860B] border border-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ORO</span>`;
+            } else if (totalMes >= sNivelPlata) {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#C0C0C0]/20 text-[#808080] border border-[#C0C0C0]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">PLATA</span>`;
+            } else {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#CD7F32]/10 text-[#A0522D] border border-[#CD7F32]/30 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">BRONCE</span>`;
+            }
+        };
+
+        window.renderClientes = function () {
+            const tbody = document.getElementById('listaClientes');
+            if (!tbody) return;
+
+            let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            if (bdClientes.length === 0) bdClientes = JSON.parse(localStorage.getItem('gecko_clientes')) || [];
+
+            window.LISTA_CLIENTES = bdClientes;
+            const termino = (document.getElementById('buscadorClientes')?.value || '').toLowerCase();
+            tbody.innerHTML = '';
+
+            if (bdClientes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">No hay clientes.</td></tr>';
+                return;
+            }
+
+            bdClientes.forEach(c => {
+                if (termino && !c.nombre.toLowerCase().includes(termino) && !(c.cuit||'').toLowerCase().includes(termino)) return;
+
+                const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+                let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total)||0) - (parseFloat(o.adelanto)||0)), 0);
+
+                let wp = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
+                let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
+                tr.onclick = function() { if(typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre); };
+
+                tr.innerHTML = `
+                    <td class="py-4 px-6">
+                        <div class="flex items-center">
+                            <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
+                            ${window.obtenerBadgeScoring(c.nombre)}
+                        </div>
+                    </td>
+                    <td class="py-4 px-6"><div class="flex gap-2">${wp}${em}</div></td>
+                    <td class="py-4 px-6"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
+                    <td class="py-4 px-6 text-right">
+                        <button onclick="if(typeof abrirFichaCliente === 'function') abrirFichaCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>Ficha / CC
+                        </button>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="if(typeof window.editarCliente === 'function') window.editarCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                            <button onclick="if(typeof window.eliminarCliente === 'function') window.eliminarCliente('${c.nombre.replace(/'/g, "\\'") }'); event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+                        </div>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.guardarCliente = function() {
+            const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
+            if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
+
+            const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
+            const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
+
+            const nuevoCliente = {
+                id: 'client_' + Date.now(),
+                nombre: nombre,
+                cuits: cuits,
+                cuit: cuits[0] || '',
+                tel: document.getElementById('nuevoClienteTel')?.value || '',
+                emails: emails,
+                email: emails[0] || '',
+                dir: document.getElementById('nuevoClienteDir')?.value || '',
+                loc: document.getElementById('nuevoClienteLoc')?.value || '',
+                rubro: document.getElementById('nuevoClienteRubro')?.value || '',
+            };
+
+            // Guardar local
+            let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            const index = bdClientes.findIndex(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+            if (index !== -1) bdClientes[index] = nuevoCliente;
+            else bdClientes.push(nuevoCliente);
+
+            localStorage.setItem('clientes', JSON.stringify(bdClientes));
+            window.LISTA_CLIENTES = bdClientes;
+
+            // Enviar a la base de datos (Producción)
+            fetch('app/api.php?endpoint=clientes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevoCliente)
+            }).catch(e => console.log('Sincronización local activa'));
+
+            const modal = document.getElementById('modalNuevoCliente');
+            if (modal) modal.style.display = 'none';
+
+            if(typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
+
+            window.renderClientes();
+            if(typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
+        };
+
+        // Forzar la tabla nueva al cargar
+        window.renderClientes();
+
+    }, 500);
+});
