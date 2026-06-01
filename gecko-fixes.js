@@ -2704,9 +2704,154 @@ window.addEventListener('load', function () {
             }
         };
 
-        // ── Stubs para Acciones (Fase 3) ──
-        window.editarCliente = function (nombre) { alert("Editar Cliente se habilitará en la Fase 3."); };
-        window.eliminarCliente = function (nombre) { alert("Eliminar Cliente se habilitará en la Fase 3."); };
+        // ── Fase 3: Acciones (Eliminar y Editar Cliente) ──
+        window.eliminarCliente = function(nombre) {
+            document.getElementById('_geckoConfirmElimCli')?.remove();
+            const modal = document.createElement('div');
+            modal.id = '_geckoConfirmElimCli';
+            modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+            modal.innerHTML = `
+                <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+                    <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </div>
+                    <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Eliminar Cliente</h3>
+                    <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se eliminará a <strong style="color:white;">${nombre}</strong> del sistema. Esta acción no se puede deshacer.</p>
+                    <div style="display:flex;gap:10px;">
+                        <button onclick="document.getElementById('_geckoConfirmElimCli').remove()" style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                        <button id="_geckoElimCliOk" style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+            
+            document.getElementById('_geckoElimCliOk').onclick = function () {
+                let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+                bdClientes = bdClientes.filter(c => c.nombre !== nombre);
+                localStorage.setItem('clientes', JSON.stringify(bdClientes));
+                modal.remove();
+                if(typeof window.renderClientes === 'function') window.renderClientes();
+                if (typeof window.mostrarExito === 'function') window.mostrarExito('Cliente eliminado', '¡Listo!');
+            };
+        };
+
+        window.agregarEditCampoCuit = function() {
+            const container = document.getElementById('editContainerCuits');
+            if(!container) return;
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
+            row.innerHTML = `<input type="text" class="edit-cuit-input gecko-input-line w-full" placeholder="Otro CUIT/DNI..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            container.appendChild(row);
+        };
+
+        window.agregarEditCampoEmail = function() {
+            const container = document.getElementById('editContainerEmails');
+            if(!container) return;
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3 mb-2 email-row animate-in fade-in slide-in-from-top-1';
+            row.innerHTML = `<input type="email" class="edit-email-input gecko-input-line w-full" placeholder="Otro email..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            container.appendChild(row);
+        };
+
+        window.editarCliente = function(nombre) {
+            const bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            const cliente = bdClientes.find(c => c.nombre === nombre);
+            if(!cliente) { alert("Cliente no encontrado."); return; }
+            
+            document.getElementById('_geckoModalEditCli')?.remove();
+            const modal = document.createElement('div');
+            modal.id = '_geckoModalEditCli';
+            modal.className = 'gecko-modal-overlay';
+            modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;overflow-y:auto;';
+            
+            let cuitsHtml = '';
+            const cuitsArray = cliente.cuits && cliente.cuits.length > 0 ? cliente.cuits : [cliente.cuit || ''];
+            cuitsArray.forEach((cuit, idx) => {
+                cuitsHtml += `<div class="flex items-center gap-3 mb-2 cuit-row"><input type="text" class="edit-cuit-input gecko-input-line w-full" value="${cuit}" placeholder="Ej: 20-12345678-9">` + 
+                (idx === 0 ? `<button type="button" onclick="window.agregarEditCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>` : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`) + `</div>`;
+            });
+
+            let emailsHtml = '';
+            const emailsArray = cliente.emails && cliente.emails.length > 0 ? cliente.emails : [cliente.email || ''];
+            emailsArray.forEach((em, idx) => {
+                emailsHtml += `<div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="edit-email-input gecko-input-line w-full" value="${em}" placeholder="ejemplo@correo.com">` + 
+                (idx === 0 ? `<button type="button" onclick="window.agregarEditCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>` : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`) + `</div>`;
+            });
+
+            modal.innerHTML = `
+                <div class="gecko-modal-box max-w-3xl w-full mx-auto my-auto relative">
+                    <button onclick="document.getElementById('_geckoModalEditCli').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'" onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    
+                    <p class="gecko-modal-subtitle">DIRECTORIO DE CLIENTES</p>
+                    <h2 class="gecko-modal-title">EDITAR CLIENTE</h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-6">
+                        <div>
+                            <label class="gecko-label">Nombre / Razón Social</label>
+                            <input type="text" id="_editCliNombre" class="gecko-input-line" value="${cliente.nombre}" disabled style="opacity:0.5;cursor:not-allowed;" title="El identificador principal no se puede modificar.">
+                        </div>
+                        <div id="editContainerCuits">
+                            <label class="gecko-label">CUIT / DNI</label>
+                            ${cuitsHtml}
+                        </div>
+                        <div>
+                            <label class="gecko-label">Teléfono / WhatsApp</label>
+                            <input type="text" id="_editCliTel" class="gecko-input-line" value="${cliente.tel || ''}">
+                        </div>
+                        <div id="editContainerEmails">
+                            <label class="gecko-label">Email</label>
+                            ${emailsHtml}
+                        </div>
+                        <div>
+                            <label class="gecko-label">Dirección</label>
+                            <input type="text" id="_editCliDir" class="gecko-input-line" value="${cliente.dir || ''}">
+                        </div>
+                        <div>
+                            <label class="gecko-label">Localidad</label>
+                            <input type="text" id="_editCliLoc" class="gecko-input-line" value="${cliente.loc || ''}">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="gecko-label">Rubro</label>
+                            <input type="text" id="_editCliRubro" class="gecko-input-line" value="${cliente.rubro || ''}">
+                        </div>
+                    </div>
+                    
+                    <div class="gecko-modal-footer" style="align-items:center;justify-content:center !important; gap: 1.5rem !important; margin-top:32px;">
+                        <button class="gecko-btn-cancel" onclick="document.getElementById('_geckoModalEditCli').remove()">CANCELAR</button>
+                        <button class="gecko-btn-primary" id="_btnGuardarEditCli">GUARDAR CAMBIOS</button>
+                    </div>
+                </div>`;
+            
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+            
+            document.getElementById('_btnGuardarEditCli').onclick = function() {
+                const cuits = Array.from(document.querySelectorAll('.edit-cuit-input')).map(i => i.value.trim()).filter(v => v);
+                const emails = Array.from(document.querySelectorAll('.edit-email-input')).map(i => i.value.trim()).filter(v => v);
+                
+                const idx = bdClientes.findIndex(c => c.nombre === nombre);
+                if(idx !== -1) {
+                    bdClientes[idx] = {
+                        ...bdClientes[idx],
+                        cuits: cuits,
+                        cuit: cuits[0] || '',
+                        tel: document.getElementById('_editCliTel').value.trim(),
+                        emails: emails,
+                        email: emails[0] || '',
+                        dir: document.getElementById('_editCliDir').value.trim(),
+                        loc: document.getElementById('_editCliLoc').value.trim(),
+                        rubro: document.getElementById('_editCliRubro').value.trim()
+                    };
+                    localStorage.setItem('clientes', JSON.stringify(bdClientes));
+                }
+                
+                modal.remove();
+                if(typeof window.mostrarExito === 'function') window.mostrarExito("Datos actualizados.", "¡Guardado!");
+                if(typeof window.renderClientes === 'function') window.renderClientes();
+            };
+        };
 
         // ── Override renderClientes con drag & drop ──
         (function () {
@@ -2923,6 +3068,76 @@ window.addEventListener('load', function () {
 
             if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
             if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        };
+
+        // ── SOBREESCRITURA DEFINITIVA: Múltiples CUITs y Mails ──
+        window.agregarCampoCuit = function() {
+            const container = document.getElementById('containerCuits');
+            if(!container) return;
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
+            row.innerHTML = `<input type="text" class="cuit-input gecko-input-line w-full" placeholder="Otro CUIT/DNI..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            container.appendChild(row);
+        };
+
+        window.agregarCampoEmail = function() {
+            const container = document.getElementById('containerEmails');
+            if(!container) return;
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3 mb-2 email-row animate-in fade-in slide-in-from-top-1';
+            row.innerHTML = `<input type="email" class="email-input gecko-input-line w-full" placeholder="Otro email..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            container.appendChild(row);
+        };
+
+        window.abrirModalNuevoCliente = function () {
+            const modal = document.getElementById('modalNuevoCliente');
+            if(modal) {
+                modal.style.display = 'flex';
+            }
+            
+            const ids = ['nuevoClienteNombre', 'nuevoClienteTel', 'nuevoClienteDir', 'nuevoClienteLoc', 'nuevoClienteRubro'];
+            ids.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+            
+            const cCuits = document.getElementById('containerCuits');
+            if(cCuits) cCuits.innerHTML = `<label class="gecko-label">CUIT / DNI</label><div class="flex items-center gap-3 mb-2 cuit-row"><input type="text" class="cuit-input gecko-input-line w-full" placeholder="Ej: 20-12345678-9"><button type="button" onclick="window.agregarCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
+            
+            const cEmails = document.getElementById('containerEmails');
+            if(cEmails) cEmails.innerHTML = `<label class="gecko-label">Email</label><div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="email-input gecko-input-line w-full" placeholder="ejemplo@correo.com"><button type="button" onclick="window.agregarCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
+        };
+
+        window.guardarCliente = function() {
+            const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
+            if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
+
+            // Recopilar arrays de los campos dinámicos
+            const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
+            const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
+
+            const nuevoCliente = {
+                id: 'client_' + Date.now(),
+                nombre: nombre,
+                cuits: cuits,
+                cuit: cuits[0] || '', 
+                tel: document.getElementById('nuevoClienteTel')?.value || '',
+                emails: emails,
+                email: emails[0] || '',
+                dir: document.getElementById('nuevoClienteDir')?.value || '',
+                loc: document.getElementById('nuevoClienteLoc')?.value || '',
+                rubro: document.getElementById('nuevoClienteRubro')?.value || '',
+            };
+
+            let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            bdClientes.push(nuevoCliente);
+            localStorage.setItem('clientes', JSON.stringify(bdClientes));
+
+            const modal = document.getElementById('modalNuevoCliente');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            
+            if(typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
+            if(typeof window.renderClientes === 'function') window.renderClientes();
+            if(typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
         };
 
         console.log('🦎 GECKO-FIXES: renderOts + renderizarMovimientos + renderClientes parcheados post-main.js.');
@@ -3207,71 +3422,5 @@ window.ejecutarTransferencia = function () {
     };
 })();
 
-// ── Fase 2: Lógica de Múltiples CUITs y Mails ──
-window.agregarCampoCuit = function () {
-    const container = document.getElementById('containerCuits');
-    if (!container) return;
-    const row = document.createElement('div');
-    row.className = 'flex gap-2 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
-    row.innerHTML = `<input type="text" class="cuit-input w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold" placeholder="Otro CUIT/DNI..."><button type="button" onclick="this.parentElement.remove()" class="w-12 rounded-2xl bg-zinc-800 text-zinc-500 hover:text-red-500 hover:bg-zinc-700 transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
-    container.appendChild(row);
-};
-
-window.agregarCampoEmail = function () {
-    const container = document.getElementById('containerEmails');
-    if (!container) return;
-    const row = document.createElement('div');
-    row.className = 'flex gap-2 mb-2 email-row animate-in fade-in slide-in-from-top-1';
-    row.innerHTML = `<input type="email" class="email-input w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold" placeholder="Otro email..."><button type="button" onclick="this.parentElement.remove()" class="w-12 rounded-2xl bg-zinc-800 text-zinc-500 hover:text-red-500 hover:bg-zinc-700 transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
-    container.appendChild(row);
-};
-
-window.abrirModalNuevoCliente = function () {
-    if (typeof openModal === 'function') openModal('modalNuevoCliente');
-    const eNom = document.getElementById('nuevoClienteNombre'); if (eNom) eNom.value = '';
-    const eTel = document.getElementById('nuevoClienteTel'); if (eTel) eTel.value = '';
-    const eDir = document.getElementById('nuevoClienteDir'); if (eDir) eDir.value = '';
-    const eLoc = document.getElementById('nuevoClienteLoc'); if (eLoc) eLoc.value = '';
-    const eRub = document.getElementById('nuevoClienteRubro'); if (eRub) eRub.value = '';
-
-    const cCuits = document.getElementById('containerCuits');
-    if (cCuits) cCuits.innerHTML = `<div class="flex justify-between items-center mb-2"><label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest">CUIT / DNI</label><button type="button" onclick="agregarCampoCuit()" class="text-gecko hover:bg-gecko/10 p-1 rounded-md transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button></div><div class="flex gap-2 mb-2 cuit-row"><input type="text" class="cuit-input w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold" placeholder="Ej: 20-12345678-9"></div>`;
-
-    const cEmails = document.getElementById('containerEmails');
-    if (cEmails) cEmails.innerHTML = `<div class="flex justify-between items-center mb-2"><label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest">Email</label><button type="button" onclick="agregarCampoEmail()" class="text-gecko hover:bg-gecko/10 p-1 rounded-md transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button></div><div class="flex gap-2 mb-2 email-row"><input type="email" class="email-input w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold" placeholder="ejemplo@correo.com"></div>`;
-};
-
-window.guardarCliente = function () {
-    const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
-    if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
-
-    // Recopilar arrays de los campos dinámicos
-    const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
-    const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
-
-    const nuevoCliente = {
-        id: 'client_' + Date.now(),
-        nombre: nombre,
-        cuits: cuits,
-        cuit: cuits[0] || '',
-        tel: document.getElementById('nuevoClienteTel')?.value || '',
-        emails: emails,
-        email: emails[0] || '',
-        dir: document.getElementById('nuevoClienteDir')?.value || '',
-        loc: document.getElementById('nuevoClienteLoc')?.value || '',
-        rubro: document.getElementById('nuevoClienteRubro')?.value || '',
-    };
-
-    let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
-    bdClientes.push(nuevoCliente);
-    localStorage.setItem('clientes', JSON.stringify(bdClientes));
-
-    const modal = document.getElementById('modalNuevoCliente');
-    if (modal) modal.style.display = 'none';
-    if (typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
-
-    if (typeof window.renderClientes === 'function') window.renderClientes();
-    if (typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
-};
 
 console.log('🦎 GECKO-FIXES v2.0 cargado — preview, desplegable OT, seña multi-caja, botones presupuestos.');
