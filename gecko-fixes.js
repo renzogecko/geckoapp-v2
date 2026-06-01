@@ -1965,76 +1965,76 @@ window.renderGastosFijos = function () {
     }
 };
 
-        window.pagarGastoFijo = function (idx) {
-            const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-            const g = lista[idx];
-            if (!g) return;
+window.pagarGastoFijo = function (idx) {
+    const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    const g = lista[idx];
+    if (!g) return;
 
-            // Guardar el índice globalmente para usarlo en la confirmación
-            window._gastoFijoAPagarIdx = idx;
+    // Guardar el índice globalmente para usarlo en la confirmación
+    window._gastoFijoAPagarIdx = idx;
 
-            // Poblar select
-            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-            const opts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-            const sel = document.getElementById('pagoGfCaja');
-            if (sel) sel.innerHTML = `<option value="">Seleccionar caja origen...</option>` + opts;
+    // Poblar select
+    const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+    const opts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+    const sel = document.getElementById('pagoGfCaja');
+    if (sel) sel.innerHTML = `<option value="">Seleccionar caja origen...</option>` + opts;
 
-            // Poblar datos visuales
-            const nombreEl = document.getElementById('pagoGfNombre');
-            const montoEl = document.getElementById('pagoGfMonto');
-            if(nombreEl) nombreEl.innerText = g.concepto;
-            if(montoEl) montoEl.innerText = '$' + Math.round(g.monto).toLocaleString('es-AR');
+    // Poblar datos visuales
+    const nombreEl = document.getElementById('pagoGfNombre');
+    const montoEl = document.getElementById('pagoGfMonto');
+    if (nombreEl) nombreEl.innerText = g.concepto;
+    if (montoEl) montoEl.innerText = '$' + Math.round(g.monto).toLocaleString('es-AR');
 
-            document.getElementById('modalPagoGastoFijo').style.display = 'flex';
-        };
+    document.getElementById('modalPagoGastoFijo').style.display = 'flex';
+};
 
-        window.confirmarPagoGastoFijo = function() {
-            const idx = window._gastoFijoAPagarIdx;
-            if(idx === undefined || idx === null) return;
+window.confirmarPagoGastoFijo = function () {
+    const idx = window._gastoFijoAPagarIdx;
+    if (idx === undefined || idx === null) return;
 
-            const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-            const g = lista[idx];
-            if (!g) return;
+    const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    const g = lista[idx];
+    if (!g) return;
 
-            const cajaNombre = document.getElementById('pagoGfCaja').value;
-            if(!cajaNombre) { alert("Seleccion\u00e1 la caja desde donde se pagar\u00e1."); return; }
+    const cajaNombre = document.getElementById('pagoGfCaja').value;
+    if (!cajaNombre) { alert("Seleccion\u00e1 la caja desde donde se pagar\u00e1."); return; }
 
-            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-            const cajaObj = cajas.find(c => c.nombre === cajaNombre);
-            if(!cajaObj) { alert("Caja no v\u00e1lida."); return; }
+    const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+    const cajaObj = cajas.find(c => c.nombre === cajaNombre);
+    if (!cajaObj) { alert("Caja no v\u00e1lida."); return; }
 
-            // 1. Restar saldo de la caja seleccionada
-            cajaObj.saldo -= g.monto;
-            localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
+    // 1. Restar saldo de la caja seleccionada
+    cajaObj.saldo -= g.monto;
+    localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
 
-            // 2. Crear el movimiento en el historial
-            const mov = {
-                id: 'mov_' + Date.now(),
-                fecha: new Date().toLocaleDateString('es-AR'),
-                detalle: g.concepto,
-                caja: cajaNombre,
-                tipo: 'Egreso',
-                monto: g.monto,
-                categoria: g.categoria || 'Gastos Fijos'
-            };
-            const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-            movs.push(mov);
-            localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
-            window.LISTA_MOVIMIENTOS = movs;
+    // 2. Crear el movimiento en el historial
+    const mov = {
+        id: 'mov_' + Date.now(),
+        fecha: new Date().toLocaleDateString('es-AR'),
+        detalle: g.concepto,
+        caja: cajaNombre,
+        tipo: 'Egreso',
+        monto: g.monto,
+        categoria: g.categoria || 'Gastos Fijos'
+    };
+    const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+    movs.push(mov);
+    localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+    window.LISTA_MOVIMIENTOS = movs;
 
-            // 3. Actualizar estado del Gasto a "Pagado"
-            g.estado = 'Pagado';
-            localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
-            window.LISTA_GASTOS_FIJOS = lista;
+    // 3. Actualizar estado del Gasto a "Pagado"
+    g.estado = 'Pagado';
+    localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
+    window.LISTA_GASTOS_FIJOS = lista;
 
-            // 4. Cerrar y Notificar
-            document.getElementById('modalPagoGastoFijo').style.display = 'none';
-            
-            window.renderGastosFijos();
-            if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
-            if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
-            if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${cajaNombre}.`, '\u00a1Abonado!');
-        };
+    // 4. Cerrar y Notificar
+    document.getElementById('modalPagoGastoFijo').style.display = 'none';
+
+    window.renderGastosFijos();
+    if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+    if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+    if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${cajaNombre}.`, '\u00a1Abonado!');
+};
 
 window.eliminarGastoFijo = function (idx) {
     document.getElementById('_geckoConfirmElimGasto')?.remove();
@@ -2068,19 +2068,19 @@ window.eliminarGastoFijo = function (idx) {
     };
 };
 
-    window.editarGastoFijo = function (idx) {
-        const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-        const g = lista[idx];
-        if (!g) return;
-        document.getElementById('_geckoModalEditGasto')?.remove();
-        const modal = document.createElement('div');
-        modal.id = '_geckoModalEditGasto';
-        modal.className = 'gecko-modal-overlay';
-        modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;';
-        const cats = ['Alquiler', 'Servicios', 'Internet', 'Sueldos', 'Impuestos', 'Insumos', 'Varios'];
-        const catLabels = { Alquiler: 'Alquiler', Servicios: 'Servicios (Luz, Agua, Gas)', Internet: 'Internet / Telefon\u00eda', Sueldos: 'Sueldos', Impuestos: 'Impuestos / Monotributo', Insumos: 'Insumos recurrentes', Varios: 'Varios' };
-        
-        modal.innerHTML = `
+window.editarGastoFijo = function (idx) {
+    const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    const g = lista[idx];
+    if (!g) return;
+    document.getElementById('_geckoModalEditGasto')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoModalEditGasto';
+    modal.className = 'gecko-modal-overlay';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;';
+    const cats = ['Alquiler', 'Servicios', 'Internet', 'Sueldos', 'Impuestos', 'Insumos', 'Varios'];
+    const catLabels = { Alquiler: 'Alquiler', Servicios: 'Servicios (Luz, Agua, Gas)', Internet: 'Internet / Telefon\u00eda', Sueldos: 'Sueldos', Impuestos: 'Impuestos / Monotributo', Insumos: 'Insumos recurrentes', Varios: 'Varios' };
+
+    modal.innerHTML = `
             <div class="gecko-modal-box max-w-md w-full mx-4">
                 <button onclick="document.getElementById('_geckoModalEditGasto').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'" onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -2122,34 +2122,34 @@ window.eliminarGastoFijo = function (idx) {
                     <button class="gecko-btn-primary" id="_editGastoGuardarBtn">GUARDAR CAMBIOS</button>
                 </div>
             </div>`;
-        
-        document.body.appendChild(modal);
-        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-        
-        document.getElementById('_editGastoGuardarBtn').onclick = function () {
-            const concepto = modal.querySelector('#_editGastoConcepto').value.trim();
-            const monto = parseFloat(modal.querySelector('#_editGastoMonto').value) || 0;
-            const vencimiento = modal.querySelector('#_editGastoVencimiento').value.trim() || '1';
-            const categoria = modal.querySelector('#_editGastoCategoria').value;
-            if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
-            const arr = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-            if (!arr[idx]) return;
-            arr[idx] = { ...arr[idx], concepto, monto, vencimiento, categoria };
-            window.LISTA_GASTOS_FIJOS = arr;
-            localStorage.setItem('gecko_gastos_fijos', JSON.stringify(arr));
-            modal.remove();
-            window.renderGastosFijos();
-            if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} actualizado.`, '\u00a1Guardado!');
-        };
-    };
 
-    window.abrirModalNuevoGastoFijo = function () {
-        document.getElementById('_geckoModalNuevoGasto')?.remove();
-        const modal = document.createElement('div');
-        modal.id = '_geckoModalNuevoGasto';
-        modal.className = 'gecko-modal-overlay';
-        modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;';
-        modal.innerHTML = `
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    document.getElementById('_editGastoGuardarBtn').onclick = function () {
+        const concepto = modal.querySelector('#_editGastoConcepto').value.trim();
+        const monto = parseFloat(modal.querySelector('#_editGastoMonto').value) || 0;
+        const vencimiento = modal.querySelector('#_editGastoVencimiento').value.trim() || '1';
+        const categoria = modal.querySelector('#_editGastoCategoria').value;
+        if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
+        const arr = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+        if (!arr[idx]) return;
+        arr[idx] = { ...arr[idx], concepto, monto, vencimiento, categoria };
+        window.LISTA_GASTOS_FIJOS = arr;
+        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(arr));
+        modal.remove();
+        window.renderGastosFijos();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} actualizado.`, '\u00a1Guardado!');
+    };
+};
+
+window.abrirModalNuevoGastoFijo = function () {
+    document.getElementById('_geckoModalNuevoGasto')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoModalNuevoGasto';
+    modal.className = 'gecko-modal-overlay';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;';
+    modal.innerHTML = `
             <div class="gecko-modal-box max-w-md w-full mx-4">
                 <button onclick="document.getElementById('_geckoModalNuevoGasto').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'" onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -2197,23 +2197,23 @@ window.eliminarGastoFijo = function (idx) {
                     <button class="gecko-btn-primary" id="_gastoGuardarBtn">GUARDAR GASTO</button>
                 </div>
             </div>`;
-        document.body.appendChild(modal);
-        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-        
-        document.getElementById('_gastoGuardarBtn').onclick = function () {
-            const concepto = modal.querySelector('#_gastoConcepto').value.trim();
-            const monto = parseFloat(modal.querySelector('#_gastoMonto').value) || 0;
-            const vencimiento = modal.querySelector('#_gastoVencimiento').value.trim() || '1';
-            const categoria = modal.querySelector('#_gastoCategoria').value;
-            if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
-            if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-            window.LISTA_GASTOS_FIJOS.push({ concepto, monto, vencimiento, categoria, estado: 'Pendiente' });
-            localStorage.setItem('gecko_gastos_fijos', JSON.stringify(window.LISTA_GASTOS_FIJOS));
-            modal.remove();
-            window.renderGastosFijos();
-            if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '\u00a1Guardado!');
-        };
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    document.getElementById('_gastoGuardarBtn').onclick = function () {
+        const concepto = modal.querySelector('#_gastoConcepto').value.trim();
+        const monto = parseFloat(modal.querySelector('#_gastoMonto').value) || 0;
+        const vencimiento = modal.querySelector('#_gastoVencimiento').value.trim() || '1';
+        const categoria = modal.querySelector('#_gastoCategoria').value;
+        if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
+        if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+        window.LISTA_GASTOS_FIJOS.push({ concepto, monto, vencimiento, categoria, estado: 'Pendiente' });
+        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(window.LISTA_GASTOS_FIJOS));
+        modal.remove();
+        window.renderGastosFijos();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '\u00a1Guardado!');
     };
+};
 
 // ── Reportes: override ranking para usar p.categoria (Gráfica / Industrial) ──
 const _renderReportesOriginal = window.renderReportesDashboard;
@@ -2678,6 +2678,36 @@ window.addEventListener('load', function () {
             window.renderizarMovimientos();
         }
 
+        // ── Override Badges (Limpieza de Emojis) ──
+        window.obtenerBadgeScoring = function (clienteNombre) {
+            const ahora = new Date();
+            const mesActual = ahora.getMonth();
+            const anioActual = ahora.getFullYear();
+            const listaP = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            const totalMes = listaP.filter(p => {
+                if (p.cliente !== clienteNombre || p.status !== 'OT' || !p.fecha) return false;
+                const parts = p.fecha.split('/');
+                if (parts.length < 3) return false;
+                return (parseInt(parts[1]) - 1) === mesActual && parseInt(parts[2]) === anioActual;
+            }).reduce((acc, p) => acc + (parseFloat(p.total) || 0), 0);
+
+            const setG = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
+            const sNivelOro = setG.nivelOro || 250000;
+            const sNivelPlata = setG.nivelPlata || 100000;
+
+            if (totalMes >= sNivelOro) {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#FFD700]/20 text-[#B8860B] border border-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ORO</span>`;
+            } else if (totalMes >= sNivelPlata) {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#C0C0C0]/20 text-[#808080] border border-[#C0C0C0]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">PLATA</span>`;
+            } else {
+                return `<span class="px-2 py-0.5 rounded-md bg-[#CD7F32]/10 text-[#A0522D] border border-[#CD7F32]/30 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">BRONCE</span>`;
+            }
+        };
+
+        // ── Stubs para Acciones (Fase 3) ──
+        window.editarCliente = function (nombre) { alert("Editar Cliente se habilitará en la Fase 3."); };
+        window.eliminarCliente = function (nombre) { alert("Eliminar Cliente se habilitará en la Fase 3."); };
+
         // ── Override renderClientes con drag & drop ──
         (function () {
             const _origRC = window.renderClientes;
@@ -2708,10 +2738,6 @@ window.addEventListener('load', function () {
                                 <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
                                 ${badge}
                             </div>
-                            <div class="flex gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">
-                                <span>${c.cuit || 'Sin CUIT'}</span>
-                                ${c.rubro ? `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg">${c.rubro}</span>` : ''}
-                            </div>
                         </td>
                         <td class="py-4 px-6 text-center hidden md:table-cell">
                             <div class="flex items-center justify-center gap-2">${waLink}${mailLink}</div>
@@ -2724,8 +2750,18 @@ window.addEventListener('load', function () {
                         <td class="py-4 px-6 text-right">
                             <button onclick="abrirFichaCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                Ver Ficha / CC
+                                Ficha / CC
                             </button>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="window.editarCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button onclick="window.eliminarCliente('${c.nombre.replace(/'/g, "\\'")}');event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
+                            </div>
                         </td>
                     </tr>`;
                 }).join('');
@@ -3170,5 +3206,72 @@ window.ejecutarTransferencia = function () {
         });
     };
 })();
+
+// ── Fase 2: Lógica de Múltiples CUITs y Mails ──
+window.agregarCampoCuit = function () {
+    const container = document.getElementById('containerCuits');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'flex gap-2 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
+    row.innerHTML = `<input type="text" class="cuit-input w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold" placeholder="Otro CUIT/DNI..."><button type="button" onclick="this.parentElement.remove()" class="w-12 rounded-2xl bg-zinc-800 text-zinc-500 hover:text-red-500 hover:bg-zinc-700 transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+    container.appendChild(row);
+};
+
+window.agregarCampoEmail = function () {
+    const container = document.getElementById('containerEmails');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'flex gap-2 mb-2 email-row animate-in fade-in slide-in-from-top-1';
+    row.innerHTML = `<input type="email" class="email-input w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold" placeholder="Otro email..."><button type="button" onclick="this.parentElement.remove()" class="w-12 rounded-2xl bg-zinc-800 text-zinc-500 hover:text-red-500 hover:bg-zinc-700 transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+    container.appendChild(row);
+};
+
+window.abrirModalNuevoCliente = function () {
+    if (typeof openModal === 'function') openModal('modalNuevoCliente');
+    const eNom = document.getElementById('nuevoClienteNombre'); if (eNom) eNom.value = '';
+    const eTel = document.getElementById('nuevoClienteTel'); if (eTel) eTel.value = '';
+    const eDir = document.getElementById('nuevoClienteDir'); if (eDir) eDir.value = '';
+    const eLoc = document.getElementById('nuevoClienteLoc'); if (eLoc) eLoc.value = '';
+    const eRub = document.getElementById('nuevoClienteRubro'); if (eRub) eRub.value = '';
+
+    const cCuits = document.getElementById('containerCuits');
+    if (cCuits) cCuits.innerHTML = `<div class="flex justify-between items-center mb-2"><label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest">CUIT / DNI</label><button type="button" onclick="agregarCampoCuit()" class="text-gecko hover:bg-gecko/10 p-1 rounded-md transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button></div><div class="flex gap-2 mb-2 cuit-row"><input type="text" class="cuit-input w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold" placeholder="Ej: 20-12345678-9"></div>`;
+
+    const cEmails = document.getElementById('containerEmails');
+    if (cEmails) cEmails.innerHTML = `<div class="flex justify-between items-center mb-2"><label class="block text-[10px] font-bold text-zinc-700 uppercase tracking-widest">Email</label><button type="button" onclick="agregarCampoEmail()" class="text-gecko hover:bg-gecko/10 p-1 rounded-md transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button></div><div class="flex gap-2 mb-2 email-row"><input type="email" class="email-input w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkBg text-zinc-200 dark:text-zinc-100 focus:ring-2 focus:ring-gecko/30 text-xs font-bold" placeholder="ejemplo@correo.com"></div>`;
+};
+
+window.guardarCliente = function () {
+    const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
+    if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
+
+    // Recopilar arrays de los campos dinámicos
+    const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
+    const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
+
+    const nuevoCliente = {
+        id: 'client_' + Date.now(),
+        nombre: nombre,
+        cuits: cuits,
+        cuit: cuits[0] || '',
+        tel: document.getElementById('nuevoClienteTel')?.value || '',
+        emails: emails,
+        email: emails[0] || '',
+        dir: document.getElementById('nuevoClienteDir')?.value || '',
+        loc: document.getElementById('nuevoClienteLoc')?.value || '',
+        rubro: document.getElementById('nuevoClienteRubro')?.value || '',
+    };
+
+    let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    bdClientes.push(nuevoCliente);
+    localStorage.setItem('clientes', JSON.stringify(bdClientes));
+
+    const modal = document.getElementById('modalNuevoCliente');
+    if (modal) modal.style.display = 'none';
+    if (typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
+
+    if (typeof window.renderClientes === 'function') window.renderClientes();
+    if (typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
+};
 
 console.log('🦎 GECKO-FIXES v2.0 cargado — preview, desplegable OT, seña multi-caja, botones presupuestos.');
