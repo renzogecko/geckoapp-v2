@@ -3703,8 +3703,11 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
           </div>
           <div>
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Fecha</label>
-            <input id="gpmFecha" type="text" value="${new Date().toLocaleDateString('es-AR')}" readonly
-              style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:#71717a;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;" />
+            <input id="gpmFecha" type="date"
+              value="${new Date().toISOString().split('T')[0]}"
+              style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:#71717a;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;color-scheme:dark;"
+              onfocus="this.style.borderColor='#F15A24'"
+              onblur="this.style.borderColor='#333333'" />
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
@@ -3815,14 +3818,14 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Notas internas (no se imprimen)</label>
             <textarea id="gpmNotasInternas" rows="3"
               placeholder="Ej: Cliente pidió entrega urgente para el viernes..."
-              style="width:100%;background:#18181b80 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#71717a;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
+              style="width:100%;background:#18181b80 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#a1a1aa;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
               onfocus="this.style.setProperty('border-color','#F15A24','important')" onblur="this.style.setProperty('border-color','#333333','important')">${notasInternas}</textarea>
           </div>
           <div>
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Condiciones para el cliente</label>
             <textarea id="gpmCondiciones" rows="3"
               placeholder="Ej: Validez 7 días. Seña 50% para iniciar trabajo..."
-              style="width:100%;background:#18181b80 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#71717a;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
+              style="width:100%;background:#18181b80 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#a1a1aa;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
               onfocus="this.style.setProperty('border-color','#F15A24','important')" onblur="this.style.setProperty('border-color','#333333','important')">${condiciones}</textarea>
           </div>
         </div>
@@ -4079,6 +4082,14 @@ window._gpmGuardar = function (status) {
     window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn };
 
     window.procesarGuardado(status);
+
+    setTimeout(() => {
+        const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+        const ultimo = lista[lista.length - 1];
+        if (ultimo && typeof window.verDocumento === 'function') {
+            window.verDocumento(ultimo.id);
+        }
+    }, 600);
 };
 
 // ── Hook procesarGuardado para inyectar metadatos extra ──
