@@ -2505,3 +2505,4 @@
 /* Presupuesto Manual — placeholders notas/condiciones */
 #gpmNotasInternas::placeholder,
 #gpmCondiciones::placeholder { color: #52525b; }
+.gpm-item-desc::placeholder { color: #52525b; }
