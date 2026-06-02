@@ -3915,12 +3915,13 @@ window._gpmAgregarItem = function (datos = null) {
         <div style="padding:12px 10px;display:flex;flex-direction:column;gap:6px;border-left:1px solid #333333;">
           <input class="gpm-item-title" type="text" value="${titulo}" placeholder="Título del trabajo"
             oninput="window._gpmCalc()"
-            style="background:transparent;border:none;outline:none;font-size:15px;font-weight:900;color:#ffffff;width:100%;font-family:inherit;"
+            style="background:transparent;border:none !important;border-bottom:none !important;outline:none;font-size:15px;font-weight:900;color:#ffffff;width:100%;font-family:inherit;"
             onfocus="this.closest('.gpm-item').style.borderColor='#333333'"
             placeholder="Título del trabajo" />
-          <textarea class="gpm-item-desc" rows="2" placeholder="Descripción detallada (dimensiones, material, acabado...)"
+          <input type="text" class="gpm-item-desc" value="${desc}"
+            placeholder="Descripción detallada (dimensiones, material, acabado...)"
             oninput="window._gpmCalc()"
-            style="background:#131314 !important;border:1px solid #333333 !important;border-radius:10px !important;padding:8px 12px !important;font-size:13px;color:#a1a1aa;width:100%;font-family:inherit;resize:none;line-height:1.5;margin-top:4px;box-sizing:border-box;">${desc}</textarea>
+            style="background:transparent;border:none !important;border-bottom:none !important;outline:none;font-size:12px;font-weight:400;color:#71717a;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;" />
         </div>
 
         <div style="display:flex;align-items:center;justify-content:center;padding:10px 8px;border-left:1px solid #333333;">
