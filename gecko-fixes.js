@@ -3921,7 +3921,7 @@ window._gpmAgregarItem = function (datos = null) {
           <input type="text" class="gpm-item-desc" value="${desc}"
             placeholder="Descripción detallada (dimensiones, material, acabado...)"
             oninput="window._gpmCalc()"
-            style="background:transparent;border:none !important;border-bottom:none !important;outline:none;font-size:12px;font-weight:400;color:#71717a;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;" />
+            style="background:transparent !important;border:none !important;border-bottom:none !important;outline:none !important;font-size:12px !important;font-weight:400 !important;color:#71717a !important;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;" />
         </div>
 
         <div style="display:flex;align-items:center;justify-content:center;padding:10px 8px;border-left:1px solid #333333;">
