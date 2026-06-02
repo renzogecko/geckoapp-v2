@@ -2498,3 +2498,10 @@
             background-size: 16px !important;
             padding-right: 40px !important;
         }
+
+/* Presupuesto Manual — ítems lista */
+.gpm-item:last-child { border-bottom: none !important; }
+
+/* Presupuesto Manual — placeholders notas/condiciones */
+#gpmNotasInternas::placeholder,
+#gpmCondiciones::placeholder { color: #52525b; }

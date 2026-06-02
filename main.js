@@ -2569,6 +2569,10 @@ window.switchMenu = function (view) {
                 cambiarCategoriaCotizador(savedCat);
             }
         }, 10);
+    } else if (view === 'presupuestoManual') {
+        hTitle.innerText = "Presupuesto Manual";
+        hSub.innerText = "Creá un presupuesto personalizado para tu cliente.";
+        hSub.style.display = 'block';
     }
     // ─── Persistencia de Pestaña: guardar en hash y localStorage ───
     window.location.hash = view;

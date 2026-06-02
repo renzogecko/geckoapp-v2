@@ -3681,64 +3681,50 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
     ).join('');
 
     container.innerHTML = `
-    <div style="max-width:860px;margin:0 auto;">
+    <div style="max-width:100%;">
 
       <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
-        <div>
-          <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;">
-            ${presupuestoEditId ? 'Editando presupuesto #' + presupuestoEditId : 'Cotizadores'}
-          </p>
-          <h2 style="color:#fff;font-size:24px;font-weight:900;margin:0;">
-            ${presupuestoEditId ? 'Editar presupuesto' : 'Nuevo presupuesto manual'}
-          </h2>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <button onclick="window._gpmGuardar('Cotizado')"
-            style="padding:12px 20px;background:transparent;border:1px solid #27272a;border-radius:12px;color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Guardar presupuesto
-          </button>
-          <button onclick="window._gpmGuardar('OT')"
-            style="padding:12px 20px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            Generar OT
-          </button>
-        </div>
+      <div style="margin-bottom:28px;">
+        <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;">
+          ${presupuestoEditId ? 'Editando presupuesto #' + presupuestoEditId : 'Cotizadores'}
+        </p>
+        <h2 style="color:#fff;font-size:24px;font-weight:900;margin:0;">
+          ${presupuestoEditId ? 'Editar presupuesto' : 'Nuevo presupuesto manual'}
+        </h2>
       </div>
 
       <!-- DATOS GENERALES -->
       <div style="background:#141417;border:1px solid #27272a;border-radius:20px;padding:24px;margin-bottom:16px;">
         <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">Datos generales</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 180px;gap:14px;margin-bottom:14px;">
-          <div style="grid-column:span 2;">
-            <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Título del presupuesto</label>
-            <input id="gpmTitulo" type="text"
-              placeholder="Ej: Cartelería evento corporativo Mayo"
-              value="${tituloInicial}"
-              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
-              onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#27272a'" />
-          </div>
+        <div style="display:grid;grid-template-columns:1fr 180px;gap:14px;margin-bottom:14px;">
           <div>
-            <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Fecha</label>
-            <input id="gpmFecha" type="text" value="${new Date().toLocaleDateString('es-AR')}" readonly
-              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#71717a;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;" />
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-          <div>
-            <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Cliente</label>
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Cliente</label>
             <input id="gpmCliente" type="text" list="gpm-clientes-list"
               placeholder="Nombre del cliente..." value="${clienteInicial}"
               autocomplete="off"
-              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:13px;font-weight:700;outline:none;box-sizing:border-box;"
+              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;"
               onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#27272a'" />
             <datalist id="gpm-clientes-list">
               ${(JSON.parse(localStorage.getItem('clientes') || '[]')).map(c => `<option value="${c.nombre || c.name || ''}"></option>`).join('')}
             </datalist>
           </div>
           <div>
-            <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Área / categoría</label>
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Fecha</label>
+            <input id="gpmFecha" type="text" value="${new Date().toLocaleDateString('es-AR')}" readonly
+              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#71717a;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div>
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Título del presupuesto</label>
+            <input id="gpmTitulo" type="text"
+              placeholder="Ej: Cartelería evento corporativo Mayo"
+              value="${tituloInicial}"
+              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;"
+              onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#27272a'" />
+          </div>
+          <div>
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Área / categoría</label>
             <select id="gpmCategoria" class="gecko-select-pro" style="font-weight:700;color:white;-webkit-text-fill-color:white;">
               ${areaOpts}
             </select>
@@ -3753,10 +3739,10 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         <!-- Cabecera columnas -->
         <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px 130px 100px 36px;gap:0;padding:0 0 10px;margin-bottom:10px;border-bottom:1px solid #1f1f23;">
           <span></span>
-          <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;padding-left:12px;">Trabajo / descripción</span>
-          <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:center;">Cant.</span>
-          <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:right;padding-right:8px;">Precio unit.</span>
-          <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:right;">Subtotal</span>
+          <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;padding-left:12px;">Trabajo / descripción</span>
+          <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:center;">Cant.</span>
+          <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:right;padding-right:8px;">Precio unit.</span>
+          <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:right;">Subtotal</span>
           <span></span>
         </div>
 
@@ -3833,17 +3819,17 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">Notas y condiciones</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
           <div>
-            <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Notas internas (no se imprimen)</label>
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Notas internas (no se imprimen)</label>
             <textarea id="gpmNotasInternas" rows="3"
               placeholder="Ej: Cliente pidió entrega urgente para el viernes..."
-              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;resize:none;font-family:inherit;"
+              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#a1a1aa;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;resize:none;font-family:inherit;"
               onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#27272a'">${notasInternas}</textarea>
           </div>
           <div>
-            <label style="display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Condiciones para el cliente</label>
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Condiciones para el cliente</label>
             <textarea id="gpmCondiciones" rows="3"
               placeholder="Ej: Validez 7 días. Seña 50% para iniciar trabajo..."
-              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;resize:none;font-family:inherit;"
+              style="width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px 16px;color:#a1a1aa;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;resize:none;font-family:inherit;"
               onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#27272a'">${condiciones}</textarea>
           </div>
         </div>
@@ -3933,7 +3919,7 @@ window._gpmAgregarItem = function (datos = null) {
 
     const div = document.createElement('div');
     div.className = 'gpm-item';
-    div.style.cssText = 'background:#09090b;border:1px solid #1f1f23;border-radius:14px;margin-bottom:8px;overflow:hidden;';
+    div.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #27272a;border-radius:0;margin-bottom:0;overflow:hidden;';
     div.innerHTML = `
       <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px 130px 100px 36px;align-items:stretch;">
 
@@ -3942,26 +3928,26 @@ window._gpmAgregarItem = function (datos = null) {
         <div style="padding:12px 10px;display:flex;flex-direction:column;gap:6px;border-left:1px solid #1f1f23;">
           <input class="gpm-item-title" type="text" value="${titulo}" placeholder="Título del trabajo"
             oninput="window._gpmCalc()"
-            style="background:transparent;border:none;outline:none;font-size:13px;font-weight:900;color:#ffffff;width:100%;font-family:inherit;"
+            style="background:transparent;border:none;outline:none;font-size:15px;font-weight:900;color:#ffffff;width:100%;font-family:inherit;"
             onfocus="this.closest('.gpm-item').style.borderColor='#27272a'"
             placeholder="Título del trabajo" />
           <textarea class="gpm-item-desc" rows="2" placeholder="Descripción detallada (dimensiones, material, acabado...)"
             oninput="window._gpmCalc()"
-            style="background:transparent;border:none;outline:none;font-size:12px;font-weight:600;color:#71717a;width:100%;font-family:inherit;resize:none;line-height:1.5;">${desc}</textarea>
+            style="background:transparent;border:none;outline:none;font-size:13px;font-weight:600;color:#71717a;width:100%;font-family:inherit;resize:none;line-height:1.5;">${desc}</textarea>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:center;padding:10px 8px;border-left:1px solid #1f1f23;">
           <input type="number" class="gpm-qty" value="${cant}" min="1" oninput="window._gpmCalc()"
-            style="width:100%;text-align:center;background:transparent;border:none;outline:none;font-size:13px;font-weight:900;color:#a1a1aa;font-family:inherit;" />
+            style="width:100%;text-align:center;background:transparent;border:none;outline:none;font-size:14px;font-weight:900;color:#a1a1aa;font-family:inherit;" />
         </div>
 
         <div style="display:flex;align-items:center;padding:10px 10px;border-left:1px solid #1f1f23;">
           <input type="text" class="gpm-price" value="${precio || ''}" placeholder="0"
             oninput="window._gpmCalc()"
-            style="width:100%;text-align:right;background:transparent;border:none;outline:none;font-size:13px;font-weight:900;color:#a1a1aa;font-family:inherit;" />
+            style="width:100%;text-align:right;background:transparent;border:none;outline:none;font-size:14px;font-weight:900;color:#a1a1aa;font-family:inherit;" />
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:flex-end;padding:10px 10px;border-left:1px solid #1f1f23;font-size:13px;font-weight:900;color:#ffffff;white-space:nowrap;">
+        <div style="display:flex;align-items:center;justify-content:flex-end;padding:10px 10px;border-left:1px solid #1f1f23;font-size:14px;font-weight:900;color:#ffffff;white-space:nowrap;">
           <span class="gpm-sv">$0</span>
         </div>
 
