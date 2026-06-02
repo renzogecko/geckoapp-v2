@@ -3718,7 +3718,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
           </div>
           <div>
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Área / categoría</label>
-            <select id="gpmCategoria" class="gecko-select-pro" style="font-weight:700;color:white;-webkit-text-fill-color:white;">
+            <select id="gpmCategoria" class="gecko-select-pro" style="font-weight:700;color:white;-webkit-text-fill-color:white;background-color:#1e1f20 !important;">
               ${areaOpts}
             </select>
           </div>
@@ -3815,35 +3815,29 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Notas internas (no se imprimen)</label>
             <textarea id="gpmNotasInternas" rows="3"
               placeholder="Ej: Cliente pidió entrega urgente para el viernes..."
-              style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:#a1a1aa;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
-              onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">${notasInternas}</textarea>
+              style="width:100%;background:#1e1f20 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#71717a;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
+              onfocus="this.style.setProperty('border-color','#F15A24','important')" onblur="this.style.setProperty('border-color','#333333','important')">${notasInternas}</textarea>
           </div>
           <div>
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Condiciones para el cliente</label>
             <textarea id="gpmCondiciones" rows="3"
               placeholder="Ej: Validez 7 días. Seña 50% para iniciar trabajo..."
-              style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:#a1a1aa;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
-              onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">${condiciones}</textarea>
+              style="width:100%;background:#1e1f20 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#71717a;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
+              onfocus="this.style.setProperty('border-color','#F15A24','important')" onblur="this.style.setProperty('border-color','#333333','important')">${condiciones}</textarea>
           </div>
         </div>
       </div>
 
       <!-- Footer acciones -->
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 0;">
-        <button onclick="window._gpmCerrar()"
-          style="background:transparent;border:none;color:#52525b;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;padding:10px 0;">
-          ← Cancelar
+      <div style="display:flex;justify-content:flex-end;align-items:center;padding:20px 0;gap:10px;">
+        <button onclick="window._gpmGuardar('Cotizado')"
+          style="padding:12px 20px;background:transparent;border:1px solid #333333;border-radius:12px;color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
+          Guardar presupuesto
         </button>
-        <div style="display:flex;gap:10px;">
-          <button onclick="window._gpmGuardar('Cotizado')"
-            style="padding:12px 20px;background:transparent;border:1px solid #333333;border-radius:12px;color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
-            Guardar presupuesto
-          </button>
-          <button onclick="window._gpmGuardar('OT')"
-            style="padding:12px 20px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
-            Generar OT
-          </button>
-        </div>
+        <button onclick="window._gpmGuardar('OT')"
+          style="padding:12px 20px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
+          Generar OT
+        </button>
       </div>
 
     </div>`;
@@ -3916,7 +3910,7 @@ window._gpmAgregarItem = function (datos = null) {
     div.innerHTML = `
       <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px 130px 100px 36px;align-items:stretch;">
 
-        <div style="display:flex;align-items:center;justify-content:center;padding:14px 0;font-size:10px;font-weight:900;color:#F15A24;">${String(n).padStart(2,'0')}</div>
+        <div style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#F15A24;">${String(n).padStart(2,'0')}</div>
 
         <div style="padding:12px 10px;display:flex;flex-direction:column;gap:6px;border-left:1px solid #333333;">
           <input class="gpm-item-title" type="text" value="${titulo}" placeholder="Título del trabajo"
@@ -3926,7 +3920,7 @@ window._gpmAgregarItem = function (datos = null) {
             placeholder="Título del trabajo" />
           <textarea class="gpm-item-desc" rows="2" placeholder="Descripción detallada (dimensiones, material, acabado...)"
             oninput="window._gpmCalc()"
-            style="background:#131314;border:1px solid #333333;border-radius:10px;padding:8px 12px;font-size:13px;color:#a1a1aa;width:100%;font-family:inherit;resize:none;line-height:1.5;margin-top:4px;box-sizing:border-box;">${desc}</textarea>
+            style="background:#131314 !important;border:1px solid #333333 !important;border-radius:10px !important;padding:8px 12px !important;font-size:13px;color:#a1a1aa;width:100%;font-family:inherit;resize:none;line-height:1.5;margin-top:4px;box-sizing:border-box;">${desc}</textarea>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:center;padding:10px 8px;border-left:1px solid #333333;">
