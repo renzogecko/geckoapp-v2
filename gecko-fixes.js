@@ -3718,7 +3718,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
           </div>
           <div>
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Área / categoría</label>
-            <select id="gpmCategoria" class="gecko-select-pro" style="font-weight:700;color:white;-webkit-text-fill-color:white;background-color:#1e1f20 !important;">
+            <select id="gpmCategoria" class="gecko-select-pro" style="font-weight:700;color:white;-webkit-text-fill-color:white;background-color:#18181b80 !important;">
               ${areaOpts}
             </select>
           </div>
@@ -3815,14 +3815,14 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Notas internas (no se imprimen)</label>
             <textarea id="gpmNotasInternas" rows="3"
               placeholder="Ej: Cliente pidió entrega urgente para el viernes..."
-              style="width:100%;background:#1e1f20 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#71717a;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
+              style="width:100%;background:#18181b80 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#71717a;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
               onfocus="this.style.setProperty('border-color','#F15A24','important')" onblur="this.style.setProperty('border-color','#333333','important')">${notasInternas}</textarea>
           </div>
           <div>
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Condiciones para el cliente</label>
             <textarea id="gpmCondiciones" rows="3"
               placeholder="Ej: Validez 7 días. Seña 50% para iniciar trabajo..."
-              style="width:100%;background:#1e1f20 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#71717a;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
+              style="width:100%;background:#18181b80 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#71717a;font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;"
               onfocus="this.style.setProperty('border-color','#F15A24','important')" onblur="this.style.setProperty('border-color','#333333','important')">${condiciones}</textarea>
           </div>
         </div>
