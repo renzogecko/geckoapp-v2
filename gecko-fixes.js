@@ -4126,3 +4126,26 @@ window.editarPresupuesto = function (id) {
 };
 
 console.log('🦎 GECKO: Presupuestador Manual (sección nativa) v2.0 cargado.');
+
+// Auto-render presupuestoManual si la URL tiene #presupuestoManual al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        const hash = window.location.hash;
+        if (hash === '#presupuestoManual') {
+            if (typeof window.abrirPresupuestadorManual === 'function') {
+                window.abrirPresupuestadorManual(null);
+            }
+        }
+    }, 500);
+});
+
+// También escuchar el evento geckoDB_ready por si carga después
+document.addEventListener('geckoDB_ready', function() {
+    const hash = window.location.hash;
+    if (hash === '#presupuestoManual') {
+        const container = document.getElementById('presupuestoManualContainer');
+        if (container && container.innerHTML.trim() === '') {
+            window.abrirPresupuestadorManual(null);
+        }
+    }
+});
