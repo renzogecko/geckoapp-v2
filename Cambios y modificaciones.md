@@ -2,11 +2,11 @@
 
 
 
-**Modal nuevo cliente:** 
+**Modal "nuevo cliente":** 
 
 \- Agregar nombre del cuit 
 
-\- Agregar multiples teléfonos y campo del nombre. 
+\- Agregar multiples teléfonos y campo del nombre del telefono (para saber con quien hablas). 
 
 
 
@@ -28,17 +28,30 @@
 
 \- si el presupuesto se armo manual, Al editar se debería abrir el modal manual para modificar. 
 
-\- Al generar el presupeusto el texto sale en el print en forma duplicada. Como titulo y como descripción de trabajo. 
+\- Al generar el presupeusto el texto sale en el print en forma duplicada. Como titulo y como descripción de trabajo.
+
+**Modal presupuesto manual.**  
 
 
 
-Sección "Pedidos"
+**Sección "Pedidos"**
 
-\- Sacar de la caja contenedora, que sea deslizable para abajo no en la caja contenedora.
+&#x20;
+
+* Sacar de la caja contenedora, que sea deslizable para abajo no en la caja contenedora.
+* Modal "EDITAR OT" - darle el estilo gecko, Que se pueda modificar - En la fecha que abra el calendario. 
 
 
 
 
 
-Modificar Modales de presupuestos 
+Modificar Modales de presupuestos
+
+- Agregar ITEM de colocacion en todos los presupeustos, para cargar de froma manual.  
+
+
+Seccion materiales pestaña servicios.
+- El editar un servicio no se abre el modal precargado, se abre limpio. 
+
+
 

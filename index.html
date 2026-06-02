@@ -232,6 +232,14 @@
                     <a href="#" id="side-3d" onclick="switchMenu('cotizadores'); window.cambiarCategoriaCotizador('3d')"
                         class="ml-4 px-4 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-[14px] font-bold">Impresión
                         3D (Técnica)</a>
+
+                    <a href="#" id="nav-presupuestoManual" onclick="switchMenu('presupuestoManual'); window.abrirPresupuestadorManual(null);"
+                        class="ml-4 px-4 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-[14px] font-bold flex items-center gap-2">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Presupuesto Manual
+                    </a>
                 </div>
             </details>
             <a href="#" onclick="switchMenu('finanzas')" id="nav-finanzas"
@@ -1008,6 +1016,11 @@
 
                 </div>
             </div>
+        </div>
+
+        <!-- VIEW: PRESUPUESTO MANUAL -->
+        <div id="viewPresupuestoManual" class="hidden px-6 md:px-10 py-6 md:py-10 flex-col flex-1 overflow-y-auto">
+            <div id="presupuestoManualContainer"></div>
         </div>
 
         <!-- VIEW: FINANZAS -->

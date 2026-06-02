@@ -2501,7 +2501,7 @@ function actualizarSugerenciaClientes() {
 
 window.switchMenu = function (view) {
     // 1. Ocultar todas las secciones (Agregamos viewMateriales y viewCotizadores)
-    const views = ['viewDashboard', 'viewPedidos', 'viewFinanzas', 'viewClientes', 'viewMateriales', 'viewCotizadores'];
+    const views = ['viewDashboard', 'viewPedidos', 'viewFinanzas', 'viewClientes', 'viewMateriales', 'viewCotizadores', 'viewPresupuestoManual'];
     views.forEach(v => {
         const el = document.getElementById(v);
         if (el) { el.classList.add('hidden'); el.style.display = ''; }

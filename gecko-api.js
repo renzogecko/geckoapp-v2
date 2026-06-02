@@ -1,6 +1,7 @@
 /**
  * ================================================================
- * GECKO API BRIDGE v2.1
+ * GECKO API BRIDGE v2.2
+ * Fix: protección anti-borrado masivo accidental
  * ================================================================
  */
 
@@ -105,14 +106,26 @@ async function _inicializarDesdeAPI() {
     for (const [lsKey, endpoint] of Object.entries(GECKO_KEY_MAP)) {
         try {
             const datos = await _apiGet(endpoint, lsKey);
+
+            // PROTECCIÓN: si la API devuelve array vacío pero había datos en localStorage,
+            // no pisamos el cache local para evitar borrado masivo accidental.
+            if (GECKO_ARRAY_KEYS.includes(lsKey) && Array.isArray(datos) && datos.length === 0) {
+                const localActual = JSON.parse(window._localStorage_original.getItem(lsKey) || '[]');
+                if (Array.isArray(localActual) && localActual.length > 0) {
+                    console.warn(`⚠️ GECKO-API: ${endpoint} devolvió vacío pero hay ${localActual.length} ítems locales — se mantiene el cache local.`);
+                    _cache[lsKey] = localActual;
+                    continue;
+                }
+            }
+
             _cache[lsKey] = datos;
             window._localStorage_original.setItem(lsKey, JSON.stringify(datos));
             const info = Array.isArray(datos) ? `${datos.length} items` : 'objeto config';
             console.log(`✅ GECKO-API: ${lsKey} → ${info}`);
         } catch (e) {
-            const fallback = GECKO_ARRAY_KEYS.includes(lsKey) ? [] : {};
-            window._localStorage_original.setItem(lsKey, JSON.stringify(fallback));
-            console.warn(`⚠️ GECKO-API: Falló ${endpoint}`);
+            // Si la API falla, NO pisar localStorage con array vacío.
+            // Dejar lo que haya en el cache local sin modificar.
+            console.warn(`⚠️ GECKO-API: Falló ${endpoint} — se mantiene el cache local.`);
         }
     }
 
@@ -126,6 +139,15 @@ async function _sincronizarArray(lsKey, nuevoArray) {
     const endpoint = GECKO_KEY_MAP[lsKey];
     if (!endpoint || !Array.isArray(nuevoArray)) return;
     const anterior = Array.isArray(_cache[lsKey]) ? _cache[lsKey] : [];
+
+    // PROTECCIÓN ANTI-BORRADO MASIVO:
+    // Si se intenta borrar más del 50% de los ítems en una sola operación,
+    // casi seguro es un error de sincronización, no una acción real del usuario.
+    const cantidadABorrar = anterior.filter(a => !nuevoArray.find(n => String(n.id) === String(a.id))).length;
+    if (anterior.length > 0 && cantidadABorrar > Math.max(1, Math.floor(anterior.length * 0.5))) {
+        console.warn(`🦎 GECKO-API: BORRADO MASIVO BLOQUEADO en "${lsKey}" — intentaba borrar ${cantidadABorrar} de ${anterior.length} ítems. Operación cancelada.`);
+        return;
+    }
 
     for (const itemAntiguo of anterior) {
         if (!nuevoArray.find(n => String(n.id) === String(itemAntiguo.id))) {
@@ -185,4 +207,4 @@ try {
 
 window._geckoAPIPromise = _inicializarDesdeAPI();
 
-console.log('🦎 GECKO-API Bridge v2.1 cargado.');
+console.log('🦎 GECKO-API Bridge v2.2 cargado.');
