@@ -2506,3 +2506,5 @@
 #gpmNotasInternas::placeholder,
 #gpmCondiciones::placeholder { color: #52525b; }
 .gpm-item-desc::placeholder { color: #52525b; }
+/* Presupuesto Manual — focus qty/precio */
+.gpm-qty:focus, .gpm-price:focus { border-color: #F15A24 !important; }

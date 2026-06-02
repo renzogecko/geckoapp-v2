@@ -3915,7 +3915,7 @@ window._gpmAgregarItem = function (datos = null) {
         <div style="padding:12px 10px;display:flex;flex-direction:column;gap:6px;border-left:1px solid #333333;">
           <input class="gpm-item-title" type="text" value="${titulo}" placeholder="Título del trabajo"
             oninput="window._gpmCalc()"
-            style="background:transparent;border:none !important;border-bottom:none !important;outline:none;font-size:15px;font-weight:900;color:#ffffff;width:100%;font-family:inherit;"
+            style="background:transparent;border:none !important;border-bottom:none !important;outline:none;font-size:14px;font-weight:700;color:#e0e0e0;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;"
             onfocus="this.closest('.gpm-item').style.borderColor='#333333'"
             placeholder="Título del trabajo" />
           <input type="text" class="gpm-item-desc" value="${desc}"
@@ -3926,13 +3926,13 @@ window._gpmAgregarItem = function (datos = null) {
 
         <div style="display:flex;align-items:center;justify-content:center;padding:10px 8px;border-left:1px solid #333333;">
           <input type="number" class="gpm-qty" value="${cant}" min="1" oninput="window._gpmCalc()"
-            style="width:100%;text-align:center;background:transparent;border:none;outline:none;font-size:14px;font-weight:900;color:#a1a1aa;font-family:inherit;" />
+            style="width:100%;text-align:center;background:#131314 !important;border:1px solid #333333 !important;border-radius:8px !important;font-size:13px;font-weight:700;color:#e0e0e0;font-family:inherit;padding:6px 4px !important;outline:none;box-sizing:border-box;" />
         </div>
 
         <div style="display:flex;align-items:center;padding:10px 10px;border-left:1px solid #333333;">
           <input type="text" class="gpm-price" value="${precio || ''}" placeholder="0"
             oninput="window._gpmCalc()"
-            style="width:100%;text-align:right;background:transparent;border:none;outline:none;font-size:14px;font-weight:900;color:#a1a1aa;font-family:inherit;" />
+            style="width:100%;text-align:right;background:#131314 !important;border:1px solid #333333 !important;border-radius:8px !important;font-size:13px;font-weight:700;color:#e0e0e0;font-family:inherit;padding:6px 8px !important;outline:none;box-sizing:border-box;" />
         </div>
 
         <div style="display:flex;align-items:center;justify-content:flex-end;padding:10px 10px;border-left:1px solid #333333;font-size:14px;font-weight:900;color:#ffffff;white-space:nowrap;">
