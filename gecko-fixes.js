@@ -758,7 +758,7 @@ window.editarPresupuesto = function (id) {
     }, 150);
 };
 
-// Hook switchMenu para auto-render al entrar a pedidos
+// Hook switchMenu unificado — pedidos, finanzas, presupuestoManual
 const _switchMenuOriginal = window.switchMenu;
 window.switchMenu = function (view) {
     if (typeof _switchMenuOriginal === 'function') _switchMenuOriginal(view);
@@ -770,6 +770,9 @@ window.switchMenu = function (view) {
     }
     if (view === 'finanzas') {
         setTimeout(() => window.renderizarFinanzas(), 50);
+    }
+    if (view === 'presupuestoManual') {
+        setTimeout(() => window.abrirPresupuestadorManual(window._editandoPresupuestoId || null), 30);
     }
 };
 
@@ -4119,15 +4122,6 @@ window.editarPresupuesto = function (id) {
         window.abrirPresupuestadorManual(id);
     } else {
         if (typeof _editarPresupuestoOrigGPM === 'function') _editarPresupuestoOrigGPM(id);
-    }
-};
-
-// ── Hook switchMenu para renderizar la sección al navegar ──
-const _switchMenuOrigGPM = window.switchMenu;
-window.switchMenu = function (view) {
-    if (typeof _switchMenuOrigGPM === 'function') _switchMenuOrigGPM(view);
-    if (view === 'presupuestoManual') {
-        setTimeout(() => window.abrirPresupuestadorManual(window._editandoPresupuestoId || null), 30);
     }
 };
 
