@@ -4208,3 +4208,14 @@ document.addEventListener('click', function(e) {
         '#gpmCondiciones::placeholder { color: #71717a !important; opacity: 1 !important; }';
     document.head.appendChild(s);
 })();
+
+// ══════════════════════════════════════════════════════
+// FIX: placeholder notas y condiciones — override webkit-text-fill-color
+// ══════════════════════════════════════════════════════
+(function() {
+    var s = document.createElement('style');
+    s.innerHTML =
+        '#gpmCondiciones::placeholder { color: #71717a !important; -webkit-text-fill-color: #71717a !important; opacity: 1 !important; }' +
+        '#gpmNotasInternas::placeholder { color: #71717a !important; -webkit-text-fill-color: #71717a !important; opacity: 1 !important; }';
+    document.head.appendChild(s);
+})();
