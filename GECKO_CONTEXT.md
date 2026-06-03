@@ -149,3 +149,40 @@ Los cambios de Design System (modales de finanzas) están en local y GitHub pero
 4. Cambiar botones provisorios en Materiales
 5. Subir todo a Hostinger y usar en producción real
 6. Desarrollar cotizadores Láser / CNC
+
+---
+
+## PROTOCOLO DE DEBUGGING — REGLAS ANTES DE ARMAR CUALQUIER PROMPT
+
+Antes de escribir cualquier prompt para el agente, siempre seguir estos pasos:
+
+### Paso 1 — Inspeccionar el elemento real
+- Click derecho sobre el elemento con el bug → Inspeccionar
+- Verificar el `id` exacto del elemento en el HTML
+- Nunca asumir IDs — siempre confirmarlos visualmente
+- Ejemplo: asumimos `id="manualFecha"` y era `id="gpmFecha"`
+
+### Paso 2 — Probar el fix en la consola del browser ANTES de mandarlo al agente
+- Abrir F12 → Consola
+- Escribir el fix directamente en la consola y ver si funciona
+- Si funciona en consola → recién ahí armar el prompt para el agente
+- Esto evita ciclos de prompt → falla → nuevo prompt → falla
+
+### Paso 3 — Una conversación nueva por tarea en Antigravity
+- Cada bug o feature = conversación nueva en Antigravity
+- El agente acumula contexto y se confunde con historial viejo
+- Siempre empezar con git pull, siempre terminar con commit + push
+
+### Paso 4 — Prompts quirúrgicos, sin margen de interpretación
+- Decir exactamente QUÉ archivo, QUÉ línea buscar, QUÉ agregar
+- Agregar siempre al final: "No analices el archivo. No agregues nada extra."
+- Cuanto más corto y específico el prompt, menos errores comete el agente
+
+### Flujo completo de un fix
+1. Ver el bug en el browser
+2. Inspeccionar el elemento (F12 → Elements) → confirmar ID y estructura
+3. Probar el fix en consola (F12 → Console) → confirmar que funciona
+4. Armar prompt quirúrgico con los datos reales
+5. Nueva conversación en Antigravity → pegar prompt
+6. Verificar en browser (Ctrl+Shift+R para limpiar caché)
+7. Commit + push
