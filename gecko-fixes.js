@@ -3681,7 +3681,8 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
     let datosEdicion = null;
     if (presupuestoEditId) {
         const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-        datosEdicion = lista.find(x => String(x.id) === String(presupuestoEditId));
+        const _todosEdit = lista.filter(x => String(x.id) === String(presupuestoEditId));
+        datosEdicion = _todosEdit[_todosEdit.length - 1];
         window._editandoPresupuestoId = presupuestoEditId;
     } else {
         window._editandoPresupuestoId = null;
@@ -4226,3 +4227,14 @@ document.addEventListener('click', function (e) {
         '#gpmNotasInternas::placeholder { color: #71717a !important; -webkit-text-fill-color: #71717a !important; opacity: 1 !important; }';
     document.head.appendChild(s);
 })();
+
+// ══════════════════════════════════════════════════════
+// FIX: renderPresupuestos al cargar sección Pedidos
+// ══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+        if (typeof renderPresupuestos === 'function') {
+            renderPresupuestos();
+        }
+    }, 1500);
+});
