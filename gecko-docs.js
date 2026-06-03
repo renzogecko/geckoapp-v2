@@ -301,7 +301,8 @@ window.generarDocOT = async function (p) {
 // ══════════════════════════════════════════════════════════════
 window.verDocumento = async function (id) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const p = lista.find(x => String(x.id) === String(id));
+    const todos = lista.filter(x => String(x.id) === String(id));
+    const p = todos[todos.length - 1];
     if (!p) { alert('No se encontró el documento.'); return; }
 
     const esOT = p.status === 'OT';
