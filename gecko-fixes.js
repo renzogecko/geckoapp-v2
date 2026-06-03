@@ -205,11 +205,11 @@ window.abrirCotizadorManual = function () {
     document.body.appendChild(modal);
 
     // Bug fix: forzar apertura del calendario en input[type=date]
-    setTimeout(function() {
+    setTimeout(function () {
         var campoFecha = document.getElementById('manualFecha');
         if (campoFecha) {
-            campoFecha.addEventListener('click', function() {
-                try { this.showPicker(); } catch(e) {}
+            campoFecha.addEventListener('click', function () {
+                try { this.showPicker(); } catch (e) { }
             });
         }
     }, 100);
@@ -3520,7 +3520,7 @@ window.addEventListener('load', function () {
     setTimeout(function () {
 
         // Funciones maestras de clientes movidas al scope global.
-        
+
         // Forzar la tabla nueva al cargar
         window.renderClientes();
 
@@ -3528,12 +3528,12 @@ window.addEventListener('load', function () {
 });
 
 // ── GECKO FIXES: FUNCIONES MAESTRAS DE CLIENTES ──
-window._geckoBadgeFijo = function(clienteNombre) {
+window._geckoBadgeFijo = function (clienteNombre) {
     const ahora = new Date();
     const mesActual = ahora.getMonth();
     const anioActual = ahora.getFullYear();
     const listaP = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    
+
     const totalMes = listaP.filter(p => {
         if (p.cliente !== clienteNombre || p.status !== 'OT' || !p.fecha) return false;
         const parts = p.fecha.split('/');
@@ -3553,32 +3553,32 @@ window._geckoBadgeFijo = function(clienteNombre) {
 window._geckoRenderFijo = function () {
     const tbody = document.getElementById('listaClientesMaster');
     if (!tbody) return;
-    
+
     let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
     if (bdClientes.length === 0) bdClientes = JSON.parse(localStorage.getItem('gecko_clientes')) || [];
-    
+
     window.LISTA_CLIENTES = bdClientes;
     const termino = (document.getElementById('buscadorClientes')?.value || '').toLowerCase();
     tbody.innerHTML = '';
-    
-    if (bdClientes.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">No hay clientes.</td></tr>'; 
-        return; 
+
+    if (bdClientes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">No hay clientes.</td></tr>';
+        return;
     }
 
     bdClientes.forEach(c => {
-        if (termino && !c.nombre.toLowerCase().includes(termino) && !(c.cuit||'').toLowerCase().includes(termino)) return;
-        
+        if (termino && !c.nombre.toLowerCase().includes(termino) && !(c.cuit || '').toLowerCase().includes(termino)) return;
+
         const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-        let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total)||0) - (parseFloat(o.adelanto)||0)), 0);
+        let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);
 
         let wp = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
         let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
 
         const tr = document.createElement('tr');
         tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
-        tr.onclick = function() { if(typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre); };
-        
+        tr.onclick = function () { if (typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre); };
+
         tr.innerHTML = `
             <td class="py-4 px-6">
                 <div class="flex items-center">
@@ -3609,14 +3609,14 @@ setInterval(() => {
         window.renderClientes = window._geckoRenderFijo;
         window.obtenerBadgeScoring = window._geckoBadgeFijo;
     }
-    
+
     let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
     if (bdClientes.length > 0 && document.getElementById('listaClientesMaster')?.innerHTML === '') {
         window._geckoRenderFijo();
     }
 }, 500);
 
-window.guardarCliente = function() {
+window.guardarCliente = function () {
     const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
     if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
 
@@ -3627,7 +3627,7 @@ window.guardarCliente = function() {
         id: 'client_' + Date.now(),
         nombre: nombre,
         cuits: cuits,
-        cuit: cuits[0] || '', 
+        cuit: cuits[0] || '',
         tel: document.getElementById('nuevoClienteTel')?.value || '',
         emails: emails,
         email: emails[0] || '',
@@ -3640,7 +3640,7 @@ window.guardarCliente = function() {
     const index = bdClientes.findIndex(c => c.nombre.toLowerCase() === nombre.toLowerCase());
     if (index !== -1) bdClientes[index] = nuevoCliente;
     else bdClientes.push(nuevoCliente);
-    
+
     localStorage.setItem('clientes', JSON.stringify(bdClientes));
     localStorage.setItem('gecko_clientes', JSON.stringify(bdClientes));
     window.LISTA_CLIENTES = bdClientes;
@@ -3660,8 +3660,8 @@ window.guardarCliente = function() {
 
     const modal = document.getElementById('modalNuevoCliente');
     if (modal) modal.style.display = 'none';
-    
-    if(typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
+
+    if (typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
     window._geckoRenderFijo();
 };
 
@@ -3687,15 +3687,15 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         window._editandoPresupuestoId = null;
     }
 
-    const clienteInicial  = datosEdicion?.cliente       || '';
-    const tituloInicial   = datosEdicion?.titulo         || '';
-    const areaInicial     = datosEdicion?.categoria      || 'Gráfica';
-    const notasInternas   = datosEdicion?.notasInternas  || '';
-    const condiciones     = datosEdicion?.condiciones    || '';
-    const itemsIniciales  = datosEdicion?.items          || [];
+    const clienteInicial = datosEdicion?.cliente || '';
+    const tituloInicial = datosEdicion?.titulo || '';
+    const areaInicial = datosEdicion?.categoria || 'Gráfica';
+    const notasInternas = datosEdicion?.notasInternas || '';
+    const condiciones = datosEdicion?.condiciones || '';
+    const itemsIniciales = datosEdicion?.items || [];
 
     // Opciones del select de área
-    const areas = ['Gráfica','Corpóreos','Láser / CNC','Bastidores','Textil','Impresión 3D','General'];
+    const areas = ['Gráfica', 'Corpóreos', 'Láser / CNC', 'Bastidores', 'Textil', 'Impresión 3D', 'General'];
     const areaOpts = areas.map(a =>
         `<option value="${a}" ${areaInicial === a ? 'selected' : ''}>${a}</option>`
     ).join('');
@@ -3852,7 +3852,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
       <div style="display:flex;justify-content:flex-end;align-items:center;padding:20px 0;gap:10px;">
         <button onclick="window._gpmGuardar('Cotizado')"
           style="padding:12px 20px;background:transparent;border:1px solid #333333;border-radius:12px;color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
-          Guardar presupuesto
+          Generar Presupuesto
         </button>
         <button onclick="window._gpmGuardar('OT')"
           style="padding:12px 20px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
@@ -3909,7 +3909,7 @@ window._gpmInitToggles = function () {
         const el = document.getElementById(id);
         if (!el) return;
         const sliderId = id + 'Slider';
-        const thumbId  = id + 'Thumb';
+        const thumbId = id + 'Thumb';
         el.addEventListener('change', () => window._gpmSyncToggle(id, sliderId, thumbId));
     });
 };
@@ -3920,8 +3920,8 @@ window._gpmAgregarItem = function (datos = null) {
     if (!lista) return;
     const n = lista.querySelectorAll('.gpm-item').length + 1;
     const titulo = (datos?.titulo || '').replace(/"/g, '&quot;');
-    const desc   = datos?.descripcion || '';
-    const cant   = datos?.cantidad || 1;
+    const desc = datos?.descripcion || '';
+    const cant = datos?.cantidad || 1;
     const precio = datos?.precio || '';
 
     const div = document.createElement('div');
@@ -3930,7 +3930,7 @@ window._gpmAgregarItem = function (datos = null) {
     div.innerHTML = `
       <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px 130px 100px 36px;align-items:stretch;">
 
-        <div style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#F15A24;">${String(n).padStart(2,'0')}</div>
+        <div style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#F15A24;">${String(n).padStart(2, '0')}</div>
 
         <div style="padding:12px 10px;display:flex;flex-direction:column;gap:6px;border-left:1px solid #333333;">
           <input class="gpm-item-title" type="text" value="${titulo}" placeholder="Título del trabajo"
@@ -3994,14 +3994,14 @@ window._gpmRemoverItem = function (btn) {
 // ── Calcular totales ──
 window._gpmCalc = function () {
     const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
-    const pn  = s => parseFloat(String(s).replace(/[^0-9.]/g, '')) || 0;
+    const pn = s => parseFloat(String(s).replace(/[^0-9.]/g, '')) || 0;
 
     let sub = 0;
     document.querySelectorAll('#gpm-items-list .gpm-item').forEach(item => {
-        const qty   = pn(item.querySelector('.gpm-qty')?.value);
+        const qty = pn(item.querySelector('.gpm-qty')?.value);
         const price = pn(item.querySelector('.gpm-price')?.value);
-        const st    = qty * price;
-        const sv    = item.querySelector('.gpm-sv');
+        const st = qty * price;
+        const sv = item.querySelector('.gpm-sv');
         if (sv) sv.textContent = fmt(st);
         sub += st;
     });
@@ -4009,10 +4009,10 @@ window._gpmCalc = function () {
     // Descuento
     const descOn = document.getElementById('gpmTogDesc')?.checked;
     if (document.getElementById('gpmDescPanel')) document.getElementById('gpmDescPanel').style.display = descOn ? 'flex' : 'none';
-    if (document.getElementById('gpmRowDesc'))   document.getElementById('gpmRowDesc').style.display   = descOn ? 'flex' : 'none';
+    if (document.getElementById('gpmRowDesc')) document.getElementById('gpmRowDesc').style.display = descOn ? 'flex' : 'none';
     let descAmt = 0;
     if (descOn) {
-        const dv    = pn(document.getElementById('gpmDescVal')?.value);
+        const dv = pn(document.getElementById('gpmDescVal')?.value);
         const dtype = document.getElementById('gpmDescTipo')?.value;
         descAmt = dtype === 'pct' ? sub * (dv / 100) : dv;
         const el = document.getElementById('gpmDescMonto');
@@ -4027,7 +4027,7 @@ window._gpmCalc = function () {
     const ivaOn = document.getElementById('gpmTogIva')?.checked;
     if (document.getElementById('gpmRowIva')) document.getElementById('gpmRowIva').style.display = ivaOn ? 'flex' : 'none';
     const ivaAmt = ivaOn ? afterDisc * 0.21 : 0;
-    const elIva  = document.getElementById('gpmIvaMonto');
+    const elIva = document.getElementById('gpmIvaMonto');
     if (elIva) elIva.textContent = fmt(ivaAmt);
 
     const elSub = document.getElementById('gpmSubtotal');
@@ -4050,18 +4050,18 @@ window._gpmGuardar = function (status) {
     const items = [];
     document.querySelectorAll('#gpm-items-list .gpm-item').forEach(item => {
         const titulo = item.querySelector('.gpm-item-title')?.value?.trim();
-        const desc   = item.querySelector('.gpm-item-desc')?.value?.trim();
-        const qty    = parseFloat(item.querySelector('.gpm-qty')?.value) || 1;
+        const desc = item.querySelector('.gpm-item-desc')?.value?.trim();
+        const qty = parseFloat(item.querySelector('.gpm-qty')?.value) || 1;
         const precio = parseFloat(String(item.querySelector('.gpm-price')?.value || '').replace(/[^0-9.]/g, '')) || 0;
         if (titulo && precio > 0) {
             items.push({
-                tipo:          'manual',
-                nombre:        titulo,
+                tipo: 'manual',
+                nombre: titulo,
                 textoOpciones: titulo,
-                descripcion:   desc || '',
-                otDetalle:     desc || titulo,
-                costo:         precio * qty,
-                cantidad:      qty,
+                descripcion: desc || '',
+                otDetalle: desc || titulo,
+                costo: precio * qty,
+                cantidad: qty,
                 precioUnitario: precio
             });
         }
@@ -4083,10 +4083,10 @@ window._gpmGuardar = function (status) {
     const ivaOn = document.getElementById('gpmTogIva')?.checked;
     if (ivaOn) total *= 1.21;
 
-    const categoria    = document.getElementById('gpmCategoria')?.value    || 'Gráfica';
-    const titulo       = document.getElementById('gpmTitulo')?.value?.trim()    || '';
-    const notasInternas= document.getElementById('gpmNotasInternas')?.value?.trim() || '';
-    const condiciones  = document.getElementById('gpmCondiciones')?.value?.trim()   || '';
+    const categoria = document.getElementById('gpmCategoria')?.value || 'Gráfica';
+    const titulo = document.getElementById('gpmTitulo')?.value?.trim() || '';
+    const notasInternas = document.getElementById('gpmNotasInternas')?.value?.trim() || '';
+    const condiciones = document.getElementById('gpmCondiciones')?.value?.trim() || '';
 
     // Conectar con el sistema existente
     window.presupuesto = items;
@@ -4137,7 +4137,8 @@ window.abrirCotizadorManual = function () {
 const _editarPresupuestoOrigGPM = window.editarPresupuesto;
 window.editarPresupuesto = function (id) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const p = lista.find(x => String(x.id) === String(id));
+    const _todos = lista.filter(x => String(x.id) === String(id));
+    const p = _todos[_todos.length - 1];
     if (!p) return;
     const esManual = p.items && p.items.length > 0 && p.items.every(it => it.tipo === 'manual');
     if (esManual) {
@@ -4151,8 +4152,8 @@ window.editarPresupuesto = function (id) {
 console.log('🦎 GECKO: Presupuestador Manual (sección nativa) v2.0 cargado.');
 
 // Auto-render presupuestoManual si la URL tiene #presupuestoManual al cargar
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
+document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
         const hash = window.location.hash;
         if (hash === '#presupuestoManual') {
             if (typeof window.abrirPresupuestadorManual === 'function') {
@@ -4163,7 +4164,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // También escuchar el evento geckoDB_ready por si carga después
-document.addEventListener('geckoDB_ready', function() {
+document.addEventListener('geckoDB_ready', function () {
     const hash = window.location.hash;
     if (hash === '#presupuestoManual') {
         const container = document.getElementById('presupuestoManualContainer');
@@ -4176,16 +4177,16 @@ document.addEventListener('geckoDB_ready', function() {
 // ══════════════════════════════════════════════════════
 // FIX: showPicker en campo fecha del presupuestador manual nativo
 // ══════════════════════════════════════════════════════
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
     if (e.target && e.target.id === 'gpmFecha') {
-        try { e.target.showPicker(); } catch(err) {}
+        try { e.target.showPicker(); } catch (err) { }
     }
 });
 
 // ══════════════════════════════════════════════════════
 // FIX: Placeholders gpmNotasInternas y gpmCondiciones
 // ══════════════════════════════════════════════════════
-(function() {
+(function () {
     var style = document.createElement('style');
     style.innerHTML = [
         '#gpmNotasInternas::placeholder {',
@@ -4205,7 +4206,7 @@ document.addEventListener('click', function(e) {
 // ══════════════════════════════════════════════════════
 // FIX: color placeholder gpmNotasInternas y gpmCondiciones
 // ══════════════════════════════════════════════════════
-(function() {
+(function () {
     var s = document.createElement('style');
     s.innerHTML =
         '.dark #gpmNotasInternas::placeholder { color: #71717a !important; opacity: 1 !important; }' +
@@ -4218,7 +4219,7 @@ document.addEventListener('click', function(e) {
 // ══════════════════════════════════════════════════════
 // FIX: placeholder notas y condiciones — override webkit-text-fill-color
 // ══════════════════════════════════════════════════════
-(function() {
+(function () {
     var s = document.createElement('style');
     s.innerHTML =
         '#gpmCondiciones::placeholder { color: #71717a !important; -webkit-text-fill-color: #71717a !important; opacity: 1 !important; }' +
