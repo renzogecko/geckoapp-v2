@@ -193,7 +193,7 @@ window.abrirCotizadorManual = function () {
         <div style="display:flex;gap:12px;">
             <button onclick="window._guardarManual('Cotizado')"
                 style="flex:1;padding:14px;background:transparent;border:1px solid #F15A24;color:#F15A24;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">
-                Guardar Presupuesto
+                Generar Presupuesto
             </button>
             <button onclick="window._guardarManual('OT')"
                 style="flex:1;padding:14px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">
@@ -249,13 +249,18 @@ window._guardarManual = function (status) {
         const desc = fila.querySelector('.fila-manual-desc')?.value?.trim();
         const precio = parseFloat(fila.querySelector('.fila-manual-precio')?.value) || 0;
         if (desc && precio > 0) {
-            items.push({ tipo: 'manual', nombre: desc, textoOpciones: desc, costo: precio, otDetalle: desc });
+            items.push({ tipo: 'manual', nombre: desc, textoOpciones: desc, costo: precio, otDetalle: desc, origen: 'manual' });
         }
     });
     if (items.length === 0) { alert('Agregá al menos un ítem con descripción y precio.'); return; }
 
     const total = items.reduce((acc, it) => acc + it.costo, 0);
     const cat = document.getElementById('manualCategoria')?.value || 'Gráfica';
+
+    // Garantizar ID único
+    const _listaActual = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const _maxId = _listaActual.length > 0 ? Math.max(..._listaActual.map(x => parseInt(x.id) || 0)) : 1000;
+    window._nextPresupuestoId = _maxId + 1;
 
     window.presupuesto = items;
     if (document.getElementById('precioTotal')) document.getElementById('precioTotal').value = total;
@@ -281,7 +286,8 @@ window._guardarManual = function (status) {
 
 window.verDocumento = function (id) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const p = lista.find(x => String(x.id) === String(id));
+    const todos = lista.filter(x => String(x.id) === String(id));
+    const p = todos[todos.length - 1];
     if (!p) { alert('No se encontró el documento.'); return; }
 
     const saldo = (p.total || 0) - (p.sena || 0);
