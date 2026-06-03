@@ -203,6 +203,17 @@ window.abrirCotizadorManual = function () {
     </div>`;
 
     document.body.appendChild(modal);
+
+    // Bug fix: forzar apertura del calendario en input[type=date]
+    setTimeout(function() {
+        var campoFecha = document.getElementById('manualFecha');
+        if (campoFecha) {
+            campoFecha.addEventListener('click', function() {
+                try { this.showPicker(); } catch(e) {}
+            });
+        }
+    }, 100);
+
     window._agregarFilaManual();
 };
 
