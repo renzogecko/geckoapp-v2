@@ -1,57 +1,17 @@
-***Cambios del sistema.*** 
+# Cambios del sistema
 
+## RESUELTOS
+- Campo fecha presupuestador manual — showPicker al hacer click
+- Placeholders Notas y Condiciones — color gris correcto
+- Preview al guardar — abre el documento correcto sin IDs duplicados
+- Botón "Guardar Presupuesto" → "Generar Presupuesto"
+- Editar presupuesto manual — abre el presupuestador manual con datos correctos
+- Lista de presupuestos vacía al cargar — se renderiza con delay de 2000ms
 
-
-**Modal "nuevo cliente":** 
-
-\- Agregar nombre del cuit 
-
-\- Agregar multiples teléfonos y campo del nombre del telefono (para saber con quien hablas). 
-
-
-
-
-
-**Sección "clientes"**
-
-\- Sacar de la caja contenedora, que sea deslizable para abajo no en la caja contenedora.
-
-
-
-
-
-
-
-**Sección presupuestos.** 
-
-\- Al abrir un presupeusto manual queda cargado el ultimo que se hizo. Deberia iniciarse sin nada. 
-
-\- si el presupuesto se armo manual, Al editar se debería abrir el modal manual para modificar. 
-
-\- Al generar el presupeusto el texto sale en el print en forma duplicada. Como titulo y como descripción de trabajo.
-
-**Modal presupuesto manual.**  
-
-
-
-**Sección "Pedidos"**
-
-&#x20;
-
-* Sacar de la caja contenedora, que sea deslizable para abajo no en la caja contenedora.
-* Modal "EDITAR OT" - darle el estilo gecko, Que se pueda modificar - En la fecha que abra el calendario. 
-
-
-
-
-
-Modificar Modales de presupuestos
-
-- Agregar ITEM de colocacion en todos los presupeustos, para cargar de froma manual.  
-
-
-Seccion materiales pestaña servicios.
-- El editar un servicio no se abre el modal precargado, se abre limpio. 
-
-
-
+## PENDIENTES
+- Campo blanco al escribir en inputs — autocompletado nativo del browser, sin solución CSS limpia
+- Modal nuevo cliente — agregar CUIT y múltiples teléfonos con nombre
+- Sección Clientes — sacar de caja contenedora, scroll libre
+- Sección Pedidos — sacar de caja contenedora, scroll libre
+- Al abrir presupuesto manual queda cargado el último — debería iniciarse vacío
+- Al generar presupuesto el texto sale duplicado en el print
