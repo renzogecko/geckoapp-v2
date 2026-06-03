@@ -4195,3 +4195,16 @@ document.addEventListener('click', function(e) {
     ].join('\n');
     document.head.appendChild(style);
 })();
+
+// ══════════════════════════════════════════════════════
+// FIX: color placeholder gpmNotasInternas y gpmCondiciones
+// ══════════════════════════════════════════════════════
+(function() {
+    var s = document.createElement('style');
+    s.innerHTML =
+        '.dark #gpmNotasInternas::placeholder { color: #71717a !important; opacity: 1 !important; }' +
+        '.dark #gpmCondiciones::placeholder { color: #71717a !important; opacity: 1 !important; }' +
+        '#gpmNotasInternas::placeholder { color: #71717a !important; opacity: 1 !important; }' +
+        '#gpmCondiciones::placeholder { color: #71717a !important; opacity: 1 !important; }';
+    document.head.appendChild(s);
+})();
