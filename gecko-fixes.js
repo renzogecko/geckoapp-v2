@@ -4166,3 +4166,12 @@ document.addEventListener('geckoDB_ready', function() {
         }
     }
 });
+
+// ══════════════════════════════════════════════════════
+// FIX: showPicker en campo fecha del presupuestador manual nativo
+// ══════════════════════════════════════════════════════
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'manualFecha') {
+        try { e.target.showPicker(); } catch(err) {}
+    }
+});
