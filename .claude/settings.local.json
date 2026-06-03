@@ -3,7 +3,22 @@
     "allow": [
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "PowerShell(git pull)",
+      "PowerShell(git add \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
+      "PowerShell(git commit -m \"fix: corregir id campo fecha showPicker gpmFecha\")",
+      "PowerShell(git push)",
+      "Bash(Get-Content \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\" -Tail 5)",
+      "Bash(Get-Content \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
+      "Bash(Select-Object -Last 5)",
+      "Bash(rmdir /s /q .vite)",
+      "Bash(rmdir /s /q node_modules/.vite)",
+      "Bash(findstr /n \"todos.length\\\\|Generar Presupuesto\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
+      "Bash(findstr /n \"todos.length\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
+      "Bash(findstr /n \"Generar Presupuesto\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
+      "Bash(findstr /n \"todos\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
+      "Bash(findstr /n \"Generar\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")"
     ]
   }
 }
