@@ -4297,12 +4297,22 @@ window._gpmGuardar = function (status) {
 // ── Hook procesarGuardado para inyectar metadatos extra ──
 const _procesarGuardadoOrigGPM = window.procesarGuardado;
 window.procesarGuardado = function (status) {
+    const _editIdAntes = window._editandoPresupuestoId;
+    const _nextIdAntes = window.nextBudgetId || (parseInt(localStorage.getItem('gecko_nextId')) || 1001);
     _procesarGuardadoOrigGPM(status);
     if (window._gpmMetadataPendiente) {
         setTimeout(() => {
             const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            const editId = window._editandoPresupuestoId;
-            const target = editId ? lista.find(x => String(x.id) === String(editId)) : lista[lista.length - 1];
+            let target;
+            if (_editIdAntes) {
+                target = lista.find(x => String(x.id) === String(_editIdAntes));
+            } else {
+                const ts = window._gpmMetadataPendiente?._tsGuardado;
+                target = ts
+                    ? lista.find(x => x._tsGuardado === ts)
+                    : lista.find(x => String(x.id) === String(_nextIdAntes));
+                if (!target) target = lista[lista.length - 1];
+            }
             if (target) {
                 Object.assign(target, window._gpmMetadataPendiente);
                 localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
