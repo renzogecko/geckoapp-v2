@@ -22,4 +22,5 @@
 - en el modal de gestion de insumos, los precios deben redonder siempre en numero redondo, no dar decimales.. hay un bug que redondea segun el margen real, lo que deberia rendondear es el numero del valor del insumo. 
 - Revisar por que se borraron los numeros del precio al gremio. 
 - Al imprimir los presupesto o decargar el PDF, el nombre del archivo debe ser "PRES_(nombre del cliente) - (Trabajo)"
-.
+- En el cotizador de grafica , tarjeta de "montado" agregarle las unidades a los items de alto y ancho (metros, centimetros, milimetros) lo que corresponda. (Ej: 1.5mts o 150cm) , siempre tiene que estar en la unidad que cargaste el item. 
+- En el cotizador de grafica , tarjeta de "montado" el precio se debe calcular siempre por mas que no pongamos los metros lineales, si no se cargan los metros lineales de corte, igual tiene q calcular el precio de todas formas con los otros datos. Si se cargan los metros lineales de corte automatiamente se suma. Si se deja en 0 el sistema deberia detectar que se debe calcular por la suma de los items (Ej. si pones 4 items de 100cm de ancho y 1mts de largo, deberia calcular solo el area sin sumar el corte)
