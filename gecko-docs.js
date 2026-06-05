@@ -307,8 +307,8 @@ window.verDocumento = async function (id) {
 
     const esOT = p.status === 'OT';
     const html = esOT
-        ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: [] })
-        : await window.generarDocPresupuesto({ ...p, mostrarPrecios: true, imagenes: [] });
+        ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: p.imagenes || [] })
+        : await window.generarDocPresupuesto({ ...p, mostrarPrecios: p.mostrarPrecios !== false, imagenes: p.imagenes || [] });
 
     const htmlPreview = html.replace(
         '<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>',
