@@ -3736,7 +3736,14 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         `<option value="${a}" ${areaInicial === a ? 'selected' : ''}>${a}</option>`
     ).join('');
 
-    window._gpmImagenes = [];
+    if (presupuestoEditId) {
+        const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+        const doc = lista.filter(x => String(x.id) === String(presupuestoEditId));
+        const docActual = doc[doc.length - 1];
+        window._gpmImagenes = (docActual?.imagenes || []).filter(img => typeof img === 'string' && img.startsWith('data:'));
+    } else {
+        window._gpmImagenes = [];
+    }
     container.innerHTML = `
     <div style="max-width:100%;">
 
@@ -3979,6 +3986,31 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
     }
 
     window._gpmCalc();
+
+    // Mostrar previews de imágenes si hay imágenes cargadas (modo edición)
+    if (window._gpmImagenes.length > 0) {
+        const preview = document.getElementById('gpmImagenesPreview');
+        if (preview) {
+            window._gpmImagenes.forEach(b64 => {
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'position:relative;';
+                const img = document.createElement('img');
+                img.src = b64;
+                img.style.cssText = 'height:72px;width:auto;border-radius:10px;border:1px solid #333333;object-fit:cover;';
+                const del = document.createElement('button');
+                del.innerHTML = '✕';
+                del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;font-weight:900;';
+                del.onclick = () => {
+                    const idx = window._gpmImagenes.indexOf(b64);
+                    if (idx > -1) window._gpmImagenes.splice(idx, 1);
+                    wrap.remove();
+                };
+                wrap.appendChild(img);
+                wrap.appendChild(del);
+                preview.appendChild(wrap);
+            });
+        }
+    }
 };
 
 // ── Sincronizar estilos del toggle visualmente ──
@@ -4245,11 +4277,9 @@ window._gpmGuardar = function (status) {
         if (typeof window._imprimirDocumento === 'function') {
             window._imprimirDocumento(String(_idParaPreview));
         }
-
-        // Redirigir a la lista correcta después de que el usuario cierre el preview
         const _tabDestino = _statusFinal === 'OT' ? 'ots' : 'presupuestos';
         window._gpmPostPrintRedirect = _tabDestino;
-    }, 800);
+    }, 1200);
 };
 
 // ── Hook procesarGuardado para inyectar metadatos extra ──
