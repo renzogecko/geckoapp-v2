@@ -1531,26 +1531,26 @@
         <p class="text-gecko text-[10px] font-black uppercase tracking-widest">Mercado</p>
         <div>
           <label class="gecko-label">Cotización Dólar (ARS)</label>
-          <input type="number" id="cfgCotizacionDolar" class="gecko-input-line" placeholder="1420">
+          <input type="number" id="cfgCotizacionDolar" class="gecko-input-line" style="padding-left:4px;" placeholder="1420">
         </div>
         <div>
           <label class="gecko-label">IVA (%)</label>
-          <input type="number" id="cfgIva" class="gecko-input-line" placeholder="21">
+          <input type="number" id="cfgIva" class="gecko-input-line" style="padding-left:4px;" placeholder="21">
         </div>
         <div>
           <label class="gecko-label">Multiplicador Global de Venta</label>
-          <input type="number" id="cfgMultGlobal" class="gecko-input-line" placeholder="2.0" step="0.1">
+          <input type="number" id="cfgMultGlobal" class="gecko-input-line" style="padding-left:4px;" placeholder="2.0" step="0.1">
         </div>
       </div>
       <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 space-y-6">
         <p class="text-gecko text-[10px] font-black uppercase tracking-widest">Clientes</p>
         <div>
           <label class="gecko-label">Umbral cliente Oro ($)</label>
-          <input type="number" id="cfgNivelOro" class="gecko-input-line" placeholder="250000">
+          <input type="number" id="cfgNivelOro" class="gecko-input-line" style="padding-left:4px;" placeholder="250000">
         </div>
         <div>
           <label class="gecko-label">Umbral cliente Plata ($)</label>
-          <input type="number" id="cfgNivelPlata" class="gecko-input-line" placeholder="100000">
+          <input type="number" id="cfgNivelPlata" class="gecko-input-line" style="padding-left:4px;" placeholder="100000">
         </div>
       </div>
       <button onclick="window.guardarConfiguracion()"
@@ -1565,26 +1565,26 @@
         <p class="text-gecko text-[10px] font-black uppercase tracking-widest">Mano de Obra y Máquinas</p>
         <div>
           <label class="gecko-label">Hora Hombre (ARS)</label>
-          <input type="number" id="cfgHoraHombre" class="gecko-input-line" placeholder="3500">
+          <input type="number" id="cfgHoraHombre" class="gecko-input-line" style="padding-left:4px;" placeholder="3500">
         </div>
         <div>
           <label class="gecko-label">Hora Láser (ARS)</label>
-          <input type="number" id="cfgHoraLaser" class="gecko-input-line" placeholder="0">
+          <input type="number" id="cfgHoraLaser" class="gecko-input-line" style="padding-left:4px;" placeholder="0">
         </div>
         <div>
           <label class="gecko-label">Hora CNC Router (ARS)</label>
-          <input type="number" id="cfgHoraCNC" class="gecko-input-line" placeholder="0">
+          <input type="number" id="cfgHoraCNC" class="gecko-input-line" style="padding-left:4px;" placeholder="0">
         </div>
         <div>
           <label class="gecko-label">Hora Impresión 3D (ARS)</label>
-          <input type="number" id="cfgHora3D" class="gecko-input-line" placeholder="0">
+          <input type="number" id="cfgHora3D" class="gecko-input-line" style="padding-left:4px;" placeholder="0">
         </div>
       </div>
       <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 space-y-4">
         <p class="text-gecko text-[10px] font-black uppercase tracking-widest">Condiciones de venta (se imprimen en presupuestos)</p>
         <textarea id="cfgCondicionesVenta" rows="5"
           class="gecko-input-line"
-          style="resize:vertical;"
+          style="resize:vertical;padding-left:4px;"
           placeholder="Ej: Validez 15 días. Seña 50%..."></textarea>
       </div>
       <button onclick="window.guardarConfiguracion()"

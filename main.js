@@ -767,8 +767,9 @@ window.agregarFilaParametroLaser = function() {
     tr.innerHTML = `
         <td class=”py-3 px-5”>
             <input type=”text”
-                class=”fila-nueva-nombre w-full bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-white font-bold text-[13px] py-1”
+                class=”fila-nueva-nombre font-bold text-white text-[13px] bg-transparent border-b border-zinc-800 focus:border-gecko outline-none w-full py-1 mb-0.5”
                 placeholder=”Ej: CORTE LASER - MDF 3MM”>
+            <p class=”text-zinc-600 text-[10px] font-bold uppercase tracking-wider mt-0.5”>MTL</p>
         </td>
         <td class=”py-3 px-4 text-center”>
             <input type=”number” step=”0.5”
