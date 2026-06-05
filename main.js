@@ -679,6 +679,7 @@ window.renderTablaParametrosLaser = async function() {
                         oninput="window._actualizarParamLaser(this)">
                 </div>
             </td>
+            <td class="py-3 px-3"></td>
         </tr>`;
     }).join('');
 };
@@ -763,44 +764,68 @@ window.agregarFilaParametroLaser = function() {
     const tbody = document.getElementById('tablaParametrosLaser');
     if (!tbody) return;
     const tr = document.createElement('tr');
-    tr.className = 'fila-laser-nueva hover:bg-white/3 transition-colors';
-    tr.innerHTML = `
-        <td class=”py-3 px-5”>
-            <input type=”text”
-                class=”fila-nueva-nombre font-bold text-white text-[13px] bg-transparent border-b border-zinc-800 focus:border-gecko outline-none w-full py-1 mb-0.5”
-                placeholder=”Ej: CORTE LASER - MDF 3MM”>
-            <p class=”text-zinc-600 text-[10px] font-bold uppercase tracking-wider mt-0.5”>MTL</p>
-        </td>
-        <td class=”py-3 px-4 text-center”>
-            <input type=”number” step=”0.5”
-                class=”fila-nueva-espesor w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1”
-                placeholder=”—“>
-        </td>
-        <td class=”py-3 px-4 text-center”>
-            <input type=”number”
-                class=”fila-nueva-speed w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1”
-                placeholder=”—“>
-        </td>
-        <td class=”py-3 px-4 text-center”>
-            <input type=”number”
-                class=”fila-nueva-power w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1”
-                placeholder=”—“>
-        </td>
-        <td class=”py-3 px-4 text-right”>
-            <div class=”flex items-center justify-end gap-1”>
-                <span class=”text-zinc-600 text-[12px]”>$</span>
-                <input type=”number”
-                    class=”fila-nueva-precio w-24 text-right bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-gecko font-black text-[14px] py-1”
-                    placeholder=”0”>
-            </div>
-        </td>
-        <td class=”py-3 px-3 text-center”>
-            <button onclick=”this.closest('tr').remove()”
-                class=”text-zinc-700 hover:text-red-500 transition-colors font-bold text-[16px] leading-none”>✕</button>
-        </td>
-    `;
+    tr.className = 'fila-laser-nueva';
+
+    const td1 = document.createElement('td');
+    td1.style.cssText = 'padding:12px 20px;';
+    const inp1 = document.createElement('input');
+    inp1.type = 'text';
+    inp1.className = 'fila-nueva-nombre';
+    inp1.placeholder = 'Ej: CORTE LASER - MDF 3MM';
+    inp1.style.cssText = 'width:100%;background:transparent;border:none;border-bottom:1px solid #3f3f46;outline:none;color:white;font-weight:700;font-size:13px;padding:2px 0 4px;font-family:inherit;';
+    const sub1 = document.createElement('p');
+    sub1.textContent = 'MTL';
+    sub1.style.cssText = 'color:#52525b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;';
+    td1.appendChild(inp1);
+    td1.appendChild(sub1);
+
+    const mkTdCenter = (cls) => {
+        const td = document.createElement('td');
+        td.style.cssText = 'padding:12px 16px;text-align:center;';
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.className = cls;
+        inp.placeholder = '—';
+        inp.style.cssText = 'width:64px;text-align:center;background:transparent;border:none;border-bottom:1px solid #3f3f46;outline:none;color:#d4d4d8;font-weight:700;font-size:13px;padding:2px 0;font-family:inherit;';
+        td.appendChild(inp);
+        return td;
+    };
+
+    const td5 = document.createElement('td');
+    td5.style.cssText = 'padding:12px 16px;text-align:right;';
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:4px;';
+    const sign = document.createElement('span');
+    sign.textContent = '$';
+    sign.style.cssText = 'color:#52525b;font-size:12px;';
+    const inpPrecio = document.createElement('input');
+    inpPrecio.type = 'number';
+    inpPrecio.className = 'fila-nueva-precio';
+    inpPrecio.placeholder = '0';
+    inpPrecio.style.cssText = 'width:96px;text-align:right;background:transparent;border:none;border-bottom:1px solid #3f3f46;outline:none;color:#f15a24;font-weight:900;font-size:14px;padding:2px 0;font-family:inherit;';
+    wrapper.appendChild(sign);
+    wrapper.appendChild(inpPrecio);
+    td5.appendChild(wrapper);
+
+    const td6 = document.createElement('td');
+    td6.style.cssText = 'padding:12px;text-align:center;';
+    const btn = document.createElement('button');
+    btn.textContent = '✕';
+    btn.style.cssText = 'background:none;border:none;color:#3f3f46;font-size:16px;font-weight:900;cursor:pointer;line-height:1;';
+    btn.onmouseover = function() { this.style.color = '#ef4444'; };
+    btn.onmouseout = function() { this.style.color = '#3f3f46'; };
+    btn.onclick = function() { tr.remove(); };
+    td6.appendChild(btn);
+
+    tr.appendChild(td1);
+    tr.appendChild(mkTdCenter('fila-nueva-espesor'));
+    tr.appendChild(mkTdCenter('fila-nueva-speed'));
+    tr.appendChild(mkTdCenter('fila-nueva-power'));
+    tr.appendChild(td5);
+    tr.appendChild(td6);
+
     tbody.appendChild(tr);
-    tr.querySelector('.fila-nueva-nombre')?.focus();
+    inp1.focus();
 };
 
 window._actualizarNombreFila = function(input) {
