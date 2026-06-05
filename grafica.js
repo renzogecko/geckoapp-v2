@@ -70,6 +70,8 @@ window.GeckoGrafica = {
         if (!panel) return;
 
         panel.addEventListener('input', (e) => {
+            // Solo ejecutar si Gráfica está activa en el panel
+            if (!document.getElementById('graficaCat') && !document.getElementById('graficaMatEspec')) return;
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
                 this.syncLaminado();
                 this.calcular();
@@ -77,6 +79,8 @@ window.GeckoGrafica = {
         });
 
         panel.addEventListener('change', (e) => {
+            // Solo ejecutar si Gráfica está activa en el panel
+            if (!document.getElementById('graficaCat') && !document.getElementById('graficaMatEspec')) return;
             if (e.target.id === 'graficaCat') {
                 this.actualizarMateriales();
                 this.actualizarTerminaciones();

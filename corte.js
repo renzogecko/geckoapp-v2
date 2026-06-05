@@ -334,6 +334,17 @@ window.GeckoCorte = {
         this.state.detalle = `${matName} | ${cant} unid. | ${mlTotales.toFixed(2)} ML ${llevaMontado ? '+ Montado' : ''}`;
         this.state.matName = matName;
 
+        // Actualizar panel derecho (mismo patrón que grafica.js)
+        window.itemActualCotizado = {
+            id: Date.now(),
+            tipo: 'grafica',
+            nombre: document.getElementById('corteNombre')?.value || 'Vinilo Corte',
+            material: matName,
+            detalle: this.state.detalle,
+            costo: totalFinal,
+            textoOpciones: matName
+        };
+
         return totalFinal;
     },
 
