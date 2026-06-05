@@ -2502,6 +2502,11 @@
 /* Presupuesto Manual — ítems lista */
 .gpm-item:last-child { border-bottom: none !important; }
 
+/* Fila nueva en tabla parámetros láser — sin borde en el nombre */
+.fila-laser-nueva td:first-child input {
+    border-bottom: none !important;
+}
+
 /* Presupuesto Manual — placeholders notas/condiciones */
 #gpmNotasInternas::placeholder,
 #gpmCondiciones::placeholder { color: #52525b !important; font-weight: 400 !important; }
