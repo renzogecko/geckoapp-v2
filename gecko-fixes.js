@@ -361,7 +361,7 @@ window._imprimirDocumento = async function (id) {
         .replace('</body>', `
         <div id="previewToolbar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:9999;background:#141417;border:1px solid #27272a;border-radius:16px;padding:12px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
             <button onclick="window.print()" style="background:#F15A24;border:none;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Imprimir</button>
-            <button onclick="window.print()" style="background:#1e1f20;border:1px solid #333;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Descargar PDF</button>
+            <button onclick="window._descargarDesdePopup()" style="background:#1e1f20;border:1px solid #333;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Descargar PDF</button>
             <button onclick="window.close()" style="background:transparent;border:1px solid #3f3f46;color:#71717a;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar</button>
         </div>
         <style>@media print { #previewToolbar { display: none !important; } }</style>
@@ -402,24 +402,85 @@ window._descargarDocumento = async function (id) {
     const clienteSlug = (p.cliente || 'cliente').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_');
     const tituloSlug = (p.titulo || '').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_');
     const nombreArchivo = esOT
-        ? `OT_${String(id).padStart(4,'0')}_${clienteSlug}`
-        : `Pres_${clienteSlug}${tituloSlug ? '_' + tituloSlug : ''}`;
+        ? `OT_${String(id).padStart(4,'0')}_${clienteSlug}.pdf`
+        : `Pres_${clienteSlug}${tituloSlug ? '_' + tituloSlug : ''}.pdf`;
 
-    const win = window.open('', '_blank', 'width=960,height=780');
-    if (!win) { alert('Permití las ventanas emergentes para descargar.'); return; }
+    // Crear iframe oculto para renderizar el HTML
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:794px;height:1123px;border:none;';
+    document.body.appendChild(iframe);
 
-    const htmlConAutoprint = html.replace('</body>', `
-        <script>
-            window.onload = function() {
-                document.title = '${nombreArchivo}';
-                window.print();
-                window.onafterprint = function() { window.close(); };
-            };
-        <\/script>
-        </body>`);
+    iframe.onload = async function() {
+        try {
+            const canvas = await html2canvas(iframe.contentDocument.body, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                width: 794,
+                windowWidth: 794
+            });
 
-    win.document.write(htmlConAutoprint);
-    win.document.close();
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+            let position = 0;
+            let remaining = imgHeight;
+
+            while (remaining > 0) {
+                pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, imgHeight);
+                remaining -= pageHeight;
+                position -= pageHeight;
+                if (remaining > 0) pdf.addPage();
+            }
+
+            pdf.save(nombreArchivo);
+        } catch(e) {
+            console.error('Error generando PDF:', e);
+            alert('Error al generar el PDF. Intentá con Imprimir → Guardar como PDF.');
+        } finally {
+            document.body.removeChild(iframe);
+        }
+    };
+
+    // Inyectar HTML limpio en el iframe
+    const htmlLimpio = html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace('</head>', '<style>body{margin:0;padding:0;background:#fff;}</style></head>');
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(htmlLimpio);
+    iframe.contentDocument.close();
+};
+
+window._descargarDesdePopup = function() {
+    // Descargar directamente desde el contenido del popup actual
+    const { jsPDF } = window.jspdf;
+    const nombreArchivo = document.title || 'presupuesto';
+    html2canvas(document.body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+    }).then(canvas => {
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgHeight = (canvas.height * pageWidth) / canvas.width;
+        let position = 0;
+        let remaining = imgHeight;
+        while (remaining > 0) {
+            pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, imgHeight);
+            remaining -= pageHeight;
+            position -= pageHeight;
+            if (remaining > 0) pdf.addPage();
+        }
+        pdf.save(nombreArchivo + '.pdf');
+    });
 };
 
 
