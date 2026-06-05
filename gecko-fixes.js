@@ -302,6 +302,7 @@ window.verDocumento = function (id) {
     const modal = document.createElement('div');
     modal.id = 'modalVerOT';
     modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    console.log('GECKO verDocumento:', id, 'imagenes:', p.imagenes?.length || 0, p);
     modal.innerHTML = `
     <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -360,6 +361,7 @@ window._imprimirDocumento = async function (id) {
         .replace('</body>', `
         <div id="previewToolbar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:9999;background:#141417;border:1px solid #27272a;border-radius:16px;padding:12px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
             <button onclick="window.print()" style="background:#F15A24;border:none;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Imprimir</button>
+            <button onclick="(function(){var a=document.createElement('a');var blob=new Blob([document.documentElement.outerHTML],{type:'text/html'});a.href=URL.createObjectURL(blob);a.download=document.title+'.html';a.click();})()" style="background:#1e1f20;border:1px solid #333;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Descargar</button>
             <button onclick="window.close()" style="background:transparent;border:1px solid #3f3f46;color:#71717a;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar</button>
         </div>
         <style>@media print { #previewToolbar { display: none !important; } }</style>
@@ -387,7 +389,38 @@ window._imprimirDocumento = async function (id) {
     }, 500);
 };
 
-window._descargarDocumento = function (id) { window._imprimirDocumento(id); };
+window._descargarDocumento = async function (id) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const p = lista.find(x => String(x.id) === String(id));
+    if (!p) return;
+
+    const esOT = p.status === 'OT';
+    const html = esOT
+        ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: p.imagenes || [] })
+        : await window.generarDocPresupuesto({ ...p, entrega: p.fechaEntrega || 'A convenir', imagenes: p.imagenes || [] });
+
+    const clienteSlug = (p.cliente || 'cliente').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_');
+    const tituloSlug = (p.titulo || '').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_');
+    const nombreArchivo = esOT
+        ? `OT_${String(id).padStart(4,'0')}_${clienteSlug}`
+        : `Pres_${clienteSlug}${tituloSlug ? '_' + tituloSlug : ''}`;
+
+    const win = window.open('', '_blank', 'width=960,height=780');
+    if (!win) { alert('Permití las ventanas emergentes para descargar.'); return; }
+
+    const htmlConAutoprint = html.replace('</body>', `
+        <script>
+            window.onload = function() {
+                document.title = '${nombreArchivo}';
+                window.print();
+                window.onafterprint = function() { window.close(); };
+            };
+        <\/script>
+        </body>`);
+
+    win.document.write(htmlConAutoprint);
+    win.document.close();
+};
 
 
 // ══════════════════════════════════════════════════════
