@@ -52,9 +52,9 @@ const GECKO_DB_DEFAULTS = {
  * @param {string|number} query - El nombre o ID del material/servicio.
  * @returns {Object|null} Ítem normalizado con costo, multiplicador y precioVenta.
  */
-window.getGeckoItem = function(query) {
+window.getGeckoItem = function (query) {
     if (!query) return null;
-    
+
     // Función de normalización universal solicitada
     const normalizar = (texto) => {
         return String(texto)
@@ -67,9 +67,9 @@ window.getGeckoItem = function(query) {
     const insumos = JSON.parse(localStorage.getItem('gecko_materiales')) || [];
     const servicios = JSON.parse(localStorage.getItem('geckoServicios')) || [];
     const pool = [...insumos, ...servicios];
-    
+
     const qNorm = normalizar(query);
-    
+
     const item = pool.find(i => {
         const iNorm = normalizar(i.nombre);
         // Búsqueda por ID exacto o por coincidencia normalizada (uno contiene al otro)
@@ -206,7 +206,7 @@ window.importarGeckoDB = function (input) {
             }
 
             if (confirm("Se van a FUSIONAR los datos del archivo con los actuales. Los ítems duplicados se actualizarán con la versión del backup. ¿Deseas continuar?")) {
-                
+
                 // Función auxiliar para fusionar listas por un campo clave
                 const fusionar = (actual, nueva, key = 'nombre') => {
                     const pool = new Map();
@@ -253,7 +253,7 @@ window.importarGeckoDB = function (input) {
                 // Ajustes Globales (Se sobreescriben para mantener integridad de arquitectura)
                 if (data.GECKO_DB) localStorage.setItem('GECKO_DB', JSON.stringify(data.GECKO_DB));
                 if (data.GECKO_SETTINGS) localStorage.setItem('GECKO_SETTINGS', JSON.stringify(data.GECKO_SETTINGS));
-                
+
                 // Cajas y Movimientos (Se sobreescriben para evitar inconsistencia de saldos)
                 if (data.cajas) localStorage.setItem('gecko_cajas', JSON.stringify(data.cajas));
                 if (data.movimientos) localStorage.setItem('gecko_movimientos', JSON.stringify(data.movimientos));
@@ -552,7 +552,7 @@ if (formConfig) {
 // SECCIÓN CONFIGURACIÓN — Tab switching + render + guardar
 // ══════════════════════════════════════════════════════
 
-window.switchConfigTab = function(tab) {
+window.switchConfigTab = function (tab) {
     ['finanzas', 'operativos', 'laser'].forEach(t => {
         const btn = document.getElementById('cfgTab-' + t);
         const content = document.getElementById('cfgContent-' + t);
@@ -565,7 +565,7 @@ window.switchConfigTab = function(tab) {
     if (tab === 'laser') window.renderTablaParametrosLaser();
 };
 
-window.initConfiguracion = function() {
+window.initConfiguracion = function () {
     const s = GECKO_SETTINGS;
     const v = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
     v('cfgCotizacionDolar', s.cotizacionDolar || 1420);
@@ -582,7 +582,7 @@ window.initConfiguracion = function() {
     window.switchConfigTab('finanzas');
 };
 
-window.guardarConfiguracion = function() {
+window.guardarConfiguracion = function () {
     const g = (id) => parseFloat(document.getElementById(id)?.value) || 0;
     GECKO_SETTINGS = {
         ...GECKO_SETTINGS,
@@ -608,7 +608,7 @@ window.guardarConfiguracion = function() {
     if (typeof renderInsumos === 'function') renderInsumos();
 };
 
-window.renderTablaParametrosLaser = async function() {
+window.renderTablaParametrosLaser = async function () {
     const tbody = document.getElementById('tablaParametrosLaser');
     if (!tbody) return;
 
@@ -621,7 +621,7 @@ window.renderTablaParametrosLaser = async function() {
             if (data && typeof data === 'object') {
                 localStorage.setItem('gecko_laserParams', JSON.stringify(data));
             }
-        } catch(e) {}
+        } catch (e) { }
     }
 
     const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
@@ -686,14 +686,14 @@ window.renderTablaParametrosLaser = async function() {
 
 window._laserParamsTemp = {};
 
-window._actualizarParamLaser = function(input) {
+window._actualizarParamLaser = function (input) {
     const servicio = input.dataset.servicio;
     const campo = input.dataset.campo;
     if (!window._laserParamsTemp[servicio]) window._laserParamsTemp[servicio] = {};
     window._laserParamsTemp[servicio][campo] = parseFloat(input.value) || input.value;
 };
 
-window.guardarParametrosLaser = async function() {
+window.guardarParametrosLaser = async function () {
     // 1. Leer servicios actuales del localStorage (ya sincronizado desde MySQL)
     const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
     const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
@@ -717,9 +717,9 @@ window.guardarParametrosLaser = async function() {
         const nombre = tr.querySelector('.fila-nueva-nombre')?.value.trim().toUpperCase();
         if (!nombre) return;
         const espesor = parseFloat(tr.querySelector('.fila-nueva-espesor')?.value) || 0;
-        const speed   = parseFloat(tr.querySelector('.fila-nueva-speed')?.value) || 0;
-        const power   = parseFloat(tr.querySelector('.fila-nueva-power')?.value) || 0;
-        const precio  = parseFloat(tr.querySelector('.fila-nueva-precio')?.value) || 0;
+        const speed = parseFloat(tr.querySelector('.fila-nueva-speed')?.value) || 0;
+        const power = parseFloat(tr.querySelector('.fila-nueva-power')?.value) || 0;
+        const precio = parseFloat(tr.querySelector('.fila-nueva-precio')?.value) || 0;
         const existeIdx = servicios.findIndex(s => s.nombre.trim().toUpperCase() === nombre);
         if (existeIdx === -1) {
             servicios.push({ id: 'laser_' + Date.now(), nombre, unidad: 'mtL', precio, precioVenta: precio, categoria: 'Servicios de Corte', costo: 0 });
@@ -751,7 +751,7 @@ window.guardarParametrosLaser = async function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(laserParams)
         });
-    } catch(e) {
+    } catch (e) {
         console.warn('GECKO: Error sincronizando con API, datos guardados solo en localStorage.', e);
     }
 
@@ -760,7 +760,7 @@ window.guardarParametrosLaser = async function() {
     window.renderTablaParametrosLaser();
 };
 
-window.agregarFilaParametroLaser = function() {
+window.agregarFilaParametroLaser = function () {
     const tbody = document.getElementById('tablaParametrosLaser');
     if (!tbody) return;
     const tr = document.createElement('tr');
@@ -812,9 +812,9 @@ window.agregarFilaParametroLaser = function() {
     const btn = document.createElement('button');
     btn.textContent = '✕';
     btn.style.cssText = 'background:none;border:none;color:#3f3f46;font-size:16px;font-weight:900;cursor:pointer;line-height:1;';
-    btn.onmouseover = function() { this.style.color = '#ef4444'; };
-    btn.onmouseout = function() { this.style.color = '#3f3f46'; };
-    btn.onclick = function() { tr.remove(); };
+    btn.onmouseover = function () { this.style.color = '#ef4444'; };
+    btn.onmouseout = function () { this.style.color = '#3f3f46'; };
+    btn.onclick = function () { tr.remove(); };
     td6.appendChild(btn);
 
     tr.appendChild(td1);
@@ -828,7 +828,7 @@ window.agregarFilaParametroLaser = function() {
     inp1.focus();
 };
 
-window._actualizarNombreFila = function(input) {
+window._actualizarNombreFila = function (input) {
     const tr = input.closest('tr');
     if (!tr) return;
     const nombre = input.value.trim().toUpperCase();
@@ -1009,7 +1009,7 @@ window.cambiarCategoriaCotizador = function (cat) {
         const modo = el.checked ? 'proyecto' : 'simple';
         window.globalEstimationMode = modo;
         localStorage.setItem('globalEstimationMode', modo);
-        
+
         // Disparar cálculos según categoría activa
         const cat = localStorage.getItem('gecko_activeCategory');
         if (cat === 'textil') window.calcularCostoTextil();
@@ -1585,7 +1585,7 @@ window.agregarItemAlCarritoUI = async function () {
     const btn = document.getElementById('btnConfirmarItem');
     if (!btn) return;
     const originalText = btn.innerHTML;
-    
+
     try {
         btn.innerHTML = 'Guardando...';
         const currentCat = window.itemActualCotizado.tipo;
@@ -2323,7 +2323,7 @@ function renderReportesDashboard() {
     const actividadCajas = {};
     LISTA_CAJAS.forEach(c => actividadCajas[c.nombre] = 0);
     movimientosMes.forEach(m => { if (actividadCajas[m.caja] !== undefined) actividadCajas[m.caja]++; });
-    
+
     const entriesActividad = Object.entries(actividadCajas).sort((a, b) => b[1] - a[1]);
     const cajaMasActivaName = entriesActividad.length > 0 ? entriesActividad[0][0] : null;
     const elMasActiva = document.getElementById('metricCajaMasActiva');
@@ -2978,7 +2978,7 @@ if (formTerminacion) {
 
             // 1. Sincronizar Array Global
             let localServicios = JSON.parse(localStorage.getItem('geckoServicios')) || [];
-            
+
             if (editId) {
                 const idx = localServicios.findIndex(t => t.id === parseInt(editId));
                 if (idx !== -1) localServicios[idx] = nuevaTerm;
@@ -2989,7 +2989,7 @@ if (formTerminacion) {
             // 2. Persistencia Total
             window.geckoServicios = localServicios;
             localStorage.setItem('geckoServicios', JSON.stringify(localServicios));
-            
+
             // 3. UI Feedback
             closeModal('modalTerminacion');
             if (typeof window.mostrarExito === 'function') {
@@ -2997,9 +2997,9 @@ if (formTerminacion) {
             }
 
             // 4. Re-renderizar lista forzando "TODOS" (Tarea 3)
-            filtrarServicios('TODOS'); 
+            filtrarServicios('TODOS');
             this.reset();
-            
+
             console.log("🦎 GECKO: Servicio sincronizado:", nuevaTerm);
         } catch (error) {
             console.error("❌ GECKO Error al guardar servicio:", error);
@@ -3031,7 +3031,7 @@ function compararCategorias(itemCat, filtroCat) {
 
 function filtrarServicios(categoriaSolicitada, btn = null) {
     window.filtroServiciosActual = (categoriaSolicitada || 'TODOS').toUpperCase().trim();
-    
+
     // UI: Actualizar estado de botones
     const container = document.querySelector('#contentMat-servicios .flex.gap-3');
     if (container) {
@@ -3052,25 +3052,25 @@ function filtrarServicios(categoriaSolicitada, btn = null) {
             btnTodos.classList.remove('bg-gray-100', 'dark:bg-white/5', 'text-zinc-700', 'dark:text-zinc-400');
         }
     }
-    
+
     renderServicios();
 }
 
 function renderServicios() {
     const normalizar = (t) => String(t || '').toUpperCase().trim();
     const query = document.getElementById('busquedaServicios')?.value.toUpperCase().trim() || '';
-    
+
     // Forzar re-lectura del estado global para máxima reactividad
     const dataAConsultar = window.geckoServicios || geckoServicios || [];
 
     const filtrados = dataAConsultar.filter(t => {
         const catData = t.categoria || 'mano_obra';
         const catFiltro = window.filtroServiciosActual;
-        
+
         // Tarea 1: Uso del Comparador Universal
         const matchesFiltro = catFiltro === 'TODOS' || compararCategorias(catData, catFiltro);
         const matchesQuery = normalizar(t.nombre).includes(query) || normalizar(catData).includes(query);
-        
+
         return matchesFiltro && matchesQuery;
     });
 
@@ -3153,17 +3153,17 @@ function renderInsumos() {
     const filtrados = materiales.filter(m => {
         const catNormalizada = (m.categoria || '').toLowerCase().trim();
         const filtroNormalizado = window.filtroMaterialesActual.toLowerCase().trim();
-        
-        const matchesFiltro = filtroNormalizado === 'todos' || 
-                             catNormalizada === filtroNormalizado || 
-                             (filtroNormalizado === 'vinilos_lonas' && (catNormalizada === 'flexible' || catNormalizada === 'vinilos_lonas' || catNormalizada === 'flexibles (vinilos/lonas)')) ||
-                             (filtroNormalizado === 'chapas' && (catNormalizada === 'chapas / placas' || catNormalizada === 'chapas')) ||
-                             (filtroNormalizado === 'polifan' && m.nombre.toLowerCase().includes('polifan'));
-        
-        const matchesQuery = m.nombre.toLowerCase().includes(query) || 
-                             catNormalizada.includes(query) || 
-                             (m.subcategoria || '').toLowerCase().includes(query);
-                             
+
+        const matchesFiltro = filtroNormalizado === 'todos' ||
+            catNormalizada === filtroNormalizado ||
+            (filtroNormalizado === 'vinilos_lonas' && (catNormalizada === 'flexible' || catNormalizada === 'vinilos_lonas' || catNormalizada === 'flexibles (vinilos/lonas)')) ||
+            (filtroNormalizado === 'chapas' && (catNormalizada === 'chapas / placas' || catNormalizada === 'chapas')) ||
+            (filtroNormalizado === 'polifan' && m.nombre.toLowerCase().includes('polifan'));
+
+        const matchesQuery = m.nombre.toLowerCase().includes(query) ||
+            catNormalizada.includes(query) ||
+            (m.subcategoria || '').toLowerCase().includes(query);
+
         return matchesFiltro && matchesQuery;
     });
 
@@ -3311,7 +3311,7 @@ function editarMaterial(id) {
             document.getElementById('matPrecioGremio').value = (material.costo * (material.multGremio || 1)).toFixed(2);
         }
     }
-    
+
     document.getElementById('matPrecioGremio').value = material.precioGremio || '';
 
     // Marcar como edición
@@ -3420,7 +3420,7 @@ const CATEGORY_CONFIG = {
 function actualizarCamposDinamicos() {
     const cat = document.getElementById('matCat').value;
     const contenedor = document.getElementById('contenedorCamposTecnicos');
-    
+
     const config = CATEGORY_CONFIG[cat] || CATEGORY_CONFIG.insumo;
     let html = '';
 
@@ -3531,27 +3531,27 @@ window.recalcularCostoReal = function (trigger) {
     if (estrategia === 'dinamica') {
         const mult = parseFloat(multiplicadorInput?.value) || 1.0;
         const multGremio = parseFloat(multiplicadorGremioInput?.value) || 1.0;
-        
+
         const precioSugerido = Math.round(costoUnitarioBase * mult);
         const precioGremioSug = Math.round(costoUnitarioBase * multGremio);
-        
+
         if (precioManualInput) precioManualInput.value = precioSugerido;
         if (precioGremioInput) precioGremioInput.value = precioGremioSug;
     } else {
         // Estrategia FIJA (Precio de Mercado)
         const precioFijo = parseFloat(precioManualInput?.value) || 0;
         const precioGremioFijo = parseFloat(precioGremioInput?.value) || 0;
-        
+
         if (costoUnitarioBase > 0) {
             const margenReal = precioFijo / costoUnitarioBase;
             const margenGremioReal = precioGremioFijo / costoUnitarioBase;
-            
+
             if (multiplicadorInput) multiplicadorInput.value = margenReal.toFixed(2);
             if (multiplicadorGremioInput) multiplicadorGremioInput.value = margenGremioReal.toFixed(2);
-            
+
             const marginValDisp = document.getElementById('matMarginVal');
             if (marginValDisp) marginValDisp.innerText = margenReal.toFixed(2);
-            
+
             const marginGremioValDisp = document.getElementById('matMarginGremioVal');
             if (marginGremioValDisp) marginGremioValDisp.innerText = margenGremioReal.toFixed(2);
         }
@@ -3610,11 +3610,11 @@ if (formMaterial) {
 
             // 1. Guardar en localStorage
             localStorage.setItem('gecko_materiales', JSON.stringify(materialesLocal));
-            
+
             // Actualizar referencias en memoria
             materiales = materialesLocal;
             window.materiales = materialesLocal;
-            
+
             console.log("Insumo guardado:", nuevoMat);
 
             // 2. CERRAR el modal
@@ -3714,7 +3714,7 @@ function agregarItemAlCarrito(catOverride) {
 }
 
 // Redundant functions removed to use unified renderizarPresupuesto and eliminarDelCarrito
-window.eliminarDelCarrito = function(index) {
+window.eliminarDelCarrito = function (index) {
     if (index > -1 && index < presupuesto.length) {
         presupuesto.splice(index, 1);
         window.renderizarPresupuesto();
@@ -3956,13 +3956,13 @@ window.abrirModalMaterial = function () {
         if (display.tagName === 'INPUT') display.value = '';
         else display.innerText = '$0';
     }
-    
+
     const displayGremio = document.getElementById('matPrecioGremio');
     if (displayGremio) displayGremio.value = '';
 
     const marginVal = document.getElementById('matMarginVal');
     if (marginVal) marginVal.innerText = '0.00';
-    
+
     const marginGremioVal = document.getElementById('matMarginGremioVal');
     if (marginGremioVal) marginGremioVal.innerText = '0.00';
 
@@ -4050,7 +4050,7 @@ window.verificarLocalStorageServicios = function () {
 // --- INICIALIZACIÓN DE LA APLICACIÓN ---
 document.addEventListener('DOMContentLoaded', () => {
     // Parche de seguridad: evitar scroll accidental en inputs numéricos
-    document.addEventListener('wheel', function(e) {
+    document.addEventListener('wheel', function (e) {
         if (document.activeElement.type === 'number') {
             document.activeElement.blur();
         }
