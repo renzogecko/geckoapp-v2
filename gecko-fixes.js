@@ -4254,31 +4254,43 @@ window._gpmGuardar = function (status) {
     if (catSelect) catSelect.value = categoria;
     if (document.getElementById('precioTotal')) document.getElementById('precioTotal').value = total;
 
-    // Capturar ID y status real ANTES de procesarGuardado
-    const _idParaPreview = window._editandoPresupuestoId
-        ? window._editandoPresupuestoId
-        : (window.nextBudgetId || (parseInt(localStorage.getItem('gecko_nextId')) || 1001));
-
-    // En edición, conservar el status original del documento
-    const _statusFinal = window._editandoPresupuestoId
+    // En edición conservar el status original
+    const _esEdicion = !!window._editandoPresupuestoId;
+    const _editId = window._editandoPresupuestoId;
+    const _statusFinal = _esEdicion
         ? (() => {
             const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            const doc = lista.find(x => String(x.id) === String(window._editandoPresupuestoId));
+            const doc = lista.find(x => String(x.id) === String(_editId));
             return doc?.status || status;
           })()
         : status;
 
-    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef };
+    // Marcar timestamp único para identificar el doc recién guardado
+    const _tsGuardado = Date.now();
+    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado };
 
     window.procesarGuardado(status);
 
     setTimeout(() => {
-        // Abrir preview con tipo correcto
-        if (typeof window._imprimirDocumento === 'function') {
-            window._imprimirDocumento(String(_idParaPreview));
+        const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+        let docTarget;
+        if (_esEdicion) {
+            // Edición: buscar por ID editado
+            docTarget = lista.filter(x => String(x.id) === String(_editId)).pop();
+        } else {
+            // Nuevo: buscar el doc con el timestamp que inyectamos en metadatos
+            docTarget = lista.filter(x => x._tsGuardado === _tsGuardado).pop();
+            // Fallback: el último con el status correcto y cliente correcto
+            if (!docTarget) {
+                docTarget = lista.filter(x => x.status === status && x.cliente === cliente).pop();
+            }
         }
+        if (!docTarget) return;
         const _tabDestino = _statusFinal === 'OT' ? 'ots' : 'presupuestos';
         window._gpmPostPrintRedirect = _tabDestino;
+        if (typeof window._imprimirDocumento === 'function') {
+            window._imprimirDocumento(String(docTarget.id));
+        }
     }, 1200);
 };
 
