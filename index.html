@@ -492,7 +492,7 @@
             </div>
         </div>
 
-        <div id="viewPedidos" class="hidden px-6 md:px-10 py-6 md:py-10 flex-col flex-1">
+        <div id="viewPedidos" class="hidden px-6 md:px-10 py-6 md:py-10 flex-col flex-1 overflow-y-auto custom-scrollbar">
             <div class="mb-8 overflow-x-auto">
                 <div class="flex items-end justify-between border-b border-gray-200 dark:border-darkBorder">
                     <div class="flex gap-8">
@@ -652,7 +652,7 @@
         </div>
 
         <!-- VIEW: CLIENTES -->
-        <div id="viewClientes" class="hidden px-6 md:px-10 py-6 md:py-10 flex-col flex-1 overflow-hidden">
+        <div id="viewClientes" class="hidden px-6 md:px-10 py-6 md:py-10 flex-col flex-1 overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center mb-8">
 
                 <button onclick="abrirModalNuevoCliente()"
@@ -680,7 +680,7 @@
 
             <!-- Tabla de Clientes -->
             <div
-                class="bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-darkBorder/80 overflow-y-auto max-h-[60vh] custom-scrollbar">
+                class="bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-darkBorder/80 overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-50/50 dark:bg-darkBg/30 border-b border-gray-100 dark:border-darkBorder/80">
@@ -809,12 +809,10 @@
                         Varios</button>
                 </div>
 
-                <div
-                    class="table-container-gecko bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-xl backdrop-blur-md">
+                <div class="bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-darkBorder overflow-x-auto">
                     <table class="w-full text-left border-collapse text-[14px]">
-                        <thead
-                            class="bg-gray-50 dark:bg-white/5 text-gray-400 dark:text-zinc-100/40 uppercase tracking-widest text-[11px]">
-                            <tr>
+                        <thead>
+                            <tr class="bg-gray-50/50 dark:bg-darkBg/30 border-b border-gray-100 dark:border-darkBorder">
                                 <th class="p-5 font-bold">Insumo</th>
                                 <th class="p-5 font-bold">Categoría</th>
                                 <th class="p-5 font-bold text-right">Costo (ARS/USD)</th>
@@ -825,7 +823,7 @@
                             </tr>
                         </thead>
                         <tbody id="tablaMaterialesBody"
-                            class="divide-y divide-gray-100 dark:divide-white/5 text-zinc-200 dark:text-zinc-100/80">
+                            class="divide-y divide-gray-100 dark:divide-gray-800/50 text-[13px] dark:text-zinc-100/80">
                         </tbody>
                     </table>
                 </div>
@@ -863,12 +861,10 @@
                         class="flex-shrink-0 px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-darkBorder text-[10px] font-black text-zinc-700 dark:text-zinc-400 uppercase tracking-widest hover:border-gecko/50 transition-all">Diseño</button>
                 </div>
 
-                <div
-                    class="table-container-gecko bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-xl backdrop-blur-md">
+                <div class="bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-darkBorder overflow-x-auto">
                     <table class="w-full text-left border-collapse text-[14px]">
-                        <thead
-                            class="bg-gray-50 dark:bg-white/5 text-gray-400 dark:text-zinc-100/40 uppercase tracking-widest text-[11px]">
-                            <tr>
+                        <thead>
+                            <tr class="bg-gray-50/50 dark:bg-darkBg/30 border-b border-gray-100 dark:border-darkBorder">
                                 <th class="p-5 font-bold">Servicio / Terminación</th>
                                 <th class="p-5 font-bold">Categoría</th>
                                 <th class="p-5 font-bold">Unidad</th>
@@ -878,7 +874,7 @@
                             </tr>
                         </thead>
                         <tbody id="tablaTerminacionesBody"
-                            class="divide-y divide-gray-100 dark:divide-white/5 text-zinc-200 dark:text-zinc-100/80">
+                            class="divide-y divide-gray-100 dark:divide-gray-800/50 text-[13px] dark:text-zinc-100/80">
                         </tbody>
                     </table>
                 </div>
@@ -2857,9 +2853,18 @@
                                 </svg></button>
                         </div>
                     </div>
-                    <div>
-                        <label class="gecko-label">Teléfono / WhatsApp</label>
-                        <input type="text" id="nuevoClienteTel" class="gecko-input-line" placeholder="+54 9 11...">
+                    <div id="containerTels">
+                        <label class="gecko-label">Teléfonos / WhatsApp</label>
+                        <div class="flex items-center gap-3 mb-2 tel-row">
+                            <input type="text" class="tel-num-input gecko-input-line flex-1" placeholder="+54 9 221...">
+                            <input type="text" class="tel-label-input gecko-input-line w-28" placeholder="Etiqueta (ej: María)">
+                            <button type="button" onclick="window.agregarCampoTel()" title="Añadir otro"
+                                class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div id="containerEmails">
                         <label class="gecko-label">Email</label>

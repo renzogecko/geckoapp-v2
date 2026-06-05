@@ -2997,6 +2997,15 @@ window.addEventListener('load', function () {
             container.appendChild(row);
         };
 
+        window.agregarCampoTel = function () {
+            const container = document.getElementById('containerTels');
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3 mb-2 tel-row';
+            row.innerHTML = `<input type="text" class="tel-num-input gecko-input-line flex-1" placeholder="Otro teléfono..."><input type="text" class="tel-label-input gecko-input-line w-28" placeholder="Etiqueta"><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            container.appendChild(row);
+        };
+
         window.agregarCampoEmail = function () {
             const container = document.getElementById('containerEmails');
             if (!container) return;
@@ -3012,7 +3021,7 @@ window.addEventListener('load', function () {
                 modal.style.display = 'flex';
             }
 
-            const ids = ['nuevoClienteNombre', 'nuevoClienteTel', 'nuevoClienteDir', 'nuevoClienteLoc', 'nuevoClienteRubro'];
+            const ids = ['nuevoClienteNombre', 'nuevoClienteDir', 'nuevoClienteLoc', 'nuevoClienteRubro'];
             ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 
             const cCuits = document.getElementById('containerCuits');
@@ -3020,6 +3029,9 @@ window.addEventListener('load', function () {
 
             const cEmails = document.getElementById('containerEmails');
             if (cEmails) cEmails.innerHTML = `<label class="gecko-label">Email</label><div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="email-input gecko-input-line w-full" placeholder="ejemplo@correo.com"><button type="button" onclick="window.agregarCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
+
+            const cTels = document.getElementById('containerTels');
+            if (cTels) cTels.innerHTML = `<label class="gecko-label">Teléfonos / WhatsApp</label><div class="flex items-center gap-3 mb-2 tel-row"><input type="text" class="tel-num-input gecko-input-line flex-1" placeholder="+54 9 221..."><input type="text" class="tel-label-input gecko-input-line w-28" placeholder="Etiqueta (ej: María)"><button type="button" onclick="window.agregarCampoTel()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
         };
 
         window.guardarCliente = function () {
@@ -3028,13 +3040,19 @@ window.addEventListener('load', function () {
 
             const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
             const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
+            const tels = Array.from(document.querySelectorAll('.tel-num-input')).map(i => {
+                const num = i.value.trim();
+                const label = i.parentElement?.querySelector('.tel-label-input')?.value?.trim() || '';
+                return num ? { numero: num, etiqueta: label } : null;
+            }).filter(v => v);
 
             const nuevoCliente = {
                 id: 'client_' + Date.now(),
                 nombre: nombre,
                 cuits: cuits,
                 cuit: cuits[0] || '',
-                tel: document.getElementById('nuevoClienteTel')?.value || '',
+                telefonos: tels,
+                tel: tels.length > 0 ? tels[0].numero : '',
                 emails: emails,
                 email: emails[0] || '',
                 dir: document.getElementById('nuevoClienteDir')?.value || '',

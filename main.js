@@ -2395,7 +2395,7 @@ window.abrirModalNuevoCliente = function () {
     openModal('modalNuevoCliente');
     document.getElementById('nuevoClienteNombre').value = '';
     document.getElementById('nuevoClienteCuit').value = '';
-    document.getElementById('nuevoClienteTel').value = '';
+    // reset del containerTels lo hace gecko-fixes.js
     document.getElementById('nuevoClienteEmail').value = '';
     document.getElementById('nuevoClienteDir').value = '';
     document.getElementById('nuevoClienteLoc').value = '';
@@ -2413,7 +2413,12 @@ function guardarCliente() {
         id: 'client_' + Date.now(),
         nombre: nombre,
         cuit: document.getElementById('nuevoClienteCuit').value,
-        tel: document.getElementById('nuevoClienteTel').value,
+        tel: (Array.from(document.querySelectorAll('.tel-num-input'))[0]?.value || ''),
+        telefonos: Array.from(document.querySelectorAll('.tel-num-input')).map((i, idx) => {
+            const num = i.value.trim();
+            const label = i.parentElement?.querySelector('.tel-label-input')?.value?.trim() || '';
+            return num ? { numero: num, etiqueta: label } : null;
+        }).filter(v => v),
         email: document.getElementById('nuevoClienteEmail').value,
         dir: document.getElementById('nuevoClienteDir').value,
         loc: document.getElementById('nuevoClienteLoc').value,
