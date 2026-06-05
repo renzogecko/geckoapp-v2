@@ -366,128 +366,125 @@ window.verDocumento = async function (id) {
 // ══════════════════════════════════════════════════════════════
 window.abrirModalDoc = function (tipo) {
     const esOT = tipo === 'OT';
-    document.getElementById('modalGeckoDoc')?.remove();
-
-    // Obtener datos actuales del cotizador
     const { items, cliente } = _getDatosActuales();
-    const id = window.nextBudgetId || (parseInt(localStorage.getItem('gecko_nextId')) || 1001);
 
-    const modal = document.createElement('div');
-    modal.id = 'modalGeckoDoc';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    if (esOT) {
+        document.getElementById('modalGeckoDoc')?.remove();
 
-    const inputStyle = 'width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:10px 14px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;font-family:inherit;';
-    const labelStyle = 'display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:7px;';
+        const modal = document.createElement('div');
+        modal.id = 'modalGeckoDoc';
+        modal.className = 'gecko-modal-overlay';
+        modal.style.cssText = 'padding:16px;';
 
-    // Preview de ítems
-    const itemsPreviewHTML = items.length > 0
-        ? items.map((it, i) => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1f1f23;">
-                <div>
-                    <span style="color:#52525b;font-size:9px;font-family:monospace;margin-right:8px;">${String(i + 1).padStart(2, '0')}</span>
-                    <span style="color:white;font-size:12px;font-weight:600;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
+        // Preview de ítems
+        const itemsPreviewHTML = items.length > 0
+            ? items.map((it, i) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1f1f23;">
+                    <div>
+                        <span style="color:#52525b;font-size:9px;font-family:monospace;margin-right:8px;">${String(i + 1).padStart(2, '0')}</span>
+                        <span style="color:white;font-size:12px;font-weight:600;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
+                    </div>
+                    <span style="color:#F15A24;font-size:12px;font-weight:700;font-family:monospace;">
+                        ${it.costo ? fmtMoney(it.costo) : '—'}
+                    </span>
                 </div>
-                <span style="color:#F15A24;font-size:12px;font-weight:700;font-family:monospace;">
-                    ${it.costo ? fmtMoney(it.costo) : '—'}
-                </span>
-            </div>
-        `).join('')
-        : '<p style="color:#52525b;font-size:11px;text-align:center;padding:12px;">No hay ítems en el cotizador</p>';
+            `).join('')
+            : '<p style="color:#52525b;font-size:11px;text-align:center;padding:12px;">No hay ítems en el cotizador</p>';
 
-    const total = items.reduce((acc, it) => acc + (parseFloat(it.costo) || 0), 0);
+        const total = items.reduce((acc, it) => acc + (parseFloat(it.costo) || 0), 0);
 
-    modal.innerHTML = `
-    <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;position:relative;">
-        
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <div>
-                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">${esOT ? '🔧 Orden de Trabajo' : '📄 Presupuesto'}</p>
-                <h2 style="color:white;font-size:18px;font-weight:900;margin:0;">${esOT ? 'Configurar OT' : 'Configurar Presupuesto'}</h2>
-            </div>
-            <button onclick="document.getElementById('modalGeckoDoc').remove()" style="background:#27272a;border:none;color:#71717a;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px;">✕</button>
-        </div>
+        modal.innerHTML = `
+  <div class="gecko-modal-box" style="max-width:560px;max-height:90vh;overflow-y:auto;">
 
-        <!-- Preview de ítems -->
-        <div style="background:#09090b;border:1px solid #27272a;border-radius:14px;padding:14px 16px;margin-bottom:16px;">
-            <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">Ítems a incluir</p>
-            ${itemsPreviewHTML}
-            ${items.length > 0 ? `
-            <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:1px solid #27272a;">
-                <span style="color:#71717a;font-size:11px;">Total</span>
-                <span style="color:#F15A24;font-weight:900;font-size:14px;font-family:monospace;">${fmtMoney(total)}</span>
-            </div>` : ''}
-        </div>
+    <!-- Header -->
+    <p class="gecko-modal-subtitle">ORDEN DE TRABAJO</p>
+    <h2 class="gecko-modal-title">Configurar OT</h2>
 
-        <!-- Cliente -->
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">Cliente</label>
-            <input type="text" id="docCliente" value="${cliente}" style="${inputStyle}">
-        </div>
+    <button onclick="document.getElementById('modalGeckoDoc').remove()"
+      style="position:absolute;top:20px;right:20px;width:36px;height:36px;border-radius:10px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"
+      onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
+      onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
 
-        ${!esOT ? `
-        <div style="background:#09090b;border:1px solid #27272a;border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
-            <div>
-                <p style="color:white;font-size:12px;font-weight:700;margin:0;">Mostrar precios individuales</p>
-                <p style="color:#52525b;font-size:10px;margin-top:2px;">Desactivá para mostrar solo el total</p>
-            </div>
-            <input type="checkbox" id="docMostrarPrecios" checked style="width:18px;height:18px;accent-color:#F15A24;cursor:pointer;">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-            <div>
-                <label style="${labelStyle}">Descuento %</label>
-                <input type="number" id="docDescuento" placeholder="Ej: 10" min="0" max="100" style="${inputStyle}">
-            </div>
-            <div>
-                <label style="${labelStyle}">Motivo</label>
-                <select id="docMetodoPago" style="${inputStyle}cursor:pointer;">
-                    <option value="">Sin descuento</option>
-                    <option value="Pago Efectivo">Pago Efectivo</option>
-                    <option value="Transferencia">Transferencia</option>
-                    <option value="Pago anticipado">Pago anticipado</option>
-                </select>
-            </div>
-        </div>` : ''}
+    <!-- Preview de ítems -->
+    <div style="background:#131314;border:1px solid #333333;border-radius:14px;padding:14px 16px;margin-bottom:20px;">
+      <p class="gecko-label" style="margin-bottom:10px;">Ítems a incluir</p>
+      ${itemsPreviewHTML}
+      ${items.length > 0 ? `
+      <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:1px solid #333333;">
+        <span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Total</span>
+        <span style="color:#F15A24;font-weight:900;font-size:14px;font-family:monospace;">${fmtMoney(total)}</span>
+      </div>` : ''}
+    </div>
 
-        ${esOT ? `
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">Área / Operario asignado</label>
-            <input type="text" id="docArea" placeholder="Ej: Taller Gráfica · Juan" style="${inputStyle}">
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">⚠ Instrucciones especiales de producción</label>
-            <textarea id="docInstrucciones" rows="4" placeholder="Ej: Pintar el corpóreo con verde furioso, cuidar que no chorree la pintura en los bordes..." style="${inputStyle}resize:vertical;border-left:3px solid #F15A24;"></textarea>
-        </div>` : ''}
+    <!-- Cliente -->
+    <div style="margin-bottom:18px;">
+      <label class="gecko-label">Cliente</label>
+      <input type="text" id="docCliente" value="${cliente}" class="gecko-input-line">
+    </div>
 
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">Fecha / Plazo de entrega</label>
-            <input type="text" id="docEntrega" placeholder="Ej: 30/05/2026 · A convenir" style="${inputStyle}">
-        </div>
+    <div style="margin-bottom:18px;">
+      <label class="gecko-label">Área / Operario asignado</label>
+      <input type="text" id="docArea" placeholder="Ej: Taller Gráfica · Juan" class="gecko-input-line">
+    </div>
+    <div style="margin-bottom:18px;">
+      <label class="gecko-label">Instrucciones especiales de producción</label>
+      <textarea id="docInstrucciones" rows="4" placeholder="Ej: Pintar el corpóreo con verde furioso, cuidar que no chorree la pintura en los bordes..." class="gecko-input-line" style="resize:vertical;border-left:3px solid #F15A24;border-bottom:1.5px solid rgba(255,255,255,0.12);"></textarea>
+    </div>
 
-        ${!esOT ? `
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">Nota adicional (opcional)</label>
-            <textarea id="docNota" rows="2" placeholder="Información extra para el cliente..." style="${inputStyle}resize:none;"></textarea>
-        </div>` : ''}
+    <div style="margin-bottom:18px;">
+      <label class="gecko-label">Fecha / Plazo de entrega</label>
+      <input type="text" id="docEntrega" placeholder="Ej: 30/05/2026 · A convenir" class="gecko-input-line">
+    </div>
 
-        <div style="margin-bottom:22px;">
-            <label style="${labelStyle}">${esOT ? '📐 Planos / Referencias técnicas' : '🖼 Imágenes de referencia'}</label>
-            <div id="docImagenesPreview" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
-            <label for="docImagenesInput" style="display:flex;align-items:center;gap:8px;background:#09090b;border:1px dashed #3f3f46;border-radius:12px;padding:11px 16px;cursor:pointer;color:#52525b;font-size:12px;font-weight:600;">
-                <span>📎</span><span>Agregar imágenes (JPG, PNG, etc.)</span>
-            </label>
-            <input type="file" id="docImagenesInput" accept="image/*" multiple style="display:none;" onchange="window._previewDocImagenes(this)">
-        </div>
+    <div style="margin-bottom:24px;">
+      <label class="gecko-label" style="margin-bottom:10px;">Planos / Referencias técnicas</label>
+      <div id="docImagenesPreview" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+      <label for="docImagenesInput" style="display:flex;align-items:center;gap:8px;background:#131314;border:1px dashed #333333;border-radius:12px;padding:11px 16px;cursor:pointer;color:#64748b;font-size:12px;font-weight:600;">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+        <span>Agregar imágenes (JPG, PNG, etc.)</span>
+      </label>
+      <input type="file" id="docImagenesInput" accept="image/*" multiple style="display:none;" onchange="window._previewDocImagenes(this)">
+    </div>
 
-        <div style="display:flex;gap:10px;">
-            <button onclick="document.getElementById('modalGeckoDoc').remove()" style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
-            <button onclick="window._imprimirDoc('${tipo}')" style="flex:2;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">
-                🖨 ${esOT ? 'Generar e Imprimir OT' : 'Generar e Imprimir'}
-            </button>
-        </div>
-    </div>`;
+    <!-- Botones -->
+    <div style="display:flex;gap:10px;">
+      <button onclick="document.getElementById('modalGeckoDoc').remove()"
+        style="flex:1;padding:14px;background:transparent;border:1px solid #333333;color:#64748b;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all 0.2s;"
+        onmouseover="this.style.borderColor='#F15A24';this.style.color='#F15A24'"
+        onmouseout="this.style.borderColor='#333333';this.style.color='#64748b'">
+        Cancelar
+      </button>
+      <button onclick="window._imprimirDoc('OT')"
+        style="flex:2;padding:14px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(241,90,36,0.3);"
+        onmouseover="this.style.background='#d94f1f'"
+        onmouseout="this.style.background='#F15A24'">
+        Generar e Imprimir OT
+      </button>
+    </div>
 
-    document.body.appendChild(modal);
-    window._docImagenes = [];
+  </div>`;
+
+        document.body.appendChild(modal);
+        window._docImagenes = [];
+        return;
+    }
+
+    // PRESUPUESTO: redirigir al Presupuestador Manual con ítems precargados
+    window._gpmItemsDesdeCotzador = items.map(it => ({
+        titulo: it.nombre || it.textoOpciones || 'Ítem',
+        descripcion: it.otDetalle && it.otDetalle !== it.nombre ? it.otDetalle : (it.detalle || ''),
+        cantidad: it.cantidad || 1,
+        precio: it.precioUnitario || (it.costo / (it.cantidad || 1)) || it.costo || 0
+    }));
+    window._gpmClienteDesdeCotzador = cliente !== 'Sin especificar' ? cliente : '';
+
+    if (typeof window.switchMenu === 'function') window.switchMenu('presupuestoManual');
+
+    setTimeout(() => {
+        window.abrirPresupuestadorManual(null);
+    }, 80);
 };
 
 window._previewDocImagenes = async function (input) {

@@ -352,8 +352,8 @@ window._imprimirDocumento = async function (id) {
 
     const esOT = p.status === 'OT';
     const html = esOT
-        ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: [] })
-        : await window.generarDocPresupuesto({ ...p, mostrarPrecios: true, imagenes: [] });
+        ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: p.imagenes || [] })
+        : await window.generarDocPresupuesto({ ...p, entrega: p.fechaEntrega || 'A convenir', imagenes: p.imagenes || [] });
 
     const htmlFinal = html
         .replace('<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>', '')
@@ -369,6 +369,22 @@ window._imprimirDocumento = async function (id) {
     if (!win) { alert('Permití las ventanas emergentes.'); return; }
     win.document.write(htmlFinal);
     win.document.close();
+    // Escuchar cuando se cierra el popup para redirigir en la ventana principal
+    const _redirectInterval = setInterval(() => {
+        if (win.closed) {
+            clearInterval(_redirectInterval);
+            const destino = window._gpmPostPrintRedirect;
+            window._gpmPostPrintRedirect = null;
+            if (destino && typeof window.switchMenu === 'function') {
+                window.switchMenu('pedidos');
+                setTimeout(() => {
+                    if (typeof window.switchTabPedidos === 'function') {
+                        window.switchTabPedidos(destino);
+                    }
+                }, 100);
+            }
+        }
+    }, 500);
 };
 
 window._descargarDocumento = function (id) { window._imprimirDocumento(id); };
@@ -3704,6 +3720,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         window._editandoPresupuestoId = presupuestoEditId;
     } else {
         window._editandoPresupuestoId = null;
+        // NO resetear _gpmItemsDesdeCotzador aquí, se consume después de renderizar
     }
 
     const clienteInicial = datosEdicion?.cliente || '';
@@ -3719,6 +3736,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         `<option value="${a}" ${areaInicial === a ? 'selected' : ''}>${a}</option>`
     ).join('');
 
+    window._gpmImagenes = [];
     container.innerHTML = `
     <div style="max-width:100%;">
 
@@ -3761,6 +3779,14 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
               ${areaOpts}
             </select>
           </div>
+        </div>
+        <div style="margin-top:14px;">
+          <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Fecha de entrega</label>
+          <input id="gpmEntrega" type="date"
+            value="${datosEdicion?.fechaEntrega || ''}"
+            style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:#71717a;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;color-scheme:dark;"
+            onfocus="this.style.borderColor='#F15A24'"
+            onblur="this.style.borderColor='#333333'" />
         </div>
       </div>
 
@@ -3849,6 +3875,19 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
       <!-- NOTAS Y CONDICIONES -->
       <div style="background:#1e1f20;border:1px solid #333333;border-radius:20px;padding:24px;margin-bottom:16px;">
         <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">Notas y condiciones</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;margin-bottom:14px;">
+          <div>
+            <p style="color:#f1f5f9;font-size:13px;font-weight:700;margin:0;">Mostrar precios individuales</p>
+            <p style="color:#52525b;font-size:10px;margin-top:2px;">Desactivá para mostrar solo el total al cliente</p>
+          </div>
+          <label style="position:relative;width:36px;height:20px;flex-shrink:0;cursor:pointer;">
+            <input type="checkbox" id="gpmMostrarPrecios" checked
+              onchange="window._gpmSyncToggle('gpmMostrarPrecios','gpmMostrarPreciosSlider','gpmMostrarPreciosThumb')"
+              style="opacity:0;width:0;height:0;position:absolute;">
+            <span id="gpmMostrarPreciosSlider" style="position:absolute;inset:0;background:#F15A24;border-radius:20px;transition:background .2s;"></span>
+            <span id="gpmMostrarPreciosThumb" style="position:absolute;width:14px;height:14px;left:3px;top:3px;background:white;border-radius:50%;transition:transform .2s;transform:translateX(16px);"></span>
+          </label>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
           <div>
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Notas internas (no se imprimen)</label>
@@ -3867,16 +3906,37 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         </div>
       </div>
 
+      <div style="background:#1e1f20;border:1px solid #333333;border-radius:20px;padding:24px;margin-bottom:16px;">
+        <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">Imágenes de referencia <span style="color:#52525b;font-weight:700;">(máx. 5)</span></p>
+        <div id="gpmImagenesPreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+        <label for="gpmImagenesInput"
+          style="display:flex;align-items:center;gap:10px;background:#131314;border:1px dashed #333333;border-radius:12px;padding:12px 16px;cursor:pointer;color:#52525b;font-size:12px;font-weight:600;"
+          onmouseover="this.style.borderColor='#F15A24';this.style.color='#F15A24'"
+          onmouseout="this.style.borderColor='#333333';this.style.color='#52525b'">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+          <span>Adjuntar imágenes (JPG, PNG, etc.)</span>
+        </label>
+        <input type="file" id="gpmImagenesInput" accept="image/*" multiple style="display:none;"
+          onchange="window._gpmAgregarImagenes(this)">
+      </div>
+
       <!-- Footer acciones -->
       <div style="display:flex;justify-content:flex-end;align-items:center;padding:20px 0;gap:10px;">
-        <button onclick="window._gpmGuardar('Cotizado')"
-          style="padding:12px 20px;background:transparent;border:1px solid #333333;border-radius:12px;color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
-          Generar Presupuesto
-        </button>
-        <button onclick="window._gpmGuardar('OT')"
-          style="padding:12px 20px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
-          Generar OT
-        </button>
+        ${datosEdicion ? `
+          <button onclick="window._gpmGuardar('${datosEdicion.status || 'Cotizado'}')"
+            style="padding:12px 28px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
+            ${datosEdicion.status === 'OT' ? 'Actualizar OT' : 'Actualizar Presupuesto'}
+          </button>
+        ` : `
+          <button onclick="window._gpmGuardar('Cotizado')"
+            style="padding:12px 20px;background:transparent;border:1px solid #333333;border-radius:12px;color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
+            Generar Presupuesto
+          </button>
+          <button onclick="window._gpmGuardar('OT')"
+            style="padding:12px 20px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
+            Generar OT
+          </button>
+        `}
       </div>
 
     </div>`;
@@ -3904,6 +3964,16 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
             document.getElementById('gpmDescPanel').style.display = 'flex';
             document.getElementById('gpmRowDesc').style.display = 'flex';
         }
+    } else if (window._gpmItemsDesdeCotzador && window._gpmItemsDesdeCotzador.length > 0) {
+        // Vienen ítems precargados desde los cotizadores
+        window._gpmItemsDesdeCotzador.forEach(it => window._gpmAgregarItem(it));
+        window._gpmItemsDesdeCotzador = null;
+        // Precargar cliente si viene del cotizador
+        if (window._gpmClienteDesdeCotzador) {
+            const clienteEl = document.getElementById('gpmCliente');
+            if (clienteEl) clienteEl.value = window._gpmClienteDesdeCotzador;
+            window._gpmClienteDesdeCotzador = null;
+        }
     } else {
         window._gpmAgregarItem();
     }
@@ -3924,13 +3994,47 @@ window._gpmSyncToggle = function (inputId, sliderId, thumbId) {
 
 // ── Inicializar listeners de toggles ──
 window._gpmInitToggles = function () {
-    ['gpmTogDesc', 'gpmTogIva'].forEach(id => {
+    ['gpmTogDesc', 'gpmTogIva', 'gpmMostrarPrecios'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const sliderId = id + 'Slider';
         const thumbId = id + 'Thumb';
         el.addEventListener('change', () => window._gpmSyncToggle(id, sliderId, thumbId));
     });
+};
+
+// ── Imágenes de referencia ──
+window._gpmImagenes = [];
+window._gpmAgregarImagenes = function (input) {
+    const preview = document.getElementById('gpmImagenesPreview');
+    if (!preview) return;
+    const files = Array.from(input.files);
+    for (const file of files) {
+        if (window._gpmImagenes.length >= 5) break;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const b64 = e.target.result;
+            window._gpmImagenes.push(b64);
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'position:relative;';
+            const img = document.createElement('img');
+            img.src = b64;
+            img.style.cssText = 'height:72px;width:auto;border-radius:10px;border:1px solid #333333;object-fit:cover;';
+            const del = document.createElement('button');
+            del.innerHTML = '✕';
+            del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;font-weight:900;';
+            del.onclick = () => {
+                const idx = window._gpmImagenes.indexOf(b64);
+                if (idx > -1) window._gpmImagenes.splice(idx, 1);
+                wrap.remove();
+            };
+            wrap.appendChild(img);
+            wrap.appendChild(del);
+            preview.appendChild(wrap);
+        };
+        reader.readAsDataURL(file);
+    }
+    input.value = '';
 };
 
 // ── Agregar ítem ──
@@ -4106,6 +4210,9 @@ window._gpmGuardar = function (status) {
     const titulo = document.getElementById('gpmTitulo')?.value?.trim() || '';
     const notasInternas = document.getElementById('gpmNotasInternas')?.value?.trim() || '';
     const condiciones = document.getElementById('gpmCondiciones')?.value?.trim() || '';
+    const fechaEntrega = document.getElementById('gpmEntrega')?.value || '';
+    const mostrarPrecios = document.getElementById('gpmMostrarPrecios')?.checked !== false;
+    const imagenesRef = window._gpmImagenes || [];
 
     // Conectar con el sistema existente
     window.presupuesto = items;
@@ -4115,17 +4222,34 @@ window._gpmGuardar = function (status) {
     if (catSelect) catSelect.value = categoria;
     if (document.getElementById('precioTotal')) document.getElementById('precioTotal').value = total;
 
-    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn };
+    // Capturar ID y status real ANTES de procesarGuardado
+    const _idParaPreview = window._editandoPresupuestoId
+        ? window._editandoPresupuestoId
+        : (window.nextBudgetId || (parseInt(localStorage.getItem('gecko_nextId')) || 1001));
+
+    // En edición, conservar el status original del documento
+    const _statusFinal = window._editandoPresupuestoId
+        ? (() => {
+            const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            const doc = lista.find(x => String(x.id) === String(window._editandoPresupuestoId));
+            return doc?.status || status;
+          })()
+        : status;
+
+    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef };
 
     window.procesarGuardado(status);
 
     setTimeout(() => {
-        const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-        const ultimo = lista[lista.length - 1];
-        if (ultimo && typeof window.verDocumento === 'function') {
-            window.verDocumento(ultimo.id);
+        // Abrir preview con tipo correcto
+        if (typeof window._imprimirDocumento === 'function') {
+            window._imprimirDocumento(String(_idParaPreview));
         }
-    }, 600);
+
+        // Redirigir a la lista correcta después de que el usuario cierre el preview
+        const _tabDestino = _statusFinal === 'OT' ? 'ots' : 'presupuestos';
+        window._gpmPostPrintRedirect = _tabDestino;
+    }, 800);
 };
 
 // ── Hook procesarGuardado para inyectar metadatos extra ──
@@ -4198,6 +4322,11 @@ document.addEventListener('geckoDB_ready', function () {
 // ══════════════════════════════════════════════════════
 document.addEventListener('click', function (e) {
     if (e.target && e.target.id === 'gpmFecha') {
+        try { e.target.showPicker(); } catch (err) { }
+    }
+});
+document.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'gpmEntrega') {
         try { e.target.showPicker(); } catch (err) { }
     }
 });
