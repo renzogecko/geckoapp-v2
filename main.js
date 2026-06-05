@@ -548,6 +548,155 @@ if (formConfig) {
     formConfig.addEventListener('submit', saveGeckoSettings);
 }
 
+// ══════════════════════════════════════════════════════
+// SECCIÓN CONFIGURACIÓN — Tab switching + render + guardar
+// ══════════════════════════════════════════════════════
+
+window.switchConfigTab = function(tab) {
+    ['finanzas', 'operativos', 'laser'].forEach(t => {
+        const btn = document.getElementById('cfgTab-' + t);
+        const content = document.getElementById('cfgContent-' + t);
+        if (btn && content) {
+            const isActive = t === tab;
+            btn.className = `pb-4 text-[14px] font-bold border-b-2 transition-all ${isActive ? 'text-gecko border-gecko' : 'text-zinc-500 hover:text-zinc-300 border-transparent'}`;
+            content.classList.toggle('hidden', !isActive);
+        }
+    });
+    if (tab === 'laser') window.renderTablaParametrosLaser();
+};
+
+window.initConfiguracion = function() {
+    const s = GECKO_SETTINGS;
+    const v = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+    v('cfgCotizacionDolar', s.cotizacionDolar || 1420);
+    v('cfgIva', s.iva || 21);
+    v('cfgMultGlobal', s.multiplicadorGlobal || 2.0);
+    v('cfgNivelOro', s.nivelOro || 250000);
+    v('cfgNivelPlata', s.nivelPlata || 100000);
+    v('cfgHoraHombre', s.valorHoraHombre || 0);
+    v('cfgHoraLaser', Math.round((s.minutoLaser || 0) * 60));
+    v('cfgHoraCNC', Math.round((s.minutoRouter || 0) * 60));
+    v('cfgHora3D', s.costoHora3D || 0);
+    const cond = document.getElementById('cfgCondicionesVenta');
+    if (cond) cond.value = s.condicionesVenta || '';
+    window.switchConfigTab('finanzas');
+};
+
+window.guardarConfiguracion = function() {
+    const g = (id) => parseFloat(document.getElementById(id)?.value) || 0;
+    GECKO_SETTINGS = {
+        ...GECKO_SETTINGS,
+        cotizacionDolar: g('cfgCotizacionDolar'),
+        iva: g('cfgIva'),
+        multiplicadorGlobal: g('cfgMultGlobal'),
+        nivelOro: g('cfgNivelOro'),
+        nivelPlata: g('cfgNivelPlata'),
+        valorHoraHombre: g('cfgHoraHombre'),
+        minutoLaser: g('cfgHoraLaser') / 60,
+        minutoRouter: g('cfgHoraCNC') / 60,
+        costoHora3D: g('cfgHora3D'),
+        condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || ''
+    };
+    localStorage.setItem('GECKO_SETTINGS', JSON.stringify(GECKO_SETTINGS));
+    if (typeof window.mostrarExito === 'function') window.mostrarExito('Configuración guardada correctamente.', '¡Guardado!');
+    if (typeof renderInsumos === 'function') renderInsumos();
+};
+
+window.renderTablaParametrosLaser = function() {
+    const tbody = document.getElementById('tablaParametrosLaser');
+    if (!tbody) return;
+
+    const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+    const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
+
+    const laserServs = servicios.filter(s =>
+        /corte laser|corte cnc|grabado laser/i.test(s.nombre)
+    );
+
+    if (laserServs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-zinc-600 italic text-sm">No se encontraron servicios de Láser/CNC en la base de datos.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = laserServs.map((s, i) => {
+        const params = laserParams[s.nombre] || {};
+        const precio = s.precioVenta || 0;
+        const espesor = params.espesor || '';
+        const speed = params.speed || '';
+        const power = params.power || '';
+        return `
+        <tr class="hover:bg-white/3 transition-colors">
+            <td class="py-3 px-5">
+                <p class="font-bold text-white text-[13px]">${s.nombre}</p>
+                <p class="text-zinc-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">${s.unidad || 'mtL'}</p>
+            </td>
+            <td class="py-3 px-4 text-center">
+                <input type="number" step="0.5"
+                    data-servicio="${s.nombre}" data-campo="espesor"
+                    value="${espesor}" placeholder="—"
+                    class="w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1"
+                    oninput="window._actualizarParamLaser(this)">
+            </td>
+            <td class="py-3 px-4 text-center">
+                <input type="number"
+                    data-servicio="${s.nombre}" data-campo="speed"
+                    value="${speed}" placeholder="—"
+                    class="w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1"
+                    oninput="window._actualizarParamLaser(this)">
+            </td>
+            <td class="py-3 px-4 text-center">
+                <input type="number"
+                    data-servicio="${s.nombre}" data-campo="power"
+                    value="${power}" placeholder="—"
+                    class="w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1"
+                    oninput="window._actualizarParamLaser(this)">
+            </td>
+            <td class="py-3 px-4 text-right">
+                <div class="flex items-center justify-end gap-1">
+                    <span class="text-zinc-600 text-[12px]">$</span>
+                    <input type="number"
+                        data-servicio="${s.nombre}" data-campo="precio"
+                        value="${precio || ''}" placeholder="0"
+                        class="w-24 text-right bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-gecko font-black text-[14px] py-1"
+                        oninput="window._actualizarParamLaser(this)">
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+};
+
+window._laserParamsTemp = {};
+
+window._actualizarParamLaser = function(input) {
+    const servicio = input.dataset.servicio;
+    const campo = input.dataset.campo;
+    if (!window._laserParamsTemp[servicio]) window._laserParamsTemp[servicio] = {};
+    window._laserParamsTemp[servicio][campo] = parseFloat(input.value) || input.value;
+};
+
+window.guardarParametrosLaser = function() {
+    const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
+    Object.assign(laserParams, window._laserParamsTemp);
+    localStorage.setItem('gecko_laserParams', JSON.stringify(laserParams));
+    window._laserParamsTemp = {};
+
+    const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+    const inputs = document.querySelectorAll('#tablaParametrosLaser input[data-campo="precio"]');
+    inputs.forEach(inp => {
+        const nombre = inp.dataset.servicio;
+        const precio = parseFloat(inp.value) || 0;
+        const idx = servicios.findIndex(s => s.nombre === nombre);
+        if (idx !== -1) servicios[idx].precioVenta = precio;
+    });
+    localStorage.setItem('geckoServicios', JSON.stringify(servicios));
+
+    if (typeof window.geckoAPI !== 'undefined') {
+        localStorage.setItem('geckoServicios', JSON.stringify(servicios));
+    }
+
+    if (typeof window.mostrarExito === 'function') window.mostrarExito('Parámetros láser guardados.', '¡Guardado!');
+};
+
 
 
 // â”€â”€ Modales Dinámicos GECKO (Globales) â”€â”€
@@ -2506,7 +2655,7 @@ function actualizarSugerenciaClientes() {
 
 window.switchMenu = function (view) {
     // 1. Ocultar todas las secciones (Agregamos viewMateriales y viewCotizadores)
-    const views = ['viewDashboard', 'viewPedidos', 'viewFinanzas', 'viewClientes', 'viewMateriales', 'viewCotizadores', 'viewPresupuestoManual'];
+    const views = ['viewDashboard', 'viewPedidos', 'viewFinanzas', 'viewClientes', 'viewMateriales', 'viewCotizadores', 'viewPresupuestoManual', 'viewConfiguracion'];
     views.forEach(v => {
         const el = document.getElementById(v);
         if (el) { el.classList.add('hidden'); el.style.display = ''; }
@@ -2527,7 +2676,7 @@ window.switchMenu = function (view) {
     }
 
     // 3. Estilo de Navegación (Usando .nav-active para mejor control)
-    const navLinks = ['nav-dashboard', 'nav-pedidos', 'nav-finanzas', 'nav-clientes', 'nav-materiales', 'nav-cotizadores', 'side-3d'];
+    const navLinks = ['nav-dashboard', 'nav-pedidos', 'nav-finanzas', 'nav-clientes', 'nav-materiales', 'nav-cotizadores', 'side-3d', 'nav-configuracion'];
     navLinks.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('nav-active');
@@ -2578,6 +2727,11 @@ window.switchMenu = function (view) {
         hTitle.innerText = "Presupuesto Manual";
         hSub.innerText = "Creá un presupuesto personalizado para tu cliente.";
         hSub.style.display = 'block';
+    } else if (view === 'configuracion') {
+        hTitle.innerText = "Configuración";
+        hSub.innerText = "Panel de control del sistema Gecko.";
+        hSub.style.display = 'block';
+        setTimeout(() => window.initConfiguracion(), 50);
     }
     // ─── Persistencia de Pestaña: guardar en hash y localStorage ───
     window.location.hash = view;
