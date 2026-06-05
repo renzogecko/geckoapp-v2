@@ -131,6 +131,12 @@ async function _inicializarDesdeAPI() {
 
     _inicializado = true;
     console.log('%c 🦎 GECKO-API: MySQL sincronizado ✓ ', 'background:#16a34a;color:white;font-weight:bold;padding:3px 8px;border-radius:4px;');
+
+    // Seed servicios láser faltantes (solo si MySQL no los tiene aún)
+    try {
+        await fetch('/app/api.php?endpoint=seed_laser', { method: 'POST' });
+    } catch(e) {}
+
     document.dispatchEvent(new CustomEvent('geckoDB_ready'));
     document.dispatchEvent(new CustomEvent('inventoryReady'));
 }

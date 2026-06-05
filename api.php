@@ -302,6 +302,61 @@ try {
     }
 
     // ══════════════════════════════════════════
+    // LASER PARAMS (speed/power/espesor por servicio)
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'laser_params') {
+
+        if ($method === 'GET') {
+            $stmt = $pdo->query("SELECT valor FROM configuracion WHERE clave = 'gecko_laserParams'");
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                responder(json_decode($row['valor'], true) ?: new stdClass());
+            }
+            responder(new stdClass());
+        }
+
+        if ($method === 'PUT') {
+            $valor = json_encode($body);
+            $stmt = $pdo->prepare("REPLACE INTO configuracion (clave, valor) VALUES ('gecko_laserParams', ?)");
+            $stmt->execute([$valor]);
+            responder(["success" => true, "message" => "Parámetros láser guardados."]);
+        }
+    }
+
+    // ══════════════════════════════════════════
+    // SEED SERVICIOS LASER (insertar faltantes)
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'seed_laser') {
+
+        if ($method === 'POST') {
+            $faltantes = [
+                ['CORTE LASER - MDF 3MM',       'mtL', 'Servicios de Corte'],
+                ['CORTE LASER - MDF 5.5MM',     'mtL', 'Servicios de Corte'],
+                ['CORTE LASER - POLIFAN 2CM',   'mtL', 'Servicios de Corte'],
+                ['CORTE LASER - POLIFAN 3CM',   'mtL', 'Servicios de Corte'],
+                ['CORTE LASER - POLIFAN 4CM',   'mtL', 'Servicios de Corte'],
+                ['CORTE LASER - POLIFAN 5CM',   'mtL', 'Servicios de Corte'],
+                ['CORTE LASER - BICAPA',        'mtL', 'Servicios de Corte'],
+                ['CORTE LASER - CARTON 6MM',    'mtL', 'Servicios de Corte'],
+                ['CORTE LASER - FIBRA PLUS',    'mtL', 'Servicios de Corte'],
+                ['CORTE CNC - CHAPA TERMEL',    'mtL', 'Servicios de Corte'],
+                ['CORTE CNC - CHAPA IACMA',     'mtL', 'Servicios de Corte'],
+            ];
+            $insertados = 0;
+            $stmt = $pdo->prepare(
+                "INSERT IGNORE INTO servicios (id, nombre, categoria, costo, unidad, precio)
+                 VALUES (?, ?, ?, 0, ?, 0)"
+            );
+            foreach ($faltantes as $f) {
+                $id = 'laser_' . strtolower(preg_replace('/[^a-z0-9]/i', '_', $f[0]));
+                $stmt->execute([$id, $f[0], $f[2], $f[1]]);
+                $insertados += $stmt->rowCount();
+            }
+            responder(["success" => true, "insertados" => $insertados]);
+        }
+    }
+
+    // ══════════════════════════════════════════
     // CONFIGURACION (GECKO_SETTINGS)
     // ══════════════════════════════════════════
     elseif ($endpoint === 'configuracion') {

@@ -1505,17 +1505,9 @@
                 </div>
             </div>
         </div>
-    </main>
 
   <!-- VIEW: CONFIGURACIÓN -->
   <div id="viewConfiguracion" class="hidden px-6 md:px-10 py-6 md:py-10 flex-col flex-1 overflow-y-auto custom-scrollbar">
-
-    <!-- Header -->
-    <div class="mb-8">
-      <p class="text-[11px] font-black text-gecko uppercase tracking-widest mb-1">Sistema</p>
-      <h1 class="text-2xl font-black text-white tracking-tight">Configuración</h1>
-      <p class="text-sm text-zinc-500 mt-1">Panel de control de variables operativas del sistema.</p>
-    </div>
 
     <!-- Tabs -->
     <div class="flex gap-6 border-b border-darkBorder mb-8">
@@ -1623,17 +1615,25 @@
               <th class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">Speed</th>
               <th class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">Power %</th>
               <th class="py-4 px-4 text-[10px] text-gecko uppercase tracking-widest font-black text-right">$ / ml</th>
+              <th class="py-4 px-3 w-10"></th>
             </tr>
           </thead>
           <tbody id="tablaParametrosLaser" class="divide-y divide-gray-800/50">
-            <!-- Renderizado dinámicamente por window.renderTablaParametrosLaser() -->
           </tbody>
         </table>
       </div>
+      <button onclick="window.agregarFilaParametroLaser()"
+        style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;margin-top:8px;background:transparent;border:1px dashed #333333;border-radius:12px;color:#52525b;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;"
+        onmouseover="this.style.color='#F15A24';this.style.borderColor='#F15A24'"
+        onmouseout="this.style.color='#52525b';this.style.borderColor='#333333'">
+        + Agregar material / servicio
+      </button>
     </div>
 
   </div>
   <!-- FIN VIEW: CONFIGURACIÓN -->
+
+    </main>
 
     <!-- ═══════════════════ MODAL PRESUPUESTO UNIFICADO ═══════════════════ -->
     <div id="modalPresupuesto" style="display:none;"

@@ -598,13 +598,31 @@ window.guardarConfiguracion = function() {
         condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || ''
     };
     localStorage.setItem('GECKO_SETTINGS', JSON.stringify(GECKO_SETTINGS));
+    // Sincronizar con MySQL
+    fetch('/app/api.php?endpoint=configuracion', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(GECKO_SETTINGS)
+    }).catch(e => console.warn('GECKO: Error guardando config en API', e));
     if (typeof window.mostrarExito === 'function') window.mostrarExito('Configuración guardada correctamente.', '¡Guardado!');
     if (typeof renderInsumos === 'function') renderInsumos();
 };
 
-window.renderTablaParametrosLaser = function() {
+window.renderTablaParametrosLaser = async function() {
     const tbody = document.getElementById('tablaParametrosLaser');
     if (!tbody) return;
+
+    // Intentar cargar laserParams desde API si no está en localStorage
+    const laserParamsLocal = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
+    if (Object.keys(laserParamsLocal).length === 0) {
+        try {
+            const res = await fetch('/app/api.php?endpoint=laser_params');
+            const data = await res.json();
+            if (data && typeof data === 'object') {
+                localStorage.setItem('gecko_laserParams', JSON.stringify(data));
+            }
+        } catch(e) {}
+    }
 
     const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
     const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
@@ -674,29 +692,124 @@ window._actualizarParamLaser = function(input) {
     window._laserParamsTemp[servicio][campo] = parseFloat(input.value) || input.value;
 };
 
-window.guardarParametrosLaser = function() {
-    const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
-    Object.assign(laserParams, window._laserParamsTemp);
-    localStorage.setItem('gecko_laserParams', JSON.stringify(laserParams));
-    window._laserParamsTemp = {};
-
+window.guardarParametrosLaser = async function() {
+    // 1. Leer servicios actuales del localStorage (ya sincronizado desde MySQL)
     const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
-    const inputs = document.querySelectorAll('#tablaParametrosLaser input[data-campo="precio"]');
-    inputs.forEach(inp => {
+    const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
+
+    // 2. Procesar filas existentes (data-campo="precio")
+    document.querySelectorAll('#tablaParametrosLaser input[data-campo="precio"]').forEach(inp => {
         const nombre = inp.dataset.servicio;
         const precio = parseFloat(inp.value) || 0;
         const idx = servicios.findIndex(s => s.nombre === nombre);
-        if (idx !== -1) servicios[idx].precioVenta = precio;
+        if (idx !== -1) {
+            servicios[idx].precioVenta = precio;
+            servicios[idx].precio = precio;
+        }
     });
-    localStorage.setItem('geckoServicios', JSON.stringify(servicios));
+    // Guardar params (espesor/speed/power)
+    Object.assign(laserParams, window._laserParamsTemp || {});
+    window._laserParamsTemp = {};
 
-    if (typeof window.geckoAPI !== 'undefined') {
-        localStorage.setItem('geckoServicios', JSON.stringify(servicios));
+    // 3. Procesar filas nuevas
+    document.querySelectorAll('.fila-laser-nueva').forEach(tr => {
+        const nombre = tr.querySelector('.fila-nueva-nombre')?.value.trim().toUpperCase();
+        if (!nombre) return;
+        const espesor = parseFloat(tr.querySelector('.fila-nueva-espesor')?.value) || 0;
+        const speed   = parseFloat(tr.querySelector('.fila-nueva-speed')?.value) || 0;
+        const power   = parseFloat(tr.querySelector('.fila-nueva-power')?.value) || 0;
+        const precio  = parseFloat(tr.querySelector('.fila-nueva-precio')?.value) || 0;
+        const existeIdx = servicios.findIndex(s => s.nombre.trim().toUpperCase() === nombre);
+        if (existeIdx === -1) {
+            servicios.push({ id: 'laser_' + Date.now(), nombre, unidad: 'mtL', precio, precioVenta: precio, categoria: 'Servicios de Corte', costo: 0 });
+        } else {
+            servicios[existeIdx].precio = precio;
+            servicios[existeIdx].precioVenta = precio;
+        }
+        laserParams[nombre] = { espesor, speed, power };
+    });
+
+    // 4. Persistir en localStorage
+    localStorage.setItem('geckoServicios', JSON.stringify(servicios));
+    localStorage.setItem('gecko_laserParams', JSON.stringify(laserParams));
+
+    // 5. Sincronizar con MySQL vía API
+    try {
+        // 5a. Actualizar cada servicio modificado (PUT)
+        const laserServs = servicios.filter(s => /corte laser|corte cnc|grabado laser/i.test(s.nombre));
+        await Promise.all(laserServs.map(s =>
+            fetch('/app/api.php?endpoint=servicios', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: s.id, nombre: s.nombre, categoria: s.categoria || 'Servicios de Corte', costo: 0, unidad: s.unidad || 'mtL', precio: s.precio || 0 })
+            })
+        ));
+        // 5b. Guardar laserParams en MySQL
+        await fetch('/app/api.php?endpoint=laser_params', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(laserParams)
+        });
+    } catch(e) {
+        console.warn('GECKO: Error sincronizando con API, datos guardados solo en localStorage.', e);
     }
 
-    if (typeof window.mostrarExito === 'function') window.mostrarExito('Parámetros láser guardados.', '¡Guardado!');
+    if (typeof window.mostrarExito === 'function') window.mostrarExito('Parámetros láser guardados en el servidor.', '¡Guardado!');
+    // Re-renderizar para mostrar nuevas filas como filas normales
+    window.renderTablaParametrosLaser();
 };
 
+window.agregarFilaParametroLaser = function() {
+    const tbody = document.getElementById('tablaParametrosLaser');
+    if (!tbody) return;
+    const tr = document.createElement('tr');
+    tr.className = 'fila-laser-nueva hover:bg-white/3 transition-colors';
+    tr.innerHTML = `
+        <td class=”py-3 px-5”>
+            <input type=”text”
+                class=”fila-nueva-nombre w-full bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-white font-bold text-[13px] py-1”
+                placeholder=”Ej: CORTE LASER - MDF 3MM”>
+        </td>
+        <td class=”py-3 px-4 text-center”>
+            <input type=”number” step=”0.5”
+                class=”fila-nueva-espesor w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1”
+                placeholder=”—“>
+        </td>
+        <td class=”py-3 px-4 text-center”>
+            <input type=”number”
+                class=”fila-nueva-speed w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1”
+                placeholder=”—“>
+        </td>
+        <td class=”py-3 px-4 text-center”>
+            <input type=”number”
+                class=”fila-nueva-power w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1”
+                placeholder=”—“>
+        </td>
+        <td class=”py-3 px-4 text-right”>
+            <div class=”flex items-center justify-end gap-1”>
+                <span class=”text-zinc-600 text-[12px]”>$</span>
+                <input type=”number”
+                    class=”fila-nueva-precio w-24 text-right bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-gecko font-black text-[14px] py-1”
+                    placeholder=”0”>
+            </div>
+        </td>
+        <td class=”py-3 px-3 text-center”>
+            <button onclick=”this.closest('tr').remove()”
+                class=”text-zinc-700 hover:text-red-500 transition-colors font-bold text-[16px] leading-none”>✕</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    tr.querySelector('.fila-nueva-nombre')?.focus();
+};
+
+window._actualizarNombreFila = function(input) {
+    const tr = input.closest('tr');
+    if (!tr) return;
+    const nombre = input.value.trim().toUpperCase();
+    tr.querySelectorAll('input[data-campo], select[data-campo]').forEach(el => {
+        if (el.dataset.campo !== 'nombre') el.dataset.servicio = nombre;
+    });
+};
 
 
 // â”€â”€ Modales Dinámicos GECKO (Globales) â”€â”€
