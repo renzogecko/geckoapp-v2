@@ -361,7 +361,7 @@ window._imprimirDocumento = async function (id) {
         .replace('</body>', `
         <div id="previewToolbar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:9999;background:#141417;border:1px solid #27272a;border-radius:16px;padding:12px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
             <button onclick="window.print()" style="background:#F15A24;border:none;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Imprimir</button>
-            <button onclick="window.opener._descargarDesdePopup()" style="background:#1e1f20;border:1px solid #333;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Descargar PDF</button>
+            <button onclick="window.opener._descargarDocumento('${id}')" style="background:#1e1f20;border:1px solid #333;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Descargar PDF</button>
             <button onclick="window.close()" style="background:transparent;border:1px solid #3f3f46;color:#71717a;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar</button>
         </div>
         <style>@media print { #previewToolbar { display: none !important; } }</style>
