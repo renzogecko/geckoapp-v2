@@ -324,9 +324,9 @@ window.verDocumento = async function (id) {
         ? `Orden de Trabajo #${String(id).padStart(4, '0')}`
         : `Presupuesto #${String(id).padStart(4, '0')}`;
 
-    const btnStyle = 'background:#27272a;border:1.5px solid #F15A24;color:#F15A24;border-radius:12px;padding:12px 32px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.15s;';
-    const btnHoverOn = "this.style.background='#F15A24';this.style.color='#1a1a1a'";
-    const btnHoverOff = "this.style.background='#27272a';this.style.color='#F15A24'";
+    const btnStyle = 'background:#27272a;border:1.5px solid #F15A24;color:#F15A24;border-radius:12px;padding:12px 32px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s ease;box-shadow:0 0px 0px rgba(241,90,36,0);';
+    const btnHoverOn = "this.style.background='#F15A24';this.style.color='#1a1a1a';this.style.transform='scale(1.04)';this.style.boxShadow='0 6px 20px rgba(241,90,36,0.4)'";
+    const btnHoverOff = "this.style.background='#27272a';this.style.color='#F15A24';this.style.transform='scale(1)';this.style.boxShadow='0 0px 0px rgba(241,90,36,0)'";
 
     modal.innerHTML = `
     <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:900px;height:92vh;display:flex;flex-direction:column;overflow:hidden;">
@@ -335,8 +335,6 @@ window.verDocumento = async function (id) {
                 <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 2px 0;">${titulo}</p>
                 <p style="color:white;font-size:16px;font-weight:900;margin:0;">${p.cliente || 'S/N'}</p>
             </div>
-            <button onclick="document.getElementById('modalVerDocumento').remove()"
-                style="background:#27272a;border:none;color:#71717a;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>
         </div>
         <iframe id="geckoPreviewFrame" style="flex:1;border:none;background:white;"></iframe>
         <div style="display:flex;gap:12px;padding:16px 24px;border-top:1px solid #27272a;flex-shrink:0;justify-content:center;">
