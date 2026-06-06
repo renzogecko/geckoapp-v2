@@ -337,8 +337,6 @@ window.verDocumento = function (id) {
         <div style="display:flex;gap:10px;">
             <button onclick="window._imprimirDocumento('${id}')"
                 style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Imprimir</button>
-            <button onclick="window._descargarDocumento('${id}')"
-                style="flex:1;padding:13px;background:#1A1A1A;border:1px solid #27272a;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Descargar</button>
             <button onclick="document.getElementById('modalVerOT').remove()"
                 style="padding:13px 16px;background:transparent;border:1px solid #3f3f46;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar</button>
         </div>
@@ -360,8 +358,7 @@ window._imprimirDocumento = async function (id) {
         .replace('<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>', '')
         .replace('</body>', `
         <div id="previewToolbar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:9999;background:#141417;border:1px solid #27272a;border-radius:16px;padding:12px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-            <button onclick="window.print()" style="background:#F15A24;border:none;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Imprimir</button>
-            <button onclick="window.opener._descargarDocumento('${id}')" style="background:#1e1f20;border:1px solid #333;color:white;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Descargar PDF</button>
+            <button onclick="window.print()" style="background:#F15A24;border:none;color:white;padding:10px 24px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;">Imprimir / Guardar PDF</button>
             <button onclick="window.close()" style="background:transparent;border:1px solid #3f3f46;color:#71717a;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar</button>
         </div>
         <style>@media print { #previewToolbar { display: none !important; } }</style>
