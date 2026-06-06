@@ -340,8 +340,8 @@ window.verDocumento = async function (id) {
         </div>
         <iframe id="geckoPreviewFrame" style="flex:1;border:none;background:white;"></iframe>
         <div style="display:flex;gap:12px;padding:16px 24px;border-top:1px solid #27272a;flex-shrink:0;justify-content:center;">
-            <button id="btnDescargaDoc" onmouseover="${btnHoverOn}" onmouseout="${btnHoverOff}" style="${btnStyle}">DESCARGAR</button>
-            <button id="btnImprimirDoc" onmouseover="${btnHoverOn}" onmouseout="${btnHoverOff}" style="${btnStyle}">IMPRIMIR</button>
+            <button id="btnImprimirDoc" onmouseover="${btnHoverOn}" onmouseout="${btnHoverOff}" style="${btnStyle}">IMPRIMIR / GUARDAR PDF</button>
+            <button onclick="document.getElementById('modalVerDocumento').remove()" style="background:transparent;border:1.5px solid #3f3f46;color:#71717a;border-radius:12px;padding:12px 32px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='#F15A24';this.style.color='#F15A24'" onmouseout="this.style.borderColor='#3f3f46';this.style.color='#71717a'">CERRAR</button>
         </div>
     </div>`;
 
@@ -354,10 +354,6 @@ window.verDocumento = async function (id) {
 
     document.getElementById('btnImprimirDoc').onclick = function () {
         frame.contentWindow.print();
-    };
-    document.getElementById('btnDescargaDoc').onclick = function () {
-        const winDL = window.open('', '_blank', 'width=960,height=780');
-        if (winDL) { winDL.document.write(htmlPreview); winDL.document.close(); }
     };
 };
 
