@@ -285,67 +285,9 @@ window._guardarManual = function (status) {
 // ══════════════════════════════════════════════════════
 
 window.verDocumento = function (id) {
-    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const todos = lista.filter(x => String(x.id) === String(id));
-    const p = todos[todos.length - 1];
-    if (!p) { alert('No se encontró el documento.'); return; }
-
-    const saldo = (p.total || 0) - (p.sena || 0);
-    const resumenItems = (p.items || []).map(it =>
-        `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1f1f23;">
-            <span style="color:#a1a1aa;font-size:12px;font-weight:600;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
-            <span style="color:#F15A24;font-size:12px;font-weight:900;font-family:monospace;">$${Math.round(it.costo || 0).toLocaleString('es-AR')}</span>
-        </div>`
-    ).join('');
-
-    document.getElementById('modalVerOT')?.remove();
-    const modal = document.createElement('div');
-    modal.id = 'modalVerOT';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
-    console.log('GECKO verDocumento:', id, 'imagenes:', p.imagenes?.length || 0, p);
-    modal.innerHTML = `
-    <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <div>
-                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">${p.status === 'OT' ? 'Orden de Trabajo' : 'Presupuesto'} #${String(id).padStart(4, '0')}</p>
-                <h2 style="color:white;font-size:20px;font-weight:900;margin:0;">${p.cliente || 'S/N'}</h2>
-            </div>
-            <button onclick="document.getElementById('modalVerOT').remove()" style="background:#27272a;border:none;color:#71717a;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px;">✕</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-            <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
-                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Estado</p>
-                <p style="color:white;font-size:14px;font-weight:900;">${p.estado_ot || p.status || '—'}</p>
-            </div>
-            <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
-                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Entrega</p>
-                <p style="color:white;font-size:14px;font-weight:900;">${p.fecha_entrega || 'A confirmar'}</p>
-            </div>
-            <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
-                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Total</p>
-                <p style="color:#F15A24;font-size:16px;font-weight:900;">$${Math.round(p.total || 0).toLocaleString('es-AR')}</p>
-            </div>
-            <div style="background:#09090b;border:1px solid ${saldo > 0 ? '#ef4444' : '#10b981'};border-radius:12px;padding:12px;">
-                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Saldo</p>
-                <p style="color:${saldo > 0 ? '#ef4444' : '#10b981'};font-size:16px;font-weight:900;">$${Math.round(saldo).toLocaleString('es-AR')}</p>
-            </div>
-        </div>
-        ${resumenItems ? `<div style="background:#09090b;border:1px solid #27272a;border-radius:14px;padding:16px;margin-bottom:20px;">
-            <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">Trabajo</p>
-            ${resumenItems}
-        </div>` : ''}
-        <div style="display:flex;gap:10px;">
-            <button onclick="window._imprimirDocumento('${id}')"
-                style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;transition:transform 0.15s ease;"
-                onmouseover="this.style.transform='scale(1.04)'"
-                onmouseout="this.style.transform='scale(1)'">Imprimir / Guardar PDF</button>
-            <button onclick="document.getElementById('modalVerOT').remove()"
-                style="padding:13px 16px;background:transparent;border:1px solid #3f3f46;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;transition:transform 0.15s ease;"
-                onmouseover="this.style.transform='scale(1.04)'"
-                onmouseout="this.style.transform='scale(1)'">Cerrar</button>
-        </div>
-    </div>`;
-    document.body.appendChild(modal);
+    if (typeof window._imprimirDocumento === 'function') {
+        window._imprimirDocumento(id);
+    }
 };
 
 window._imprimirDocumento = async function (id) {
