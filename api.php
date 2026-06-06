@@ -25,6 +25,15 @@ function error($msg, $code = 400) {
     responder(["success" => false, "message" => $msg]);
 }
 
+function presupuesto_metadata($d) {
+    $columnas = ['id','cliente','fecha','total','status','sena','estado_ot','items','metodo_pago','metadata'];
+    $meta = [];
+    foreach ($d as $k => $v) {
+        if (!in_array($k, $columnas, true)) $meta[$k] = $v;
+    }
+    return json_encode($meta, JSON_UNESCAPED_UNICODE);
+}
+
 try {
     // ══════════════════════════════════════════
     // MATERIALES
@@ -189,34 +198,44 @@ try {
             // Decodificar items JSON
             foreach ($rows as &$r) {
                 $r['items'] = json_decode($r['items'] ?? '[]', true) ?: [];
+                if (!empty($r['metadata'])) {
+                    $meta = json_decode($r['metadata'], true);
+                    if (is_array($meta)) {
+                        foreach ($meta as $mk => $mv) { $r[$mk] = $mv; }
+                    }
+                }
+                unset($r['metadata']);
             }
+            unset($r);
             responder($rows);
         }
 
         if ($method === 'POST') {
             $d = $body;
-            $stmt = $pdo->prepare("INSERT INTO presupuestos 
-                (id, cliente, fecha, total, status, sena, estado_ot, items, metodo_pago)
-                VALUES (?,?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO presupuestos
+                (id, cliente, fecha, total, status, sena, estado_ot, items, metodo_pago, metadata)
+                VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid(), $d['cliente'] ?? '', $d['fecha'] ?? '',
                 $d['total'] ?? 0, $d['status'] ?? 'Presupuesto',
                 $d['sena'] ?? 0, $d['estado_ot'] ?? '',
-                json_encode($d['items'] ?? []), $d['metodo_pago'] ?? ''
+                json_encode($d['items'] ?? []), $d['metodo_pago'] ?? '',
+                presupuesto_metadata($d)
             ]);
             responder(["success" => true, "message" => "Presupuesto creado."]);
         }
 
         if ($method === 'PUT') {
             $d = $body;
-            $stmt = $pdo->prepare("REPLACE INTO presupuestos 
-                (id, cliente, fecha, total, status, sena, estado_ot, items, metodo_pago)
-                VALUES (?,?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("REPLACE INTO presupuestos
+                (id, cliente, fecha, total, status, sena, estado_ot, items, metodo_pago, metadata)
+                VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'], $d['cliente'] ?? '', $d['fecha'] ?? '',
                 $d['total'] ?? 0, $d['status'] ?? 'Presupuesto',
                 $d['sena'] ?? 0, $d['estado_ot'] ?? '',
-                json_encode($d['items'] ?? []), $d['metodo_pago'] ?? ''
+                json_encode($d['items'] ?? []), $d['metodo_pago'] ?? '',
+                presupuesto_metadata($d)
             ]);
             responder(["success" => true, "message" => "Presupuesto actualizado."]);
         }
