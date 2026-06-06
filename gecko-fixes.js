@@ -291,33 +291,14 @@ window.verDocumento = function (id) {
 };
 
 window._imprimirDocumento = async function (id) {
-    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const p = lista.find(x => String(x.id) === String(id));
-    if (!p) return;
-
-    const esOT = p.status === 'OT';
-    const html = esOT
-        ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: p.imagenes || [] })
-        : await window.generarDocPresupuesto({ ...p, entrega: p.fechaEntrega || 'A convenir', imagenes: p.imagenes || [] });
-
-    const htmlFinal = html
-        .replace('<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>', '')
-        .replace('</body>', `
-        <div id="previewToolbar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:9999;background:#141417;border:1px solid #27272a;border-radius:16px;padding:12px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-            <button onclick="window.print()" style="background:#F15A24;border:none;color:white;padding:10px 24px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">Imprimir / Guardar PDF</button>
-            <button onclick="window.close()" style="background:transparent;border:1px solid #3f3f46;color:#71717a;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">Cerrar</button>
-        </div>
-        <style>@media print { #previewToolbar { display: none !important; } }</style>
-        </body>`);
-
-    const win = window.open('', '_blank', 'width=960,height=780');
-    if (!win) { alert('Permití las ventanas emergentes.'); return; }
-    win.document.write(htmlFinal);
-    win.document.close();
-    // Escuchar cuando se cierra el popup para redirigir en la ventana principal
-    const _redirectInterval = setInterval(() => {
-        if (win.closed) {
-            clearInterval(_redirectInterval);
+    // Usar verDocumento (gecko-docs.js) que tiene el modal oscuro correcto
+    if (typeof window.verDocumento === 'function') {
+        window.verDocumento(id);
+    }
+    // Redirección post-print al cerrar
+    const _checkClosed = setInterval(() => {
+        if (!document.getElementById('modalVerDocumento')) {
+            clearInterval(_checkClosed);
             const destino = window._gpmPostPrintRedirect;
             window._gpmPostPrintRedirect = null;
             if (destino && typeof window.switchMenu === 'function') {
