@@ -402,58 +402,22 @@ window._descargarDocumento = async function (id) {
     const clienteSlug = (p.cliente || 'cliente').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_');
     const tituloSlug = (p.titulo || '').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_');
     const nombreArchivo = esOT
-        ? `OT_${String(id).padStart(4,'0')}_${clienteSlug}.pdf`
-        : `Pres_${clienteSlug}${tituloSlug ? '_' + tituloSlug : ''}.pdf`;
+        ? `OT_${String(id).padStart(4,'0')}_${clienteSlug}`
+        : `Pres_${clienteSlug}${tituloSlug ? '_' + tituloSlug : ''}`;
 
-    // Crear iframe oculto para renderizar el HTML
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:794px;height:1123px;border:none;';
-    document.body.appendChild(iframe);
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (!win) { alert("Permití las ventanas emergentes para descargar."); return; }
 
-    iframe.onload = async function() {
-        try {
-            const canvas = await html2canvas(iframe.contentDocument.body, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#ffffff',
-                width: 794,
-                windowWidth: 794
-            });
+    const htmlConPrint = html.replace('</title>', `</title><script>
+        window.onload = function() {
+            document.title = '${nombreArchivo}';
+            setTimeout(function() { window.print(); }, 300);
+            window.onafterprint = function() { window.close(); };
+        };
+    <\/script>`);
 
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-            let position = 0;
-            let remaining = imgHeight;
-
-            while (remaining > 0) {
-                pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, imgHeight);
-                remaining -= pageHeight;
-                position -= pageHeight;
-                if (remaining > 0) pdf.addPage();
-            }
-
-            pdf.save(nombreArchivo);
-        } catch(e) {
-            console.error('Error generando PDF:', e);
-            alert('Error al generar el PDF. Intentá con Imprimir → Guardar como PDF.');
-        } finally {
-            document.body.removeChild(iframe);
-        }
-    };
-
-    // Inyectar HTML limpio en el iframe
-    const htmlLimpio = html
-        .replace(/<script[\s\S]*?<\/script>/gi, '')
-        .replace('</head>', '<style>body{margin:0;padding:0;background:#fff;}</style></head>');
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(htmlLimpio);
-    iframe.contentDocument.close();
+    win.document.write(htmlConPrint);
+    win.document.close();
 };
 
 window._descargarDesdePopup = function() {
