@@ -284,8 +284,9 @@ let GECKO_SETTINGS = JSON.parse(localStorage.getItem('GECKO_SETTINGS')) || {
     valorHoraHombre: 3500,
     costoHora3D: 1500,
     condicionesVenta: "Este presupuesto tiene una validez de 15 días.\nLos trabajos se inician con una seña del 50%.\nTiempos de entrega a confirmar al momento de Señalar.",
-    nivelOro: 250000,
-    nivelPlata: 100000
+    nivelBronce: 150000,
+    nivelPlata: 300000,
+    nivelOro: 500000
 };
 
 
@@ -394,12 +395,14 @@ function obtenerBadgeScoring(clienteNombre) {
     }).reduce((acc, p) => acc + p.total, 0);
 
     // Evaluamos contra los settings y devolvemos la insignia HTML
-    if (totalMes >= (GECKO_SETTINGS.nivelOro || 250000)) {
-        return `<span class="px-2 py-0.5 rounded-md bg-[#FFD700]/20 text-[#B8860B] border border-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ðŸ¥‡ Oro</span>`;
-    } else if (totalMes >= (GECKO_SETTINGS.nivelPlata || 100000)) {
-        return `<span class="px-2 py-0.5 rounded-md bg-[#C0C0C0]/20 text-[#808080] border border-[#C0C0C0]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ðŸ¥ˆ Plata</span>`;
+    if (totalMes >= (GECKO_SETTINGS.nivelOro || 500000)) {
+        return `<span class="px-2 py-0.5 rounded-md bg-[#FFD700]/20 text-[#B8860B] border border-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ORO</span>`;
+    } else if (totalMes >= (GECKO_SETTINGS.nivelPlata || 300000)) {
+        return `<span class="px-2 py-0.5 rounded-md bg-[#C0C0C0]/20 text-[#94a3b8] border border-[#C0C0C0]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">PLATA</span>`;
+    } else if (totalMes >= (GECKO_SETTINGS.nivelBronce || 150000)) {
+        return `<span class="px-2 py-0.5 rounded-md bg-[#CD7F32]/20 text-[#CD7F32] border border-[#CD7F32]/50 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">BRONCE</span>`;
     } else {
-        return `<span class="px-2 py-0.5 rounded-md bg-[#CD7F32]/10 text-[#A0522D] border border-[#CD7F32]/30 text-[9px] font-black uppercase tracking-widest ml-2" title="Facturación Mes: $${totalMes.toLocaleString('es-AR')}">ðŸ¥‰ Bronce</span>`;
+        return '';
     }
 }
 
@@ -552,6 +555,30 @@ if (formConfig) {
 // SECCIÓN CONFIGURACIÓN — Tab switching + render + guardar
 // ══════════════════════════════════════════════════════
 
+// COTIZACIÓN DÓLAR ONLINE — DolarApi.com (BNA Oficial)
+window.geckoFetchCotizacionDolar = async function () {
+    const input = document.getElementById('cfgCotizacionDolar');
+    const chip = document.getElementById('cfgDolarChip');
+    if (!input) return;
+    try {
+        const res = await fetch('https://dolarapi.com/v1/dolares/oficial', { signal: AbortSignal.timeout(4000) });
+        if (!res.ok) return;
+        const data = await res.json();
+        const venta = data?.venta;
+        if (!venta || isNaN(venta)) return;
+        // Solo actualiza si el campo está vacío o tiene el valor por defecto
+        if (!input.value || parseFloat(input.value) === 0) {
+            input.value = venta;
+        }
+        if (chip) {
+            chip.textContent = `BNA Oficial · Venta $${venta.toLocaleString('es-AR')} · actualizado hoy`;
+            chip.classList.remove('hidden');
+        }
+    } catch (e) {
+        // Silencioso — usa el valor guardado en MySQL
+    }
+};
+
 window.switchConfigTab = function (tab) {
     ['finanzas', 'operativos', 'laser'].forEach(t => {
         const btn = document.getElementById('cfgTab-' + t);
@@ -567,6 +594,9 @@ window.switchConfigTab = function (tab) {
         window.geckoLaserStickyShow();
     } else {
         window.geckoLaserStickyHide();
+    }
+    if (tab === 'finanzas') {
+        window.geckoFetchCotizacionDolar();
     }
 };
 
@@ -618,8 +648,9 @@ window.initConfiguracion = function () {
     v('cfgCotizacionDolar', s.cotizacionDolar || 1420);
     v('cfgIva', s.iva || 21);
     v('cfgMultGlobal', s.multiplicadorGlobal || 2.0);
-    v('cfgNivelOro', s.nivelOro || 250000);
-    v('cfgNivelPlata', s.nivelPlata || 100000);
+    v('cfgNivelBronce', s.nivelBronce || 150000);
+    v('cfgNivelPlata', s.nivelPlata || 300000);
+    v('cfgNivelOro', s.nivelOro || 500000);
     v('cfgHoraHombre', s.valorHoraHombre || 0);
     v('cfgHoraLaser', Math.round((s.minutoLaser || 0) * 60));
     v('cfgHoraCNC', Math.round((s.minutoRouter || 0) * 60));
@@ -636,8 +667,9 @@ window.guardarConfiguracion = function () {
         cotizacionDolar: g('cfgCotizacionDolar'),
         iva: g('cfgIva'),
         multiplicadorGlobal: g('cfgMultGlobal'),
-        nivelOro: g('cfgNivelOro'),
+        nivelBronce: g('cfgNivelBronce'),
         nivelPlata: g('cfgNivelPlata'),
+        nivelOro: g('cfgNivelOro'),
         valorHoraHombre: g('cfgHoraHombre'),
         minutoLaser: g('cfgHoraLaser') / 60,
         minutoRouter: g('cfgHoraCNC') / 60,

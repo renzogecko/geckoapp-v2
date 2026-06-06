@@ -1526,85 +1526,166 @@
     </div>
 
     <!-- Tab: Finanzas -->
-    <div id="cfgContent-finanzas" class="space-y-6 max-w-lg">
-      <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 space-y-6">
-        <p class="text-gecko text-[10px] font-black uppercase tracking-widest">Mercado</p>
+    <div id="cfgContent-finanzas" class="max-w-xl">
+
+      <div class="bg-darkCard border border-darkBorder rounded-2xl p-8 space-y-8">
+
+        <!-- Sección: Mercado -->
         <div>
-          <label class="gecko-label">Cotización Dólar (ARS)</label>
-          <input type="number" id="cfgCotizacionDolar" class="gecko-input-line" style="padding-left:4px;" placeholder="1420">
+          <p class="text-gecko text-[10px] font-black uppercase tracking-widest mb-5">Mercado</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="gecko-label">Cotización Dólar (ARS)</label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">U$D</span>
+                <input type="number" id="cfgCotizacionDolar" class="input-limpio-gecko" placeholder="1420" step="1" style="padding-left:16px !important;">
+              </div>
+              <p id="cfgDolarChip" class="text-[10px] text-zinc-600 font-bold uppercase tracking-wider mt-2 ml-1 hidden"></p>
+            </div>
+            <div>
+              <label class="gecko-label">IVA (%)</label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">%</span>
+                <input type="number" id="cfgIva" class="input-limpio-gecko" placeholder="21" step="0.1" style="padding-left:16px !important;">
+              </div>
+            </div>
+            <div>
+              <label class="gecko-label">Multiplicador Global de Venta</label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">×</span>
+                <input type="number" id="cfgMultGlobal" class="input-limpio-gecko" placeholder="2.0" step="0.1" style="padding-left:16px !important;">
+              </div>
+            </div>
+          </div>
         </div>
+
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0;">
+
+        <!-- Sección: Scoring de Clientes (4 niveles) -->
         <div>
-          <label class="gecko-label">IVA (%)</label>
-          <input type="number" id="cfgIva" class="gecko-input-line" style="padding-left:4px;" placeholder="21">
+          <p class="text-gecko text-[10px] font-black uppercase tracking-widest mb-1">Scoring de Clientes</p>
+          <p class="text-zinc-600 text-[11px] mb-5">Facturación mensual mínima para alcanzar cada categoría.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="gecko-label" style="color:#CD7F32 !important;">
+                <svg style="display:inline;width:10px;height:10px;margin-right:4px;vertical-align:middle;" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#CD7F32" opacity="0.3"/><circle cx="5" cy="5" r="2.5" fill="#CD7F32"/></svg>
+                Bronce — desde ($)
+              </label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">$</span>
+                <input type="number" id="cfgNivelBronce" class="input-limpio-gecko" placeholder="150000" step="10000" style="padding-left:16px !important;">
+              </div>
+            </div>
+            <div>
+              <label class="gecko-label" style="color:#94a3b8 !important;">
+                <svg style="display:inline;width:10px;height:10px;margin-right:4px;vertical-align:middle;" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#94a3b8" opacity="0.3"/><circle cx="5" cy="5" r="2.5" fill="#94a3b8"/></svg>
+                Plata — desde ($)
+              </label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">$</span>
+                <input type="number" id="cfgNivelPlata" class="input-limpio-gecko" placeholder="300000" step="10000" style="padding-left:16px !important;">
+              </div>
+            </div>
+            <div>
+              <label class="gecko-label" style="color:#FFD700 !important;">
+                <svg style="display:inline;width:10px;height:10px;margin-right:4px;vertical-align:middle;" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#FFD700" opacity="0.3"/><circle cx="5" cy="5" r="2.5" fill="#FFD700"/></svg>
+                Oro — desde ($)
+              </label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">$</span>
+                <input type="number" id="cfgNivelOro" class="input-limpio-gecko" placeholder="500000" step="10000" style="padding-left:16px !important;">
+              </div>
+            </div>
+            <div class="md:col-span-1 flex items-end">
+              <p class="text-zinc-700 text-[10px] font-bold uppercase tracking-wider leading-relaxed">
+                Base: menos de Bronce<br>
+                <span class="text-zinc-600">Sin insignia — cliente nuevo o bajo volumen.</span>
+              </p>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="gecko-label">Multiplicador Global de Venta</label>
-          <input type="number" id="cfgMultGlobal" class="gecko-input-line" style="padding-left:4px;" placeholder="2.0" step="0.1">
-        </div>
+
       </div>
-      <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 space-y-6">
-        <p class="text-gecko text-[10px] font-black uppercase tracking-widest">Clientes</p>
-        <div>
-          <label class="gecko-label">Umbral cliente Oro ($)</label>
-          <input type="number" id="cfgNivelOro" class="gecko-input-line" style="padding-left:4px;" placeholder="250000">
-        </div>
-        <div>
-          <label class="gecko-label">Umbral cliente Plata ($)</label>
-          <input type="number" id="cfgNivelPlata" class="gecko-input-line" style="padding-left:4px;" placeholder="100000">
-        </div>
-      </div>
+
       <button onclick="window.guardarConfiguracion()"
-        class="w-full py-4 bg-gecko text-white font-black rounded-2xl text-[12px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg shadow-gecko/20">
+        class="w-full h-12 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] mt-6 transition-all hover:scale-[1.02] active:scale-95"
+        style="background:#f15a24;box-shadow:0 4px 20px rgba(241,90,36,0.35);transition:transform 0.15s ease,box-shadow 0.15s ease;"
+        onmouseover="this.style.boxShadow='0 8px 30px rgba(241,90,36,0.55)'"
+        onmouseout="this.style.boxShadow='0 4px 20px rgba(241,90,36,0.35)'">
         Guardar Finanzas
       </button>
     </div>
 
     <!-- Tab: Costos Operativos -->
-    <div id="cfgContent-operativos" class="hidden space-y-6 max-w-lg">
-      <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 space-y-6">
-        <p class="text-gecko text-[10px] font-black uppercase tracking-widest">Mano de Obra y Máquinas</p>
+    <div id="cfgContent-operativos" class="hidden max-w-xl">
+
+      <div class="bg-darkCard border border-darkBorder rounded-2xl p-8 space-y-8">
+
+        <!-- Sección: Mano de Obra y Máquinas -->
         <div>
-          <label class="gecko-label">Hora Hombre (ARS)</label>
-          <input type="number" id="cfgHoraHombre" class="gecko-input-line" style="padding-left:4px;" placeholder="3500">
+          <p class="text-gecko text-[10px] font-black uppercase tracking-widest mb-5">Mano de Obra y Máquinas</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="gecko-label">Hora Hombre (ARS)</label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">$</span>
+                <input type="number" id="cfgHoraHombre" class="input-limpio-gecko" placeholder="3500" step="100" style="padding-left:16px !important;">
+              </div>
+            </div>
+            <div>
+              <label class="gecko-label">Hora Láser (ARS)</label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">$</span>
+                <input type="number" id="cfgHoraLaser" class="input-limpio-gecko" placeholder="0" step="100" style="padding-left:16px !important;">
+              </div>
+            </div>
+            <div>
+              <label class="gecko-label">Hora CNC Router (ARS)</label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">$</span>
+                <input type="number" id="cfgHoraCNC" class="input-limpio-gecko" placeholder="0" step="100" style="padding-left:16px !important;">
+              </div>
+            </div>
+            <div>
+              <label class="gecko-label">Hora Impresión 3D (ARS)</label>
+              <div class="grupo-input-gecko">
+                <span class="prefijo-gecko">$</span>
+                <input type="number" id="cfgHora3D" class="input-limpio-gecko" placeholder="0" step="100" style="padding-left:16px !important;">
+              </div>
+            </div>
+          </div>
         </div>
+
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0;">
+
+        <!-- Sección: Condiciones de venta -->
         <div>
-          <label class="gecko-label">Hora Láser (ARS)</label>
-          <input type="number" id="cfgHoraLaser" class="gecko-input-line" style="padding-left:4px;" placeholder="0">
+          <p class="text-gecko text-[10px] font-black uppercase tracking-widest mb-2">Condiciones de Venta</p>
+          <p class="text-zinc-600 text-[11px] mb-4">Se imprimen al pie de cada presupuesto.</p>
+          <textarea id="cfgCondicionesVenta" rows="5"
+            placeholder="Ej: Validez 15 días. Seña 50%..."
+            style="width:100%;resize:vertical;background:rgba(24,24,27,0.5);border:1px solid #3f3f46;border-radius:12px;color:#f1f5f9;padding:14px 16px;font-size:0.95rem;outline:none;line-height:1.6;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#f15a24'"
+            onblur="this.style.borderColor='#3f3f46'"></textarea>
         </div>
-        <div>
-          <label class="gecko-label">Hora CNC Router (ARS)</label>
-          <input type="number" id="cfgHoraCNC" class="gecko-input-line" style="padding-left:4px;" placeholder="0">
-        </div>
-        <div>
-          <label class="gecko-label">Hora Impresión 3D (ARS)</label>
-          <input type="number" id="cfgHora3D" class="gecko-input-line" style="padding-left:4px;" placeholder="0">
-        </div>
+
       </div>
-      <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 space-y-4">
-        <p class="text-gecko text-[10px] font-black uppercase tracking-widest">Condiciones de venta (se imprimen en presupuestos)</p>
-        <textarea id="cfgCondicionesVenta" rows="5"
-          class="gecko-input-line"
-          style="resize:vertical;padding-left:4px;"
-          placeholder="Ej: Validez 15 días. Seña 50%..."></textarea>
-      </div>
+
       <button onclick="window.guardarConfiguracion()"
-        class="w-full py-4 bg-gecko text-white font-black rounded-2xl text-[12px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg shadow-gecko/20">
+        class="w-full h-12 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] mt-6 transition-all hover:scale-[1.02] active:scale-95"
+        style="background:#f15a24;box-shadow:0 4px 20px rgba(241,90,36,0.35);transition:transform 0.15s ease,box-shadow 0.15s ease;"
+        onmouseover="this.style.boxShadow='0 8px 30px rgba(241,90,36,0.55)'"
+        onmouseout="this.style.boxShadow='0 4px 20px rgba(241,90,36,0.35)'">
         Guardar Costos Operativos
       </button>
     </div>
 
     <!-- Tab: Parámetros Láser -->
     <div id="cfgContent-laser" class="hidden">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <p class="text-zinc-400 text-sm">Editá el precio por metro lineal y los parámetros de corte de cada material.
-            <br><span class="text-gecko font-bold">El cotizador usará estos valores automáticamente.</span>
-          </p>
-        </div>
-        <button onclick="window.guardarParametrosLaser()"
-          class="px-6 py-3 bg-gecko text-white font-black rounded-xl text-[11px] uppercase tracking-widest hover:bg-orange-600 transition-all shrink-0">
-          Guardar Cambios
-        </button>
+      <div class="mb-6">
+        <p class="text-zinc-400 text-sm">Editá el precio por metro lineal y los parámetros de corte de cada material.
+          <br><span class="text-gecko font-bold">El cotizador usará estos valores automáticamente.</span>
+        </p>
       </div>
       <div class="bg-darkCard border border-darkBorder rounded-2xl overflow-x-auto">
         <table class="w-full text-left border-collapse text-[13px]">
