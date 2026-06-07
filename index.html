@@ -3096,7 +3096,7 @@
     <div id="modalNuevoCliente" style="display:none;"
         class="fixed inset-0 z-[70] bg-gray-900/60 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
         <div
-            class="modal-content bg-white dark:bg-darkCard rounded-2xl p-8 md:p-10 w-full max-w-2xl shadow-2xl border border-gray-100 dark:border-darkBorder relative">
+            class="modal-content bg-white dark:bg-darkCard rounded-2xl p-8 md:p-10 w-full max-w-3xl shadow-2xl border border-gray-100 dark:border-darkBorder relative">
             <button onclick="intentarCerrarModal('modalNuevoCliente')"
                 style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;"
                 onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
@@ -3117,12 +3117,14 @@
                         <input type="text" id="nuevoClienteNombre" class="gecko-input-line"
                             placeholder="Ej: Juan Pérez">
                     </div>
-                    <div id="containerCuits">
+                    <div id="containerCuits" class="md:col-span-2">
                         <label class="gecko-label">CUIT / DNI</label>
-                        <div class="flex items-center gap-3 mb-2 cuit-row">
-                            <input type="text" class="cuit-input gecko-input-line w-full"
+                        <div class="flex items-center gap-2 mb-2 cuit-row">
+                            <input type="text" class="cuit-input gecko-input-line flex-1"
                                 placeholder="Ej: 20-12345678-9">
-                            <button type="button" onclick="agregarCampoCuit()" title="Añadir otro"
+                            <input type="text" class="cuit-label-input gecko-input-line w-36"
+                                placeholder="Etiqueta (ej: Kiara)">
+                            <button type="button" onclick="window.agregarCampoCuit()" title="Añadir otro"
                                 class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg
                                     class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                     stroke-width="3">
@@ -3130,12 +3132,11 @@
                                 </svg></button>
                         </div>
                     </div>
-                    <div id="containerTels">
+                    <div id="containerTels" class="md:col-span-2">
                         <label class="gecko-label">Teléfonos / WhatsApp</label>
-                        <div class="flex items-center gap-3 mb-2 tel-row">
-                            <input type="text" class="tel-num-input gecko-input-line flex-1" placeholder="+54 9 221...">
-                            <input type="text" class="tel-label-input gecko-input-line w-28"
-                                placeholder="Etiqueta (ej: María)">
+                        <div class="flex items-center gap-2 mb-2 tel-row">
+                            <input type="text" class="tel-num-input gecko-input-line flex-1" style="width:auto !important; min-width:0;" placeholder="+54 9 221...">
+                            <input type="text" class="tel-label-input gecko-input-line w-36" style="width:9rem !important;" placeholder="Etiqueta (ej: Laura)">
                             <button type="button" onclick="window.agregarCampoTel()" title="Añadir otro"
                                 class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"

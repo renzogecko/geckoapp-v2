@@ -2990,8 +2990,8 @@ window.addEventListener('load', function () {
             const container = document.getElementById('containerCuits');
             if (!container) return;
             const row = document.createElement('div');
-            row.className = 'flex items-center gap-3 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
-            row.innerHTML = `<input type="text" class="cuit-input gecko-input-line w-full" placeholder="Otro CUIT/DNI..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            row.className = 'flex items-center gap-2 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
+            row.innerHTML = `<input type="text" class="cuit-input gecko-input-line flex-1" placeholder="Otro CUIT/DNI..."><input type="text" class="cuit-label-input gecko-input-line w-36" style="width:9rem !important;" placeholder="Etiqueta (ej: Movilist)"><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
             container.appendChild(row);
         };
 
@@ -2999,8 +2999,8 @@ window.addEventListener('load', function () {
             const container = document.getElementById('containerTels');
             if (!container) return;
             const row = document.createElement('div');
-            row.className = 'flex items-center gap-3 mb-2 tel-row';
-            row.innerHTML = `<input type="text" class="tel-num-input gecko-input-line flex-1" placeholder="Otro teléfono..."><input type="text" class="tel-label-input gecko-input-line w-28" placeholder="Etiqueta"><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            row.className = 'flex items-center gap-2 mb-2 tel-row';
+            row.innerHTML = `<input type="text" class="tel-num-input gecko-input-line flex-1" style="width:auto !important; min-width:0;" placeholder="Otro teléfono..."><input type="text" class="tel-label-input gecko-input-line w-36" style="width:9rem !important;" placeholder="Etiqueta"><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
             container.appendChild(row);
         };
 
@@ -3023,20 +3023,24 @@ window.addEventListener('load', function () {
             ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 
             const cCuits = document.getElementById('containerCuits');
-            if (cCuits) cCuits.innerHTML = `<label class="gecko-label">CUIT / DNI</label><div class="flex items-center gap-3 mb-2 cuit-row"><input type="text" class="cuit-input gecko-input-line w-full" placeholder="Ej: 20-12345678-9"><button type="button" onclick="window.agregarCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
+            if (cCuits) cCuits.innerHTML = `<label class="gecko-label">CUIT / DNI</label><div class="flex items-center gap-2 mb-2 cuit-row"><input type="text" class="cuit-input gecko-input-line flex-1" placeholder="Ej: 20-12345678-9"><input type="text" class="cuit-label-input gecko-input-line w-36" style="width:9rem !important;" placeholder="Etiqueta (ej: Kiara)"><button type="button" onclick="window.agregarCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
 
             const cEmails = document.getElementById('containerEmails');
-            if (cEmails) cEmails.innerHTML = `<label class="gecko-label">Email</label><div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="email-input gecko-input-line w-full" placeholder="ejemplo@correo.com"><button type="button" onclick="window.agregarCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
+            if (cEmails) cEmails.innerHTML = `<label class="gecko-label">Email</label><div class="flex items-center gap-2 mb-2 email-row"><input type="email" class="email-input gecko-input-line w-full" placeholder="ejemplo@correo.com"><button type="button" onclick="window.agregarCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
 
             const cTels = document.getElementById('containerTels');
-            if (cTels) cTels.innerHTML = `<label class="gecko-label">Teléfonos / WhatsApp</label><div class="flex items-center gap-3 mb-2 tel-row"><input type="text" class="tel-num-input gecko-input-line flex-1" placeholder="+54 9 221..."><input type="text" class="tel-label-input gecko-input-line w-28" placeholder="Etiqueta (ej: María)"><button type="button" onclick="window.agregarCampoTel()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
+            if (cTels) cTels.innerHTML = `<label class="gecko-label">Teléfonos / WhatsApp</label><div class="flex items-center gap-2 mb-2 tel-row"><input type="text" class="tel-num-input gecko-input-line flex-1" style="width:auto !important; min-width:0;" placeholder="+54 9 221..."><input type="text" class="tel-label-input gecko-input-line w-36" style="width:9rem !important;" placeholder="Etiqueta (ej: Laura)"><button type="button" onclick="window.agregarCampoTel()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></div>`;
         };
 
         window.guardarCliente = function () {
             const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
             if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
 
-            const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
+            const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => {
+                const num = i.value.trim();
+                const label = i.parentElement?.querySelector('.cuit-label-input')?.value?.trim() || '';
+                return num ? { numero: num, etiqueta: label } : null;
+            }).filter(v => v);
             const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
             const tels = Array.from(document.querySelectorAll('.tel-num-input')).map(i => {
                 const num = i.value.trim();
@@ -3048,7 +3052,7 @@ window.addEventListener('load', function () {
                 id: 'client_' + Date.now(),
                 nombre: nombre,
                 cuits: cuits,
-                cuit: cuits[0] || '',
+                cuit: cuits.length > 0 ? cuits[0].numero : '',
                 telefonos: tels,
                 tel: tels.length > 0 ? tels[0].numero : '',
                 emails: emails,
@@ -3588,7 +3592,9 @@ window._geckoRenderFijo = function () {
         const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
         let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);
 
-        let wp = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
+        let wp = (c.telefonos && c.telefonos.length > 0)
+            ? c.telefonos.map(t => `<a href="https://wa.me/${t.numero.replace(/\D/g, '')}" target="_blank" class="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-colors text-[10px] font-bold" title="WhatsApp ${t.etiqueta || t.numero}" onclick="event.stopPropagation()"><svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg>${t.etiqueta || t.numero}</a>`).join('')
+            : c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
         let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
 
         const tr = document.createElement('tr');
@@ -3601,8 +3607,9 @@ window._geckoRenderFijo = function () {
                     <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
                     ${window._geckoBadgeFijo(c.nombre)}
                 </div>
+                ${(c.cuits && c.cuits.length > 0) ? `<div class="flex flex-wrap gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">${c.cuits.map(cu => `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg" title="${cu.etiqueta || ''}">${cu.numero}${cu.etiqueta ? ` · ${cu.etiqueta}` : ''}</span>`).join('')}</div>` : ''}
             </td>
-            <td class="py-4 px-6"><div class="flex gap-2">${wp}${em}</div></td>
+            <td class="py-4 px-6"><div class="flex flex-wrap items-center gap-1">${wp}${em}</div></td>
             <td class="py-4 px-6"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
             <td class="py-4 px-6 text-right">
                 <button onclick="if(typeof abrirFichaCliente === 'function') abrirFichaCliente('${c.nombre.replace(/'/g, "\\'")}'); event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
