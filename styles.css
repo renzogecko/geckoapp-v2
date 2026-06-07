@@ -2295,11 +2295,15 @@
             text-transform: uppercase !important;
             cursor: pointer !important;
             transition: all 0.2s !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
         }
 
         .gecko-btn-cancel:hover {
             background: rgba(255, 255, 255, 0.1) !important;
             color: #94a3b8 !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
         }
 
         .gecko-btn-primary {
@@ -2313,14 +2317,22 @@
             letter-spacing: 0.1em !important;
             text-transform: uppercase !important;
             cursor: pointer !important;
-            transition: background 0.2s !important;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 0.4rem !important;
+            box-shadow: 0 2px 10px rgba(241, 90, 36, 0.25) !important;
         }
 
         .gecko-btn-primary:hover {
             background: #d94e1a !important;
+            transform: scale(1.03) !important;
+            box-shadow: 0 6px 20px rgba(241, 90, 36, 0.38), 0 2px 8px rgba(0,0,0,0.18) !important;
+        }
+
+        .gecko-btn-primary:active {
+            transform: scale(0.97) !important;
+            box-shadow: 0 1px 6px rgba(241, 90, 36, 0.2) !important;
         }
 
         .gecko-btn-danger {
