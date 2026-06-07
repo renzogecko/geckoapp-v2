@@ -3588,7 +3588,10 @@ window._geckoRenderFijo = function () {
     if (bdClientes.length === 0) bdClientes = JSON.parse(localStorage.getItem('gecko_clientes')) || [];
 
     window.LISTA_CLIENTES = bdClientes;
-    const termino = (document.getElementById('buscadorClientes')?.value || '').toLowerCase();
+    const termino = (
+        document.getElementById('filtroClienteBusqueda')?.value ||
+        document.getElementById('buscadorClientes')?.value || ''
+    ).toLowerCase().trim();
     tbody.innerHTML = '';
 
     if (bdClientes.length === 0) {
@@ -3597,7 +3600,17 @@ window._geckoRenderFijo = function () {
     }
 
     bdClientes.forEach(c => {
-        if (termino && !c.nombre.toLowerCase().includes(termino) && !(c.cuit || '').toLowerCase().includes(termino)) return;
+        if (termino) {
+            const matchNombre = c.nombre.toLowerCase().includes(termino);
+            const matchCuit = (c.cuit || '').toLowerCase().includes(termino);
+            const matchCuits = (c.cuits || []).some(cu =>
+                (typeof cu === 'string' ? cu : cu.numero || '').includes(termino) ||
+                (typeof cu === 'object' ? (cu.etiqueta || '').toLowerCase().includes(termino) : false)
+            );
+            const matchRubro = (c.rubro || '').toLowerCase().includes(termino);
+            const matchTel = (c.telefonos || []).some(t => (t.numero || '').includes(termino) || (t.etiqueta || '').toLowerCase().includes(termino));
+            if (!matchNombre && !matchCuit && !matchCuits && !matchRubro && !matchTel) return;
+        }
 
         const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
         let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);
@@ -3617,7 +3630,12 @@ window._geckoRenderFijo = function () {
                     <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
                     ${window._geckoBadgeFijo(c.nombre)}
                 </div>
-                ${(c.cuits && c.cuits.length > 0) ? `<div class="flex flex-wrap gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">${c.cuits.map(cu => `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg" title="${cu.etiqueta || ''}">${cu.numero}${cu.etiqueta ? ` · ${cu.etiqueta}` : ''}</span>`).join('')}</div>` : ''}
+                ${(c.cuits && c.cuits.length > 0) ? `<div class="flex flex-wrap gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">${c.cuits.map(cu => {
+                    const num = typeof cu === 'string' ? cu : (cu.numero || '');
+                    const etq = typeof cu === 'string' ? '' : (cu.etiqueta || '');
+                    if (!num) return '';
+                    return `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg" title="${etq}">${num}${etq ? ` · ${etq}` : ''}</span>`;
+                }).join('')}</div>` : (c.cuit ? `<div class="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">${c.cuit}</div>` : '')}
             </td>
             <td class="py-4 px-6"><div class="flex flex-wrap items-center gap-1">${wp}${em}</div></td>
             <td class="py-4 px-6"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
@@ -3653,7 +3671,11 @@ window.guardarCliente = function () {
     const nombre = document.getElementById('nuevoClienteNombre')?.value.trim();
     if (!nombre) { alert("El Nombre / Razón Social es obligatorio"); return; }
 
-    const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => i.value.trim()).filter(v => v);
+    const cuits = Array.from(document.querySelectorAll('.cuit-input')).map(i => {
+        const num = i.value.trim();
+        const etq = i.parentElement?.querySelector('.cuit-label-input')?.value?.trim() || '';
+        return num ? { numero: num, etiqueta: etq } : null;
+    }).filter(v => v);
     const emails = Array.from(document.querySelectorAll('.email-input')).map(i => i.value.trim()).filter(v => v);
 
     const nuevoCliente = {
