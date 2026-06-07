@@ -3203,7 +3203,10 @@ window.addEventListener('load', function () {
 
             window.LISTA_CLIENTES = bdClientes;
 
-            const termino = (document.getElementById('buscadorClientes')?.value || '').toLowerCase();
+            const termino = (
+                document.getElementById('filtroClienteBusqueda')?.value ||
+                document.getElementById('buscadorClientes')?.value || ''
+            ).toLowerCase();
             tbody.innerHTML = '';
 
             if (bdClientes.length === 0) {
@@ -3212,7 +3215,14 @@ window.addEventListener('load', function () {
             }
 
             bdClientes.forEach(c => {
-                if (termino && !c.nombre.toLowerCase().includes(termino) && !(c.cuit || '').toLowerCase().includes(termino)) return;
+                if (termino) {
+                    const matchNombre = c.nombre.toLowerCase().includes(termino);
+                    const matchCuit = (c.cuit || '').toLowerCase().includes(termino);
+                    const matchCuits = (c.cuits || []).some(cu => cu.numero?.includes(termino) || cu.etiqueta?.toLowerCase().includes(termino));
+                    const matchRubro = (c.rubro || '').toLowerCase().includes(termino);
+                    const matchTel = (c.telefonos || []).some(t => t.numero?.includes(termino) || t.etiqueta?.toLowerCase().includes(termino));
+                    if (!matchNombre && !matchCuit && !matchCuits && !matchRubro && !matchTel) return;
+                }
 
                 const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
                 let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);

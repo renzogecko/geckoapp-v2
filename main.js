@@ -274,6 +274,7 @@ window.importarGeckoDB = function (input) {
 initGeckoDB();
 
 // —— Variables de Configuración Globales ——
+// Carga inicial: primero localStorage, luego sincroniza con MySQL en background
 let GECKO_SETTINGS = JSON.parse(localStorage.getItem('GECKO_SETTINGS')) || {
     cotizacionDolar: 1420,
     iva: 21,
@@ -643,21 +644,37 @@ window.guardarParametrosLaserSticky = async function () {
 };
 
 window.initConfiguracion = function () {
-    const s = GECKO_SETTINGS;
-    const v = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-    v('cfgCotizacionDolar', s.cotizacionDolar || 1420);
-    v('cfgIva', s.iva || 21);
-    v('cfgMultGlobal', s.multiplicadorGlobal || 2.0);
-    v('cfgNivelBronce', s.nivelBronce || 150000);
-    v('cfgNivelPlata', s.nivelPlata || 300000);
-    v('cfgNivelOro', s.nivelOro || 500000);
-    v('cfgHoraHombre', s.valorHoraHombre || 0);
-    v('cfgHoraLaser', Math.round((s.minutoLaser || 0) * 60));
-    v('cfgHoraCNC', Math.round((s.minutoRouter || 0) * 60));
-    v('cfgHora3D', s.costoHora3D || 0);
-    const cond = document.getElementById('cfgCondicionesVenta');
-    if (cond) cond.value = s.condicionesVenta || '';
+    const aplicarSettings = (s) => {
+        const v = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+        v('cfgCotizacionDolar', s.cotizacionDolar || 1420);
+        v('cfgIva', s.iva || 21);
+        v('cfgMultGlobal', s.multiplicadorGlobal || 2.0);
+        v('cfgNivelBronce', s.nivelBronce || 150000);
+        v('cfgNivelPlata', s.nivelPlata || 300000);
+        v('cfgNivelOro', s.nivelOro || 500000);
+        v('cfgHoraHombre', s.valorHoraHombre || 0);
+        v('cfgHoraLaser', Math.round((s.minutoLaser || 0) * 60));
+        v('cfgHoraCNC', Math.round((s.minutoRouter || 0) * 60));
+        v('cfgHora3D', s.costoHora3D || 0);
+        const cond = document.getElementById('cfgCondicionesVenta');
+        if (cond) cond.value = s.condicionesVenta || '';
+    };
+
+    // Mostrar valores locales primero (respuesta inmediata)
+    aplicarSettings(GECKO_SETTINGS);
     window.switchConfigTab('finanzas');
+
+    // Luego sincronizar con MySQL y actualizar si hay diferencias
+    fetch('/app/api.php?endpoint=configuracion')
+        .then(r => r.json())
+        .then(data => {
+            if (data && typeof data === 'object' && !data.error) {
+                GECKO_SETTINGS = { ...GECKO_SETTINGS, ...data };
+                localStorage.setItem('GECKO_SETTINGS', JSON.stringify(GECKO_SETTINGS));
+                aplicarSettings(GECKO_SETTINGS);
+            }
+        })
+        .catch(() => {}); // Silencioso — usa localStorage si falla
 };
 
 window.guardarConfiguracion = function () {
