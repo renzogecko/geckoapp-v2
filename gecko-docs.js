@@ -137,6 +137,8 @@ window.generarDocPresupuesto = async function (p) {
     const descMonto = total * (descuento / 100);
     const totalFinal = total - descMonto;
 
+    const titulo = p.titulo || '';
+
     const itemsHTML = items.length > 0 ? items.map((it, i) => `
         <tr>
             <td class="td-num">${String(i + 1).padStart(2, '0')}</td>
@@ -181,6 +183,7 @@ window.generarDocPresupuesto = async function (p) {
     </div>
     <div class="doc-meta">
         <div class="meta-item"><label>Cliente</label><value>${cliente}</value></div>
+        ${titulo ? `<div class="meta-item" style="grid-column:1/-1"><label>Trabajo</label><value style="font-weight:900;color:#1A1A1A;">${titulo}</value></div>` : ''}
         <div class="meta-item"><label>Válido por</label><value>${validez}</value></div>
         <div class="meta-item"><label>Entrega estimada</label><value>${entrega}</value></div>
     </div>
