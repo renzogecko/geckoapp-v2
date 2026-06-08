@@ -2733,8 +2733,17 @@ window.addEventListener('load', function () {
             const container = document.getElementById('editContainerCuits');
             if (!container) return;
             const row = document.createElement('div');
-            row.className = 'flex items-center gap-3 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
-            row.innerHTML = `<input type="text" class="edit-cuit-input gecko-input-line w-full" placeholder="Otro CUIT/DNI..."><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            row.className = 'flex items-center gap-2 mb-2 cuit-row animate-in fade-in slide-in-from-top-1';
+            row.innerHTML = `<input type="text" class="edit-cuit-input gecko-input-line flex-1" placeholder="Otro CUIT/DNI..."><input type="text" class="edit-cuit-label-input gecko-input-line" style="width:9rem !important;flex-shrink:0;" placeholder="Etiqueta"><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+            container.appendChild(row);
+        };
+
+        window.agregarEditCampoTel = function () {
+            const container = document.getElementById('editContainerTels');
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2 mb-2 tel-row animate-in fade-in slide-in-from-top-1';
+            row.innerHTML = `<input type="text" class="edit-tel-num-input gecko-input-line flex-1" style="width:auto !important;min-width:0;" placeholder="Otro teléfono..."><input type="text" class="edit-tel-label-input gecko-input-line" style="width:9rem !important;flex-shrink:0;" placeholder="Etiqueta"><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
             container.appendChild(row);
         };
 
@@ -2781,6 +2790,29 @@ window.addEventListener('load', function () {
                     + `</div>`;
             });
 
+            // Normalizar telefonos — puede venir como string JSON, array de strings, o array de {numero, etiqueta}
+            let telefonosNorm = [];
+            if (Array.isArray(cliente.telefonos) && cliente.telefonos.length > 0) {
+                telefonosNorm = cliente.telefonos;
+            } else if (typeof cliente.telefonos === 'string' && cliente.telefonos.startsWith('[')) {
+                try { telefonosNorm = JSON.parse(cliente.telefonos); } catch(e) { telefonosNorm = []; }
+            }
+            if (telefonosNorm.length === 0 && cliente.tel) telefonosNorm = [{ numero: cliente.tel, etiqueta: '' }];
+            if (telefonosNorm.length === 0) telefonosNorm = [{ numero: '', etiqueta: '' }];
+
+            let telefonosHtml = '';
+            telefonosNorm.forEach((t, idx) => {
+                const num = typeof t === 'string' ? t : (t.numero || '');
+                const etq = typeof t === 'string' ? '' : (t.etiqueta || '');
+                telefonosHtml += `<div class="flex items-center gap-2 mb-2 tel-row">
+                    <input type="text" class="edit-tel-num-input gecko-input-line flex-1" style="width:auto !important;min-width:0;" value="${num}" placeholder="+54 9 221...">
+                    <input type="text" class="edit-tel-label-input gecko-input-line" style="width:9rem !important;flex-shrink:0;" value="${etq}" placeholder="Etiqueta (ej: Kiara)">` +
+                    (idx === 0
+                        ? `<button type="button" onclick="window.agregarEditCampoTel()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>`
+                        : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`)
+                    + `</div>`;
+            });
+
             // Normalizar emails
             let emailsNorm = [];
             if (Array.isArray(cliente.emails) && cliente.emails.length > 0) {
@@ -2819,9 +2851,9 @@ window.addEventListener('load', function () {
                             <label class="gecko-label">CUIT / DNI</label>
                             ${cuitsHtml}
                         </div>
-                        <div>
-                            <label class="gecko-label">Teléfono / WhatsApp</label>
-                            <input type="text" id="_editCliTel" class="gecko-input-line" value="${cliente.tel || ''}">
+                        <div id="editContainerTels">
+                            <label class="gecko-label">Teléfonos / WhatsApp</label>
+                            ${telefonosHtml}
                         </div>
                         <div id="editContainerEmails">
                             <label class="gecko-label">Email</label>
@@ -2851,11 +2883,20 @@ window.addEventListener('load', function () {
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
             document.getElementById('_btnGuardarEditCli').onclick = function () {
-                const cuits = Array.from(document.querySelectorAll('.cuit-row')).map(row => {
+                // Leer CUITs con etiqueta
+                const cuits = Array.from(document.querySelectorAll('#editContainerCuits .cuit-row')).map(row => {
                     const num = row.querySelector('.edit-cuit-input')?.value.trim() || '';
                     const etq = row.querySelector('.edit-cuit-label-input')?.value.trim() || '';
                     return num ? { numero: num, etiqueta: etq } : null;
                 }).filter(v => v);
+
+                // Leer teléfonos con etiqueta
+                const tels = Array.from(document.querySelectorAll('#editContainerTels .tel-row')).map(row => {
+                    const num = row.querySelector('.edit-tel-num-input')?.value.trim() || '';
+                    const etq = row.querySelector('.edit-tel-label-input')?.value.trim() || '';
+                    return num ? { numero: num, etiqueta: etq } : null;
+                }).filter(v => v);
+
                 const emails = Array.from(document.querySelectorAll('.edit-email-input')).map(i => i.value.trim()).filter(v => v);
 
                 const idx = bdClientes.findIndex(c => c.nombre === nombre);
@@ -2863,8 +2904,9 @@ window.addEventListener('load', function () {
                     bdClientes[idx] = {
                         ...bdClientes[idx],
                         cuits: cuits,
-                        cuit: cuits[0] || '',
-                        tel: document.getElementById('_editCliTel').value.trim(),
+                        cuit: cuits.length > 0 ? cuits[0].numero : '',
+                        telefonos: tels,
+                        tel: tels.length > 0 ? tels[0].numero : '',
                         emails: emails,
                         email: emails[0] || '',
                         dir: document.getElementById('_editCliDir').value.trim(),
