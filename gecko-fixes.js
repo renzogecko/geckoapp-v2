@@ -2758,18 +2758,47 @@ window.addEventListener('load', function () {
             modal.className = 'gecko-modal-overlay';
             modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;overflow-y:auto;';
 
+            // Normalizar cuits — puede venir como string JSON, array de strings o array de {numero, etiqueta}
+            let cuitsNorm = [];
+            if (Array.isArray(cliente.cuits) && cliente.cuits.length > 0) {
+                cuitsNorm = cliente.cuits;
+            } else if (typeof cliente.cuits === 'string' && cliente.cuits.startsWith('[')) {
+                try { cuitsNorm = JSON.parse(cliente.cuits); } catch(e) { cuitsNorm = []; }
+            }
+            if (cuitsNorm.length === 0 && cliente.cuit) cuitsNorm = [{ numero: cliente.cuit, etiqueta: '' }];
+            if (cuitsNorm.length === 0) cuitsNorm = [{ numero: '', etiqueta: '' }];
+
             let cuitsHtml = '';
-            const cuitsArray = cliente.cuits && cliente.cuits.length > 0 ? cliente.cuits : [cliente.cuit || ''];
-            cuitsArray.forEach((cuit, idx) => {
-                cuitsHtml += `<div class="flex items-center gap-3 mb-2 cuit-row"><input type="text" class="edit-cuit-input gecko-input-line w-full" value="${cuit}" placeholder="Ej: 20-12345678-9">` +
-                    (idx === 0 ? `<button type="button" onclick="window.agregarEditCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>` : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`) + `</div>`;
+            cuitsNorm.forEach((cu, idx) => {
+                const num = typeof cu === 'string' ? cu : (cu.numero || '');
+                const etq = typeof cu === 'string' ? '' : (cu.etiqueta || '');
+                cuitsHtml += `<div class="flex items-center gap-2 mb-2 cuit-row">
+                    <input type="text" class="edit-cuit-input gecko-input-line flex-1" value="${num}" placeholder="Ej: 20-12345678-9">
+                    <input type="text" class="edit-cuit-label-input gecko-input-line" style="width:9rem !important;flex-shrink:0;" value="${etq}" placeholder="Etiqueta (ej: Kiara)">` +
+                    (idx === 0
+                        ? `<button type="button" onclick="window.agregarEditCampoCuit()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>`
+                        : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`)
+                    + `</div>`;
             });
 
+            // Normalizar emails
+            let emailsNorm = [];
+            if (Array.isArray(cliente.emails) && cliente.emails.length > 0) {
+                emailsNorm = cliente.emails;
+            } else if (typeof cliente.emails === 'string' && cliente.emails.startsWith('[')) {
+                try { emailsNorm = JSON.parse(cliente.emails); } catch(e) { emailsNorm = []; }
+            }
+            if (emailsNorm.length === 0 && cliente.email) emailsNorm = [cliente.email];
+            if (emailsNorm.length === 0) emailsNorm = [''];
+
             let emailsHtml = '';
-            const emailsArray = cliente.emails && cliente.emails.length > 0 ? cliente.emails : [cliente.email || ''];
-            emailsArray.forEach((em, idx) => {
-                emailsHtml += `<div class="flex items-center gap-3 mb-2 email-row"><input type="email" class="edit-email-input gecko-input-line w-full" value="${em}" placeholder="ejemplo@correo.com">` +
-                    (idx === 0 ? `<button type="button" onclick="window.agregarEditCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>` : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`) + `</div>`;
+            emailsNorm.forEach((em, idx) => {
+                const emStr = typeof em === 'string' ? em : (em.email || '');
+                emailsHtml += `<div class="flex items-center gap-2 mb-2 email-row"><input type="email" class="edit-email-input gecko-input-line w-full" value="${emStr}" placeholder="ejemplo@correo.com">` +
+                    (idx === 0
+                        ? `<button type="button" onclick="window.agregarEditCampoEmail()" title="Añadir otro" class="w-8 h-8 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>`
+                        : `<button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`)
+                    + `</div>`;
             });
 
             modal.innerHTML = `
@@ -2822,7 +2851,11 @@ window.addEventListener('load', function () {
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
             document.getElementById('_btnGuardarEditCli').onclick = function () {
-                const cuits = Array.from(document.querySelectorAll('.edit-cuit-input')).map(i => i.value.trim()).filter(v => v);
+                const cuits = Array.from(document.querySelectorAll('.cuit-row')).map(row => {
+                    const num = row.querySelector('.edit-cuit-input')?.value.trim() || '';
+                    const etq = row.querySelector('.edit-cuit-label-input')?.value.trim() || '';
+                    return num ? { numero: num, etiqueta: etq } : null;
+                }).filter(v => v);
                 const emails = Array.from(document.querySelectorAll('.edit-email-input')).map(i => i.value.trim()).filter(v => v);
 
                 const idx = bdClientes.findIndex(c => c.nombre === nombre);
@@ -3616,8 +3649,20 @@ window._geckoRenderFijo = function () {
         const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
         let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);
 
-        let wp = (c.telefonos && c.telefonos.length > 0)
-            ? c.telefonos.map(t => `<a href="https://wa.me/${t.numero.replace(/\D/g, '')}" target="_blank" class="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-colors text-[10px] font-bold" title="WhatsApp ${t.etiqueta || t.numero}" onclick="event.stopPropagation()"><svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg>${t.etiqueta || t.numero}</a>`).join('')
+        // Normalizar telefonos: puede ser string JSON legacy, array de strings, o array de {numero, etiqueta}
+        let telefonosArr = [];
+        if (Array.isArray(c.telefonos)) {
+            telefonosArr = c.telefonos;
+        } else if (typeof c.telefonos === 'string' && c.telefonos.startsWith('[')) {
+            try { telefonosArr = JSON.parse(c.telefonos); } catch(e) { telefonosArr = []; }
+        }
+        let wp = telefonosArr.length > 0
+            ? telefonosArr.map(t => {
+                const num = typeof t === 'string' ? t : (t.numero || '');
+                const etq = typeof t === 'string' ? '' : (t.etiqueta || '');
+                if (!num) return '';
+                return `<a href="https://wa.me/${num.replace(/\D/g, '')}" target="_blank" class="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-colors text-[10px] font-bold" title="WhatsApp ${etq || num}" onclick="event.stopPropagation()"><svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg>${etq || num}</a>`;
+              }).join('')
             : c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
         let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
 
