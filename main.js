@@ -3499,18 +3499,20 @@ function editarMaterial(id) {
     if (material.espesor) document.getElementById('matEspesor') && (document.getElementById('matEspesor').value = material.espesor);
     if (material.nota) document.getElementById('matNota') && (document.getElementById('matNota').value = material.nota);
 
-    // Recalcular
+    // Recalcular (puede pisar precioGremio si está vacío — lo restauramos después)
     recalcularCostoReal();
 
     if (material.costo) {
         document.getElementById('matCostoReal').value = material.costo;
         if (est === 'fija') {
             document.getElementById('matPrecioVentaManual').value = Math.round(material.costo * (material.multiplicador || 1));
-            document.getElementById('matPrecioGremio').value = Math.round(material.costo * (material.multGremio || 1));
         }
     }
 
-    document.getElementById('matPrecioGremio').value = material.precioGremio || '';
+    // Restaurar precioGremio guardado — siempre al final, después del recálculo
+    if (material.precioGremio > 0) {
+        document.getElementById('matPrecioGremio').value = material.precioGremio;
+    }
 
     // Marcar como edición
     document.getElementById('formMaterial').dataset.editId = id;
@@ -3734,7 +3736,10 @@ window.recalcularCostoReal = function (trigger) {
         const precioGremioSug = Math.round(costoUnitarioBase * multGremio);
 
         if (precioManualInput) precioManualInput.value = precioSugerido;
-        if (precioGremioInput) precioGremioInput.value = precioGremioSug;
+        // Solo actualizar precioGremio si está vacío — no pisar un valor guardado manualmente
+        if (precioGremioInput && (!precioGremioInput.value || parseFloat(precioGremioInput.value) === 0)) {
+            precioGremioInput.value = precioGremioSug;
+        }
     } else {
         // Estrategia FIJA (Precio de Mercado)
         const precioFijo = parseFloat(precioManualInput?.value) || 0;
