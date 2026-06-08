@@ -1,41 +1,57 @@
 # Cambios del sistema
 
 ## PENDIENTES
-- Al modificar el precio global del dolar, debe impactar en los precios de los materiales, debe actualizarse en los precios del modal de gestion de insumos. 
-- lista de clientes , revisar los iconos de contacto directo, sobre todo el de whatsapp. (ver si se pueden poner los iconos correspondientes)
-- en el modal de gestion de insumos, los precios deben redonder siempre en numero redondo, no dar decimales.. hay un bug que redondea segun el margen real, lo que deberia rendondear es el numero del valor del insumo. 
-- Al imprimir los presupesto o decargar el PDF, el nombre del archivo debe ser "PRES_(nombre del cliente) - (Trabajo)"
-- En el cotizador de grafica , tarjeta de "montado" agregarle las unidades a los items de alto y ancho (metros, centimetros, milimetros) lo que corresponda. (Ej: 1.5mts o 150cm) , siempre tiene que estar en la unidad que cargaste el item. 
-- En el cotizador de grafica , tarjeta de "montado" el precio se debe calcular siempre por mas que no pongamos los metros lineales, si no se cargan los metros lineales de corte, igual tiene q calcular el precio de todas formas con los otros datos. Si se cargan los metros lineales de corte automatiamente se suma. Si se deja en 0 el sistema deberia detectar que se debe calcular por la suma de los items (Ej. si pones 4 items de 100cm de ancho y 1mts de largo, deberia calcular solo el area sin sumar el corte)
+
+- En el cotizador de gráfica, tarjeta de "montado": agregarle las unidades a los items de alto y ancho (metros, centímetros, milímetros) lo que corresponda. Ej: 1.5mts o 150cm. Siempre tiene que estar en la unidad que cargaste el item.
+- En el cotizador de gráfica, tarjeta de "montado": el precio se debe calcular siempre aunque no se carguen los metros lineales. Si no se cargan los metros lineales de corte, igual tiene que calcular el precio con los otros datos. Si se cargan los metros lineales de corte, automáticamente se suma. Si se deja en 0, el sistema debe detectar que debe calcular por la suma de los ítems. Ej: si ponés 4 ítems de 100cm de ancho y 1m de largo, debería calcular solo el área sin sumar el corte.
+- Mensajes de confirmación consistentes en formularios que hoy guardan en silencio (Costos Operativos, Parámetros Láser, otros).
 
 ---
 
-## ESTADO AL 06/06/2026 — Bugs pendientes tras deploy en Hostinger
+## RESUELTOS ✅
 
-### 🔴 CRÍTICO
-1. Imágenes adjuntas no persisten tras recargar — api.php no tiene columna metadata en tabla presupuestos. gecko-api.js al sincronizar desde MySQL sobreescribe localStorage perdiendo imagenes, titulo, fechaEntrega, mostrarPrecios.
-2. Precio $/ML en Parámetros Láser no persiste — api.php no tiene endpoint laser_params en producción.
+### Sesión 08/06/2026
 
-### 🟠 ALTO
-3. Input número de teléfono oculto en modal Nuevo Cliente — gecko-input-line tiene width:100% !important que pisa el flex-1 del input de número.
-4. Segundo teléfono no se guarda — guardarNuevoCliente no lee todos los .tel-num-input.
+- ✅ Al modificar el precio global del dólar, impacta en los precios de los materiales (costoARS y precioVenta se recalculan al guardar Finanzas).
+- ✅ Lista de clientes: iconos de contacto directo WhatsApp con etiqueta del contacto.
+- ✅ Modal de insumos: precios sin decimales, siempre número redondo.
+- ✅ Al imprimir o descargar el PDF, el nombre del archivo es "PRES_(cliente) - (Trabajo)".
+- ✅ Toggle Público/Gremio en cotizador Vinilo Corte: funciona cuando el material tiene precioGremio cargado.
+- ✅ 85 materiales en lugar de 66: descartado, son materiales nuevos agregados manualmente.
+- ✅ Scroll roto al cerrar modales: resuelto con MutationObserver global que restaura el overflow automáticamente.
+- ✅ Lista de clientes vacía (crash): normalización defensiva de cuits/telefonos legacy desde MySQL.
+- ✅ Botón Editar cliente abría la Ficha en lugar del modal de edición: resuelto con delegación de eventos en el tr.
+- ✅ CUITs visibles en lista de clientes: eliminados, ahora solo se muestra nombre y rubro.
+- ✅ Modal Nuevo Cliente y Editar Cliente con etiquetas en CUIT y teléfonos.
+- ✅ Parámetros Láser/CNC: nombres editables inline y botón eliminar por fila.
+- ✅ Pestaña renombrada a "Parámetros Láser / CNC" con campos Minuto Láser y Minuto CNC.
+- ✅ Precio $/ML no persistía al recargar: normalización de claves con espacios dobles.
+- ✅ precioGremio no persistía en modal de insumos: recalcularCostoReal ya no pisa el valor guardado.
+- ✅ Fecha de entrega mostraba "A convenir" aunque estuviera guardada: gecko-docs.js ahora lee p.entrega || p.fechaEntrega || p.fecha_entrega.
+- ✅ Cotización dólar online: chip BNA Oficial con valor del día desde dolarapi.com.
+- ✅ Scoring de clientes a 4 niveles (Base / Bronce / Plata / Oro) con umbrales configurables.
+- ✅ Validaciones con toast amarillo en Configuración: Cotización Dólar en $0, Hora Hombre en $0, materiales Láser sin precio.
+- ✅ Sección Configuración: refresh visual completo con gecko Design System (tarjetas, inputs con prefijo, botones unificados).
+- ✅ Barra fija Parámetros Láser reemplazada por botón al pie igual que las otras pestañas.
 
-### 🟡 MEDIO
-5. Costos Operativos muestra valores vacíos — initConfiguracion no carga valores desde MySQL al abrir la tab.
-6. Sin feedback visual al guardar Parámetros Láser — guardarParametrosLaser no llama mostrarExito.
-7. Búsqueda de clientes no filtra la lista.
+### Sesión 06/06/2026
 
-### 🟢 BAJO
-8. Título del presupuesto no aparece en el preview/PDF.
-9. Toggle Público/Gremio sin efecto en cotizador Vinilo Corte.
-10. 85 materiales en lugar de 66 — verificar duplicados.
+- ✅ Bug crítico #1: Imágenes adjuntas y metadata (titulo, fechaEntrega, mostrarPrecios) no persistían tras recargar. Agregada columna metadata LONGTEXT en tabla presupuestos. api.php actualizado.
+- ✅ Bug crítico #2: Precio $/ML en Parámetros Láser no persistía. Endpoint laser_params agregado a api.php en producción.
+- ✅ Input número de teléfono oculto en modal Nuevo Cliente.
+- ✅ Segundo teléfono no se guardaba.
+- ✅ Costos Operativos mostraba valores vacíos: initConfiguracion ahora hace fetch desde MySQL al abrir el tab.
+- ✅ Sin feedback visual al guardar Parámetros Láser.
+- ✅ Búsqueda de clientes no filtraba la lista.
+
+---
 
 ## CONTEXTO TÉCNICO IMPORTANTE
-- gecko-input-line en styles.css tiene width:100% !important — cualquier override necesita !important
-- Las imágenes se guardan en base64 en localStorage bajo p.imagenes pero NO se sincronizan a MySQL porque falta columna metadata en tabla presupuestos
-- gecko-api.js intercepta localStorage y sincroniza con MySQL — al recargar, MySQL sobreescribe localStorage perdiendo los metadatos
-- laser_params se guarda en localStorage bajo clave gecko_laserParams pero el endpoint api.php?endpoint=laser_params no existe en producción
-- verDocumento (gecko-docs.js) es la función correcta para mostrar previews — usa iframe + modal oscuro
-- _imprimirDocumento (gecko-fixes.js) ahora llama a verDocumento
-- Presupuestador Manual: _gpmGuardar usa timestamp _tsGuardado para identificar el doc correcto post-save
-- Hook procesarGuardado captura _editIdAntes y _nextIdAntes ANTES de llamar procesarGuardado para evitar race condition con metadatos
+
+- `gecko-input-line` en styles.css tiene `width:100% !important` — cualquier override necesita `!important`.
+- `gecko-fixes.js` usa un `setInterval` guardián que sobreescribe `window.renderClientes` con `_geckoRenderFijo` — fixes al render de clientes deben hacerse en `_geckoRenderFijo` directamente.
+- Datos legacy de MySQL pueden devolver `cuits`, `telefonos`, `emails` como JSON strings en lugar de arrays — siempre normalizar con `Array.isArray()` + `JSON.parse()` fallback.
+- Tabla `configuracion` usa patrón clave-valor con `REPLACE INTO` — todo el JSON de settings en una sola fila.
+- `verDocumento` (gecko-docs.js) es la función correcta para previews — usa iframe + modal oscuro.
+- El nombre del PDF se controla cambiando `document.title` antes de abrir la ventana de impresión.
+- MutationObserver en main.js restaura `document.body.style.overflow` automáticamente al cerrar cualquier modal.
