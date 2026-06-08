@@ -3600,6 +3600,7 @@ window._geckoRenderFijo = function () {
     }
 
     bdClientes.forEach(c => {
+        try {
         if (termino) {
             const matchNombre = c.nombre.toLowerCase().includes(termino);
             const matchCuit = (c.cuit || '').toLowerCase().includes(termino);
@@ -3630,12 +3631,25 @@ window._geckoRenderFijo = function () {
                     <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
                     ${window._geckoBadgeFijo(c.nombre)}
                 </div>
-                ${(c.cuits && c.cuits.length > 0) ? `<div class="flex flex-wrap gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">${c.cuits.map(cu => {
-                    const num = typeof cu === 'string' ? cu : (cu.numero || '');
-                    const etq = typeof cu === 'string' ? '' : (cu.etiqueta || '');
-                    if (!num) return '';
-                    return `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg" title="${etq}">${num}${etq ? ` · ${etq}` : ''}</span>`;
-                }).join('')}</div>` : (c.cuit ? `<div class="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">${c.cuit}</div>` : '')}
+                ${(() => {
+                    // Normalizar cuits: puede ser string legacy, array de strings, o array de {numero, etiqueta}
+                    let cuitsArr = [];
+                    if (Array.isArray(c.cuits) && c.cuits.length > 0) {
+                        cuitsArr = c.cuits;
+                    } else if (typeof c.cuits === 'string' && c.cuits.startsWith('[')) {
+                        try { cuitsArr = JSON.parse(c.cuits); } catch(e) { cuitsArr = []; }
+                    } else if (c.cuit) {
+                        cuitsArr = [{ numero: c.cuit, etiqueta: '' }];
+                    }
+                    if (cuitsArr.length === 0) return '';
+                    const chips = cuitsArr.map(cu => {
+                        const num = typeof cu === 'string' ? cu : (cu.numero || '');
+                        const etq = typeof cu === 'string' ? '' : (cu.etiqueta || '');
+                        if (!num) return '';
+                        return `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg" title="${etq}">${num}${etq ? ` · ${etq}` : ''}</span>`;
+                    }).join('');
+                    return `<div class="flex flex-wrap gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">${chips}</div>`;
+                })()}
             </td>
             <td class="py-4 px-6"><div class="flex flex-wrap items-center gap-1">${wp}${em}</div></td>
             <td class="py-4 px-6"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
@@ -3651,6 +3665,7 @@ window._geckoRenderFijo = function () {
                 </div>
             </td>`;
         tbody.appendChild(tr);
+        } catch(e) { console.warn('GECKO: error renderizando cliente', c.nombre, e); }
     });
 };
 

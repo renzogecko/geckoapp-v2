@@ -711,8 +711,13 @@ window.renderTablaParametrosLaser = async function () {
     }
 
     tbody.innerHTML = laserServs.map((s, i) => {
-        const params = laserParams[s.nombre] || {};
-        const precio = s.precioVenta || 0;
+        // Buscar params con nombre normalizado (trim + colapsar espacios dobles)
+        const normalizar = str => str.trim().replace(/\s+/g, ' ').toUpperCase();
+        const nombreNorm = normalizar(s.nombre);
+        const params = laserParams[s.nombre] || laserParams[nombreNorm] ||
+            Object.entries(laserParams).find(([k]) => normalizar(k) === nombreNorm)?.[1] || {};
+        // Precio: primero del servicio, luego del laserParams como fallback
+        const precio = s.precioVenta || s.precio || params.precio || 0;
         const espesor = params.espesor || '';
         const speed = params.speed || '';
         const power = params.power || '';

@@ -129,7 +129,7 @@ window.generarDocPresupuesto = async function (p) {
     const descuento = parseFloat(p.descuento) || 0;
     const metodoPago = p.metodoPago || '';
     const validez = p.validez || '10 días';
-    const entrega = p.entrega || 'A convenir';
+    const entrega = p.entrega || p.fechaEntrega || p.fecha_entrega || 'A convenir';
     const nota = p.nota || '';
     const imagenes = p.imagenes || [];
 
