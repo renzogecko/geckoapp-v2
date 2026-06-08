@@ -2978,7 +2978,13 @@ window.switchMenu = function (view) {
     const views = ['viewDashboard', 'viewPedidos', 'viewFinanzas', 'viewClientes', 'viewMateriales', 'viewCotizadores', 'viewPresupuestoManual', 'viewConfiguracion'];
     views.forEach(v => {
         const el = document.getElementById(v);
-        if (el) { el.classList.add('hidden'); el.style.display = ''; }
+        if (el) {
+            el.classList.add('hidden');
+            el.style.display = '';
+            el.style.flexDirection = '';
+            el.style.minHeight = '';
+            el.style.flex = '';
+        }
     });
 
     // 2. Mostrar la sección elegida
@@ -2989,10 +2995,11 @@ window.switchMenu = function (view) {
     const targetView = document.getElementById(targetId);
     if (targetView) {
         targetView.classList.remove('hidden');
-        // Para views con flex-col necesitamos restablecer display:flex explícitamente
-        if (targetView.classList.contains('flex-col') || targetView.classList.contains('flex-1')) {
-            targetView.style.display = 'flex';
-        }
+        // Restablecer display flex y permitir scroll correcto
+        targetView.style.display = 'flex';
+        targetView.style.flexDirection = 'column';
+        targetView.style.minHeight = '0';
+        targetView.style.flex = '1';
     }
 
     // 3. Estilo de Navegación (Usando .nav-active para mejor control)
