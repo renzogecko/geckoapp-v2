@@ -679,6 +679,19 @@ window.initConfiguracion = function () {
 
 window.guardarConfiguracion = function () {
     const g = (id) => parseFloat(document.getElementById(id)?.value) || 0;
+
+    // ── Validaciones antes de guardar (no bloquean, solo advierten) ──
+    const advertencias = [];
+    const tabActiva = document.querySelector('[id^="cfgTab-"].border-gecko')?.id?.replace('cfgTab-', '') || '';
+
+    if (tabActiva === 'finanzas' || !tabActiva) {
+        if (g('cfgCotizacionDolar') === 0) advertencias.push('Cotización Dólar está en $0 — los materiales importados no se calcularán correctamente.');
+        if (g('cfgMultGlobal') === 0) advertencias.push('Multiplicador Global está en 0 — todos los precios de venta quedarán en $0.');
+    }
+    if (tabActiva === 'operativos' || !tabActiva) {
+        if (g('cfgHoraHombre') === 0) advertencias.push('Hora Hombre está en $0 — los presupuestos que incluyan mano de obra no tendrán ese costo.');
+    }
+
     GECKO_SETTINGS = {
         ...GECKO_SETTINGS,
         cotizacionDolar: g('cfgCotizacionDolar'),
@@ -694,14 +707,22 @@ window.guardarConfiguracion = function () {
         condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || ''
     };
     localStorage.setItem('GECKO_SETTINGS', JSON.stringify(GECKO_SETTINGS));
+
     // Sincronizar con MySQL
     fetch('/app/api.php?endpoint=configuracion', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(GECKO_SETTINGS)
     }).catch(e => console.warn('GECKO: Error guardando config en API', e));
-    if (typeof window.mostrarExito === 'function') window.mostrarExito('Configuración guardada correctamente.', '¡Guardado!');
+
     if (typeof renderInsumos === 'function') renderInsumos();
+
+    // Mostrar advertencias o éxito
+    if (advertencias.length > 0 && typeof window.mostrarAdvertencia === 'function') {
+        window.mostrarAdvertencia(advertencias.join(' · '), 'Guardado con advertencias');
+    } else if (typeof window.mostrarExito === 'function') {
+        window.mostrarExito('Configuración guardada correctamente.', '¡Guardado!');
+    }
 };
 
 window.renderTablaParametrosLaser = async function () {
@@ -796,6 +817,23 @@ window._actualizarParamLaser = function (input) {
 };
 
 window.guardarParametrosLaser = async function () {
+    // ── Validación: detectar filas con precio en $0 ──
+    const filasSinPrecio = [];
+    document.querySelectorAll('#tablaParametrosLaser input[data-campo="precio"]').forEach(inp => {
+        if ((parseFloat(inp.value) || 0) === 0) filasSinPrecio.push(inp.dataset.servicio);
+    });
+    document.querySelectorAll('.fila-laser-nueva').forEach(tr => {
+        const nombre = tr.querySelector('.fila-nueva-nombre')?.value.trim();
+        const precio = parseFloat(tr.querySelector('.fila-nueva-precio')?.value) || 0;
+        if (nombre && precio === 0) filasSinPrecio.push(nombre);
+    });
+    if (filasSinPrecio.length > 0 && typeof window.mostrarAdvertencia === 'function') {
+        window.mostrarAdvertencia(
+            `${filasSinPrecio.length} material${filasSinPrecio.length > 1 ? 'es tienen' : ' tiene'} precio $/ML en $0. Los cotizadores de corte calcularán $0 para ese material.`,
+            'Guardado con advertencias'
+        );
+    }
+
     // 1. Leer servicios actuales del localStorage (ya sincronizado desde MySQL)
     const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
     const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
@@ -2996,6 +3034,23 @@ function nuevaVenta() {
     renderizarPresupuesto();
 }
 // Función Global de Éxito REDISEÑADA
+window.mostrarAdvertencia = function (mensaje, titulo = "ATENCIÓN") {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:100px;right:24px;z-index:99999;background:#1e1f20;border:1.5px solid #f59e0b;border-radius:16px;padding:18px 24px;max-width:380px;box-shadow:0 8px 32px rgba(245,158,11,0.25);animation:slideInRight 0.3s ease;';
+    toast.innerHTML = `
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#f59e0b" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+            </div>
+            <div>
+                <p style="color:#f59e0b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px 0;">${titulo}</p>
+                <p style="color:#d4d4d8;font-size:13px;font-weight:500;margin:0;line-height:1.5;">${mensaje}</p>
+            </div>
+        </div>`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; setTimeout(() => toast.remove(), 400); }, 5000);
+};
+
 window.mostrarExito = function (mensaje, titulo = "HECHO") {
     const overlay = document.createElement('div');
     overlay.className = 'success-overlay';
