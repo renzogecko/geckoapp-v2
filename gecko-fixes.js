@@ -3623,47 +3623,41 @@ window._geckoRenderFijo = function () {
 
         const tr = document.createElement('tr');
         tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
-        tr.onclick = function () { if (typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre); };
 
         tr.innerHTML = `
-            <td class="py-4 px-6">
+            <td class="py-4 px-6" data-accion="ficha">
                 <div class="flex items-center">
                     <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
                     ${window._geckoBadgeFijo(c.nombre)}
                 </div>
-                ${(() => {
-                    // Normalizar cuits: puede ser string legacy, array de strings, o array de {numero, etiqueta}
-                    let cuitsArr = [];
-                    if (Array.isArray(c.cuits) && c.cuits.length > 0) {
-                        cuitsArr = c.cuits;
-                    } else if (typeof c.cuits === 'string' && c.cuits.startsWith('[')) {
-                        try { cuitsArr = JSON.parse(c.cuits); } catch(e) { cuitsArr = []; }
-                    } else if (c.cuit) {
-                        cuitsArr = [{ numero: c.cuit, etiqueta: '' }];
-                    }
-                    if (cuitsArr.length === 0) return '';
-                    const chips = cuitsArr.map(cu => {
-                        const num = typeof cu === 'string' ? cu : (cu.numero || '');
-                        const etq = typeof cu === 'string' ? '' : (cu.etiqueta || '');
-                        if (!num) return '';
-                        return `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg" title="${etq}">${num}${etq ? ` · ${etq}` : ''}</span>`;
-                    }).join('');
-                    return `<div class="flex flex-wrap gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">${chips}</div>`;
-                })()}
+                ${c.rubro ? `<p class="text-zinc-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">${c.rubro}</p>` : ''}
             </td>
-            <td class="py-4 px-6"><div class="flex flex-wrap items-center gap-1">${wp}${em}</div></td>
-            <td class="py-4 px-6"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
-            <td class="py-4 px-6 text-right">
-                <button onclick="if(typeof abrirFichaCliente === 'function') abrirFichaCliente('${c.nombre.replace(/'/g, "\\'")}'); event.stopPropagation();" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
+            <td class="py-4 px-6" data-accion="ficha"><div class="flex flex-wrap items-center gap-1">${wp}${em}</div></td>
+            <td class="py-4 px-6" data-accion="ficha"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
+            <td class="py-4 px-6 text-right" data-accion="ficha">
+                <button class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2" data-accion="ficha">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>Ficha / CC
                 </button>
             </td>
             <td class="py-4 px-6 text-center">
                 <div class="flex items-center justify-center gap-2">
-                    <button onclick="if(typeof window.editarCliente === 'function') window.editarCliente('${c.nombre.replace(/'/g, "\\'")}'); event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                    <button onclick="if(typeof window.eliminarCliente === 'function') window.eliminarCliente('${c.nombre.replace(/'/g, "\\'")}'); event.stopPropagation();" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+                    <button data-accion="editar" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button data-accion="eliminar" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
                 </div>
             </td>`;
+
+        // Delegación de eventos — un solo listener en el tr que distingue la acción
+        tr.addEventListener('click', function (e) {
+            const accion = e.target.closest('[data-accion]')?.dataset?.accion;
+            if (accion === 'editar') {
+                if (typeof window.editarCliente === 'function') window.editarCliente(c.nombre);
+            } else if (accion === 'eliminar') {
+                if (typeof window.eliminarCliente === 'function') window.eliminarCliente(c.nombre);
+            } else if (accion === 'ficha' || !accion) {
+                if (typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre);
+            }
+        });
+
         tbody.appendChild(tr);
         } catch(e) { console.warn('GECKO: error renderizando cliente', c.nombre, e); }
     });
