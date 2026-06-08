@@ -527,7 +527,6 @@ function openConfigModal() {
     if (modal) {
         modal.classList.add('open');
         modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
     }
 }
 
@@ -536,7 +535,6 @@ function closeConfigModal() {
     if (modal) {
         modal.classList.remove('open');
         setTimeout(() => { if (!modal.classList.contains('open')) modal.style.display = 'none'; }, 200);
-        document.body.style.overflow = '';
     }
 }
 
@@ -1031,13 +1029,14 @@ window.resetModal = function () {
     cambiarCategoriaCotizador('grafica');
 };
 
+// Sistema de scroll: en lugar de bloquear body, usamos un observer
+// que detecta automáticamente cuando no quedan modales visibles
 window.openModal = function (id) {
     const targetId = id || 'modalPresupuesto';
     const modal = document.getElementById(targetId);
     if (modal) {
         modal.style.display = 'flex';
         modal.classList.add('open');
-        document.body.style.overflow = 'hidden';
         if (targetId === 'modalPresupuesto') window.resetModal();
     }
 };
@@ -1048,9 +1047,24 @@ window.closeModal = function (id) {
     if (modal) {
         modal.style.display = 'none';
         modal.classList.remove('open');
-        document.body.style.overflow = '';
     }
 };
+
+// Observer global: restaura el scroll cuando no hay modales abiertos
+(function () {
+    const checkModales = () => {
+        const hayModal = document.querySelector(
+            '[id^="modal"]:not([style*="display: none"]):not([style*="display:none"]):not(.hidden), ' +
+            '[id^="_gecko"]:not([style*="display: none"]):not([style*="display:none"]):not(.hidden)'
+        );
+        document.body.style.overflow = hayModal ? 'hidden' : '';
+    };
+
+    const observer = new MutationObserver(checkModales);
+    document.addEventListener('DOMContentLoaded', () => {
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    });
+})();
 
 // Actualización de intentarCerrarModal para usar la nueva lógica asíncrona
 window.intentarCerrarModal = async function (id) {
