@@ -1526,7 +1526,7 @@
                 </button>
                 <button id="cfgTab-laser" onclick="window.switchConfigTab('laser')"
                     class="pb-4 text-[14px] font-bold text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-all">
-                    Parámetros Láser
+                    Parámetros Láser / CNC
                 </button>
             </div>
 
@@ -1661,22 +1661,6 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="gecko-label">Hora Láser (ARS)</label>
-                                <div class="grupo-input-gecko">
-                                    <span class="prefijo-gecko">$</span>
-                                    <input type="number" id="cfgHoraLaser" class="input-limpio-gecko" placeholder="0"
-                                        step="100" style="padding-left:16px !important;">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="gecko-label">Hora CNC Router (ARS)</label>
-                                <div class="grupo-input-gecko">
-                                    <span class="prefijo-gecko">$</span>
-                                    <input type="number" id="cfgHoraCNC" class="input-limpio-gecko" placeholder="0"
-                                        step="100" style="padding-left:16px !important;">
-                                </div>
-                            </div>
-                            <div>
                                 <label class="gecko-label">Hora Impresión 3D (ARS)</label>
                                 <div class="grupo-input-gecko">
                                     <span class="prefijo-gecko">$</span>
@@ -1711,9 +1695,33 @@
                 </div>
             </div>
 
-            <!-- Tab: Parámetros Láser -->
+            <!-- Tab: Parámetros Láser / CNC -->
             <div id="cfgContent-laser" class="hidden">
-                <div class="mb-6">
+
+                <!-- Costos de máquina -->
+                <div class="bg-darkCard border border-darkBorder rounded-2xl p-8 mb-6">
+                    <p class="text-gecko text-[10px] font-black uppercase tracking-widest mb-5">Costos de Máquina</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="gecko-label">Minuto Láser (ARS)</label>
+                            <div class="grupo-input-gecko">
+                                <span class="prefijo-gecko">$</span>
+                                <input type="number" id="cfgHoraLaser" class="input-limpio-gecko" placeholder="0" step="1" style="padding-left:16px !important;">
+                            </div>
+                            <p class="text-zinc-600 text-[10px] mt-1 ml-1">Costo por minuto de uso del láser.</p>
+                        </div>
+                        <div>
+                            <label class="gecko-label">Minuto CNC Router (ARS)</label>
+                            <div class="grupo-input-gecko">
+                                <span class="prefijo-gecko">$</span>
+                                <input type="number" id="cfgHoraCNC" class="input-limpio-gecko" placeholder="0" step="1" style="padding-left:16px !important;">
+                            </div>
+                            <p class="text-zinc-600 text-[10px] mt-1 ml-1">Costo por minuto de uso del CNC router.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
                     <p class="text-zinc-400 text-sm">Editá el precio por metro lineal y los parámetros de corte de cada
                         material.
                         <br><span class="text-gecko font-bold">El cotizador usará estos valores automáticamente.</span>

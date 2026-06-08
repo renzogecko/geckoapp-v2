@@ -163,7 +163,7 @@ window.generarDocPresupuesto = async function (p) {
 
     return `<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>Presupuesto #${numPpto}</title>
+<head><meta charset="UTF-8"><title>PRES_${(p.cliente || 'Cliente').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-]/g, '')}${p.titulo ? ' - ' + p.titulo.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-]/g, '') : ''}</title>
 <style>${GECKO_PRINT_STYLES}</style></head>
 <body>
 <div class="page">

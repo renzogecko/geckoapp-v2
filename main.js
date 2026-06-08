@@ -610,8 +610,8 @@ window.initConfiguracion = function () {
         v('cfgNivelPlata', s.nivelPlata || 300000);
         v('cfgNivelOro', s.nivelOro || 500000);
         v('cfgHoraHombre', s.valorHoraHombre || 0);
-        v('cfgHoraLaser', Math.round((s.minutoLaser || 0) * 60));
-        v('cfgHoraCNC', Math.round((s.minutoRouter || 0) * 60));
+        v('cfgHoraLaser', s.minutoLaser || 0);
+        v('cfgHoraCNC', s.minutoRouter || 0);
         v('cfgHora3D', s.costoHora3D || 0);
         const cond = document.getElementById('cfgCondicionesVenta');
         if (cond) cond.value = s.condicionesVenta || '';
@@ -658,8 +658,8 @@ window.guardarConfiguracion = function () {
         nivelPlata: g('cfgNivelPlata'),
         nivelOro: g('cfgNivelOro'),
         valorHoraHombre: g('cfgHoraHombre'),
-        minutoLaser: g('cfgHoraLaser') / 60,
-        minutoRouter: g('cfgHoraCNC') / 60,
+        minutoLaser: g('cfgHoraLaser'),
+        minutoRouter: g('cfgHoraCNC'),
         costoHora3D: g('cfgHora3D'),
         condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || ''
     };
@@ -3505,8 +3505,8 @@ function editarMaterial(id) {
     if (material.costo) {
         document.getElementById('matCostoReal').value = material.costo;
         if (est === 'fija') {
-            document.getElementById('matPrecioVentaManual').value = (material.costo * (material.multiplicador || 1)).toFixed(2);
-            document.getElementById('matPrecioGremio').value = (material.costo * (material.multGremio || 1)).toFixed(2);
+            document.getElementById('matPrecioVentaManual').value = Math.round(material.costo * (material.multiplicador || 1));
+            document.getElementById('matPrecioGremio').value = Math.round(material.costo * (material.multGremio || 1));
         }
     }
 
