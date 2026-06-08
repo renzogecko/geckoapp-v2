@@ -161,9 +161,15 @@ window.generarDocPresupuesto = async function (p) {
         </div>
     ` : '';
 
+    const clienteLimpio = (p.cliente || 'Cliente').replace(/[<>:"/\\|?*]/g, '').trim();
+    const tituloLimpio = (p.titulo || '').replace(/[<>:"/\\|?*]/g, '').trim();
+    const nombreArchivoPDF = tituloLimpio
+        ? `PRES_${clienteLimpio} - ${tituloLimpio}`
+        : `PRES_${clienteLimpio}`;
+
     return `<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>PRES_${(p.cliente || 'Cliente').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-]/g, '')}${p.titulo ? ' - ' + p.titulo.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-]/g, '') : ''}</title>
+<head><meta charset="UTF-8"><title>${nombreArchivoPDF}</title>
 <style>${GECKO_PRINT_STYLES}</style></head>
 <body>
 <div class="page">
@@ -353,19 +359,16 @@ window.verDocumento = async function (id) {
     frame.contentDocument.close();
 
     document.getElementById('btnImprimirDoc').onclick = function () {
-        // Cambiar el título del documento temporalmente para que el PDF se guarde con el nombre correcto
-        const clienteLimpio = (p.cliente || 'Cliente').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-]/g, '').trim();
-        const tituloLimpio = (p.titulo || '').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-]/g, '').trim();
-        const esOT = p.status === 'OT';
-        const prefijo = esOT ? 'OT' : 'PRES';
-        const nombreArchivo = tituloLimpio
-            ? `${prefijo}_${clienteLimpio} - ${tituloLimpio}`
-            : `${prefijo}_${clienteLimpio}`;
-
-        const tituloOriginal = document.title;
-        document.title = nombreArchivo;
-        frame.contentWindow.print();
-        setTimeout(() => { document.title = tituloOriginal; }, 1000);
+        // Abrir ventana nueva con el HTML completo — el <title> del HTML define el nombre del PDF
+        const printWin = window.open('', '_blank', 'width=900,height=700');
+        if (!printWin) {
+            // Fallback si el popup está bloqueado
+            frame.contentWindow.print();
+            return;
+        }
+        printWin.document.open();
+        printWin.document.write(html);
+        printWin.document.close();
     };
 };
 
