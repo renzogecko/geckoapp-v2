@@ -353,7 +353,19 @@ window.verDocumento = async function (id) {
     frame.contentDocument.close();
 
     document.getElementById('btnImprimirDoc').onclick = function () {
+        // Cambiar el título del documento temporalmente para que el PDF se guarde con el nombre correcto
+        const clienteLimpio = (p.cliente || 'Cliente').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-]/g, '').trim();
+        const tituloLimpio = (p.titulo || '').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-]/g, '').trim();
+        const esOT = p.status === 'OT';
+        const prefijo = esOT ? 'OT' : 'PRES';
+        const nombreArchivo = tituloLimpio
+            ? `${prefijo}_${clienteLimpio} - ${tituloLimpio}`
+            : `${prefijo}_${clienteLimpio}`;
+
+        const tituloOriginal = document.title;
+        document.title = nombreArchivo;
         frame.contentWindow.print();
+        setTimeout(() => { document.title = tituloOriginal; }, 1000);
     };
 };
 
