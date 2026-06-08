@@ -152,13 +152,14 @@ try {
             $d = $body;
             $cuits = isset($d['cuits']) ? (is_array($d['cuits']) ? json_encode($d['cuits']) : $d['cuits']) : '[]';
             $emails = isset($d['emails']) ? (is_array($d['emails']) ? json_encode($d['emails']) : $d['emails']) : '[]';
-            $stmt = $pdo->prepare("INSERT INTO clientes (id, nombre, cuit, tel, email, dir, loc, rubro, cuits, emails)
-                VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $telefonos = isset($d['telefonos']) ? (is_array($d['telefonos']) ? json_encode($d['telefonos']) : $d['telefonos']) : '[]';
+            $stmt = $pdo->prepare("INSERT INTO clientes (id, nombre, cuit, tel, email, dir, loc, rubro, cuits, emails, telefonos)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid(), $d['nombre'] ?? '', $d['cuit'] ?? '',
                 $d['tel'] ?? '', $d['email'] ?? '', $d['dir'] ?? '',
                 $d['loc'] ?? '', $d['rubro'] ?? '',
-                $cuits, $emails
+                $cuits, $emails, $telefonos
             ]);
             responder(["success" => true, "message" => "Cliente creado."]);
         }
@@ -167,13 +168,14 @@ try {
             $d = $body;
             $cuits = isset($d['cuits']) ? (is_array($d['cuits']) ? json_encode($d['cuits']) : $d['cuits']) : '[]';
             $emails = isset($d['emails']) ? (is_array($d['emails']) ? json_encode($d['emails']) : $d['emails']) : '[]';
-            $stmt = $pdo->prepare("REPLACE INTO clientes (id, nombre, cuit, tel, email, dir, loc, rubro, cuits, emails)
-                VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $telefonos = isset($d['telefonos']) ? (is_array($d['telefonos']) ? json_encode($d['telefonos']) : $d['telefonos']) : '[]';
+            $stmt = $pdo->prepare("REPLACE INTO clientes (id, nombre, cuit, tel, email, dir, loc, rubro, cuits, emails, telefonos)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'], $d['nombre'] ?? '', $d['cuit'] ?? '',
                 $d['tel'] ?? '', $d['email'] ?? '', $d['dir'] ?? '',
                 $d['loc'] ?? '', $d['rubro'] ?? '',
-                $cuits, $emails
+                $cuits, $emails, $telefonos
             ]);
             responder(["success" => true, "message" => "Cliente actualizado."]);
         }
