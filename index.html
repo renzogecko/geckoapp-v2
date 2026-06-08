@@ -1750,32 +1750,15 @@
                     onmouseout="this.style.color='#52525b';this.style.borderColor='#333333'">
                     + Agregar material / servicio
                 </button>
-                <!-- Espaciador para que el contenido no quede tapado por la barra fija -->
-                <div style="height:72px;"></div>
-            </div>
-
-            <!-- BARRA FIJA INFERIOR — Parámetros Láser -->
-            <div id="geckoLaserStickyBar"
-                style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:90;background:#1e1f20;border-top:1px solid #333333;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="8" cy="8" r="7" stroke="#64748b" stroke-width="1.5" />
-                        <path d="M8 5v3.5l2.5 1.5" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    <span id="geckoLaserStickyStatus"
-                        style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;">Sin
-                        cambios</span>
+                <div class="flex justify-end mt-6">
+                    <button onclick="window.guardarParametrosLaser()"
+                        class="px-8 py-4 rounded-2xl text-white font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        style="background:#f15a24;box-shadow:0 4px 20px rgba(241,90,36,0.35);transition:transform 0.15s ease,box-shadow 0.15s ease;"
+                        onmouseover="this.style.boxShadow='0 8px 30px rgba(241,90,36,0.55)'"
+                        onmouseout="this.style.boxShadow='0 4px 20px rgba(241,90,36,0.35)'">
+                        Guardar Parámetros Láser
+                    </button>
                 </div>
-                <button onclick="window.guardarParametrosLaserSticky()"
-                    style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:#F15A24;color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;transition:background 0.2s;"
-                    onmouseover="this.style.background='#d44e1e'" onmouseout="this.style.background='#F15A24'">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M2 7.5L5.5 11 12 3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    Guardar cambios
-                </button>
             </div>
 
         </div>

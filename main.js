@@ -592,56 +592,13 @@ window.switchConfigTab = function (tab) {
     });
     if (tab === 'laser') {
         window.renderTablaParametrosLaser();
-        window.geckoLaserStickyShow();
-    } else {
-        window.geckoLaserStickyHide();
     }
     if (tab === 'finanzas') {
         window.geckoFetchCotizacionDolar();
     }
 };
 
-// BARRA FIJA LÁSER — control de visibilidad y estado
-window._geckoLaserDirty = false;
-
-window.geckoLaserStickyShow = function () {
-    const bar = document.getElementById('geckoLaserStickyBar');
-    if (bar) bar.style.display = 'flex';
-};
-
-window.geckoLaserStickyHide = function () {
-    const bar = document.getElementById('geckoLaserStickyBar');
-    if (bar) bar.style.display = 'none';
-    window._geckoLaserDirty = false;
-    window.geckoLaserStickySetStatus('clean');
-};
-
-window.geckoLaserStickySetStatus = function (estado) {
-    const el = document.getElementById('geckoLaserStickyStatus');
-    if (!el) return;
-    if (estado === 'dirty') {
-        el.textContent = 'Cambios sin guardar';
-        el.style.color = '#F15A24';
-        window._geckoLaserDirty = true;
-    } else if (estado === 'saved') {
-        el.textContent = 'Guardado';
-        el.style.color = '#10b981';
-        window._geckoLaserDirty = false;
-        setTimeout(() => {
-            el.textContent = 'Sin cambios';
-            el.style.color = '#64748b';
-        }, 3000);
-    } else {
-        el.textContent = 'Sin cambios';
-        el.style.color = '#64748b';
-        window._geckoLaserDirty = false;
-    }
-};
-
-window.guardarParametrosLaserSticky = async function () {
-    await window.guardarParametrosLaser();
-    window.geckoLaserStickySetStatus('saved');
-};
+// Sticky láser eliminado — el guardado se hace desde el botón al pie del tab
 
 window.initConfiguracion = function () {
     const aplicarSettings = (s) => {
@@ -799,12 +756,6 @@ window.renderTablaParametrosLaser = async function () {
             <td class="py-3 px-3"></td>
         </tr>`;
     }).join('');
-
-    // Marcar cambios al editar cualquier input de la tabla
-    document.querySelectorAll('#tablaParametrosLaser input').forEach(inp => {
-        inp.addEventListener('input', () => window.geckoLaserStickySetStatus('dirty'));
-        inp.addEventListener('change', () => window.geckoLaserStickySetStatus('dirty'));
-    });
 };
 
 window._laserParamsTemp = {};
