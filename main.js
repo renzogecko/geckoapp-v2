@@ -672,6 +672,25 @@ window.guardarConfiguracion = function () {
         body: JSON.stringify(GECKO_SETTINGS)
     }).catch(e => console.warn('GECKO: Error guardando config en API', e));
 
+    // Recalcular precios de materiales en ARS cuando cambia la cotización dólar
+    try {
+        const materiales = JSON.parse(localStorage.getItem('geckoMateriales') || '[]');
+        const nuevaCotiz = GECKO_SETTINGS.cotizacionDolar;
+        let actualizados = false;
+        materiales.forEach(m => {
+            if (m.costoUSD && parseFloat(m.costoUSD) > 0) {
+                m.costoARS = Math.round(parseFloat(m.costoUSD) * nuevaCotiz);
+                const mult = m.multiplicador || GECKO_SETTINGS.multiplicadorGlobal || 2;
+                m.precioVenta = Math.round(m.costoARS * mult);
+                actualizados = true;
+            }
+        });
+        if (actualizados) {
+            localStorage.setItem('geckoMateriales', JSON.stringify(materiales));
+            if (typeof window.gecko_api_sync === 'function') window.gecko_api_sync('materiales', materiales);
+        }
+    } catch(e) { console.warn('GECKO: error actualizando precios por dólar', e); }
+
     if (typeof renderInsumos === 'function') renderInsumos();
 
     // Mostrar advertencias o éxito
@@ -721,29 +740,35 @@ window.renderTablaParametrosLaser = async function () {
         const espesor = params.espesor || '';
         const speed = params.speed || '';
         const power = params.power || '';
+        const nombreSeguro = s.nombre.replace(/"/g, '&quot;');
         return `
-        <tr class="hover:bg-white/3 transition-colors">
+        <tr class="hover:bg-white/3 transition-colors" data-id-servicio="${s.id || ''}" data-nombre-original="${nombreSeguro}">
             <td class="py-3 px-5">
-                <p class="font-bold text-white text-[13px]">${s.nombre}</p>
-                <p class="text-zinc-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">${s.unidad || 'mtL'}</p>
+                <input type="text"
+                    data-servicio="${nombreSeguro}" data-campo="nombre"
+                    value="${nombreSeguro}"
+                    class="w-full bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-white font-bold text-[13px] py-1 uppercase tracking-wide"
+                    style="min-width:180px;"
+                    oninput="window._actualizarParamLaser(this)">
+                <p class="text-zinc-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">MTL</p>
             </td>
             <td class="py-3 px-4 text-center">
                 <input type="number" step="0.5"
-                    data-servicio="${s.nombre}" data-campo="espesor"
+                    data-servicio="${nombreSeguro}" data-campo="espesor"
                     value="${espesor}" placeholder="—"
                     class="w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1"
                     oninput="window._actualizarParamLaser(this)">
             </td>
             <td class="py-3 px-4 text-center">
                 <input type="number"
-                    data-servicio="${s.nombre}" data-campo="speed"
+                    data-servicio="${nombreSeguro}" data-campo="speed"
                     value="${speed}" placeholder="—"
                     class="w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1"
                     oninput="window._actualizarParamLaser(this)">
             </td>
             <td class="py-3 px-4 text-center">
                 <input type="number"
-                    data-servicio="${s.nombre}" data-campo="power"
+                    data-servicio="${nombreSeguro}" data-campo="power"
                     value="${power}" placeholder="—"
                     class="w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1"
                     oninput="window._actualizarParamLaser(this)">
@@ -752,15 +777,37 @@ window.renderTablaParametrosLaser = async function () {
                 <div class="flex items-center justify-end gap-1">
                     <span class="text-zinc-600 text-[12px]">$</span>
                     <input type="number"
-                        data-servicio="${s.nombre}" data-campo="precio"
+                        data-servicio="${nombreSeguro}" data-campo="precio"
                         value="${precio || ''}" placeholder="0"
                         class="w-24 text-right bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-gecko font-black text-[14px] py-1"
                         oninput="window._actualizarParamLaser(this)">
                 </div>
             </td>
-            <td class="py-3 px-3"></td>
+            <td class="py-3 px-3 text-center">
+                <button onclick="window._eliminarFilaLaser(this)"
+                    style="width:28px;height:28px;border-radius:8px;background:transparent;border:1px solid rgba(239,68,68,0.2);color:#71717a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"
+                    onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.5)';this.style.color='#ef4444'"
+                    onmouseout="this.style.background='transparent';this.style.borderColor='rgba(239,68,68,0.2)';this.style.color='#71717a'"
+                    title="Eliminar fila">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                    </svg>
+                </button>
+            </td>
         </tr>`;
     }).join('');
+};
+
+window._laserEliminar = [];
+
+window._eliminarFilaLaser = function (btn) {
+    const tr = btn.closest('tr');
+    const nombreOriginal = tr.dataset.nombreOriginal;
+    const idServicio = tr.dataset.idServicio;
+    window._laserEliminar.push({ nombre: nombreOriginal, id: idServicio });
+    tr.style.opacity = '0';
+    tr.style.transition = 'opacity 0.3s';
+    setTimeout(() => tr.remove(), 300);
 };
 
 window._laserParamsTemp = {};
@@ -794,7 +841,34 @@ window.guardarParametrosLaser = async function () {
     const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
     const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
 
-    // 2. Procesar filas existentes (data-campo="precio")
+    // 2a. Procesar eliminaciones pendientes
+    const eliminados = window._laserEliminar || [];
+    eliminados.forEach(({ nombre, id }) => {
+        const idx = servicios.findIndex(s => s.nombre === nombre || s.id === id);
+        if (idx !== -1) servicios.splice(idx, 1);
+        delete laserParams[nombre];
+    });
+    window._laserEliminar = [];
+
+    // 2b. Procesar renombres — si el input de nombre cambió respecto al data-nombre-original
+    document.querySelectorAll('#tablaParametrosLaser tr[data-nombre-original]').forEach(tr => {
+        const nombreOriginal = tr.dataset.nombreOriginal;
+        const inputNombre = tr.querySelector('input[data-campo="nombre"]');
+        const nombreNuevo = inputNombre?.value.trim().toUpperCase();
+        if (!nombreNuevo || nombreNuevo === nombreOriginal) return;
+        const idx = servicios.findIndex(s => s.nombre === nombreOriginal);
+        if (idx !== -1) {
+            servicios[idx].nombre = nombreNuevo;
+            if (laserParams[nombreOriginal]) {
+                laserParams[nombreNuevo] = laserParams[nombreOriginal];
+                delete laserParams[nombreOriginal];
+            }
+            tr.querySelectorAll('input[data-servicio]').forEach(inp => inp.dataset.servicio = nombreNuevo);
+            tr.dataset.nombreOriginal = nombreNuevo;
+        }
+    });
+
+    // 2c. Procesar precios existentes
     document.querySelectorAll('#tablaParametrosLaser input[data-campo="precio"]').forEach(inp => {
         const nombre = inp.dataset.servicio;
         const precio = parseFloat(inp.value) || 0;
@@ -807,6 +881,17 @@ window.guardarParametrosLaser = async function () {
     // Guardar params (espesor/speed/power)
     Object.assign(laserParams, window._laserParamsTemp || {});
     window._laserParamsTemp = {};
+
+    // 2d. Sincronizar eliminaciones en MySQL
+    if (eliminados.length > 0) {
+        await Promise.all(eliminados.filter(e => e.id).map(e =>
+            fetch('/app/api.php?endpoint=servicios', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: e.id })
+            }).catch(() => {})
+        ));
+    }
 
     // 3. Procesar filas nuevas
     document.querySelectorAll('.fila-laser-nueva').forEach(tr => {
