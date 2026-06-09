@@ -1597,33 +1597,102 @@ window.cambiarCategoriaCotizador = function (cat) {
         }, 100);
 
     } else if (cat === 'laser_cnc') {
-        const options = (window.materiales || []).filter(m => m.categoria === 'rigido').map(m => `<option value="${m.nombre}">`).join('');
+        const modoActual = window._laserCncModo || 'laser';
+        const esCnc = modoActual === 'cnc';
+
+        // Materiales válidos: rígidos, polifán, chapas
+        const matsCats = ['rigido', 'polifan', 'chapas'];
+        const matsValidos = (window.materiales || []).filter(m => matsCats.includes(m.categoria));
+        const optionsMats = matsValidos.map(m => `<option value="${m.nombre}">`).join('');
+
         panel.innerHTML = `
-            <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
+
+                <!-- 01. MODO Y NOMBRE -->
                 <div class="card-gecko">
-                    <div class="flex items-center justify-between w-full mb-4">
-                        <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">01. IDENTIFICACIÓN DEL TRABAJO</p>
-                    </div>
-                    <div class="group"><input type="text" id="corteNombre" oninput="window.calcularCostoCorte()" placeholder="Ej: Llaveros MDF Grabados" class="${inputStyle}"></div>
-                </div>
-                <div class="card-gecko space-y-2">
-                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">02. SELECCIÓN DE MATERIALES</p>
-                    <div id="contenedorFilasLaser" class="space-y-3 mb-4">
-                        <div class="grid grid-cols-12 gap-4 items-center fila-laser group">
-                            <div class="col-span-5"><input type="text" list="dlCorte" class="input-laser-mat w-full bg-transparent border-b border-zinc-800 p-2" oninput="window.calcularCostoCorte()" placeholder="Material..."></div>
-                            <div class="col-span-2"><input type="number" class="input-laser-ancho w-full bg-transparent border-b border-zinc-800 p-2 text-center" oninput="window.calcularCostoCorte()" placeholder="Ancho"></div>
-                            <div class="col-span-2"><input type="number" class="input-laser-alto w-full bg-transparent border-b border-zinc-800 p-2 text-center" oninput="window.calcularCostoCorte()" placeholder="Alto"></div>
-                            <div class="col-span-2"><input type="number" class="input-laser-cant w-full bg-transparent border-b border-zinc-800 p-2 text-center" oninput="window.calcularCostoCorte()" value="1"></div>
-                            <div class="col-span-1 flex justify-center"><button onclick="this.closest('.fila-laser').remove(); window.calcularCostoCorte();" class="text-red-500/50 hover:text-red-500 p-2 transition-colors">✕</button></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">01. TIPO DE TRABAJO</p>
+                        <div class="flex bg-zinc-900 rounded-xl p-1 gap-1">
+                            <button id="btnModeLaser" onclick="window.setLaserCncModo('laser')"
+                                class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${!esCnc ? 'bg-zinc-700 text-gecko' : 'text-zinc-500 hover:text-white'}">
+                                Láser
+                            </button>
+                            <button id="btnModeCnc" onclick="window.setLaserCncModo('cnc')"
+                                class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${esCnc ? 'bg-zinc-700 text-gecko' : 'text-zinc-500 hover:text-white'}">
+                                CNC Router
+                            </button>
                         </div>
                     </div>
-                    <button onclick="window.agregarFilaLaser()" class="w-full py-4 bg-transparent border border-dashed border-zinc-800 rounded-2xl text-[10px] font-black text-zinc-500 hover:border-gecko/50 hover:text-gecko transition-all">+ Añadir Material</button>
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex-1">
+                            <label class="${labelStyle}">Nombre del trabajo</label>
+                            <input type="text" id="corteNombre" oninput="window.calcularCostoCorte()"
+                                placeholder="Ej: Llaveros MDF Grabados" class="${inputStyle}">
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 mt-4">
+                            <span id="labelPublicoCorte" class="text-[10px] font-black uppercase tracking-widest ${!esCnc ? 'text-white' : 'text-zinc-500'}">Público</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="modoGremioCorte" class="sr-only peer"
+                                    onchange="window.calcularCostoCorte()">
+                                <div class="w-10 h-5 bg-zinc-700 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                            </label>
+                            <span id="labelGremioCorte" class="text-[10px] font-black uppercase tracking-widest text-zinc-500 peer-checked:text-indigo-400">Gremio</span>
+                        </div>
+                    </div>
                 </div>
-                <div class=""><button onclick="window.agregarItemAlCarritoUI()" class="w-full py-3 bg-[#f15a24] text-white rounded-2xl font-black uppercase text-[11px] tracking-[3px] shadow-lg">+ AÑADIR A COTIZACIÓN</button></div>
-                <datalist id="dlCorte">${options}</datalist>
+
+                <!-- 02. FILAS DE MATERIAL -->
+                <div class="card-gecko space-y-2">
+                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-3">02. MATERIALES Y MEDIDAS</p>
+
+                    <!-- Encabezados columnas -->
+                    <div class="grid gap-2 px-1 mb-1 text-[9px] font-black uppercase tracking-widest text-zinc-600 ${esCnc ? 'grid-cols-12' : 'grid-cols-11'}">
+                        <div class="col-span-3">Material</div>
+                        <div class="col-span-2 text-center">Ancho (cm)</div>
+                        <div class="col-span-2 text-center">Alto (cm)</div>
+                        <div class="col-span-2 text-center">Perímetro (cm)</div>
+                        ${esCnc ? '<div class="col-span-1 text-center">Pasadas</div>' : ''}
+                        <div class="col-span-1 text-center">Cant</div>
+                        <div class="col-span-1"></div>
+                    </div>
+
+                    <div id="contenedorFilasLaser" class="space-y-2 mb-3">
+                        <!-- Fila inicial inyectada por agregarFilaLaser() -->
+                    </div>
+
+                    <button onclick="window.agregarFilaLaser()"
+                        class="w-full py-3 bg-transparent border border-dashed border-zinc-800 rounded-xl text-[10px] font-black text-zinc-500 hover:border-gecko/50 hover:text-gecko transition-all">
+                        + Añadir material / pieza
+                    </button>
+                </div>
+
+                <!-- 03. PARÁMETROS GLOBALES -->
+                <div class="card-gecko">
+                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-3">03. PARÁMETROS GLOBALES</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="${labelStyle}">Desperdicio (%)</label>
+                            <input type="number" id="corteDesperdicio" value="0" min="0" max="100"
+                                oninput="window.calcularCostoCorte()" onwheel="this.blur()" class="${inputStyle}">
+                        </div>
+                        <div>
+                            <label class="${labelStyle} text-zinc-400">Extras / Adicionales ($)</label>
+                            <input type="number" id="corteExtras" value="0" min="0"
+                                oninput="window.calcularCostoCorte()" onwheel="this.blur()" class="${inputStyle}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AUDITOR POR FILA -->
+                <div id="auditorLaserContainer" class="space-y-1"></div>
+
+                <datalist id="dlCorte">${optionsMats}</datalist>
             </div>
         `;
-        setTimeout(() => window.calcularCostoCorte('laser_cnc'), 50);
+
+        // Inyectar primera fila
+        window.agregarFilaLaser();
+        setTimeout(() => window.calcularCostoCorte(), 50);
     } else if (cat === 'textil') {
         panel.innerHTML = `
             <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
