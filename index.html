@@ -2958,7 +2958,8 @@
                             Compra</label>
                         <select id="matUnidad"
                             class="gecko-select-pro w-full h-12 px-4 bg-zinc-900/50 border border-zinc-700 rounded-2xl focus:border-orange-500 outline-none text-white font-bold cursor-pointer transition-all"
-                            style="padding-left: 20px !important;">
+                            style="padding-left: 20px !important;"
+                            onchange="window.recalcularCantidadQueTrae(); window.recalcularCostoReal();">
                             <option value="rollo">Rollo</option>
                             <option value="m2">Por m²</option>
                             <option value="placa">Por Placa</option>

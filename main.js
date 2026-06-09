@@ -3567,12 +3567,6 @@ function convertirMoneda(origen) {
         const ars = parseFloat(inputARS.value) || 0;
         inputUSD.value = (ars / cotizDolar).toFixed(2);
     }
-    // Limpiar campos de medidas para evitar valores cruzados entre categorías
-    ['matAncho', 'matLargo', 'matEspesor', 'matPeso', 'matContenidoUnidad'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-
     // Recalcular el costo real en tiempo real
     recalcularCostoReal();
 }
@@ -3655,12 +3649,16 @@ function actualizarCamposDinamicos() {
     const inputStyle = "w-full bg-transparent border-b-2 border-zinc-800 p-3 text-[11px] font-normal text-white transition-all outline-none placeholder:text-zinc-500";
 
     config.campos.forEach(campo => {
+        const isMediaField = ['matAncho', 'matLargo', 'matPeso'].includes(campo.id);
+        const onInputHandler = isMediaField
+            ? 'window.recalcularCantidadQueTrae(); window.recalcularCostoReal();'
+            : 'window.recalcularCostoReal()';
         html += `
             <div class="flex flex-col">
                 <label class="${labelStyle}">${campo.label}</label>
-                <input type="${campo.type}" id="${campo.id}" placeholder="${campo.placeholder}" 
-                       ${campo.type === 'number' ? 'step="any"' : ''} 
-                       oninput="window.recalcularCostoReal()" class="${inputStyle}">
+                <input type="${campo.type}" id="${campo.id}" placeholder="${campo.placeholder}"
+                       ${campo.type === 'number' ? 'step="any"' : ''}
+                       oninput="${onInputHandler}" class="${inputStyle}">
             </div>
         `;
     });
@@ -3705,32 +3703,55 @@ window.setEstrategiaVenta = function (est) {
     recalcularCostoReal();
 };
 
-// -- Función: Calcular Costo Real en tiempo real (Refuerzo UX) --
-window.recalcularCostoReal = function (trigger) {
+// Autocompletar "Cantidad que trae" solo cuando tiene sentido calcularlo
+window.recalcularCantidadQueTrae = function () {
     const cat = document.getElementById('matCat')?.value;
     const unidadCompra = document.getElementById('matUnidad')?.value;
     const inputContenido = document.getElementById('matContenidoUnidad');
-    const ancho = parseFloat(document.getElementById('matAncho')?.value) || 0;
-    const largo = parseFloat(document.getElementById('matLargo')?.value) || 0; // 'matLargo' también se usa para Alto
-    const peso = parseFloat(document.getElementById('matPeso')?.value) || 0;
+    if (!inputContenido) return;
 
-    // Lógica prioritaria: Autocompletado de contenido según medidas
-    if (inputContenido) {
-        let cantCalculada = null;
-        if (['rigido', 'polifan', 'chapas'].includes(cat) && unidadCompra === 'placa') {
-            // ancho y largo en cm → área en m²
-            if (ancho > 0 && largo > 0) cantCalculada = (ancho * largo) / 10000;
-        } else if ((cat === 'vinilos_lonas' || cat === 'flexible') && unidadCompra === 'rollo') {
-            // ancho en cm, largo en metros → área en m²
-            if (ancho > 0 && largo > 0) cantCalculada = (ancho / 100) * largo;
-        } else if (cat === '3d') {
-            if (peso > 0) cantCalculada = peso;
-        }
-        if (cantCalculada !== null) {
-            // Redondear a 1 decimal máximo, evitar .0 innecesario
-            inputContenido.value = parseFloat(cantCalculada.toFixed(1));
+    // Para estas unidades el campo es manual — no tocar
+    if (['unidad', 'barra'].includes(unidadCompra)) return;
+
+    const ancho = parseFloat(document.getElementById('matAncho')?.value) || 0;
+    const largo = parseFloat(document.getElementById('matLargo')?.value) || 0;
+
+    // Necesitamos ambas dimensiones para calcular
+    if (ancho <= 0 || largo <= 0) return;
+
+    let cantCalculada = null;
+
+    if (unidadCompra === 'placa' || unidadCompra === 'm2') {
+        // Placas rígidas: ancho y alto en cm → m²
+        if (['rigido', 'polifan', 'chapas'].includes(cat)) {
+            cantCalculada = (ancho * largo) / 10000;
         }
     }
+
+    if (unidadCompra === 'rollo' || unidadCompra === 'm2') {
+        // Rollos/vinilos: ancho en cm, largo en metros → m²
+        if (['vinilos_lonas', 'flexible'].includes(cat)) {
+            cantCalculada = (ancho / 100) * largo;
+        }
+    }
+
+    if (unidadCompra === 'metro_lineal') {
+        // Metro lineal: el largo ya es la cantidad
+        cantCalculada = largo;
+    }
+
+    if (cantCalculada !== null) {
+        inputContenido.value = parseFloat(cantCalculada.toFixed(1));
+        // Disparar recálculo de costo después de actualizar la cantidad
+        window.recalcularCostoReal();
+    }
+};
+
+// -- Función: Calcular Costo Real en tiempo real (Refuerzo UX) --
+window.recalcularCostoReal = function (trigger) {
+    const cat = document.getElementById('matCat')?.value;
+    const ancho = parseFloat(document.getElementById('matAncho')?.value) || 0;
+    const largo = parseFloat(document.getElementById('matLargo')?.value) || 0;
 
     const unidadVenta = document.getElementById('matUnidadVenta')?.value || 'm2';
     const costoARS = parseFloat(document.getElementById('matCostARS')?.value) || 0;
