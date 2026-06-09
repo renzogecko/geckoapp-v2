@@ -1854,8 +1854,18 @@ window.agregarItemAlCarritoUI = async function () {
         btn.innerHTML = 'Guardando...';
         const currentCat = window.itemActualCotizado.tipo;
 
-        // Ejecutar lógica base
-        await agregarItemAlCarrito();
+        // Para laser_cnc usar window.itemActualCotizado directamente — evita la función legacy
+        if (currentCat === 'laser_cnc') {
+            const item = window.itemActualCotizado;
+            if (item && item.costo > 0) {
+                presupuesto.push({ ...item });
+                window.renderizarPresupuesto();
+                mostrarExito("Ítem añadido al presupuesto", "Carrito Actualizado");
+            }
+        } else {
+            // Ejecutar lógica base para otros cotizadores
+            await agregarItemAlCarrito();
+        }
 
         // Feedback y reset de tab 
         btn.innerHTML = `<svg class="w-5 h-5 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Guardado!`;
