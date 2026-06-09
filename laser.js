@@ -17,12 +17,19 @@ window.agregarFilaLaser = function () {
     const div = document.createElement('div');
     div.className = `grid gap-2 items-center fila-laser animate-in fade-in ${esCnc ? 'grid-cols-12' : 'grid-cols-11'}`;
 
+    // Construir opciones del select con materiales válidos
+    const matsCats = ['rigido', 'polifan', 'chapas'];
+    const matsValidos = (window.materiales || []).filter(m => matsCats.includes(m.categoria));
+    const opcionesSelect = matsValidos.map(m =>
+        `<option value="${m.nombre}">${m.nombre}</option>`
+    ).join('');
+
     div.innerHTML = `
         <div class="col-span-3">
-            <input type="text" list="dlCorte"
-                class="input-laser-mat w-full bg-transparent border-b border-zinc-800 px-1 py-2 text-[13px] text-white outline-none focus:border-gecko"
-                oninput="window.calcularCostoCorte()"
-                placeholder="Material...">
+            <select class="input-laser-mat gecko-select-pro w-full" onchange="window.calcularCostoCorte()">
+                <option value="">Seleccionar material...</option>
+                ${opcionesSelect}
+            </select>
         </div>
         <div class="col-span-2">
             <input type="number" min="0"
@@ -155,6 +162,14 @@ window.calcularCostoCorte = function () {
         }
     }
 
+    // Actualizar etiquetas del panel derecho para contexto láser
+    const labelMat = document.querySelector('#contenedorResumenGrafica .flex:nth-child(2) span:first-child');
+    const labelServ = document.querySelector('#contenedorResumenGrafica .flex:nth-child(3) span:first-child');
+    const labelExtra = document.querySelector('#contenedorResumenGrafica .flex:nth-child(4) span:first-child');
+    if (labelMat) labelMat.textContent = 'Material base';
+    if (labelServ) labelServ.textContent = 'Servicio de corte';
+    if (labelExtra) labelExtra.textContent = extras > 0 ? 'Extras / Adicionales' : 'Extras / Adicionales';
+
     // Guardar para carrito
     const nombre = document.getElementById('corteNombre')?.value?.trim() || 'Trabajo Láser/CNC';
     window.itemActualCotizado = {
@@ -163,4 +178,22 @@ window.calcularCostoCorte = function () {
         costo: totalFinal,
         otDetalle: auditLineas.map(l => l.texto).join(' | ')
     };
+
+    // Mostrar / ocultar botón añadir
+    const btnExistente = document.getElementById('btnAnadirLaser');
+    if (!btnExistente) {
+        const panelConf = document.getElementById('panelConfigurador');
+        if (panelConf) {
+            const btnWrap = document.createElement('div');
+            btnWrap.id = 'btnAnadirLaser';
+            btnWrap.className = 'mt-4';
+            btnWrap.innerHTML = `
+                <button onclick="window.agregarItemAlCarritoUI()"
+                    class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                    + Añadir a Cotización
+                </button>`;
+            panelConf.appendChild(btnWrap);
+        }
+    }
 };
