@@ -4345,12 +4345,15 @@ window._gpmGuardar = function (status) {
     let total = items.reduce((acc, it) => acc + it.costo, 0);
 
     const descOn = document.getElementById('gpmTogDesc')?.checked;
-    let descuento = 0, tipoDescuento = 'pct';
+    let descuento = 0, descuentoValor = 0, tipoDescuento = 'pct';
     if (descOn) {
         const dv = pn(document.getElementById('gpmDescVal')?.value);
         tipoDescuento = document.getElementById('gpmDescTipo')?.value || 'pct';
-        descuento = tipoDescuento === 'pct' ? total * (dv / 100) : dv;
-        total -= descuento;
+        // descuento = el valor ingresado por el usuario (% o monto fijo) — se guarda tal cual
+        descuento = dv;
+        // descuentoValor = el monto real descontado en pesos — se usa solo para el cálculo del total
+        descuentoValor = tipoDescuento === 'pct' ? total * (dv / 100) : dv;
+        total -= descuentoValor;
     }
     const ivaOn = document.getElementById('gpmTogIva')?.checked;
     if (ivaOn) total *= 1.21;
