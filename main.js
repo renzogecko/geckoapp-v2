@@ -3567,6 +3567,12 @@ function convertirMoneda(origen) {
         const ars = parseFloat(inputARS.value) || 0;
         inputUSD.value = (ars / cotizDolar).toFixed(2);
     }
+    // Limpiar campos de medidas para evitar valores cruzados entre categorías
+    ['matAncho', 'matLargo', 'matEspesor', 'matPeso', 'matContenidoUnidad'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
     // Recalcular el costo real en tiempo real
     recalcularCostoReal();
 }
@@ -3710,12 +3716,19 @@ window.recalcularCostoReal = function (trigger) {
 
     // Lógica prioritaria: Autocompletado de contenido según medidas
     if (inputContenido) {
+        let cantCalculada = null;
         if (['rigido', 'polifan', 'chapas'].includes(cat) && unidadCompra === 'placa') {
-            inputContenido.value = ((ancho * largo) / 10000).toFixed(2);
+            // ancho y largo en cm → área en m²
+            if (ancho > 0 && largo > 0) cantCalculada = (ancho * largo) / 10000;
         } else if ((cat === 'vinilos_lonas' || cat === 'flexible') && unidadCompra === 'rollo') {
-            inputContenido.value = ((ancho / 100) * largo).toFixed(2);
+            // ancho en cm, largo en metros → área en m²
+            if (ancho > 0 && largo > 0) cantCalculada = (ancho / 100) * largo;
         } else if (cat === '3d') {
-            inputContenido.value = peso || 1;
+            if (peso > 0) cantCalculada = peso;
+        }
+        if (cantCalculada !== null) {
+            // Redondear a 1 decimal máximo, evitar .0 innecesario
+            inputContenido.value = parseFloat(cantCalculada.toFixed(1));
         }
     }
 
@@ -3756,11 +3769,9 @@ window.recalcularCostoReal = function (trigger) {
         const precioSugerido = Math.round(costoUnitarioBase * mult);
         const precioGremioSug = Math.round(costoUnitarioBase * multGremio);
 
+        // En modo DINÁMICO: siempre recalcular ambos precios según los multiplicadores
         if (precioManualInput) precioManualInput.value = precioSugerido;
-        // Solo actualizar precioGremio si está vacío — no pisar un valor guardado manualmente
-        if (precioGremioInput && (!precioGremioInput.value || parseFloat(precioGremioInput.value) === 0)) {
-            precioGremioInput.value = precioGremioSug;
-        }
+        if (precioGremioInput) precioGremioInput.value = precioGremioSug;
     } else {
         // Estrategia FIJA (Precio de Mercado)
         const precioFijo = parseFloat(precioManualInput?.value) || 0;
