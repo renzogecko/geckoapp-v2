@@ -187,8 +187,9 @@ window.calcularCostoCorte = function () {
             const btnWrap = document.createElement('div');
             btnWrap.id = 'btnAnadirLaser';
             btnWrap.className = 'mt-4';
+            // Usar id="btnConfirmarItem" para que agregarItemAlCarritoUI() lo encuentre
             btnWrap.innerHTML = `
-                <button onclick="window.agregarItemAlCarritoUI()"
+                <button id="btnConfirmarItem" onclick="window.agregarItemAlCarritoUI()"
                     class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
                     style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
                     + Añadir a Cotización
