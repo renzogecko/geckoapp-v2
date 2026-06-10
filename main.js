@@ -1686,13 +1686,69 @@ window.cambiarCategoriaCotizador = function (cat) {
                 <!-- AUDITOR POR FILA -->
                 <div id="auditorLaserContainer" class="space-y-1"></div>
 
+                <!-- 04. ACABADOS / VINILOS (toggle) -->
+                <div class="seccion-switch-gecko">
+                    <p class="text-[12px] font-black text-white uppercase tracking-[0.2em] mb-2 guia-gecko">04. Acabados / Vinilos</p>
+                    <div class="switch-row" onclick="document.getElementById('switch-acabados-laser').click()">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-orange-950/30 rounded-xl flex items-center justify-center border border-orange-900/30">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gecko" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-[11px] font-black text-white uppercase tracking-wider">¿Lleva Vinilo o Acabado?</p>
+                                <p class="text-[9px] font-bold text-zinc-500 uppercase">Vinilo impreso, corte, laminado...</p>
+                            </div>
+                        </div>
+                        <label class="switch-gecko" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="switch-acabados-laser">
+                            <span class="slider-gecko"></span>
+                        </label>
+                    </div>
+
+                    <div id="detallesAcabadosLaser" class="hidden mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div class="pt-4 border-t border-zinc-800/50 space-y-2">
+
+                            <!-- Encabezados -->
+                            <div class="grid grid-cols-12 gap-2 px-1 mb-1 text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                                <div class="col-span-4">Material (vinilo)</div>
+                                <div class="col-span-3 text-center">Área (m²)</div>
+                                <div class="col-span-2 text-center">Cobertura (%)</div>
+                                <div class="col-span-2 text-center">Cant</div>
+                                <div class="col-span-1"></div>
+                            </div>
+
+                            <div id="contenedorFilasAcabados" class="space-y-2"></div>
+
+                            <button onclick="window.agregarFilaAcabado()"
+                                class="w-full py-3 bg-transparent border border-dashed border-zinc-800 rounded-xl text-[10px] font-black text-zinc-500 hover:border-gecko/50 hover:text-gecko transition-all mt-2">
+                                + Añadir acabado / vinilo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <datalist id="dlCorte">${optionsMats}</datalist>
             </div>
         `;
 
-        // Inyectar primera fila
+        // Inyectar primera fila y listener del toggle
         window.agregarFilaLaser();
-        setTimeout(() => window.calcularCostoCorte(), 50);
+
+        // Listener del toggle de acabados
+        setTimeout(() => {
+            const switchAcabados = document.getElementById('switch-acabados-laser');
+            if (switchAcabados) {
+                switchAcabados.addEventListener('change', function () {
+                    const detalles = document.getElementById('detallesAcabadosLaser');
+                    if (detalles) detalles.classList.toggle('hidden', !this.checked);
+                    if (this.checked) window.agregarFilaAcabado();
+                    window.calcularCostoCorte();
+                });
+            }
+            window.calcularCostoCorte();
+        }, 50);
     } else if (cat === 'textil') {
         panel.innerHTML = `
             <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">

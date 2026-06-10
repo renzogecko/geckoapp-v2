@@ -8,6 +8,83 @@ window.setLaserCncModo = function (modo) {
     }
 };
 
+// ── Agregar fila de acabado / vinilo ─────────────────────────────────────────
+window.agregarFilaAcabado = function () {
+    const contenedor = document.getElementById('contenedorFilasAcabados');
+    if (!contenedor) return;
+
+    // Calcular área total de las piezas para autocompletar
+    let areaTotalAuto = 0;
+    document.querySelectorAll('.fila-laser').forEach(fila => {
+        const ancho = parseFloat(fila.querySelector('.input-laser-ancho')?.value) || 0;
+        const alto = parseFloat(fila.querySelector('.input-laser-alto')?.value) || 0;
+        const cant = parseInt(fila.querySelector('.input-laser-cant')?.value) || 1;
+        areaTotalAuto += (ancho / 100) * (alto / 100) * cant;
+    });
+
+    // Opciones de vinilos del inventario
+    const matsVinilo = (window.materiales || []).filter(m =>
+        ['vinilos_lonas', 'flexible'].includes(m.categoria)
+    );
+    const opcionesVinilo = matsVinilo.map(m =>
+        `<option value="${m.nombre}">${m.nombre}</option>`
+    ).join('');
+
+    const div = document.createElement('div');
+    div.className = 'grid grid-cols-12 gap-2 items-center fila-acabado animate-in fade-in';
+    div.innerHTML = `
+        <div class="col-span-4">
+            <select class="input-acabado-mat gecko-select-pro w-full" onchange="window.calcularCostoCorte()">
+                <option value="">Seleccionar vinilo...</option>
+                ${opcionesVinilo}
+            </select>
+        </div>
+        <div class="col-span-3 relative">
+            <input type="number" min="0" step="0.001"
+                class="input-acabado-area w-full bg-zinc-900/40 border border-zinc-700/50 rounded-lg px-2 py-2 text-[13px] text-white text-center outline-none focus:border-gecko"
+                value="${areaTotalAuto > 0 ? parseFloat(areaTotalAuto.toFixed(4)) : ''}"
+                placeholder="0.0000"
+                oninput="this.dataset.manual='true'; window.calcularCostoCorte();"
+                onwheel="this.blur()"
+                data-auto="${areaTotalAuto > 0 ? areaTotalAuto : 0}"
+                data-manual="false"
+                title="Área del vinilo en m²">
+            <button onclick="
+                const autoVal = parseFloat(this.previousElementSibling.dataset.auto) || 0;
+                if (autoVal > 0) {
+                    this.previousElementSibling.value = parseFloat(autoVal.toFixed(4));
+                    this.previousElementSibling.dataset.manual = 'false';
+                    window.calcularCostoCorte();
+                }"
+                class="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-gecko transition-colors"
+                title="Restaurar área automática">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </button>
+        </div>
+        <div class="col-span-2">
+            <input type="number" min="1" max="100" value="100"
+                class="input-acabado-cobertura w-full bg-transparent border-b border-zinc-800 px-1 py-2 text-[13px] text-white text-center outline-none focus:border-gecko"
+                oninput="window.calcularCostoCorte()" onwheel="this.blur()">
+        </div>
+        <div class="col-span-2">
+            <input type="number" min="1" value="1"
+                class="input-acabado-cant w-full bg-transparent border-b border-zinc-800 px-1 py-2 text-[13px] text-white text-center outline-none focus:border-gecko"
+                oninput="window.calcularCostoCorte()" onwheel="this.blur()">
+        </div>
+        <div class="col-span-1 flex justify-center">
+            <button onclick="this.closest('.fila-acabado').remove(); window.calcularCostoCorte();"
+                class="w-7 h-7 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    `;
+    contenedor.appendChild(div);
+};
+
 // ── Agregar fila de material ──────────────────────────────────────────────────
 window.agregarFilaLaser = function () {
     const contenedor = document.getElementById('contenedorFilasLaser');
@@ -132,11 +209,35 @@ window.calcularCostoCorte = function () {
         });
     });
 
+    // Calcular acabados / vinilos (si el toggle está activo)
+    let totalAcabados = 0;
+    const auditAcabados = [];
+    const switchAcabados = document.getElementById('switch-acabados-laser');
+    if (switchAcabados?.checked) {
+        document.querySelectorAll('.fila-acabado').forEach(fila => {
+            const matNombre = fila.querySelector('.input-acabado-mat')?.value?.trim();
+            const area = parseFloat(fila.querySelector('.input-acabado-area')?.value) || 0;
+            const cobertura = parseFloat(fila.querySelector('.input-acabado-cobertura')?.value) || 100;
+            const cant = parseInt(fila.querySelector('.input-acabado-cant')?.value) || 1;
+            if (!matNombre || area <= 0) return;
+            const isGremio = document.getElementById('modoGremioCorte')?.checked || false;
+            const matV = (window.materiales || []).find(m => m.nombre === matNombre);
+            if (!matV) return;
+            const precioM2 = isGremio && matV.precioGremio > 0 ? matV.precioGremio : (matV.precioVenta || 0);
+            const areaEfectiva = area * (cobertura / 100);
+            const costoFila = areaEfectiva * precioM2 * cant;
+            totalAcabados += costoFila;
+            auditAcabados.push(
+                `Acabado: ${matNombre} | ${areaEfectiva.toFixed(4)}m² × ${fmt(precioM2)}/m² × ${cant} = ${fmt(costoFila)}`
+            );
+        });
+    }
+
     // Aplicar desperdicio solo al material (si > 0)
     const costoMatConDesp = desperdicioPct > 0
         ? totalMaterial * (1 + desperdicioPct / 100)
         : totalMaterial;
-    const totalFinal = Math.round(costoMatConDesp + totalCorte + extras);
+    const totalFinal = Math.round(costoMatConDesp + totalCorte + totalAcabados + extras);
 
     // Actualizar footer
     if (document.getElementById('detMaterialBase'))
@@ -144,17 +245,23 @@ window.calcularCostoCorte = function () {
     if (document.getElementById('detServicio'))
         document.getElementById('detServicio').innerText = fmt(totalCorte);
     if (document.getElementById('detTerminaciones'))
-        document.getElementById('detTerminaciones').innerText = extras > 0 ? fmt(extras) : '$ 0';
+        document.getElementById('detTerminaciones').innerText = totalAcabados > 0 ? fmt(totalAcabados) : (extras > 0 ? fmt(extras) : '$ 0');
     if (document.getElementById('subtotalEstimado'))
         document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
 
-    // Auditor por fila
+    // Auditor por fila — piezas + acabados
     const auditorContainer = document.getElementById('auditorLaserContainer');
     if (auditorContainer) {
-        if (auditLineas.length > 0) {
-            auditorContainer.innerHTML = auditLineas.map(l => `
-                <div class="px-4 py-2.5 bg-zinc-900/60 rounded-xl border border-zinc-800/50">
-                    <p class="text-[10px] text-zinc-400 font-mono leading-relaxed">${l.texto}</p>
+        const todasLasLineas = [
+            ...auditLineas.map(l => ({ texto: l.texto, tipo: 'pieza' })),
+            ...auditAcabados.map(t => ({ texto: t, tipo: 'acabado' }))
+        ];
+        if (todasLasLineas.length > 0) {
+            auditorContainer.innerHTML = todasLasLineas.map(l => `
+                <div class="px-4 py-2.5 rounded-xl border ${l.tipo === 'acabado'
+                    ? 'bg-indigo-950/30 border-indigo-800/30'
+                    : 'bg-zinc-900/60 border-zinc-800/50'}">
+                    <p class="text-[10px] ${l.tipo === 'acabado' ? 'text-indigo-300' : 'text-zinc-400'} font-mono leading-relaxed">${l.texto}</p>
                 </div>
             `).join('');
         } else {
