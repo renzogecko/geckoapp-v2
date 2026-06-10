@@ -55,3 +55,11 @@
 - `verDocumento` (gecko-docs.js) es la función correcta para previews — usa iframe + modal oscuro.
 - El nombre del PDF se controla cambiando `document.title` antes de abrir la ventana de impresión.
 - MutationObserver en main.js restaura `document.body.style.overflow` automáticamente al cerrar cualquier modal.
+
+
+
+
+## BUGS DETECTADOR POR MI 
+
+- Al generar un presupuesto, las imágenes adjuntas, no se muestran completas, solo se ve una pequeña parte. No toma el tamaño completo de la imagen.
+ 
