@@ -24,14 +24,19 @@ window.agregarFilaAcabado = function () {
 
     // Opciones de vinilos del inventario
     // Incluir vinilos_lonas, flexible Y materiales de otras categorías con subcategoría de vinilo
-    const matsParaAcabado = (window.materiales || JSON.parse(localStorage.getItem('gecko_materiales') || '[]'))
-        .filter(m =>
-            ['vinilos_lonas', 'flexible'].includes(m.categoria) ||
-            ['impresion', 'corte', 'laminado'].some(sub =>
-                (m.subcategoria || '').toLowerCase().includes(sub)
-            )
-        );
-    const matsVinilo = matsParaAcabado;
+    const _matsSrc = (window.materiales && window.materiales.length > 0)
+        ? window.materiales
+        : JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+    const matsVinilo = _matsSrc.filter(m => {
+        const cat = (m.categoria || '').toLowerCase();
+        const sub = (m.subcategoria || '').toLowerCase();
+        return cat === 'vinilos_lonas' ||
+               cat === 'flexible' ||
+               sub.includes('impresion') ||
+               sub.includes('corte') ||
+               sub.includes('laminado') ||
+               sub.includes('vinilo');
+    });
     const opcionesVinilo = matsVinilo.map(m =>
         `<option value="${m.nombre}">${m.nombre}</option>`
     ).join('');
