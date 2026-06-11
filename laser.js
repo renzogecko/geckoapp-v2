@@ -245,11 +245,17 @@ window.calcularCostoCorte = function () {
             const isGremio = document.getElementById('modoGremioCorte')?.checked || false;
             const matV = (window.materiales || []).find(m => m.nombre === matNombre);
             if (!matV) return;
-            // Precio con fallback completo: precioGremio → precioVenta → costoARS × multiplicador
+            // Precio de venta SIEMPRE calculado desde costoARS / contenidoUnidad * multiplicador
+            // (misma lógica que recalcularCostoReal en main.js — nunca usar precioVenta directo
+            // porque puede estar en 0 si no se recalculó)
             const cotizDolar = window.GECKO_SETTINGS?.cotizacionDolar || 1420;
             const costoBase = matV.costoARS || (matV.costoUSD ? matV.costoUSD * cotizDolar : 0) || matV.costo || 0;
-            const precioPublico = matV.precioVenta || Math.round(costoBase * (matV.multiplicador || 2));
-            const precioGrem = matV.precioGremio > 0 ? matV.precioGremio : Math.round(costoBase * (matV.multiplicadorGremio || 1.5));
+            const contenido = parseFloat(matV.contenidoUnidad) || 1;
+            const costoUnitario = costoBase / contenido;
+            const multPublico = parseFloat(matV.multiplicador) || 2;
+            const multGremio = parseFloat(matV.multGremio) || parseFloat(matV.multiplicadorGremio) || 1.5;
+            const precioPublico = Math.round(costoUnitario * multPublico);
+            const precioGrem = matV.precioGremio > 0 ? matV.precioGremio : Math.round(costoUnitario * multGremio);
             const precioM2 = isGremio ? precioGrem : precioPublico;
             const areaEfectiva = area * (cobertura / 100);
             const costoFila = areaEfectiva * precioM2 * cant;
