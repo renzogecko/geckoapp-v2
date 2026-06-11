@@ -1866,56 +1866,15 @@
         }
 
         /* Familias de Tags Gecko */
-        .tag-impresion {
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        /* Rojo */
-        .tag-corte {
-            background: rgba(59, 130, 246, 0.15);
-            color: #3b82f6;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        /* Azul */
-        .tag-liso {
-            background: rgba(245, 158, 11, 0.15);
-            color: #f59e0b;
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
-
-        /* Ámbar */
-
-        .tag-plastico {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        /* Esmeralda: PVC, PAI, Acrilico, Poli */
-        .tag-madera {
-            background: rgba(161, 161, 170, 0.15);
-            color: #a1a1aa;
-            border: 1px solid rgba(161, 161, 170, 0.3);
-        }
-
-        /* Zinc: MDF, Corrugado */
-        .tag-3d {
-            background: rgba(99, 102, 241, 0.15);
-            color: #6366f1;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-        }
-
-        /* Indigo: Filamento */
-        .tag-electric {
-            background: rgba(234, 179, yellow, 0.15);
-            color: #eab308;
-            border: 1px solid rgba(234, 179, 8, 0.3);
-        }
-
-        /* Amarillo: Módulos, Fuentes, Cables */
+        /* Colores de punto por tipo de tag — fondo transparente, solo borde sutil */
+        .tag-impresion { color: #ef4444; border: 1px solid rgba(239,68,68,0.35); background: transparent; }
+        .tag-corte     { color: #3b82f6; border: 1px solid rgba(59,130,246,0.35); background: transparent; }
+        .tag-liso      { color: #f59e0b; border: 1px solid rgba(245,158,11,0.35); background: transparent; }
+        .tag-plastico  { color: #10b981; border: 1px solid rgba(16,185,129,0.35); background: transparent; }
+        .tag-madera    { color: #a1a1aa; border: 1px solid rgba(161,161,170,0.35); background: transparent; }
+        .tag-3d        { color: #6366f1; border: 1px solid rgba(99,102,241,0.35); background: transparent; }
+        .tag-electric  { color: #eab308; border: 1px solid rgba(234,179,8,0.35); background: transparent; }
+        .tag-default   { color: #71717a; border: 1px solid rgba(113,113,122,0.35); background: transparent; }
 
         .sortable-ghost {
             opacity: 0.4;
@@ -1924,15 +1883,16 @@
         }
 
         .gecko-tag {
-            padding: 1px 6px;
-            border-radius: 4px;
+            padding: 1px 8px 1px 5px;
+            border-radius: 2rem;
             font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             display: inline-flex;
             align-items: center;
-            opacity: 0.75;
+            gap: 4px;
+            opacity: 0.85;
         }
 
         /* FEEDBACK VISUAL DE ÉLITE: ÉXITO ANIMADO */

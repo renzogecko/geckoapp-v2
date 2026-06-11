@@ -94,12 +94,12 @@ window.getGeckoItem = function (query) {
     // Determinar Multiplicador
     const multiplicador = parseFloat(item.multiplicador || item.coeficiente || multGlobal);
 
-    // Calcular Precio de Venta — usar precioVenta del item si existe y es razonable
-    // NO usar item.precio ya que puede ser el costo unitario base, no el precio de venta
+    // Calcular Precio de Venta con fallback robusto
+    // precioVenta guardado en el item tiene prioridad si es > 0
+    // Fallback: costoBase × multiplicador (nunca usar item.precio que puede ser el costo unitario)
     const precioVentaGuardado = parseFloat(item.precioVenta) || 0;
-    const precioVenta = precioVentaGuardado > 0
-        ? precioVentaGuardado
-        : Math.round(costoBase * multiplicador);
+    const precioVentaCalculado = costoBase > 0 ? Math.round(costoBase * multiplicador) : 0;
+    const precioVenta = precioVentaGuardado > 0 ? precioVentaGuardado : precioVentaCalculado;
 
     return {
         ...item,

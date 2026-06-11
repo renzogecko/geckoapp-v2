@@ -23,9 +23,15 @@ window.agregarFilaAcabado = function () {
     });
 
     // Opciones de vinilos del inventario
-    const matsVinilo = (window.materiales || []).filter(m =>
-        ['vinilos_lonas', 'flexible'].includes(m.categoria)
-    );
+    // Incluir vinilos_lonas, flexible Y materiales de otras categorías con subcategoría de vinilo
+    const matsParaAcabado = (window.materiales || JSON.parse(localStorage.getItem('gecko_materiales') || '[]'))
+        .filter(m =>
+            ['vinilos_lonas', 'flexible'].includes(m.categoria) ||
+            ['impresion', 'corte', 'laminado'].some(sub =>
+                (m.subcategoria || '').toLowerCase().includes(sub)
+            )
+        );
+    const matsVinilo = matsParaAcabado;
     const opcionesVinilo = matsVinilo.map(m =>
         `<option value="${m.nombre}">${m.nombre}</option>`
     ).join('');
