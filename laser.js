@@ -177,8 +177,12 @@ window.calcularCostoCorte = function () {
         const mat = (window.materiales || []).find(m => normalizar(m.nombre) === normalizar(matNombre));
         if (!mat) return;
 
-        // Precio del material: público o gremio
-        const precioM2 = isGremio && mat.precioGremio > 0 ? mat.precioGremio : (mat.precioVenta || mat.costo * (mat.multiplicador || 2));
+        // Precio del material: público o gremio, con fallback completo basado en costoARS
+        const cotizDolarMat = window.GECKO_SETTINGS?.cotizacionDolar || 1420;
+        const costoBaseMat = mat.costoARS || (mat.costoUSD ? mat.costoUSD * cotizDolarMat : 0) || mat.costo || 0;
+        const precioPublicoMat = mat.precioVenta || Math.round(costoBaseMat * (mat.multiplicador || 2));
+        const precioGremioMat = mat.precioGremio > 0 ? mat.precioGremio : Math.round(costoBaseMat * (mat.multGremio || mat.multiplicadorGremio || 1.5));
+        const precioM2 = isGremio ? precioGremioMat : precioPublicoMat;
 
         // Costo material por fila
         const areaM2 = (ancho / 100) * (alto / 100);

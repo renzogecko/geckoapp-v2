@@ -718,16 +718,33 @@ window.renderTablaParametrosLaser = async function () {
     const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
     const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
 
-    const laserServs = servicios.filter(s =>
-        /corte laser|corte cnc|grabado laser/i.test(s.nombre)
+    // Generar tabla desde materiales con tieneParametrosCorte = true
+    // Más servicios legacy de geckoServicios (compatibilidad)
+    const materialesConCorte = (window.materiales || JSON.parse(localStorage.getItem('gecko_materiales') || '[]'))
+        .filter(m => m.tieneParametrosCorte);
+
+    const laserServs = [
+        ...materialesConCorte.map(m => ({
+            id: m.id,
+            nombre: m.nombre,
+            unidad: 'mtL',
+            _esMaterial: true
+        })),
+        ...servicios.filter(s =>
+            /corte laser|corte cnc|grabado laser/i.test(s.nombre)
+        )
+    ];
+    // Eliminar duplicados por nombre
+    const laserServsUnicos = laserServs.filter((s, i, arr) =>
+        arr.findIndex(x => x.nombre === s.nombre) === i
     );
 
-    if (laserServs.length === 0) {
+    if (laserServsUnicos.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-zinc-600 italic text-sm">No se encontraron servicios de Láser/CNC en la base de datos.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = laserServs.map((s, i) => {
+    tbody.innerHTML = laserServsUnicos.map((s, i) => {
         // Buscar params con nombre normalizado (trim + colapsar espacios dobles)
         const normalizar = str => str.trim().replace(/\s+/g, ' ').toUpperCase();
         const nombreNorm = normalizar(s.nombre);
@@ -3662,6 +3679,20 @@ function editarMaterial(id) {
         document.getElementById('matPrecioGremio').value = material.precioGremio;
     }
 
+    // Cargar parámetros de corte si el material los tiene
+    const switchCorte = document.getElementById('switch-params-corte');
+    const detallesCorte = document.getElementById('detallesParamsCorte');
+    if (switchCorte && detallesCorte) {
+        const tieneCorte = material.tieneParametrosCorte || false;
+        switchCorte.checked = tieneCorte;
+        detallesCorte.classList.toggle('hidden', !tieneCorte);
+        if (tieneCorte) {
+            if (document.getElementById('matCorteSpeed')) document.getElementById('matCorteSpeed').value = material.corteSpeed || '';
+            if (document.getElementById('matCortePower')) document.getElementById('matCortePower').value = material.cortePower || '';
+            if (document.getElementById('matCortePrecioML')) document.getElementById('matCortePrecioML').value = material.cortePrecioML || '';
+        }
+    }
+
     // Marcar como edición
     document.getElementById('formMaterial').dataset.editId = id;
     openModal('modalMaterial');
@@ -3958,6 +3989,12 @@ if (formMaterial) {
             const costoUSD_val = parseFloat(document.getElementById('matCostUSD').value) || 0;
             const costoARS_val = parseFloat(document.getElementById('matCostARS').value) || (costoUSD_val * 1420);
 
+            // Parámetros de corte láser/CNC
+            const tieneCorte = document.getElementById('switch-params-corte')?.checked || false;
+            const corteSpeed = parseFloat(document.getElementById('matCorteSpeed')?.value) || 0;
+            const cortePower = parseFloat(document.getElementById('matCortePower')?.value) || 0;
+            const cortePrecioML = parseFloat(document.getElementById('matCortePrecioML')?.value) || 0;
+
             const nuevoMat = {
                 id: editId || Date.now(),
                 nombre: document.getElementById('matNom').value,
@@ -3979,8 +4016,24 @@ if (formMaterial) {
                 peso: document.getElementById('matPeso') ? document.getElementById('matPeso').value : null,
                 nota: document.getElementById('matNota') ? document.getElementById('matNota').value : null,
                 precioGremio: parseFloat(document.getElementById('matPrecioGremio').value) || 0,
-                multGremio: parseFloat(document.getElementById('matMultGremio').value) || 1.5
+                multGremio: parseFloat(document.getElementById('matMultGremio').value) || 1.5,
+                tieneParametrosCorte: tieneCorte,
+                corteSpeed: corteSpeed,
+                cortePower: cortePower,
+                cortePrecioML: cortePrecioML
             };
+
+            // Sincronizar gecko_laserParams con los parámetros del material
+            if (tieneCorte && nuevoMat.nombre) {
+                const lp = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
+                lp[nuevoMat.nombre] = {
+                    precio: cortePrecioML,
+                    speed: corteSpeed,
+                    power: cortePower,
+                    espesor: nuevoMat.espesor || ''
+                };
+                localStorage.setItem('gecko_laserParams', JSON.stringify(lp));
+            }
 
             let materialesLocal = JSON.parse(localStorage.getItem('gecko_materiales')) || [];
             if (editId) {
@@ -4342,6 +4395,9 @@ window.abrirModalMaterial = function () {
 
     const displayGremio = document.getElementById('matPrecioGremio');
     if (displayGremio) displayGremio.value = '';
+
+    const detallesCorteReset = document.getElementById('detallesParamsCorte');
+    if (detallesCorteReset) detallesCorteReset.classList.add('hidden');
 
     const marginVal = document.getElementById('matMarginVal');
     if (marginVal) marginVal.innerText = '0.00';
