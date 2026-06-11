@@ -589,6 +589,7 @@ window.switchConfigTab = function (tab) {
         }
     });
     if (tab === 'laser') {
+        window.limpiarLaserParamsLegacy();
         window.renderTablaParametrosLaser();
     }
     if (tab === 'finanzas') {
@@ -696,6 +697,43 @@ window.guardarConfiguracion = function () {
         window.mostrarAdvertencia(advertencias.join(' · '), 'Guardado con advertencias');
     } else if (typeof window.mostrarExito === 'function') {
         window.mostrarExito('Configuración guardada correctamente.', '¡Guardado!');
+    }
+};
+
+// Limpiar datos legacy de gecko_laserParams que tengan nombres estilo "CORTE LASER - ..."
+window.limpiarLaserParamsLegacy = function () {
+    const lp = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
+    const keysLegacy = Object.keys(lp).filter(k =>
+        /^CORTE\s+(LASER|CNC)/i.test(k) || /^GRABADO\s+LASER/i.test(k)
+    );
+    if (keysLegacy.length > 0) {
+        keysLegacy.forEach(k => delete lp[k]);
+        localStorage.setItem('gecko_laserParams', JSON.stringify(lp));
+        console.log('GECKO: Limpiados', keysLegacy.length, 'parámetros legacy de laserParams');
+    }
+};
+
+// Cambiar pestaña Corte / Grabado en Configuración
+window.switchParamsTab = function (tab) {
+    const panelCorte = document.getElementById('panelParamsCorte');
+    const panelGrabado = document.getElementById('panelParamsGrabado');
+    const btnCorte = document.getElementById('tabParamsCorte');
+    const btnGrabado = document.getElementById('tabParamsGrabado');
+
+    if (tab === 'corte') {
+        panelCorte?.classList.remove('hidden');
+        panelGrabado?.classList.add('hidden');
+        btnCorte?.classList.add('bg-darkCard', 'text-gecko');
+        btnCorte?.classList.remove('text-zinc-500');
+        btnGrabado?.classList.remove('bg-darkCard', 'text-gecko');
+        btnGrabado?.classList.add('text-zinc-500');
+    } else {
+        panelGrabado?.classList.remove('hidden');
+        panelCorte?.classList.add('hidden');
+        btnGrabado?.classList.add('bg-darkCard', 'text-gecko');
+        btnGrabado?.classList.remove('text-zinc-500');
+        btnCorte?.classList.remove('bg-darkCard', 'text-gecko');
+        btnCorte?.classList.add('text-zinc-500');
     }
 };
 

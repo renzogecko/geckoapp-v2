@@ -1722,49 +1722,72 @@
                 </div>
 
                 <div class="mb-4">
-                    <p class="text-zinc-400 text-sm">Editá el precio por metro lineal y los parámetros de corte de cada
-                        material.
+                    <p class="text-zinc-400 text-sm">Los materiales aparecen automáticamente cuando activás "¿Se puede cortar con Láser/CNC?" desde el inventario.
                         <br><span class="text-gecko font-bold">El cotizador usará estos valores automáticamente.</span>
                     </p>
                 </div>
-                <div class="bg-darkCard border border-darkBorder rounded-2xl overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-[13px]">
-                        <thead>
-                            <tr class="bg-darkBg/30 border-b border-darkBorder">
-                                <th class="py-4 px-5 text-[10px] text-zinc-600 uppercase tracking-widest font-black">
-                                    Servicio / Material</th>
-                                <th
-                                    class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">
-                                    Espesor</th>
-                                <th
-                                    class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">
-                                    Speed</th>
-                                <th
-                                    class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">
-                                    Power %</th>
-                                <th
-                                    class="py-4 px-4 text-[10px] text-gecko uppercase tracking-widest font-black text-right">
-                                    $ / ml</th>
-                                <th class="py-4 px-3 w-10"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaParametrosLaser" class="divide-y divide-gray-800/50">
-                        </tbody>
-                    </table>
+
+                <!-- Pestañas Corte / Grabado -->
+                <div class="flex gap-1 mb-4 bg-darkBg/50 rounded-xl p-1 w-fit">
+                    <button id="tabParamsCorte" onclick="window.switchParamsTab('corte')"
+                        class="px-5 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all bg-darkCard text-gecko">
+                        Corte ($/ML)
+                    </button>
+                    <button id="tabParamsGrabado" onclick="window.switchParamsTab('grabado')"
+                        class="px-5 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all text-zinc-500 hover:text-zinc-300">
+                        Grabado ($/min)
+                    </button>
                 </div>
-                <button onclick="window.agregarFilaParametroLaser()"
-                    style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;margin-top:8px;background:transparent;border:1px dashed #333333;border-radius:12px;color:#52525b;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;"
-                    onmouseover="this.style.color='#F15A24';this.style.borderColor='#F15A24'"
-                    onmouseout="this.style.color='#52525b';this.style.borderColor='#333333'">
-                    + Agregar material / servicio
-                </button>
+
+                <!-- Tabla Corte -->
+                <div id="panelParamsCorte">
+                    <div class="bg-darkCard border border-darkBorder rounded-2xl overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-[13px]">
+                            <thead>
+                                <tr class="bg-darkBg/30 border-b border-darkBorder">
+                                    <th class="py-4 px-5 text-[10px] text-zinc-600 uppercase tracking-widest font-black">Material</th>
+                                    <th class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">Espesor</th>
+                                    <th class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">Speed</th>
+                                    <th class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">Power %</th>
+                                    <th class="py-4 px-4 text-[10px] text-gecko uppercase tracking-widest font-black text-right">$ / ML</th>
+                                    <th class="py-4 px-3 w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaParametrosLaser" class="divide-y divide-gray-800/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabla Grabado -->
+                <div id="panelParamsGrabado" class="hidden">
+                    <div class="bg-darkCard border border-darkBorder rounded-2xl overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-[13px]">
+                            <thead>
+                                <tr class="bg-darkBg/30 border-b border-darkBorder">
+                                    <th class="py-4 px-5 text-[10px] text-zinc-600 uppercase tracking-widest font-black">Material</th>
+                                    <th class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">Speed</th>
+                                    <th class="py-4 px-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black text-center">Power %</th>
+                                    <th class="py-4 px-4 text-[10px] text-gecko uppercase tracking-widest font-black text-right">$ / Min</th>
+                                    <th class="py-4 px-3 w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaParametrosGrabado" class="divide-y divide-gray-800/50">
+                                <tr><td colspan="5" class="py-10 text-center text-zinc-600 italic text-sm">
+                                    Grabado láser — próximamente.<br>
+                                    <span class="text-[11px]">Los parámetros de grabado se configurarán por material desde el inventario.</span>
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="flex justify-end mt-6">
                     <button onclick="window.guardarParametrosLaser()"
                         class="px-8 py-4 rounded-2xl text-white font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-[0.98]"
                         style="background:#f15a24;box-shadow:0 2px 12px rgba(241,90,36,0.18);transition:transform 0.15s ease,box-shadow 0.15s ease;"
                         onmouseover="this.style.boxShadow='0 4px 18px rgba(241,90,36,0.3)'"
                         onmouseout="this.style.boxShadow='0 2px 12px rgba(241,90,36,0.18)'">
-                        Guardar Parámetros Láser
+                        Guardar Parámetros
                     </button>
                 </div>
             </div>
