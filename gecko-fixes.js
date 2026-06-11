@@ -4442,6 +4442,22 @@ window._gpmGuardar = function (status) {
             }
         }
         if (!docTarget) return;
+
+        // Garantizar que las imágenes estén en el doc antes de mostrar el PDF.
+        // No confiar en el timeout del hook — inyectarlas directamente en memoria.
+        const imagenesParaPDF = imagenesRef.length > 0
+            ? imagenesRef
+            : (Array.isArray(window._gpmImagenes) ? window._gpmImagenes.filter(img => typeof img === 'string' && img.length > 100) : []);
+        if (imagenesParaPDF.length > 0 && (!docTarget.imagenes || docTarget.imagenes.length === 0)) {
+            docTarget.imagenes = imagenesParaPDF;
+            // También persistir en localStorage para que verDocumento lo encuentre al leer
+            const idxDoc = lista.findIndex(x => String(x.id) === String(docTarget.id));
+            if (idxDoc !== -1) {
+                lista[idxDoc] = docTarget;
+                localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+            }
+        }
+
         const _tabDestino = _statusFinal === 'OT' ? 'ots' : 'presupuestos';
         window._gpmPostPrintRedirect = _tabDestino;
         if (typeof window._imprimirDocumento === 'function') {
