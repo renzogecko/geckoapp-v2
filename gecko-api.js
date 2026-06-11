@@ -24,7 +24,7 @@ const GECKO_ARRAY_KEYS = [
 
 // Campos que MySQL devuelve como string pero deben ser números
 const GECKO_NUMERIC_FIELDS = {
-    'gecko_materiales': ['stock','multiplicador','costoUSD','costoARS','costo','contenidoUnidad','multGremio','precioGremio','precioCorteMl'],
+    'gecko_materiales': ['stock','multiplicador','costoUSD','costoARS','costo','contenidoUnidad','multGremio','precioGremio','precioCorteMl','corteSpeed','cortePower'],
     'geckoServicios':   ['costo','precio'],
     'gecko_cajas':      ['saldo'],
     'gecko_movimientos':['monto'],
@@ -47,6 +47,14 @@ function _castearNumeros(lsKey, array) {
             }
         });
         if ('incluyeIva' in nuevo) nuevo.incluyeIva = nuevo.incluyeIva == 1 || nuevo.incluyeIva === true;
+        // Normalizar campos de parámetros de corte laser
+        if ('tieneParametrosCorte' in nuevo) {
+            nuevo.tieneParametrosCorte = nuevo.tieneParametrosCorte == 1 || nuevo.tieneParametrosCorte === true;
+        }
+        // Mapear precioCorteMl (nombre DB) → cortePrecioML (nombre JS)
+        if (nuevo.precioCorteMl !== undefined && nuevo.cortePrecioML === undefined) {
+            nuevo.cortePrecioML = parseFloat(nuevo.precioCorteMl) || 0;
+        }
         return nuevo;
     });
 }
