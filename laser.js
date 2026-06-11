@@ -302,11 +302,15 @@ window.calcularCostoCorte = function () {
         }
     }
 
-    // Actualizar etiquetas del footer compartido para contexto láser/CNC
-    const labelServFooter = document.querySelector('#detServicio')?.previousElementSibling;
-    const labelExtraFooter = document.querySelector('#detTerminaciones')?.previousElementSibling;
-    if (labelServFooter) labelServFooter.textContent = 'Servicio de corte';
-    if (labelExtraFooter) labelExtraFooter.textContent = totalAcabados > 0 ? 'Acabados / Vinilos' : 'Extras';
+    // Actualizar etiquetas del panel derecho (contenedorResumenGrafica)
+    // Buscar en el contenedor correcto para evitar colisión con el #detServicio del panel textil
+    const resumenPanel = document.getElementById('contenedorResumenGrafica');
+    if (resumenPanel) {
+        const labelServFooter = resumenPanel.querySelector('#detServicio')?.previousElementSibling;
+        const labelExtraFooter = resumenPanel.querySelector('#detTerminaciones')?.previousElementSibling;
+        if (labelServFooter) labelServFooter.textContent = 'Servicio de corte';
+        if (labelExtraFooter) labelExtraFooter.textContent = totalAcabados > 0 ? 'Acabados / Vinilos' : 'Extras';
+    }
 
     // Guardar para carrito
     const nombre = document.getElementById('corteNombre')?.value?.trim() || 'Trabajo Láser/CNC';
