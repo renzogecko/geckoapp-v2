@@ -723,24 +723,20 @@ window.renderTablaParametrosLaser = async function () {
     const materialesConCorte = (window.materiales || JSON.parse(localStorage.getItem('gecko_materiales') || '[]'))
         .filter(m => m.tieneParametrosCorte);
 
-    const laserServs = [
-        ...materialesConCorte.map(m => ({
-            id: m.id,
-            nombre: m.nombre,
-            unidad: 'mtL',
-            _esMaterial: true
-        })),
-        ...servicios.filter(s =>
-            /corte laser|corte cnc|grabado laser/i.test(s.nombre)
-        )
-    ];
-    // Eliminar duplicados por nombre
-    const laserServsUnicos = laserServs.filter((s, i, arr) =>
-        arr.findIndex(x => x.nombre === s.nombre) === i
-    );
+    // Solo mostrar materiales con tieneParametrosCorte = true
+    // Los servicios legacy de geckoServicios ya no se usan en esta tabla
+    const laserServsUnicos = materialesConCorte.map(m => ({
+        id: m.id,
+        nombre: m.nombre,
+        unidad: 'mtL',
+        _esMaterial: true
+    }));
 
     if (laserServsUnicos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-zinc-600 italic text-sm">No se encontraron servicios de Láser/CNC en la base de datos.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-zinc-500 italic text-sm">
+            Ningún material tiene parámetros de corte configurados.<br>
+            <span class="text-[11px]">Editá un material desde Inventario y activá "¿Se puede cortar con Láser/CNC?"</span>
+        </td></tr>`;
         return;
     }
 
@@ -3589,11 +3585,11 @@ function renderInsumos() {
                                 ${(iconos[m.categoria] || iconos['insumo']).replace('w-6 h-6', 'w-5 h-5')}
                             </span>
                             <div>
-                                <p class="font-black text-gray-900 dark:text-white leading-tight uppercase text-sm">${m.nombre}</p>
-                                ${m.subcategoria ? `
-                                    <span class="gecko-tag ${tagClass}">${m.subcategoria}</span>
-                                ` : ''}
-                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">${m.unidadVenta === 'unidad' ? 'Por Unidad' : 'Por m²'}</p>
+                                <div class="flex items-center gap-2 leading-tight">
+                                    <p class="font-black text-gray-900 dark:text-white uppercase text-sm">${m.nombre}</p>
+                                    ${m.subcategoria ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:1px 6px;border-radius:4px;opacity:0.7;" class="${tagClass}">${m.subcategoria}</span>` : ''}
+                                </div>
+                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">${m.unidadVenta === 'unidad' ? 'Por Unidad' : m.unidadVenta === 'm2' ? 'Por m²' : m.unidad || 'Por Unidad'}</p>
                             </div>
                         </div>
                     </td>
