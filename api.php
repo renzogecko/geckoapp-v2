@@ -48,11 +48,12 @@ try {
 
         if ($method === 'POST') {
             $d = $body;
-            $stmt = $pdo->prepare("INSERT INTO materiales 
+            $stmt = $pdo->prepare("INSERT INTO materiales
                 (id, nombre, categoria, subcategoria, stock, multiplicador, costoUSD, costoARS,
                  unidad, unidadVenta, incluyeIva, estrategiaVenta, costo, contenidoUnidad,
-                 ancho, largo, espesor, precioCorteMl, nota, multGremio, precioGremio)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                 ancho, largo, espesor, precioCorteMl, nota, multGremio, precioGremio,
+                 tieneParametrosCorte, corteSpeed, cortePower)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid(), $d['nombre'] ?? '', $d['categoria'] ?? '',
                 $d['subcategoria'] ?? null, $d['stock'] ?? 0, $d['multiplicador'] ?? 2.0,
@@ -60,19 +61,22 @@ try {
                 $d['unidadVenta'] ?? 'unidad', $d['incluyeIva'] ? 1 : 0,
                 $d['estrategiaVenta'] ?? 'dinamica', $d['costo'] ?? 0,
                 $d['contenidoUnidad'] ?? 1, $d['ancho'] ?? null, $d['largo'] ?? null,
-                $d['espesor'] ?? null, $d['precioCorteMl'] ?? null, $d['nota'] ?? null,
-                $d['multGremio'] ?? 1.5, $d['precioGremio'] ?? 0
+                $d['espesor'] ?? null, $d['cortePrecioML'] ?? $d['precioCorteMl'] ?? null,
+                $d['nota'] ?? null, $d['multGremio'] ?? 1.5, $d['precioGremio'] ?? 0,
+                $d['tieneParametrosCorte'] ? 1 : 0,
+                $d['corteSpeed'] ?? null, $d['cortePower'] ?? null
             ]);
             responder(["success" => true, "message" => "Material creado."]);
         }
 
         if ($method === 'PUT') {
             $d = $body;
-            $stmt = $pdo->prepare("REPLACE INTO materiales 
+            $stmt = $pdo->prepare("REPLACE INTO materiales
                 (id, nombre, categoria, subcategoria, stock, multiplicador, costoUSD, costoARS,
                  unidad, unidadVenta, incluyeIva, estrategiaVenta, costo, contenidoUnidad,
-                 ancho, largo, espesor, precioCorteMl, nota, multGremio, precioGremio)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                 ancho, largo, espesor, precioCorteMl, nota, multGremio, precioGremio,
+                 tieneParametrosCorte, corteSpeed, cortePower)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'], $d['nombre'] ?? '', $d['categoria'] ?? '',
                 $d['subcategoria'] ?? null, $d['stock'] ?? 0, $d['multiplicador'] ?? 2.0,
@@ -80,8 +84,10 @@ try {
                 $d['unidadVenta'] ?? 'unidad', $d['incluyeIva'] ? 1 : 0,
                 $d['estrategiaVenta'] ?? 'dinamica', $d['costo'] ?? 0,
                 $d['contenidoUnidad'] ?? 1, $d['ancho'] ?? null, $d['largo'] ?? null,
-                $d['espesor'] ?? null, $d['precioCorteMl'] ?? null, $d['nota'] ?? null,
-                $d['multGremio'] ?? 1.5, $d['precioGremio'] ?? 0
+                $d['espesor'] ?? null, $d['cortePrecioML'] ?? $d['precioCorteMl'] ?? null,
+                $d['nota'] ?? null, $d['multGremio'] ?? 1.5, $d['precioGremio'] ?? 0,
+                $d['tieneParametrosCorte'] ? 1 : 0,
+                $d['corteSpeed'] ?? null, $d['cortePower'] ?? null
             ]);
             responder(["success" => true, "message" => "Material actualizado."]);
         }
