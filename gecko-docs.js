@@ -44,8 +44,8 @@ const GECKO_PRINT_STYLES = `
     .td-precio { text-align: right; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; white-space: nowrap; }
     .doc-referencias { padding: 12px 36px; border-top: 1px solid #eee; margin-top: 8px; }
     .sec-titulo { font-size: 7.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #F15A24; margin-bottom: 8px; }
-    .referencias-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .referencias-grid img { height: 100px; width: auto; max-width: 140px; object-fit: cover; border-radius: 4px; border: 1px solid #eee; }
+    .referencias-grid { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+    .referencias-grid img { max-height: 200px; max-width: 280px; width: auto; height: auto; object-fit: contain; border-radius: 6px; border: 1px solid #eee; background: #fafafa; }
     .doc-totales { padding: 10px 36px; display: flex; justify-content: flex-end; }
     .totales-box { width: 230px; }
     .totales-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0; font-size: 11px; }
