@@ -930,6 +930,9 @@ window.guardarParametrosLaser = async function () {
             servicios[idx].precioVenta = precio;
             servicios[idx].precio = precio;
         }
+        // Sincronizar precio también en laserParams para que el cotizador lo encuentre
+        if (!laserParams[nombre]) laserParams[nombre] = {};
+        laserParams[nombre].precio = precio;
     });
     // Guardar params (espesor/speed/power)
     Object.assign(laserParams, window._laserParamsTemp || {});
@@ -961,7 +964,7 @@ window.guardarParametrosLaser = async function () {
             servicios[existeIdx].precio = precio;
             servicios[existeIdx].precioVenta = precio;
         }
-        laserParams[nombre] = { espesor, speed, power };
+        laserParams[nombre] = { espesor, speed, power, precio };
     });
 
     // 4. Persistir en localStorage
