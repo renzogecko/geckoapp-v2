@@ -1924,14 +1924,15 @@
         }
 
         .gecko-tag {
-            padding: 2px 8px;
+            padding: 1px 6px;
             border-radius: 4px;
             font-size: 9px;
-            font-weight: 800;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            display: inline-block;
-            margin-top: 4px;
+            display: inline-flex;
+            align-items: center;
+            opacity: 0.75;
         }
 
         /* FEEDBACK VISUAL DE ÉLITE: ÉXITO ANIMADO */

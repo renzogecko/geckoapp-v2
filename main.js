@@ -94,8 +94,12 @@ window.getGeckoItem = function (query) {
     // Determinar Multiplicador
     const multiplicador = parseFloat(item.multiplicador || item.coeficiente || multGlobal);
 
-    // Calcular Precio de Venta (si no está fijado manualmente)
-    const precioVenta = item.precio || item.precioVenta || Math.round(costoBase * multiplicador);
+    // Calcular Precio de Venta — usar precioVenta del item si existe y es razonable
+    // NO usar item.precio ya que puede ser el costo unitario base, no el precio de venta
+    const precioVentaGuardado = parseFloat(item.precioVenta) || 0;
+    const precioVenta = precioVentaGuardado > 0
+        ? precioVentaGuardado
+        : Math.round(costoBase * multiplicador);
 
     return {
         ...item,
@@ -3623,9 +3627,9 @@ function renderInsumos() {
                                 ${(iconos[m.categoria] || iconos['insumo']).replace('w-6 h-6', 'w-5 h-5')}
                             </span>
                             <div>
-                                <div class="flex items-center gap-2 leading-tight">
+                                <div class="flex items-center gap-2 leading-tight flex-wrap">
                                     <p class="font-black text-gray-900 dark:text-white uppercase text-sm">${m.nombre}</p>
-                                    ${m.subcategoria ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:1px 6px;border-radius:4px;opacity:0.7;" class="${tagClass}">${m.subcategoria}</span>` : ''}
+                                    ${m.subcategoria ? `<span class="gecko-tag ${tagClass}" style="display:inline-flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;"></span>${m.subcategoria}</span>` : ''}
                                 </div>
                                 <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">${m.unidadVenta === 'unidad' ? 'Por Unidad' : m.unidadVenta === 'm2' ? 'Por m²' : m.unidad || 'Por Unidad'}</p>
                             </div>
