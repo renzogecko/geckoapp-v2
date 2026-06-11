@@ -184,12 +184,19 @@ window.calcularCostoCorte = function () {
         const areaM2 = (ancho / 100) * (alto / 100);
         const costoMat = areaM2 * precioM2 * cant;
 
-        // Precio de corte desde laserParams
+        // Precio de corte desde laserParams — buscar por nombre exacto, normalizado, o coincidencia parcial
         const nombreNorm = normalizar(matNombre);
-        const params = laserParams[matNombre] || laserParams[nombreNorm] ||
-            Object.entries(laserParams).find(([k]) => normalizar(k) === nombreNorm)?.[1] || {};
-        const precioML = params.precio || 0; // precio por metro lineal (en ARS/m)
-        const precioXcm = precioML / 100;    // convertir a ARS/cm
+        // Extraer palabras clave del nombre del material (ej: "Acrilico - 3mm" → ["ACRILICO", "3MM"])
+        const palabrasMatNombre = nombreNorm.split(/[\s\-–]+/).filter(p => p.length > 1);
+        const params = laserParams[matNombre] ||
+            laserParams[nombreNorm] ||
+            Object.entries(laserParams).find(([k]) => normalizar(k) === nombreNorm)?.[1] ||
+            Object.entries(laserParams).find(([k]) => {
+                const kNorm = normalizar(k);
+                return palabrasMatNombre.every(p => kNorm.includes(p));
+            })?.[1] || {};
+        const precioML = params.precio || 0;
+        const precioXcm = precioML / 100;
 
         // Costo corte por fila (perímetro en cm × precio/cm × pasadas × cantidad)
         const costoCorte = perimetro * precioXcm * pasadas * cant;
@@ -223,7 +230,12 @@ window.calcularCostoCorte = function () {
             const isGremio = document.getElementById('modoGremioCorte')?.checked || false;
             const matV = (window.materiales || []).find(m => m.nombre === matNombre);
             if (!matV) return;
-            const precioM2 = isGremio && matV.precioGremio > 0 ? matV.precioGremio : (matV.precioVenta || 0);
+            // Precio con fallback completo: precioGremio → precioVenta → costoARS × multiplicador
+            const cotizDolar = window.GECKO_SETTINGS?.cotizacionDolar || 1420;
+            const costoBase = matV.costoARS || (matV.costoUSD ? matV.costoUSD * cotizDolar : 0) || matV.costo || 0;
+            const precioPublico = matV.precioVenta || Math.round(costoBase * (matV.multiplicador || 2));
+            const precioGrem = matV.precioGremio > 0 ? matV.precioGremio : Math.round(costoBase * (matV.multiplicadorGremio || 1.5));
+            const precioM2 = isGremio ? precioGrem : precioPublico;
             const areaEfectiva = area * (cobertura / 100);
             const costoFila = areaEfectiva * precioM2 * cant;
             totalAcabados += costoFila;

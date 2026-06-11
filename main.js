@@ -1672,12 +1672,12 @@ window.cambiarCategoriaCotizador = function (cat) {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="${labelStyle}">Desperdicio (%)</label>
-                            <input type="number" id="corteDesperdicio" value="0" min="0" max="100"
+                            <input type="number" id="corteDesperdicio" placeholder="0" min="0" max="100"
                                 oninput="window.calcularCostoCorte()" onwheel="this.blur()" class="${inputStyle}">
                         </div>
                         <div>
                             <label class="${labelStyle} text-zinc-400">Extras / Adicionales ($)</label>
-                            <input type="number" id="corteExtras" value="0" min="0"
+                            <input type="number" id="corteExtras" placeholder="0" min="0"
                                 oninput="window.calcularCostoCorte()" onwheel="this.blur()" class="${inputStyle}">
                         </div>
                     </div>
@@ -1702,7 +1702,12 @@ window.cambiarCategoriaCotizador = function (cat) {
                             </div>
                         </div>
                         <label class="switch-gecko" onclick="event.stopPropagation()">
-                            <input type="checkbox" id="switch-acabados-laser">
+                            <input type="checkbox" id="switch-acabados-laser"
+                                onchange="
+                                    const d=document.getElementById('detallesAcabadosLaser');
+                                    if(d) d.classList.toggle('hidden',!this.checked);
+                                    if(this.checked && document.querySelectorAll('.fila-acabado').length===0) window.agregarFilaAcabado();
+                                    window.calcularCostoCorte();">
                             <span class="slider-gecko"></span>
                         </label>
                     </div>
@@ -1733,22 +1738,9 @@ window.cambiarCategoriaCotizador = function (cat) {
             </div>
         `;
 
-        // Inyectar primera fila y listener del toggle
+        // Inyectar primera fila
         window.agregarFilaLaser();
-
-        // Listener del toggle de acabados
-        setTimeout(() => {
-            const switchAcabados = document.getElementById('switch-acabados-laser');
-            if (switchAcabados) {
-                switchAcabados.addEventListener('change', function () {
-                    const detalles = document.getElementById('detallesAcabadosLaser');
-                    if (detalles) detalles.classList.toggle('hidden', !this.checked);
-                    if (this.checked) window.agregarFilaAcabado();
-                    window.calcularCostoCorte();
-                });
-            }
-            window.calcularCostoCorte();
-        }, 50);
+        setTimeout(() => window.calcularCostoCorte(), 50);
     } else if (cat === 'textil') {
         panel.innerHTML = `
             <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
