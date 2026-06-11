@@ -4154,37 +4154,69 @@ window._gpmInitToggles = function () {
 
 // ── Imágenes de referencia ──
 window._gpmImagenes = [];
-window._gpmAgregarImagenes = function (input) {
+// Función reutilizable para agregar una imagen (File o Blob) al preview
+window._gpmAgregarUnaImagen = function (file) {
+    if (window._gpmImagenes.length >= 5) return;
     const preview = document.getElementById('gpmImagenesPreview');
     if (!preview) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const b64 = e.target.result;
+        window._gpmImagenes.push(b64);
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;';
+        const img = document.createElement('img');
+        img.src = b64;
+        img.style.cssText = 'height:72px;width:auto;max-width:120px;border-radius:10px;border:1px solid #333333;object-fit:cover;';
+        const del = document.createElement('button');
+        del.innerHTML = '✕';
+        del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;font-weight:900;';
+        del.onclick = () => {
+            const idx = window._gpmImagenes.indexOf(b64);
+            if (idx > -1) window._gpmImagenes.splice(idx, 1);
+            wrap.remove();
+        };
+        wrap.appendChild(img);
+        wrap.appendChild(del);
+        preview.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+};
+
+window._gpmAgregarImagenes = function (input) {
     const files = Array.from(input.files);
     for (const file of files) {
         if (window._gpmImagenes.length >= 5) break;
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const b64 = e.target.result;
-            window._gpmImagenes.push(b64);
-            const wrap = document.createElement('div');
-            wrap.style.cssText = 'position:relative;';
-            const img = document.createElement('img');
-            img.src = b64;
-            img.style.cssText = 'height:72px;width:auto;border-radius:10px;border:1px solid #333333;object-fit:cover;';
-            const del = document.createElement('button');
-            del.innerHTML = '✕';
-            del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;font-weight:900;';
-            del.onclick = () => {
-                const idx = window._gpmImagenes.indexOf(b64);
-                if (idx > -1) window._gpmImagenes.splice(idx, 1);
-                wrap.remove();
-            };
-            wrap.appendChild(img);
-            wrap.appendChild(del);
-            preview.appendChild(wrap);
-        };
-        reader.readAsDataURL(file);
+        window._gpmAgregarUnaImagen(file);
     }
     input.value = '';
 };
+
+// Listener de paste global — activo solo cuando el modal de presupuesto está abierto
+document.addEventListener('paste', function (e) {
+    // Solo actuar si el contenedor de imágenes está visible en el DOM
+    const preview = document.getElementById('gpmImagenesPreview');
+    if (!preview) return;
+    if (window._gpmImagenes.length >= 5) return;
+    const items = Array.from(e.clipboardData?.items || []);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+    if (!imageItem) return;
+    e.preventDefault();
+    const blob = imageItem.getAsFile();
+    if (blob) {
+        window._gpmAgregarUnaImagen(blob);
+        // Flash visual en el área de drop para confirmar el pegado
+        const label = preview.nextElementSibling;
+        if (label) {
+            label.style.borderColor = '#F15A24';
+            label.style.color = '#F15A24';
+            setTimeout(() => {
+                label.style.borderColor = '#333333';
+                label.style.color = '#52525b';
+            }, 800);
+        }
+    }
+});
 
 // ── Agregar ítem ──
 window._gpmAgregarItem = function (datos = null) {
