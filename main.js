@@ -634,7 +634,7 @@ window.initConfiguracion = function () {
                 aplicarSettings(GECKO_SETTINGS);
             }
         })
-        .catch(() => {}); // Silencioso — usa localStorage si falla
+        .catch(() => { }); // Silencioso — usa localStorage si falla
 };
 
 window.guardarConfiguracion = function () {
@@ -692,7 +692,7 @@ window.guardarConfiguracion = function () {
             localStorage.setItem('geckoMateriales', JSON.stringify(materiales));
             if (typeof window.gecko_api_sync === 'function') window.gecko_api_sync('materiales', materiales);
         }
-    } catch(e) { console.warn('GECKO: error actualizando precios por dólar', e); }
+    } catch (e) { console.warn('GECKO: error actualizando precios por dólar', e); }
 
     if (typeof renderInsumos === 'function') renderInsumos();
 
@@ -945,7 +945,7 @@ window.guardarParametrosLaser = async function () {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: e.id })
-            }).catch(() => {})
+            }).catch(() => { })
         ));
     }
 
@@ -1803,7 +1803,7 @@ window.cambiarCategoriaCotizador = function (cat) {
         setTimeout(() => window.calcularCostoCorte(), 50);
     } else if (cat === 'textil') {
         panel.innerHTML = `
-            <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+            <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-1">
                 <!-- Tarjeta 01: IDENTIFICACIÓN -->
                 <div class="card-gecko">
                     <div class="flex items-center justify-between w-full mb-4">

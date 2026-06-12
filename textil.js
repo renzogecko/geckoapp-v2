@@ -42,7 +42,7 @@ window.setTextilModo = function (modo) {
         const ancho = (modo === 'dtf') ? '57 cm' : '50 cm';
         const labelStyle = "block text-[11px] uppercase tracking-wider text-zinc-400 font-bold mb-2 ml-1";
         const inputStyle = "w-full h-12 px-4 bg-zinc-900/50 border border-zinc-700 rounded-2xl focus:border-orange-500 outline-none text-white font-bold transition-all";
-        
+
         container.innerHTML = `
             <div class="grid grid-cols-2 gap-6">
                 <div>
@@ -99,7 +99,7 @@ window.calcularCostoTextil = function () {
         const subtotalPrendas = cantPrendas * valorPrenda;
 
         const totalFinal = Math.round(subtotalMaterial + subtotalCorte + subtotalEstampas + subtotalPrendas);
-        
+
         // --- ASIGNACIÓN AL CARRITO GLOBAL (CRÍTICO) ---
         // Realizamos la asignación inmediatamente tras el cálculo para sincronizar la UI
         window.itemActualCotizado = {
@@ -118,7 +118,7 @@ window.calcularCostoTextil = function () {
         if (!auditorWrap && panelConfTextil) {
             auditorWrap = document.createElement('div');
             auditorWrap.id = 'geckoAuditorTextil';
-            auditorWrap.style.marginTop = '0';
+            auditorWrap.style.marginTop = '12px';
             panelConfTextil.appendChild(auditorWrap);
         }
         // Botón siempre después del auditor
@@ -217,7 +217,7 @@ window.calcularCostoTextil = function () {
 };
 
 // --- FUNCIÓN DE ENVÍO INDEPENDIENTE ---
-window.añadirTextilAlPresupuesto = function() {
+window.añadirTextilAlPresupuesto = function () {
     // 1. Forzar cálculo para asegurar datos frescos
     window.calcularCostoTextil();
 
@@ -249,7 +249,7 @@ window.añadirTextilAlPresupuesto = function() {
     // 4. Enviar al presupuesto global (La vía rápida)
     if (typeof window.agregarItemAlPresupuesto === 'function') {
         window.agregarItemAlPresupuesto(item);
-        
+
         // 5. Feedback y Limpieza
         if (typeof window.mostrarExito === 'function') {
             window.mostrarExito("Producto añadido", "Cotización Actualizada");

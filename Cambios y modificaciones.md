@@ -61,5 +61,3 @@
 
 ## BUGS DETECTADOR POR MI 
 
-- Al generar un presupuesto, las imágenes adjuntas, no se muestran completas, solo se ve una pequeña parte. No toma el tamaño completo de la imagen.
- 
