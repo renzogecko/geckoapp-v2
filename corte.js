@@ -35,6 +35,8 @@ window.GeckoCorte = {
         this.render();
         this.poblarMateriales();
         this.poblarPlacas();
+        // Inicializar auditor y botón aunque no haya datos cargados
+        setTimeout(() => this.calcular(), 50);
     },
 
     poblarMateriales: function () {
