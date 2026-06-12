@@ -1639,6 +1639,7 @@ window.cambiarCategoriaCotizador = function (cat) {
         </div>
     </div>
 </div>
+        </div>
 
         <div id="geckoAuditorGrafica"></div>
 
