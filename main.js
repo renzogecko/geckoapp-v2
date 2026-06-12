@@ -1741,8 +1741,7 @@ window.cambiarCategoriaCotizador = function (cat) {
                     </div>
                 </div>
 
-                <!-- AUDITOR POR FILA -->
-                <div id="auditorLaserContainer" class="space-y-1"></div>
+                <!-- Auditor y botón se inyectan dinámicamente por laser.js al final del panel -->
 
                 <!-- 04. ACABADOS / VINILOS (toggle) -->
                 <div class="seccion-switch-gecko">

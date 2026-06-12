@@ -247,6 +247,15 @@ window.calcularCostoCorte = function () {
         auditLineas.push({
             mat: matNombre,
             cant,
+            ancho,
+            alto,
+            precioM2,
+            costoMatTotal,
+            costoCorteTotal,
+            perimetro,
+            precioXcm,
+            precioML: precioMLDisplay,
+            pasadas,
             texto: `${matNombre} | ${ancho}×${alto}cm | Área: ${areaM2.toFixed(4)}m² × ${fmt(precioM2)}/m² = ${fmt(costoMatUnit)}/u | ${corteInfo} | ×${cant} piezas = ${fmt(costoMatTotal + costoCorteTotal)}`
         });
     });
@@ -270,9 +279,11 @@ window.calcularCostoCorte = function () {
             const costoFilaUnit = areaEfectiva * precioM2;
             const costoFila = costoFilaUnit * cant;
             totalAcabados += costoFila;
-            auditAcabados.push(
-                `Acabado: ${matNombre} | ${areaEfectiva.toFixed(4)}m² × ${fmt(precioM2)}/m²${cant > 1 ? ` × ${cant}` : ''} = ${fmt(costoFila)}`
-            );
+            auditAcabados.push({
+                mat: matNombre,
+                detalle: `${areaEfectiva.toFixed(4)}m² × ${fmt(precioM2)}/m²${cant > 1 ? ` × ${cant} u` : ''}`,
+                costoTotal: costoFila
+            });
         });
     }
 
@@ -292,28 +303,7 @@ window.calcularCostoCorte = function () {
     if (document.getElementById('subtotalEstimado'))
         document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
 
-    // Auditor por fila — piezas + acabados
-    const auditorContainer = document.getElementById('auditorLaserContainer');
-    if (auditorContainer) {
-        const todasLasLineas = [
-            ...auditLineas.map(l => ({ texto: l.texto, tipo: 'pieza' })),
-            ...auditAcabados.map(t => ({ texto: t, tipo: 'acabado' }))
-        ];
-        if (todasLasLineas.length > 0) {
-            auditorContainer.innerHTML = todasLasLineas.map(l => `
-                <div class="px-4 py-2.5 rounded-xl border ${l.tipo === 'acabado'
-                    ? 'bg-indigo-950/30 border-indigo-800/30'
-                    : 'bg-zinc-900/60 border-zinc-800/50'}">
-                    <p class="text-[10px] ${l.tipo === 'acabado' ? 'text-indigo-300' : 'text-zinc-400'} font-mono leading-relaxed">${l.texto}</p>
-                </div>
-            `).join('');
-        } else {
-            auditorContainer.innerHTML = '<p class="text-[11px] text-zinc-600 text-center py-3">Completá las filas para ver el desglose</p>';
-        }
-    }
-
-    // Actualizar etiquetas del panel derecho (contenedorResumenGrafica)
-    // Buscar en el contenedor correcto para evitar colisión con el #detServicio del panel textil
+    // ── Labels del panel derecho ──────────────────────────────────────────────
     const resumenPanel = document.getElementById('contenedorResumenGrafica');
     if (resumenPanel) {
         const labelServFooter = resumenPanel.querySelector('#detServicio')?.previousElementSibling;
@@ -322,7 +312,7 @@ window.calcularCostoCorte = function () {
         if (labelExtraFooter) labelExtraFooter.textContent = totalAcabados > 0 ? 'Acabados / Vinilos' : 'Extras';
     }
 
-    // Guardar para carrito
+    // ── Guardar para carrito ──────────────────────────────────────────────────
     const nombre = document.getElementById('corteNombre')?.value?.trim() || 'Trabajo Láser/CNC';
     window.itemActualCotizado = {
         tipo: 'laser_cnc',
@@ -331,22 +321,105 @@ window.calcularCostoCorte = function () {
         otDetalle: auditLineas.map(l => l.texto).join(' | ')
     };
 
-    // Mostrar / ocultar botón añadir
-    const btnExistente = document.getElementById('btnAnadirLaser');
-    if (!btnExistente) {
-        const panelConf = document.getElementById('panelConfigurador');
-        if (panelConf) {
-            const btnWrap = document.createElement('div');
+    // ── Auditor + Botón: siempre al final del panel ───────────────────────────
+    // Se inyectan dinámicamente para garantizar que queden DESPUÉS de todos los toggles
+    const panelConf = document.getElementById('panelConfigurador');
+    if (panelConf) {
+        const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
+        const hayDatos = auditLineas.length > 0 || auditAcabados.length > 0;
+
+        // Crear o reusar el wrapper del auditor
+        let auditorWrap = document.getElementById('geckoAuditorLaser');
+        if (!auditorWrap) {
+            auditorWrap = document.createElement('div');
+            auditorWrap.id = 'geckoAuditorLaser';
+            panelConf.appendChild(auditorWrap);
+        }
+
+        if (hayDatos) {
+            const lineaRow = (label, detalle, valor) => `
+                <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                    <div style="flex:1;min-width:0;">
+                        <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                        <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                        ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                    </div>
+                    <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmtVal(valor)}</span>
+                </div>`;
+
+            const seccion = (titulo) =>
+                `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;padding-top:2px;">${titulo}</p>`;
+
+            let html = '';
+
+            // ZONA 1 — MATERIALES
+            if (auditLineas.length > 0) {
+                html += seccion('Materiales');
+                auditLineas.forEach(l => {
+                    html += lineaRow(
+                        l.mat,
+                        `${l.ancho}×${l.alto}cm | ${((l.ancho/100)*(l.alto/100)).toFixed(4)}m² × ${fmtVal(l.precioM2)}/m²${l.cant > 1 ? ` × ${l.cant} u` : ''}`,
+                        l.costoMatTotal
+                    );
+                });
+            }
+
+            // ZONA 2 — SERVICIO DE CORTE
+            const lineasConCorte = auditLineas.filter(l => l.costoCorteTotal > 0);
+            if (lineasConCorte.length > 0) {
+                html += seccion('Servicio de corte');
+                lineasConCorte.forEach(l => {
+                    html += lineaRow(
+                        l.mat,
+                        `${l.perimetro}cm × ${fmtVal(l.precioXcm)}/cm (${fmtVal(l.precioML)}/ML)${l.pasadas > 1 ? ` × ${l.pasadas} pas.` : ''}${l.cant > 1 ? ` × ${l.cant} u` : ''}`,
+                        l.costoCorteTotal
+                    );
+                });
+            }
+
+            // ZONA 3 — ACABADOS / VINILOS
+            if (auditAcabados.length > 0) {
+                html += seccion('Acabados / Vinilos');
+                auditAcabados.forEach(a => {
+                    html += lineaRow(a.mat, a.detalle, a.costoTotal);
+                });
+            }
+
+            // ZONA 4 — EXTRAS
+            if (desperdicioPct > 0 || extras > 0) {
+                html += seccion('Extras');
+                if (desperdicioPct > 0) html += lineaRow(`Desperdicio ${desperdicioPct}%`, '', totalMaterial * (desperdicioPct / 100));
+                if (extras > 0) html += lineaRow('Adicionales', '', extras);
+            }
+
+            // TOTAL
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+                <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+                <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
+            </div>`;
+
+            auditorWrap.innerHTML = `
+                <div class="card-gecko" style="margin-top:12px;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                    ${html}
+                </div>`;
+        } else {
+            auditorWrap.innerHTML = '';
+        }
+
+        // Botón añadir — siempre después del auditor
+        let btnWrap = document.getElementById('btnAnadirLaser');
+        if (!btnWrap) {
+            btnWrap = document.createElement('div');
             btnWrap.id = 'btnAnadirLaser';
-            btnWrap.className = 'mt-4';
-            // Usar id="btnConfirmarItem" para que agregarItemAlCarritoUI() lo encuentre
-            btnWrap.innerHTML = `
-                <button id="btnConfirmarItem" onclick="window.agregarItemAlCarritoUI()"
-                    class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
-                    style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
-                    + Añadir a Cotización
-                </button>`;
+            btnWrap.style.marginTop = '12px';
             panelConf.appendChild(btnWrap);
         }
+        btnWrap.innerHTML = `
+            <button id="btnConfirmarItem" onclick="window.agregarItemAlCarritoUI()"
+                class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                + Añadir a Cotización
+            </button>`;
     }
 };
