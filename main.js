@@ -1954,15 +1954,16 @@ window.agregarItemAlCarritoUI = async function () {
 
         // Para laser_cnc y 3d usar itemActualCotizado directamente — evita la función legacy
         if (currentCat === 'laser_cnc' || currentCat === '3d') {
-            // Para 3D: forzar recálculo fresco antes de agregar
-            if (currentCat === '3d' && typeof window.calcularCosto3D === 'function') {
-                window.calcularCosto3D();
-            }
             const item = window.itemActualCotizado || window.itemActual3D;
             if (item && item.costo > 0) {
                 presupuesto.push({ ...item });
                 window.renderizarPresupuesto();
                 mostrarExito("Ítem añadido al presupuesto", "Carrito Actualizado");
+                // Reset suave: limpiar item pero NO re-renderizar el panel (evita duplicados)
+                window.itemActualCotizado = null;
+                window.itemActual3D = null;
+                btn.innerHTML = originalText;
+                return; // Salir antes del re-render de cambiarCategoriaCotizador
             }
         } else {
             // Ejecutar lógica base para otros cotizadores
