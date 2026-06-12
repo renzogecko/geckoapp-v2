@@ -262,7 +262,7 @@ window.calcularCostoCorte = function () {
             const cobertura = parseFloat(fila.querySelector('.input-acabado-cobertura')?.value) || 100;
             const cant = parseInt(fila.querySelector('.input-acabado-cant')?.value) || 1;
             if (!matNombre || area <= 0) return;
-            const matV = (window.materiales || []).find(m => m.nombre === matNombre);
+            const matV = (window.materiales || []).find(m => normalizar(m.nombre) === normalizar(matNombre));
             if (!matV) return;
             // Mismo sistema de precio que rígidos: costo × multiplicador
             const precioM2 = getPrecioMat(matV);
