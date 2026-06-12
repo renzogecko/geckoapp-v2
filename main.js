@@ -1307,11 +1307,6 @@ window.cambiarCategoriaCotizador = function (cat) {
                     </div>
                 </div>
 
-                <div>
-                    <button onclick="window.agregarItemAlCarritoUI()" class="w-full py-3 bg-[#f15a24] text-white rounded-2xl font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all active:scale-[0.98]">
-                        + AÑADIR A COTIZACIÓN
-                    </button>
-                </div>
             </div>
         `;
         const selMat = document.getElementById('preciso3dMaterial');

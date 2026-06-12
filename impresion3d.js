@@ -36,5 +36,65 @@ window.calcularCosto3D = function () {
         costo: totalFinal,
         otDetalle: `Peso: ${gramos}gr | Tiempo: ${horas}hs | Material: ${nombreMat}`
     };
+    window.itemActualCotizado = window.itemActual3D;
+
+    // ── Auditor + botón ───────────────────────────────────────────────────────
+    const panelConf3D = document.getElementById('panelConfigurador');
+    let auditorWrap = document.getElementById('geckoAuditor3D');
+    if (!auditorWrap && panelConf3D) {
+        auditorWrap = document.createElement('div');
+        auditorWrap.id = 'geckoAuditor3D';
+        auditorWrap.style.marginTop = '0';
+        panelConf3D.appendChild(auditorWrap);
+    }
+    let btn3DWrap = document.getElementById('btn3DAnadir');
+    if (!btn3DWrap && panelConf3D) {
+        btn3DWrap = document.createElement('div');
+        btn3DWrap.id = 'btn3DAnadir';
+        btn3DWrap.style.marginTop = '12px';
+        btn3DWrap.innerHTML = `<button id="btnConfirmarItem" onclick="window.agregarItemAlCarritoUI()" class="w-full py-3 bg-[#f15a24] text-white rounded-2xl font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all active:scale-[0.98]">+ AÑADIR A COTIZACIÓN</button>`;
+        panelConf3D.appendChild(btn3DWrap);
+    }
+    if (auditorWrap) {
+        const hayDatos = costoMaterial > 0 || costoServicio > 0;
+        const lineaRow = (label, detalle, valor) => `
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                <div style="flex:1;min-width:0;">
+                    <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                    <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                    ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                </div>
+                <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmt(valor)}</span>
+            </div>`;
+        const seccion = titulo =>
+            `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;">${titulo}</p>`;
+
+        if (hayDatos) {
+            let html = '';
+            html += seccion('Material');
+            html += lineaRow(nombreMat || 'Filamento',
+                `${gramos}gr × ${fmt(precioVentaGr)}/gr`,
+                costoMaterial);
+            html += seccion('Servicio de impresión');
+            html += lineaRow('Tiempo máquina',
+                `${horas}hs × ${fmt(costoHora3D)}/hs`,
+                costoServicio);
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+                <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+                <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmt(totalFinal)}</span>
+            </div>`;
+            auditorWrap.innerHTML = `
+                <div class="card-gecko" style="margin-top:0;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                    ${html}
+                </div>`;
+        } else {
+            auditorWrap.innerHTML = `
+                <div class="card-gecko" style="margin-top:0;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                    <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                </div>`;
+        }
+    }
 }
 
