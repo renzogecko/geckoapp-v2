@@ -349,6 +349,7 @@ window.GeckoCorte = {
         if (!auditorWrap && panelConfCorte) {
             auditorWrap = document.createElement('div');
             auditorWrap.id = 'geckoAuditorCorte';
+            auditorWrap.style.marginTop = '-8px';
             panelConfCorte.appendChild(auditorWrap);
         }
         // Botón siempre después del auditor
