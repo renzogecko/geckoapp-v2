@@ -43,6 +43,8 @@ window.GeckoGrafica = {
 
         // 7. Inicializar Placas
         this.actualizarSelectorPlacas();
+        // Mostrar auditor y botón desde el inicio
+        setTimeout(() => this.calcular(), 50);
     },
 
     limpiarCategorias: function () {
@@ -558,7 +560,14 @@ window.GeckoGrafica = {
         };
 
         // ── Auditor de cálculo ────────────────────────────────────────────────────
-        const auditorWrap = document.getElementById('geckoAuditorGrafica');
+        const panelConfGrafica = document.getElementById('panelConfigurador');
+        let auditorWrap = document.getElementById('geckoAuditorGrafica');
+        if (!auditorWrap && panelConfGrafica) {
+            auditorWrap = document.createElement('div');
+            auditorWrap.id = 'geckoAuditorGrafica';
+            auditorWrap.style.marginTop = '-33px';
+            panelConfGrafica.appendChild(auditorWrap);
+        }
         if (auditorWrap) {
             const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
             const hayDatos = (mat && mt2Totales > 0) || serviciosCostos > 0 || totalRigidos > 0;
@@ -658,7 +667,11 @@ window.GeckoGrafica = {
                         ${html}
                     </div>`;
             } else {
-                auditorWrap.innerHTML = '';
+                auditorWrap.innerHTML = `
+                    <div class="card-gecko" style="margin-top:0;">
+                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                        <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                    </div>`;
             }
         }
 

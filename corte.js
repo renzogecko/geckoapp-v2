@@ -18,7 +18,7 @@ window.GeckoCorte = {
 
     init: function () {
         console.log("🦎 Módulo Vinilo de Corte (Nesting) Iniciado");
-        
+
         // ASEGURAR CARGA DE DATOS
         if (!window.materiales || window.materiales.length === 0) {
             window.materiales = JSON.parse(localStorage.getItem('gecko_materiales')) || [];
@@ -53,7 +53,7 @@ window.GeckoCorte = {
 
             // Categoría válida: nueva (vinilos_lonas) o vieja (flexible)
             const esCatValida = cat === 'vinilos_lonas' || cat === 'flexible' ||
-                                cat.includes('vinilo') || cat.includes('flexible');
+                cat.includes('vinilo') || cat.includes('flexible');
 
             // Excluir si el nombre o subcategoría contiene alguna palabra prohibida
             const tieneExcluido = excluidos.some(ex => nombre.includes(ex) || sub.includes(ex));
@@ -71,7 +71,7 @@ window.GeckoCorte = {
         const placas = (window.materiales || []).filter(m => {
             const cat = (m.categoria || '').toLowerCase().trim();
             return cat === 'rigido' || cat === 'chapas' || cat === 'polifan' ||
-                   cat.includes('placa') || cat.includes('rigido') || cat.includes('rígido');
+                cat.includes('placa') || cat.includes('rigido') || cat.includes('rígido');
         });
 
         select.innerHTML = '<option value="">Seleccionar Placa...</option>' +
@@ -257,7 +257,7 @@ window.GeckoCorte = {
 
             // --- LÓGICA GREMIO (lee ambos switches: el local y el global de Gráfica) ---
             const isGremio = document.getElementById('modoGremioCorte')?.checked ||
-                             document.getElementById('modoGremio')?.checked;
+                document.getElementById('modoGremio')?.checked;
 
             // precioBase es el precio por m2 del material
             const precioBase = (isGremio && mat.precioGremio > 0)
@@ -296,7 +296,7 @@ window.GeckoCorte = {
         if (llevaMontado) {
             const placaId = document.getElementById('cortePlacas')?.value;
             const placaMat = window.getGeckoItem(placaId);
-            
+
             if (placaMat) {
                 const precioPlaca = (typeof window.getPrecioEfectivo === 'function')
                     ? window.getPrecioEfectivo(placaMat)
@@ -349,7 +349,7 @@ window.GeckoCorte = {
         if (!auditorWrap && panelConfCorte) {
             auditorWrap = document.createElement('div');
             auditorWrap.id = 'geckoAuditorCorte';
-            auditorWrap.style.marginTop = '-8px';
+            auditorWrap.style.marginTop = '-33px';
             panelConfCorte.appendChild(auditorWrap);
         }
         // Botón siempre después del auditor
@@ -453,7 +453,7 @@ window.GeckoCorte = {
         if (!this.state.totalFinal || this.state.totalFinal <= 0) return alert("Costo inválido");
 
         const isGremio = document.getElementById('modoGremioCorte')?.checked ||
-                         document.getElementById('modoGremio')?.checked;
+            document.getElementById('modoGremio')?.checked;
         const gremioSuffix = isGremio ? ' (Gremio)' : '';
 
         const item = {
