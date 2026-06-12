@@ -75,24 +75,27 @@ window.calcularCostoTextil = function () {
         const queryMaterial = (modoActivo === 'dtf') ? "DTF" : "TERMO";
         const itemMaterial = window.getGeckoItem(queryMaterial);
         const itemEstampa = window.getGeckoItem("ESTAMPADO");
-        const itemCorte = window.getGeckoItem("PLOTER DE CORTE - 60CM");
-        
-        // 2. Uso de Precios (No re-multiplicar, el GDM ya incluye el margen)
+        // Buscar ploter con múltiples nombres posibles (igual que grafica.js)
+        const itemCorte = window.getGeckoItem("PLOTER DE CORTE - 60CM")
+            || window.getGeckoItem("PLOTER 60")
+            || window.getGeckoItem("SERVICIO DE CORTE");
+
+        // 2. Precios base
         const pMaterial = itemMaterial ? itemMaterial.precioVenta : (modoActivo === 'dtf' ? 12000 : 8500);
         const pEstampa = itemEstampa ? itemEstampa.precioVenta : 2500;
-        const pCorte = itemCorte ? itemCorte.precioVenta : 0;
+        // Corte termovinilo: precio por ML (se multiplica por largo, no se suma al material)
+        const pCorte = itemCorte ? itemCorte.precioVenta : 7500;
 
-        // 3. Lógica de Negocio Estricta
-        let costoML = pMaterial;
-        if (modoActivo === 'termo') {
-            costoML = pMaterial + pCorte;
-        }
-
-        const subtotalMaterial = (largo / 100) * costoML;
+        // 3. Lógica de cálculo
+        // Material: largo en cm → ML (÷100) × precio/ML
+        const subtotalMaterial = (largo / 100) * pMaterial;
+        // Corte (solo termovinilo): largo en cm → ML (÷100) × precio/ML — línea separada
+        const subtotalCorte = (modoActivo === 'termo') ? (largo / 100) * pCorte : 0;
+        // Estampas: cantidad × precio unitario
         const subtotalEstampas = bajadas * pEstampa;
         const subtotalPrendas = cantPrendas * valorPrenda;
-        
-        const totalFinal = Math.round(subtotalMaterial + subtotalEstampas + subtotalPrendas);
+
+        const totalFinal = Math.round(subtotalMaterial + subtotalCorte + subtotalEstampas + subtotalPrendas);
         
         // --- ASIGNACIÓN AL CARRITO GLOBAL (CRÍTICO) ---
         // Realizamos la asignación inmediatamente tras el cálculo para sincronizar la UI
@@ -125,7 +128,7 @@ window.calcularCostoTextil = function () {
             panelConfTextil.appendChild(btnTextilWrap);
         }
         if (auditorWrap) {
-            const hayDatos = subtotalMaterial > 0 || subtotalEstampas > 0 || subtotalPrendas > 0;
+            const hayDatos = subtotalMaterial > 0 || subtotalCorte > 0 || subtotalEstampas > 0 || subtotalPrendas > 0;
             const lineaRow = (label, detalle, valor) => `
                 <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
                     <div style="flex:1;min-width:0;">
@@ -144,14 +147,22 @@ window.calcularCostoTextil = function () {
                 // ZONA 1 — MATERIAL
                 html += seccion('Material');
                 const labelMat = modoActivo === 'termo'
-                    ? `Termovinilo + Corte`
+                    ? `Termovinilo`
                     : `DTF Textil`;
                 html += lineaRow(labelMat,
-                    `${largo}cm × ${fmt(costoML)}/ML`,
+                    `${largo}cm × ${fmt(pMaterial)}/ML`,
                     subtotalMaterial);
 
-                // ZONA 2 — ESTAMPADO
-                if (subtotalEstampas > 0) {
+                // ZONA 2 — CORTE PLOTTER (solo termovinilo)
+                if (subtotalCorte > 0) {
+                    html += seccion('Servicio de corte');
+                    html += lineaRow('Ploter de corte 60cm',
+                        `${largo}cm × ${fmt(pCorte)}/ML`,
+                        subtotalCorte);
+                }
+
+                // ZONA 3 — ESTAMPADO
+                if (bajadas > 0) {
                     html += seccion('Estampado');
                     html += lineaRow('Bajadas',
                         `${bajadas} u × ${fmt(pEstampa)}/u`,
@@ -192,7 +203,7 @@ window.calcularCostoTextil = function () {
         const detPrenda = document.getElementById('detTerminaciones');
         const totalDisplay = document.getElementById('subtotalEstimado');
 
-        if (detMat) detMat.innerText = fmt(subtotalMaterial);
+        if (detMat) detMat.innerText = fmt(subtotalMaterial + subtotalCorte);
         if (detServ) detServ.innerText = fmt(subtotalEstampas);
         if (detPrenda) detPrenda.innerText = fmt(subtotalPrendas);
         if (totalDisplay) totalDisplay.innerText = fmt(totalFinal);
