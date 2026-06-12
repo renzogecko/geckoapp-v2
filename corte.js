@@ -132,7 +132,7 @@ window.GeckoCorte = {
                     <select id="corteMaterial" class="gecko-select-pro" onchange="window.GeckoCorte.calcular()">
                         <option value="">Cargando materiales...</option>
                     </select>
-                    <p id="auditorMaterialCorte" class="text-[11px] text-zinc-400 font-medium italic mt-2.5"></p>
+                    <p id="auditorMaterialCorte" class="hidden"></p>
                 </div>
 
                 <!-- 04. SERVICIOS Y TRANSFER -->
@@ -181,7 +181,7 @@ window.GeckoCorte = {
                             <select id="cortePlacas" onchange="window.GeckoCorte.calcular()" class="gecko-select-pro w-full mb-1">
                                 <option value="">Seleccionar Placa...</option>
                             </select>
-                            <p id="auditorPlacaCorte" class="text-[11px] text-zinc-400 font-medium italic mt-2.5 mb-4 px-1"></p>
+                            <p id="auditorPlacaCorte" class="hidden"></p>
 
                             <!-- Títulos de Columnas -->
                             <div class="grid grid-cols-4 gap-4 px-1 mb-1">
@@ -206,6 +206,9 @@ window.GeckoCorte = {
                         </div>
                     </div>
                 </div>
+
+                <!-- AUDITOR DE CÁLCULO — fuera de seccion-switch-gecko para evitar doble card -->
+                <div id="geckoAuditorCorte"></div>
 
                 <!-- BOTÓN FINAL -->
                 <button onclick="window.GeckoCorte.añadirAlPresupuesto()" class="w-full py-4 bg-gecko text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[12px] hover:bg-orange-600 transition-all shadow-lg shadow-gecko/20 mt-6">
@@ -344,6 +347,83 @@ window.GeckoCorte = {
             costo: totalFinal,
             textoOpciones: matName
         };
+
+        // ── Auditor de cálculo ────────────────────────────────────────────────────
+        const auditorWrap = document.getElementById('geckoAuditorCorte');
+        if (auditorWrap) {
+            const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
+            const hayDatos = costoMaterial > 0 || costoTransfer > 0 || costoCortePlotter > 0 || totalRigidos > 0;
+
+            if (hayDatos) {
+                const lineaRow = (label, detalle, valor) => `
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                        <div style="flex:1;min-width:0;">
+                            <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                            <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                            ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                        </div>
+                        <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmtVal(valor)}</span>
+                    </div>`;
+                const seccion = titulo =>
+                    `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;">${titulo}</p>`;
+
+                let html = '';
+
+                // ZONA 1 — MATERIAL
+                if (costoMaterial > 0) {
+                    const mat = window.getGeckoItem(document.getElementById('corteMaterial')?.value);
+                    const isGremio = document.getElementById('modoGremioCorte')?.checked || document.getElementById('modoGremio')?.checked;
+                    const precioBase = mat ? ((isGremio && mat.precioGremio > 0) ? mat.precioGremio : (mat.precioVenta || (mat.costoARS * (mat.multiplicador || 2.0)))) : 0;
+                    const precioMLAudit = precioBase * (bobina / 100);
+                    html += seccion('Material');
+                    html += lineaRow(
+                        matName,
+                        `${mlTotales.toFixed(2)}ML × ${fmtVal(precioMLAudit)}/ML (bobina ${bobina}cm)${cant > 1 ? ` × ${cant} u` : ''}`,
+                        costoMaterial
+                    );
+                }
+
+                // ZONA 2 — SERVICIOS
+                const servicios = [];
+                if (costoCortePlotter > 0) {
+                    const servCorte = window.getGeckoItem('PLOTER DE CORTE - ' + bobinaStr + 'CM') || window.getGeckoItem('SERVICIO DE CORTE');
+                    const precioCorte = servCorte ? servCorte.precioVenta : 0;
+                    servicios.push({ label: 'Corte plotter', detalle: `${mlTotales.toFixed(2)}ML × ${fmtVal(precioCorte)}/ML`, valor: costoCortePlotter });
+                }
+                if (costoTransfer > 0) {
+                    const mlT = bobina === 120 ? mlTotales * 2 : mlTotales;
+                    const matT = window.getGeckoItem('Transfer') || window.getGeckoItem('CINTA POSICIONADORA');
+                    const precioT = matT ? matT.precioVenta : 0;
+                    servicios.push({ label: 'Transfer', detalle: `${mlT.toFixed(2)}ML × ${fmtVal(precioT)}/ML`, valor: costoTransfer });
+                }
+                if (servicios.length > 0) {
+                    html += seccion('Servicios');
+                    servicios.forEach(s => { html += lineaRow(s.label, s.detalle, s.valor); });
+                }
+
+                // ZONA 3 — MONTADO EN RÍGIDO
+                if (totalRigidos > 0) {
+                    const placaId = document.getElementById('cortePlacas')?.value;
+                    const placaMat = window.getGeckoItem(placaId);
+                    html += seccion('Montado en rígido');
+                    html += lineaRow(placaMat ? placaMat.nombre : 'Placa', 'Material + corte por fila', totalRigidos);
+                }
+
+                // TOTAL
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+                    <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+                    <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
+                </div>`;
+
+                auditorWrap.innerHTML = `
+                    <div class="card-gecko" style="margin-top:12px;">
+                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                        ${html}
+                    </div>`;
+            } else {
+                auditorWrap.innerHTML = '';
+            }
+        }
 
         return totalFinal;
     },
