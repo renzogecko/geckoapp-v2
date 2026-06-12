@@ -1952,9 +1952,13 @@ window.agregarItemAlCarritoUI = async function () {
         btn.innerHTML = 'Guardando...';
         const currentCat = window.itemActualCotizado.tipo;
 
-        // Para laser_cnc usar window.itemActualCotizado directamente — evita la función legacy
-        if (currentCat === 'laser_cnc') {
-            const item = window.itemActualCotizado;
+        // Para laser_cnc y 3d usar itemActualCotizado directamente — evita la función legacy
+        if (currentCat === 'laser_cnc' || currentCat === '3d') {
+            // Para 3D: forzar recálculo fresco antes de agregar
+            if (currentCat === '3d' && typeof window.calcularCosto3D === 'function') {
+                window.calcularCosto3D();
+            }
+            const item = window.itemActualCotizado || window.itemActual3D;
             if (item && item.costo > 0) {
                 presupuesto.push({ ...item });
                 window.renderizarPresupuesto();
