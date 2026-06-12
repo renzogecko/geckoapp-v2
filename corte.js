@@ -426,13 +426,13 @@ window.GeckoCorte = {
                 </div>`;
 
                 auditorWrap.innerHTML = `
-                    <div class="card-gecko" style="margin-top:12px;">
+                    <div class="card-gecko" style="margin-top:0;">
                         <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
                         ${html}
                     </div>`;
             } else {
                 auditorWrap.innerHTML = `
-                    <div class="card-gecko" style="margin-top:12px;">
+                    <div class="card-gecko" style="margin-top:0;">
                         <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
                         <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
                     </div>`;
