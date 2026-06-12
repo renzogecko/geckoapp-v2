@@ -23,19 +23,20 @@ window.agregarFilaAcabado = function () {
     });
 
     // Opciones de vinilos del inventario
-    // Incluir vinilos_lonas, flexible Y materiales de otras categorías con subcategoría de vinilo
+    // Mostrar todo material que pueda usarse como acabado de superficie (vinilo, papel, sticker, etc.)
+    // Excluir solo categorías que son claramente materiales de estructura/corte, no de acabado
     const _matsSrc = (window.materiales && window.materiales.length > 0)
         ? window.materiales
         : JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+    const _catExcluidas = ['rigido', 'polifan', 'chapas', '3d', 'electrico', 'metal_madera'];
     const matsVinilo = _matsSrc.filter(m => {
-        const cat = (m.categoria || '').toLowerCase();
-        const sub = (m.subcategoria || '').toLowerCase();
-        return cat === 'vinilos_lonas' ||
-               cat === 'flexible' ||
-               sub.includes('impresion') ||
-               sub.includes('corte') ||
-               sub.includes('laminado') ||
-               sub.includes('vinilo');
+        const cat = (m.categoria || '').toLowerCase().trim();
+        // Excluir categorías de estructura/corte que nunca son acabados
+        if (_catExcluidas.some(ex => cat === ex || cat.includes(ex))) return false;
+        // Excluir si el nombre sugiere que es un material de corte/estructura, no acabado
+        const nombre = (m.nombre || '').toLowerCase();
+        if (nombre.includes('filamento') || nombre.includes('led ') || nombre.includes('fuente')) return false;
+        return true;
     });
     const opcionesVinilo = matsVinilo.map(m =>
         `<option value="${m.nombre}">${m.nombre}</option>`
@@ -165,17 +166,50 @@ window.calcularCostoCorte = function () {
     const desperdicioPct = Math.max(0, parseFloat(document.getElementById('corteDesperdicio')?.value) || 0);
     const extras = parseFloat(document.getElementById('corteExtras')?.value) || 0;
 
-    // Leer laserParams guardados
+    // Leer laserParams guardados (fuente del $/ML de corte)
     const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
-    const normalizar = str => str.trim().replace(/\s+/g, ' ').toUpperCase();
+    const normalizar = str => (str || '').trim().replace(/\s+/g, ' ').toUpperCase();
+
+    // ── Función canónica de precio de material ──────────────────────────────
+    // mat.costo ya es el costoUnitarioBase (calculado por recalcularCostoReal según
+    // unidadVenta: $/m² o $/unidad), así que el precio de venta es costo × multiplicador.
+    const getPrecioMat = (mat) => {
+        const costoUnit = parseFloat(mat.costo) || 0;
+        const mult = parseFloat(mat.multiplicador) || 2;
+        const precioPublico = Math.round(costoUnit * mult);
+        const precioGremio = (parseFloat(mat.precioGremio) > 0)
+            ? parseFloat(mat.precioGremio)
+            : Math.round(costoUnit * (parseFloat(mat.multGremio) || 1.5));
+        return isGremio ? precioGremio : precioPublico;
+    };
+
+    // ── Lookup de precio de corte $/cm ──────────────────────────────────────
+    // laserParams[nombre].precio está en $/ML (metro lineal = 100 cm)
+    // Conversión: $/cm = $/ML ÷ 100
+    const getPrecioCorte = (matNombre) => {
+        const nombreNorm = normalizar(matNombre);
+        const palabras = nombreNorm.split(/[\s\-–]+/).filter(p => p.length > 1);
+        const params = laserParams[matNombre]
+            || laserParams[nombreNorm]
+            || Object.entries(laserParams).find(([k]) => normalizar(k) === nombreNorm)?.[1]
+            || Object.entries(laserParams).find(([k]) => {
+                const kNorm = normalizar(k);
+                return palabras.every(p => kNorm.includes(p));
+            })?.[1];
+        // También usar mat.cortePrecioML como fallback directo del objeto material
+        if (!params || !params.precio) {
+            const mat = (window.materiales || []).find(m => normalizar(m.nombre) === nombreNorm);
+            const mlFallback = parseFloat(mat?.cortePrecioML) || 0;
+            return mlFallback / 100; // $/ML → $/cm
+        }
+        return (parseFloat(params.precio) || 0) / 100; // $/ML → $/cm
+    };
 
     let totalMaterial = 0;
     let totalCorte = 0;
     const auditLineas = [];
 
-    const filas = document.querySelectorAll('.fila-laser');
-
-    filas.forEach((fila, idx) => {
+    document.querySelectorAll('.fila-laser').forEach((fila) => {
         const matNombre = fila.querySelector('.input-laser-mat')?.value?.trim();
         const ancho = parseFloat(fila.querySelector('.input-laser-ancho')?.value) || 0;
         const alto = parseFloat(fila.querySelector('.input-laser-alto')?.value) || 0;
@@ -188,46 +222,32 @@ window.calcularCostoCorte = function () {
         const mat = (window.materiales || []).find(m => normalizar(m.nombre) === normalizar(matNombre));
         if (!mat) return;
 
-        // Precio del material: público o gremio, con fallback completo basado en costoARS
-        const cotizDolarMat = window.GECKO_SETTINGS?.cotizacionDolar || 1420;
-        const costoBaseMat = mat.costoARS || (mat.costoUSD ? mat.costoUSD * cotizDolarMat : 0) || mat.costo || 0;
-        const precioPublicoMat = mat.precioVenta || Math.round(costoBaseMat * (mat.multiplicador || 2));
-        const precioGremioMat = mat.precioGremio > 0 ? mat.precioGremio : Math.round(costoBaseMat * (mat.multGremio || mat.multiplicadorGremio || 1.5));
-        const precioM2 = isGremio ? precioGremioMat : precioPublicoMat;
+        // Precio por m² según estrategia y modo público/gremio
+        const precioM2 = getPrecioMat(mat);
 
-        // Costo material por fila
+        // Costo del material: área × precio/m² × cantidad
         const areaM2 = (ancho / 100) * (alto / 100);
-        const costoMat = areaM2 * precioM2 * cant;
+        const costoMatUnit = areaM2 * precioM2;           // por 1 pieza
+        const costoMatTotal = costoMatUnit * cant;
 
-        // Precio de corte desde laserParams — buscar por nombre exacto, normalizado, o coincidencia parcial
-        const nombreNorm = normalizar(matNombre);
-        // Extraer palabras clave del nombre del material (ej: "Acrilico - 3mm" → ["ACRILICO", "3MM"])
-        const palabrasMatNombre = nombreNorm.split(/[\s\-–]+/).filter(p => p.length > 1);
-        const params = laserParams[matNombre] ||
-            laserParams[nombreNorm] ||
-            Object.entries(laserParams).find(([k]) => normalizar(k) === nombreNorm)?.[1] ||
-            Object.entries(laserParams).find(([k]) => {
-                const kNorm = normalizar(k);
-                return palabrasMatNombre.every(p => kNorm.includes(p));
-            })?.[1] || {};
-        const precioML = params.precio || 0;
-        const precioXcm = precioML / 100;
+        // Costo de corte: perímetro (cm) × precio/cm × pasadas × cantidad
+        const precioXcm = getPrecioCorte(matNombre);
+        const costoCorteUnit = perimetro * precioXcm * pasadas;  // por 1 pieza
+        const costoCorteTotal = costoCorteUnit * cant;
 
-        // Costo corte por fila (perímetro en cm × precio/cm × pasadas × cantidad)
-        const costoCorte = perimetro * precioXcm * pasadas * cant;
+        totalMaterial += costoMatTotal;
+        totalCorte += costoCorteTotal;
 
-        totalMaterial += costoMat;
-        totalCorte += costoCorte;
-
-        // Línea del auditor
-        const areaFmt = (areaM2).toFixed(4);
+        // ── Auditor: línea clara y verificable ────────────────────────────
+        const precioMLDisplay = Math.round(precioXcm * 100); // mostrar en $/ML para referencia
         const corteInfo = perimetro > 0
-            ? `Corte: ${perimetro}cm × ${fmt(precioXcm)}/cm${pasadas > 1 ? ` × ${pasadas} pasadas` : ''} = ${fmt(costoCorte / cant)}`
-            : 'Sin corte';
+            ? `Corte: ${perimetro}cm × ${fmt(precioXcm)}/cm (${fmt(precioMLDisplay)}/ML)${pasadas > 1 ? ` × ${pasadas} pas.` : ''} = ${fmt(costoCorteUnit)}/u`
+            : 'Sin corte (sin perímetro)';
+
         auditLineas.push({
             mat: matNombre,
             cant,
-            texto: `${matNombre} | Área: ${areaFmt}m² × ${fmt(precioM2)}/m² = ${fmt(costoMat / cant)} | ${corteInfo} | ×${cant} = ${fmt(costoMat + costoCorte)}`
+            texto: `${matNombre} | ${ancho}×${alto}cm | Área: ${areaM2.toFixed(4)}m² × ${fmt(precioM2)}/m² = ${fmt(costoMatUnit)}/u | ${corteInfo} | ×${cant} piezas = ${fmt(costoMatTotal + costoCorteTotal)}`
         });
     });
 
@@ -242,26 +262,16 @@ window.calcularCostoCorte = function () {
             const cobertura = parseFloat(fila.querySelector('.input-acabado-cobertura')?.value) || 100;
             const cant = parseInt(fila.querySelector('.input-acabado-cant')?.value) || 1;
             if (!matNombre || area <= 0) return;
-            const isGremio = document.getElementById('modoGremioCorte')?.checked || false;
             const matV = (window.materiales || []).find(m => m.nombre === matNombre);
             if (!matV) return;
-            // Precio de venta SIEMPRE calculado desde costoARS / contenidoUnidad * multiplicador
-            // (misma lógica que recalcularCostoReal en main.js — nunca usar precioVenta directo
-            // porque puede estar en 0 si no se recalculó)
-            const cotizDolar = window.GECKO_SETTINGS?.cotizacionDolar || 1420;
-            const costoBase = matV.costoARS || (matV.costoUSD ? matV.costoUSD * cotizDolar : 0) || matV.costo || 0;
-            const contenido = parseFloat(matV.contenidoUnidad) || 1;
-            const costoUnitario = costoBase / contenido;
-            const multPublico = parseFloat(matV.multiplicador) || 2;
-            const multGremio = parseFloat(matV.multGremio) || parseFloat(matV.multiplicadorGremio) || 1.5;
-            const precioPublico = Math.round(costoUnitario * multPublico);
-            const precioGrem = matV.precioGremio > 0 ? matV.precioGremio : Math.round(costoUnitario * multGremio);
-            const precioM2 = isGremio ? precioGrem : precioPublico;
+            // Mismo sistema de precio que rígidos: costo × multiplicador
+            const precioM2 = getPrecioMat(matV);
             const areaEfectiva = area * (cobertura / 100);
-            const costoFila = areaEfectiva * precioM2 * cant;
+            const costoFilaUnit = areaEfectiva * precioM2;
+            const costoFila = costoFilaUnit * cant;
             totalAcabados += costoFila;
             auditAcabados.push(
-                `Acabado: ${matNombre} | ${areaEfectiva.toFixed(4)}m² × ${fmt(precioM2)}/m² × ${cant} = ${fmt(costoFila)}`
+                `Acabado: ${matNombre} | ${areaEfectiva.toFixed(4)}m² × ${fmt(precioM2)}/m²${cant > 1 ? ` × ${cant}` : ''} = ${fmt(costoFila)}`
             );
         });
     }
@@ -278,7 +288,7 @@ window.calcularCostoCorte = function () {
     if (document.getElementById('detServicio'))
         document.getElementById('detServicio').innerText = fmt(totalCorte);
     if (document.getElementById('detTerminaciones'))
-        document.getElementById('detTerminaciones').innerText = totalAcabados > 0 ? fmt(totalAcabados) : (extras > 0 ? fmt(extras) : '$ 0');
+        document.getElementById('detTerminaciones').innerText = totalAcabados > 0 ? fmt(totalAcabados) : (extras > 0 ? fmt(extras) : '$0');
     if (document.getElementById('subtotalEstimado'))
         document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
 
@@ -298,7 +308,7 @@ window.calcularCostoCorte = function () {
                 </div>
             `).join('');
         } else {
-            auditorContainer.innerHTML = '';
+            auditorContainer.innerHTML = '<p class="text-[11px] text-zinc-600 text-center py-3">Completá las filas para ver el desglose</p>';
         }
     }
 
