@@ -1518,7 +1518,7 @@
             border-radius: 16px;
             padding: 20px;
             /* Esto despega todo de los bordes */
-            margin-bottom: 24px;
+            margin-bottom: 12px;
         }
 
         /* EL SWITCH (LA PASTILLA) */
@@ -1867,14 +1867,53 @@
 
         /* Familias de Tags Gecko */
         /* Colores de punto por tipo de tag — fondo transparente, solo borde sutil */
-        .tag-impresion { color: #ef4444; border: 1px solid rgba(239,68,68,0.35); background: transparent; }
-        .tag-corte     { color: #3b82f6; border: 1px solid rgba(59,130,246,0.35); background: transparent; }
-        .tag-liso      { color: #f59e0b; border: 1px solid rgba(245,158,11,0.35); background: transparent; }
-        .tag-plastico  { color: #10b981; border: 1px solid rgba(16,185,129,0.35); background: transparent; }
-        .tag-madera    { color: #a1a1aa; border: 1px solid rgba(161,161,170,0.35); background: transparent; }
-        .tag-3d        { color: #6366f1; border: 1px solid rgba(99,102,241,0.35); background: transparent; }
-        .tag-electric  { color: #eab308; border: 1px solid rgba(234,179,8,0.35); background: transparent; }
-        .tag-default   { color: #71717a; border: 1px solid rgba(113,113,122,0.35); background: transparent; }
+        .tag-impresion {
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            background: transparent;
+        }
+
+        .tag-corte {
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            background: transparent;
+        }
+
+        .tag-liso {
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            background: transparent;
+        }
+
+        .tag-plastico {
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            background: transparent;
+        }
+
+        .tag-madera {
+            color: #a1a1aa;
+            border: 1px solid rgba(161, 161, 170, 0.35);
+            background: transparent;
+        }
+
+        .tag-3d {
+            color: #6366f1;
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            background: transparent;
+        }
+
+        .tag-electric {
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.35);
+            background: transparent;
+        }
+
+        .tag-default {
+            color: #71717a;
+            border: 1px solid rgba(113, 113, 122, 0.35);
+            background: transparent;
+        }
 
         .sortable-ghost {
             opacity: 0.4;
@@ -2288,7 +2327,7 @@
         .gecko-btn-primary:hover {
             background: #d94e1a !important;
             transform: scale(1.03) !important;
-            box-shadow: 0 6px 20px rgba(241, 90, 36, 0.38), 0 2px 8px rgba(0,0,0,0.18) !important;
+            box-shadow: 0 6px 20px rgba(241, 90, 36, 0.38), 0 2px 8px rgba(0, 0, 0, 0.18) !important;
         }
 
         .gecko-btn-primary:active {
@@ -2472,18 +2511,35 @@
             padding-right: 40px !important;
         }
 
-/* Presupuesto Manual — ítems lista */
-.gpm-item:last-child { border-bottom: none !important; }
+        /* Presupuesto Manual — ítems lista */
+        .gpm-item:last-child {
+            border-bottom: none !important;
+        }
 
-/* Fila nueva en tabla parámetros láser — sin borde en el nombre */
-.fila-laser-nueva td:first-child input {
-    border-bottom: none !important;
-}
+        /* Fila nueva en tabla parámetros láser — sin borde en el nombre */
+        .fila-laser-nueva td:first-child input {
+            border-bottom: none !important;
+        }
 
-/* Presupuesto Manual — placeholders notas/condiciones */
-#gpmNotasInternas::placeholder,
-#gpmCondiciones::placeholder { color: #52525b !important; font-weight: 400 !important; }
-.gpm-item-desc { color: #71717a !important; font-weight: 400 !important; font-size: 12px !important; }
-.gpm-item-desc::placeholder { color: #52525b; }
-/* Presupuesto Manual — focus qty/precio */
-.gpm-qty:focus, .gpm-price:focus { border-color: #F15A24 !important; }
+        /* Presupuesto Manual — placeholders notas/condiciones */
+        #gpmNotasInternas::placeholder,
+        #gpmCondiciones::placeholder {
+            color: #52525b !important;
+            font-weight: 400 !important;
+        }
+
+        .gpm-item-desc {
+            color: #71717a !important;
+            font-weight: 400 !important;
+            font-size: 12px !important;
+        }
+
+        .gpm-item-desc::placeholder {
+            color: #52525b;
+        }
+
+        /* Presupuesto Manual — focus qty/precio */
+        .gpm-qty:focus,
+        .gpm-price:focus {
+            border-color: #F15A24 !important;
+        }

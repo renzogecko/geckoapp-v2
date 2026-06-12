@@ -43,6 +43,8 @@ window.GeckoGrafica = {
 
         // 7. Inicializar Placas
         this.actualizarSelectorPlacas();
+        // Mostrar auditor y botón desde el inicio
+        setTimeout(() => this.calcular(), 50);
     },
 
     limpiarCategorias: function () {
@@ -302,6 +304,7 @@ window.GeckoGrafica = {
         const matId = document.getElementById('graficaMatEspec')?.value;
         const mat = window.getGeckoItem(matId);
         let costoBase = 0;
+        let precioM2 = 0;
         if (mat) {
             const isGremio = document.getElementById('modoGremio')?.checked;
 
@@ -331,7 +334,7 @@ window.GeckoGrafica = {
                 precioVenta = precioGremio;
             }
 
-            const precioM2 = precioVenta;
+            precioM2 = precioVenta;
             if (mt2Totales > 0) costoBase = mt2Totales * precioM2;
 
             // Actualizar Auditor de Material
@@ -555,6 +558,122 @@ window.GeckoGrafica = {
             costo: totalFinal,
             textoOpciones: mat ? mat.nombre : 'S/M'
         };
+
+        // ── Auditor de cálculo ────────────────────────────────────────────────────
+        const panelConfGrafica = document.getElementById('panelConfigurador');
+        let auditorWrap = document.getElementById('geckoAuditorGrafica');
+        if (!auditorWrap && panelConfGrafica) {
+            auditorWrap = document.createElement('div');
+            auditorWrap.id = 'geckoAuditorGrafica';
+            auditorWrap.style.marginTop = '-33px';
+            panelConfGrafica.appendChild(auditorWrap);
+        }
+        if (auditorWrap) {
+            const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
+            const hayDatos = (mat && mt2Totales > 0) || serviciosCostos > 0 || totalRigidos > 0;
+
+            if (hayDatos) {
+                const lineaRow = (label, detalle, valor) => `
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                        <div style="flex:1;min-width:0;">
+                            <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                            <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                            ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                        </div>
+                        <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmtVal(valor)}</span>
+                    </div>`;
+                const seccion = titulo =>
+                    `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;">${titulo}</p>`;
+
+                let html = '';
+
+                // ZONA 1 — MATERIAL BASE
+                if (mat && mt2Totales > 0) {
+                    html += seccion('Material');
+                    html += lineaRow(
+                        mat.nombre,
+                        `${mt2Totales.toFixed(4)}m² × ${fmtVal(precioM2)}/m²`,
+                        costoBase
+                    );
+                }
+
+                // ZONA 2 — TERMINACIONES Y SERVICIOS
+                const termActivas = [];
+                if (this.isTermActive('checkRefilado')) {
+                    const ml = parseFloat(document.getElementById('valRefilado')?.value) || 1;
+                    termActivas.push({ label: 'Refilado', detalle: `${ml}ml × $1.800/ml`, valor: ml * 1800 });
+                }
+                if (this.isTermActive('checkBolsillo')) {
+                    const ml = parseFloat(document.getElementById('valBolsillo')?.value) || 1;
+                    termActivas.push({ label: 'Bolsillo', detalle: `${ml}ml × $3.000/ml`, valor: ml * 3000 });
+                }
+                if (this.isTermActive('checkOjales')) {
+                    const cant = parseFloat(document.getElementById('valOjales')?.value) || 1;
+                    termActivas.push({ label: 'Ojales', detalle: `${cant}u × $800/u`, valor: cant * 800 });
+                }
+                if (this.isTermActive('checkLaminado')) {
+                    const m2Lam = parseFloat(document.getElementById('graficaLaminadoMt2')?.value) || 0;
+                    const lamMat = window.getGeckoItem('Laminado');
+                    const precioLam = lamMat ? lamMat.costoARS * (mode === 'proyecto' ? 1 : lamMat.multiplicador) : 4500;
+                    termActivas.push({ label: 'Laminado', detalle: `${m2Lam}m² × ${fmtVal(precioLam)}/m²`, valor: m2Lam * precioLam });
+                }
+                if (this.isTermActive('checkMontado')) {
+                    const val = parseFloat(document.getElementById('valMontado')?.value) || 1;
+                    const serv = window.getGeckoItem('MONTADO') || window.getGeckoItem('SERVICIO DE MONTADO');
+                    const precio = serv ? serv.precioVenta : 1800;
+                    termActivas.push({ label: 'Montado sup.', detalle: `${val}m² × ${fmtVal(precio)}/m²`, valor: val * precio });
+                }
+                if (this.isTermActive('checkTransfer')) {
+                    const ml = parseFloat(document.getElementById('valTransfer')?.value) || 1;
+                    const matT = window.getGeckoItem('TRANSFER');
+                    const precio = matT ? matT.precioVenta : 0;
+                    termActivas.push({ label: 'Transfer', detalle: `${ml}ml × ${fmtVal(precio)}/ml`, valor: ml * precio });
+                }
+                if (this.isTermActive('checkTensado')) {
+                    const ml = parseFloat(document.getElementById('valTensado')?.value) || 1;
+                    const serv = window.getGeckoItem('TENSADO');
+                    const precio = serv ? serv.precioVenta : 3500;
+                    termActivas.push({ label: 'Tensado', detalle: `${ml}ml × ${fmtVal(precio)}/ml`, valor: ml * precio });
+                }
+                if (this.isTermActive('checkTroquelado')) {
+                    const ml = parseFloat(document.getElementById('valTroquelado')?.value) || 1;
+                    const serv = window.getGeckoItem('PLOTER 60') || window.getGeckoItem('SERVICIO DE CORTE');
+                    const precio = serv ? serv.precioVenta : 7800;
+                    termActivas.push({ label: 'Troquelado', detalle: `${ml}ml × ${fmtVal(precio)}/ml`, valor: ml * precio });
+                }
+
+                if (termActivas.length > 0) {
+                    html += seccion('Terminaciones y servicios');
+                    termActivas.forEach(t => { html += lineaRow(t.label, t.detalle, t.valor); });
+                }
+
+                // ZONA 3 — MONTADO EN RÍGIDO
+                if (totalRigidos > 0) {
+                    const selectorPlacas = document.getElementById('graficaImpresionPlacas');
+                    const textoPlaca = selectorPlacas?.options[selectorPlacas.selectedIndex]?.text || 'Placa';
+                    html += seccion('Montado en rígido');
+                    html += lineaRow(textoPlaca, 'Material + corte por fila', totalRigidos);
+                }
+
+                // TOTAL
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+                    <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+                    <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
+                </div>`;
+
+                auditorWrap.innerHTML = `
+                    <div class="card-gecko" style="margin-top:12px;">
+                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                        ${html}
+                    </div>`;
+            } else {
+                auditorWrap.innerHTML = `
+                    <div class="card-gecko" style="margin-top:0;">
+                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                        <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                    </div>`;
+            }
+        }
 
         // Exportar para compatibilidad legacy
         window._graficaTotal = totalFinal;
