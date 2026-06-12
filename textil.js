@@ -71,20 +71,23 @@ window.calcularCostoTextil = function () {
 
         const fmt = (v) => '$' + Math.round(v).toLocaleString('es-AR');
 
-        // 1. Búsqueda de Ítems (GDM) - Uso estricto de PLOTER DE CORTE
-        const queryMaterial = (modoActivo === 'dtf') ? "DTF" : "TERMO";
-        const itemMaterial = window.getGeckoItem(queryMaterial);
-        const itemEstampa = window.getGeckoItem("ESTAMPADO");
-        // Buscar ploter con múltiples nombres posibles (igual que grafica.js)
-        const itemCorte = window.getGeckoItem("PLOTER DE CORTE - 60CM")
+        // 1. Búsqueda de Ítems (GDM) - Nombres exactos según geckoServicios en DB
+        const itemMaterial = modoActivo === 'dtf'
+            ? (window.getGeckoItem("DTF - textil") || window.getGeckoItem("DTF TEXTIL") || window.getGeckoItem("DTF"))
+            : (window.getGeckoItem("Termovinilo") || window.getGeckoItem("TERMOVINILO") || window.getGeckoItem("TERMO"));
+        const itemEstampa = window.getGeckoItem("Estampados") || window.getGeckoItem("ESTAMPADO") || window.getGeckoItem("estampado");
+        const itemCorte = window.getGeckoItem("Ploter de corte - 60cm")
+            || window.getGeckoItem("PLOTER DE CORTE - 60CM")
             || window.getGeckoItem("PLOTER 60")
-            || window.getGeckoItem("SERVICIO DE CORTE");
+            || window.getGeckoItem("Ploter de corte - 60 cm");
+
+        // Servicios usan campo 'precio', materiales usan 'costo' o 'precioVenta'
+        const getPrecio = (item) => item ? (item.precio || item.precioVenta || item.costo || 0) : 0;
 
         // 2. Precios base
-        const pMaterial = itemMaterial ? itemMaterial.precioVenta : (modoActivo === 'dtf' ? 12000 : 8500);
-        const pEstampa = itemEstampa ? itemEstampa.precioVenta : 2500;
-        // Corte termovinilo: precio por ML (se multiplica por largo, no se suma al material)
-        const pCorte = itemCorte ? itemCorte.precioVenta : 7500;
+        const pMaterial = getPrecio(itemMaterial) || (modoActivo === 'dtf' ? 20000 : 8500);
+        const pEstampa = getPrecio(itemEstampa) || 800;
+        const pCorte = getPrecio(itemCorte) || 7500;
 
         // 3. Lógica de cálculo
         // Material: largo en cm → ML (÷100) × precio/ML
