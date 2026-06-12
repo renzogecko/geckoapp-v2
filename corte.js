@@ -207,9 +207,6 @@ window.GeckoCorte = {
                     </div>
                 </div>
 
-                <!-- AUDITOR DE CÁLCULO — fuera de seccion-switch-gecko para evitar doble card -->
-                <div id="geckoAuditorCorte"></div>
-
                 <!-- BOTÓN FINAL -->
                 <button onclick="window.GeckoCorte.añadirAlPresupuesto()" class="w-full py-4 bg-gecko text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[12px] hover:bg-orange-600 transition-all shadow-lg shadow-gecko/20 mt-6">
                     + AÑADIR COTIZACIÓN
@@ -348,8 +345,17 @@ window.GeckoCorte = {
             textoOpciones: matName
         };
 
-        // ── Auditor de cálculo ────────────────────────────────────────────────────
-        const auditorWrap = document.getElementById('geckoAuditorCorte');
+        // ── Auditor de cálculo — creado dinámicamente igual que laser.js ──────────
+        const panelConfCorte = document.getElementById('panelConfigurador');
+        let auditorWrap = document.getElementById('geckoAuditorCorte');
+        if (!auditorWrap && panelConfCorte) {
+            auditorWrap = document.createElement('div');
+            auditorWrap.id = 'geckoAuditorCorte';
+            // Insertar antes del botón final
+            const btnFinal = panelConfCorte.querySelector('button[onclick*="añadirAlPresupuesto"]');
+            if (btnFinal) btnFinal.before(auditorWrap);
+            else panelConfCorte.appendChild(auditorWrap);
+        }
         if (auditorWrap) {
             const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
             const hayDatos = costoMaterial > 0 || costoTransfer > 0 || costoCortePlotter > 0 || totalRigidos > 0;
@@ -421,7 +427,11 @@ window.GeckoCorte = {
                         ${html}
                     </div>`;
             } else {
-                auditorWrap.innerHTML = '';
+                auditorWrap.innerHTML = `
+                    <div class="card-gecko" style="margin-top:12px;">
+                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                        <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                    </div>`;
             }
         }
 
