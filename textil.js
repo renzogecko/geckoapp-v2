@@ -106,19 +106,84 @@ window.calcularCostoTextil = function () {
             otDetalle: `Material: ${largo}cm | Estampas: ${bajadas} | Prendas: ${cantPrendas}`
         };
 
-        // 4. Auditoría Visual (Feedback real del desglose)
-        const auditorMat = document.getElementById('auditorMaterial');
-        const auditorEst = document.getElementById('auditorEstampado');
-        
-        if (auditorMat) {
-            if (modoActivo === 'termo') {
-                auditorMat.innerText = `Auditor: Material: ${fmt(pMaterial)} + Corte: ${fmt(pCorte)} = ${fmt(costoML)}/ml.`;
-            } else {
-                auditorMat.innerText = `Auditor: Material DTF @ ${fmt(pMaterial)}/ml | Subtotal: ${fmt(subtotalMaterial)}`;
-            }
+        // 4. Auditor unificado
+        const panelConfTextil = document.getElementById('panelConfigurador');
+        let auditorWrap = document.getElementById('geckoAuditorTextil');
+        if (!auditorWrap && panelConfTextil) {
+            auditorWrap = document.createElement('div');
+            auditorWrap.id = 'geckoAuditorTextil';
+            auditorWrap.style.marginTop = '0';
+            panelConfTextil.appendChild(auditorWrap);
         }
-        if (auditorEst) {
-            auditorEst.innerText = `Auditor: Estampa @ ${fmt(pEstampa)}/u | Subtotal: ${fmt(subtotalEstampas)}`;
+        // Botón siempre después del auditor
+        let btnTextilWrap = document.getElementById('btnTextilAnadir');
+        if (!btnTextilWrap && panelConfTextil) {
+            btnTextilWrap = document.createElement('div');
+            btnTextilWrap.id = 'btnTextilAnadir';
+            btnTextilWrap.style.marginTop = '12px';
+            btnTextilWrap.innerHTML = `<button id="btnConfirmarItem" onclick="window.añadirTextilAlPresupuesto()" class="w-full py-3 bg-[#f15a24] text-white rounded-2xl font-black uppercase text-[11px] tracking-[3px] shadow-lg">+ AÑADIR A COTIZACIÓN</button>`;
+            panelConfTextil.appendChild(btnTextilWrap);
+        }
+        if (auditorWrap) {
+            const hayDatos = subtotalMaterial > 0 || subtotalEstampas > 0 || subtotalPrendas > 0;
+            const lineaRow = (label, detalle, valor) => `
+                <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                    <div style="flex:1;min-width:0;">
+                        <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                        <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                        ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                    </div>
+                    <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmt(valor)}</span>
+                </div>`;
+            const seccion = titulo =>
+                `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;">${titulo}</p>`;
+
+            if (hayDatos) {
+                let html = '';
+
+                // ZONA 1 — MATERIAL
+                html += seccion('Material');
+                const labelMat = modoActivo === 'termo'
+                    ? `Termovinilo + Corte`
+                    : `DTF Textil`;
+                html += lineaRow(labelMat,
+                    `${largo}cm × ${fmt(costoML)}/ML`,
+                    subtotalMaterial);
+
+                // ZONA 2 — ESTAMPADO
+                if (subtotalEstampas > 0) {
+                    html += seccion('Estampado');
+                    html += lineaRow('Bajadas',
+                        `${bajadas} u × ${fmt(pEstampa)}/u`,
+                        subtotalEstampas);
+                }
+
+                // ZONA 3 — PRENDA
+                if (subtotalPrendas > 0) {
+                    html += seccion('Prendas');
+                    html += lineaRow('Costo prendas',
+                        `${cantPrendas} u × ${fmt(valorPrenda)}/u`,
+                        subtotalPrendas);
+                }
+
+                // TOTAL
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+                    <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+                    <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmt(totalFinal)}</span>
+                </div>`;
+
+                auditorWrap.innerHTML = `
+                    <div class="card-gecko" style="margin-top:0;">
+                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                        ${html}
+                    </div>`;
+            } else {
+                auditorWrap.innerHTML = `
+                    <div class="card-gecko" style="margin-top:0;">
+                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                        <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                    </div>`;
+            }
         }
 
         // 5. Actualización de UI Derecha

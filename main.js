@@ -1820,7 +1820,7 @@ window.cambiarCategoriaCotizador = function (cat) {
                     <div id="contenedorVariablesTextil">
                         <!-- Inyectado por setTextilModo -->
                     </div>
-                    <div id="auditorMaterial" class="text-[11px] text-zinc-400 font-medium italic mt-2.5 ml-1"></div>
+                    <div id="auditorMaterial" class="hidden"></div>
                 </div>
 
                 <!-- Tarjeta 03: ESTAMPADO -->
@@ -1834,7 +1834,7 @@ window.cambiarCategoriaCotizador = function (cat) {
                             <input type="number" id="textilBajadas" value="1" oninput="window.calcularCostoTextil()" onwheel="this.blur()" class="${inputStyle} text-center">
                         </div>
                     </div>
-                    <div id="auditorEstampado" class="text-[11px] text-zinc-400 font-medium italic mt-2.5 ml-1"></div>
+                    <div id="auditorEstampado" class="hidden"></div>
                 </div>
 
                 <!-- Tarjeta 04: PRENDA -->
@@ -1852,11 +1852,6 @@ window.cambiarCategoriaCotizador = function (cat) {
                     </div>
                 </div>
 
-                <div class="">
-                    <button id="btnConfirmarItem" onclick="window.añadirTextilAlPresupuesto()" class="w-full py-3 bg-[#f15a24] text-white rounded-2xl font-black uppercase text-[11px] tracking-[3px] shadow-lg">
-                        + AÑADIR A COTIZACIÓN
-                    </button>
-                </div>
             </div>
         `;
         setTimeout(() => window.setTextilModo(window._textilModo || 'dtf'), 50);
