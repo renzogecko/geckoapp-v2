@@ -653,8 +653,10 @@ window.GeckoGrafica = {
                 </div>`;
 
                 auditorWrap.innerHTML = `
-                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
-                    ${html}`;
+                    <div class="card-gecko" style="margin-top:12px;">
+                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                        ${html}
+                    </div>`;
             } else {
                 auditorWrap.innerHTML = '';
             }
