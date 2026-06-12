@@ -1640,6 +1640,8 @@ window.cambiarCategoriaCotizador = function (cat) {
     </div>
 </div>
 
+        <div id="geckoAuditorGrafica"></div>
+
         <button onclick="window.GeckoGrafica.añadirAlPresupuesto()" class="w-full py-4 bg-gecko text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[12px] hover:bg-orange-600 transition-all shadow-lg shadow-gecko/20">
             + AÑADIR A COTIZACIÓN
         </button>
