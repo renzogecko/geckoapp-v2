@@ -23,20 +23,19 @@ window.agregarFilaAcabado = function () {
     });
 
     // Opciones de vinilos del inventario
-    // Mostrar todo material que pueda usarse como acabado de superficie (vinilo, papel, sticker, etc.)
-    // Excluir solo categorías que son claramente materiales de estructura/corte, no de acabado
+    // Incluir vinilos_lonas, flexible Y materiales de otras categorías con subcategoría de vinilo
     const _matsSrc = (window.materiales && window.materiales.length > 0)
         ? window.materiales
         : JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
-    const _catExcluidas = ['rigido', 'polifan', 'chapas', '3d', 'electrico', 'metal_madera'];
     const matsVinilo = _matsSrc.filter(m => {
-        const cat = (m.categoria || '').toLowerCase().trim();
-        // Excluir categorías de estructura/corte que nunca son acabados
-        if (_catExcluidas.some(ex => cat === ex || cat.includes(ex))) return false;
-        // Excluir si el nombre sugiere que es un material de corte/estructura, no acabado
-        const nombre = (m.nombre || '').toLowerCase();
-        if (nombre.includes('filamento') || nombre.includes('led ') || nombre.includes('fuente')) return false;
-        return true;
+        const cat = (m.categoria || '').toLowerCase();
+        const sub = (m.subcategoria || '').toLowerCase();
+        return cat === 'vinilos_lonas' ||
+               cat === 'flexible' ||
+               sub.includes('impresion') ||
+               sub.includes('corte') ||
+               sub.includes('laminado') ||
+               sub.includes('vinilo');
     });
     const opcionesVinilo = matsVinilo.map(m =>
         `<option value="${m.nombre}">${m.nombre}</option>`
@@ -166,50 +165,17 @@ window.calcularCostoCorte = function () {
     const desperdicioPct = Math.max(0, parseFloat(document.getElementById('corteDesperdicio')?.value) || 0);
     const extras = parseFloat(document.getElementById('corteExtras')?.value) || 0;
 
-    // Leer laserParams guardados (fuente del $/ML de corte)
+    // Leer laserParams guardados
     const laserParams = JSON.parse(localStorage.getItem('gecko_laserParams') || '{}');
-    const normalizar = str => (str || '').trim().replace(/\s+/g, ' ').toUpperCase();
-
-    // ── Función canónica de precio de material ──────────────────────────────
-    // mat.costo ya es el costoUnitarioBase (calculado por recalcularCostoReal según
-    // unidadVenta: $/m² o $/unidad), así que el precio de venta es costo × multiplicador.
-    const getPrecioMat = (mat) => {
-        const costoUnit = parseFloat(mat.costo) || 0;
-        const mult = parseFloat(mat.multiplicador) || 2;
-        const precioPublico = Math.round(costoUnit * mult);
-        const precioGremio = (parseFloat(mat.precioGremio) > 0)
-            ? parseFloat(mat.precioGremio)
-            : Math.round(costoUnit * (parseFloat(mat.multGremio) || 1.5));
-        return isGremio ? precioGremio : precioPublico;
-    };
-
-    // ── Lookup de precio de corte $/cm ──────────────────────────────────────
-    // laserParams[nombre].precio está en $/ML (metro lineal = 100 cm)
-    // Conversión: $/cm = $/ML ÷ 100
-    const getPrecioCorte = (matNombre) => {
-        const nombreNorm = normalizar(matNombre);
-        const palabras = nombreNorm.split(/[\s\-–]+/).filter(p => p.length > 1);
-        const params = laserParams[matNombre]
-            || laserParams[nombreNorm]
-            || Object.entries(laserParams).find(([k]) => normalizar(k) === nombreNorm)?.[1]
-            || Object.entries(laserParams).find(([k]) => {
-                const kNorm = normalizar(k);
-                return palabras.every(p => kNorm.includes(p));
-            })?.[1];
-        // También usar mat.cortePrecioML como fallback directo del objeto material
-        if (!params || !params.precio) {
-            const mat = (window.materiales || []).find(m => normalizar(m.nombre) === nombreNorm);
-            const mlFallback = parseFloat(mat?.cortePrecioML) || 0;
-            return mlFallback / 100; // $/ML → $/cm
-        }
-        return (parseFloat(params.precio) || 0) / 100; // $/ML → $/cm
-    };
+    const normalizar = str => str.trim().replace(/\s+/g, ' ').toUpperCase();
 
     let totalMaterial = 0;
     let totalCorte = 0;
     const auditLineas = [];
 
-    document.querySelectorAll('.fila-laser').forEach((fila) => {
+    const filas = document.querySelectorAll('.fila-laser');
+
+    filas.forEach((fila, idx) => {
         const matNombre = fila.querySelector('.input-laser-mat')?.value?.trim();
         const ancho = parseFloat(fila.querySelector('.input-laser-ancho')?.value) || 0;
         const alto = parseFloat(fila.querySelector('.input-laser-alto')?.value) || 0;
@@ -222,41 +188,46 @@ window.calcularCostoCorte = function () {
         const mat = (window.materiales || []).find(m => normalizar(m.nombre) === normalizar(matNombre));
         if (!mat) return;
 
-        // Precio por m² según estrategia y modo público/gremio
-        const precioM2 = getPrecioMat(mat);
+        // Precio del material: público o gremio, con fallback completo basado en costoARS
+        const cotizDolarMat = window.GECKO_SETTINGS?.cotizacionDolar || 1420;
+        const costoBaseMat = mat.costoARS || (mat.costoUSD ? mat.costoUSD * cotizDolarMat : 0) || mat.costo || 0;
+        const precioPublicoMat = mat.precioVenta || Math.round(costoBaseMat * (mat.multiplicador || 2));
+        const precioGremioMat = mat.precioGremio > 0 ? mat.precioGremio : Math.round(costoBaseMat * (mat.multGremio || mat.multiplicadorGremio || 1.5));
+        const precioM2 = isGremio ? precioGremioMat : precioPublicoMat;
 
-        // Costo del material: área × precio/m² × cantidad
+        // Costo material por fila
         const areaM2 = (ancho / 100) * (alto / 100);
-        const costoMatUnit = areaM2 * precioM2;           // por 1 pieza
-        const costoMatTotal = costoMatUnit * cant;
+        const costoMat = areaM2 * precioM2 * cant;
 
-        // Costo de corte: perímetro (cm) × precio/cm × pasadas × cantidad
-        const precioXcm = getPrecioCorte(matNombre);
-        const costoCorteUnit = perimetro * precioXcm * pasadas;  // por 1 pieza
-        const costoCorteTotal = costoCorteUnit * cant;
+        // Precio de corte desde laserParams — buscar por nombre exacto, normalizado, o coincidencia parcial
+        const nombreNorm = normalizar(matNombre);
+        // Extraer palabras clave del nombre del material (ej: "Acrilico - 3mm" → ["ACRILICO", "3MM"])
+        const palabrasMatNombre = nombreNorm.split(/[\s\-–]+/).filter(p => p.length > 1);
+        const params = laserParams[matNombre] ||
+            laserParams[nombreNorm] ||
+            Object.entries(laserParams).find(([k]) => normalizar(k) === nombreNorm)?.[1] ||
+            Object.entries(laserParams).find(([k]) => {
+                const kNorm = normalizar(k);
+                return palabrasMatNombre.every(p => kNorm.includes(p));
+            })?.[1] || {};
+        const precioML = params.precio || 0;
+        const precioXcm = precioML / 100;
 
-        totalMaterial += costoMatTotal;
-        totalCorte += costoCorteTotal;
+        // Costo corte por fila (perímetro en cm × precio/cm × pasadas × cantidad)
+        const costoCorte = perimetro * precioXcm * pasadas * cant;
 
-        // ── Auditor: línea clara y verificable ────────────────────────────
-        const precioMLDisplay = Math.round(precioXcm * 100); // mostrar en $/ML para referencia
+        totalMaterial += costoMat;
+        totalCorte += costoCorte;
+
+        // Línea del auditor
+        const areaFmt = (areaM2).toFixed(4);
         const corteInfo = perimetro > 0
-            ? `Corte: ${perimetro}cm × ${fmt(precioXcm)}/cm (${fmt(precioMLDisplay)}/ML)${pasadas > 1 ? ` × ${pasadas} pas.` : ''} = ${fmt(costoCorteUnit)}/u`
-            : 'Sin corte (sin perímetro)';
-
+            ? `Corte: ${perimetro}cm × ${fmt(precioXcm)}/cm${pasadas > 1 ? ` × ${pasadas} pasadas` : ''} = ${fmt(costoCorte / cant)}`
+            : 'Sin corte';
         auditLineas.push({
             mat: matNombre,
             cant,
-            ancho,
-            alto,
-            precioM2,
-            costoMatTotal,
-            costoCorteTotal,
-            perimetro,
-            precioXcm,
-            precioML: precioMLDisplay,
-            pasadas,
-            texto: `${matNombre} | ${ancho}×${alto}cm | Área: ${areaM2.toFixed(4)}m² × ${fmt(precioM2)}/m² = ${fmt(costoMatUnit)}/u | ${corteInfo} | ×${cant} piezas = ${fmt(costoMatTotal + costoCorteTotal)}`
+            texto: `${matNombre} | Área: ${areaFmt}m² × ${fmt(precioM2)}/m² = ${fmt(costoMat / cant)} | ${corteInfo} | ×${cant} = ${fmt(costoMat + costoCorte)}`
         });
     });
 
@@ -271,19 +242,27 @@ window.calcularCostoCorte = function () {
             const cobertura = parseFloat(fila.querySelector('.input-acabado-cobertura')?.value) || 100;
             const cant = parseInt(fila.querySelector('.input-acabado-cant')?.value) || 1;
             if (!matNombre || area <= 0) return;
-            const matV = (window.materiales || []).find(m => normalizar(m.nombre) === normalizar(matNombre));
+            const isGremio = document.getElementById('modoGremioCorte')?.checked || false;
+            const matV = (window.materiales || []).find(m => m.nombre === matNombre);
             if (!matV) return;
-            // Mismo sistema de precio que rígidos: costo × multiplicador
-            const precioM2 = getPrecioMat(matV);
+            // Precio de venta SIEMPRE calculado desde costoARS / contenidoUnidad * multiplicador
+            // (misma lógica que recalcularCostoReal en main.js — nunca usar precioVenta directo
+            // porque puede estar en 0 si no se recalculó)
+            const cotizDolar = window.GECKO_SETTINGS?.cotizacionDolar || 1420;
+            const costoBase = matV.costoARS || (matV.costoUSD ? matV.costoUSD * cotizDolar : 0) || matV.costo || 0;
+            const contenido = parseFloat(matV.contenidoUnidad) || 1;
+            const costoUnitario = costoBase / contenido;
+            const multPublico = parseFloat(matV.multiplicador) || 2;
+            const multGremio = parseFloat(matV.multGremio) || parseFloat(matV.multiplicadorGremio) || 1.5;
+            const precioPublico = Math.round(costoUnitario * multPublico);
+            const precioGrem = matV.precioGremio > 0 ? matV.precioGremio : Math.round(costoUnitario * multGremio);
+            const precioM2 = isGremio ? precioGrem : precioPublico;
             const areaEfectiva = area * (cobertura / 100);
-            const costoFilaUnit = areaEfectiva * precioM2;
-            const costoFila = costoFilaUnit * cant;
+            const costoFila = areaEfectiva * precioM2 * cant;
             totalAcabados += costoFila;
-            auditAcabados.push({
-                mat: matNombre,
-                detalle: `${areaEfectiva.toFixed(4)}m² × ${fmt(precioM2)}/m²${cant > 1 ? ` × ${cant} u` : ''}`,
-                costoTotal: costoFila
-            });
+            auditAcabados.push(
+                `Acabado: ${matNombre} | ${areaEfectiva.toFixed(4)}m² × ${fmt(precioM2)}/m² × ${cant} = ${fmt(costoFila)}`
+            );
         });
     }
 
@@ -299,11 +278,32 @@ window.calcularCostoCorte = function () {
     if (document.getElementById('detServicio'))
         document.getElementById('detServicio').innerText = fmt(totalCorte);
     if (document.getElementById('detTerminaciones'))
-        document.getElementById('detTerminaciones').innerText = totalAcabados > 0 ? fmt(totalAcabados) : (extras > 0 ? fmt(extras) : '$0');
+        document.getElementById('detTerminaciones').innerText = totalAcabados > 0 ? fmt(totalAcabados) : (extras > 0 ? fmt(extras) : '$ 0');
     if (document.getElementById('subtotalEstimado'))
         document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
 
-    // ── Labels del panel derecho ──────────────────────────────────────────────
+    // Auditor por fila — piezas + acabados
+    const auditorContainer = document.getElementById('auditorLaserContainer');
+    if (auditorContainer) {
+        const todasLasLineas = [
+            ...auditLineas.map(l => ({ texto: l.texto, tipo: 'pieza' })),
+            ...auditAcabados.map(t => ({ texto: t, tipo: 'acabado' }))
+        ];
+        if (todasLasLineas.length > 0) {
+            auditorContainer.innerHTML = todasLasLineas.map(l => `
+                <div class="px-4 py-2.5 rounded-xl border ${l.tipo === 'acabado'
+                    ? 'bg-indigo-950/30 border-indigo-800/30'
+                    : 'bg-zinc-900/60 border-zinc-800/50'}">
+                    <p class="text-[10px] ${l.tipo === 'acabado' ? 'text-indigo-300' : 'text-zinc-400'} font-mono leading-relaxed">${l.texto}</p>
+                </div>
+            `).join('');
+        } else {
+            auditorContainer.innerHTML = '';
+        }
+    }
+
+    // Actualizar etiquetas del panel derecho (contenedorResumenGrafica)
+    // Buscar en el contenedor correcto para evitar colisión con el #detServicio del panel textil
     const resumenPanel = document.getElementById('contenedorResumenGrafica');
     if (resumenPanel) {
         const labelServFooter = resumenPanel.querySelector('#detServicio')?.previousElementSibling;
@@ -312,7 +312,7 @@ window.calcularCostoCorte = function () {
         if (labelExtraFooter) labelExtraFooter.textContent = totalAcabados > 0 ? 'Acabados / Vinilos' : 'Extras';
     }
 
-    // ── Guardar para carrito ──────────────────────────────────────────────────
+    // Guardar para carrito
     const nombre = document.getElementById('corteNombre')?.value?.trim() || 'Trabajo Láser/CNC';
     window.itemActualCotizado = {
         tipo: 'laser_cnc',
@@ -321,110 +321,22 @@ window.calcularCostoCorte = function () {
         otDetalle: auditLineas.map(l => l.texto).join(' | ')
     };
 
-    // ── Auditor + Botón: siempre al final del panel ───────────────────────────
-    // Se inyectan dinámicamente para garantizar que queden DESPUÉS de todos los toggles
-    const panelConf = document.getElementById('panelConfigurador');
-    if (panelConf) {
-        const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
-        const hayDatos = auditLineas.length > 0 || auditAcabados.length > 0;
-
-        // Crear o reusar el wrapper del auditor
-        let auditorWrap = document.getElementById('geckoAuditorLaser');
-        if (!auditorWrap) {
-            auditorWrap = document.createElement('div');
-            auditorWrap.id = 'geckoAuditorLaser';
-            auditorWrap.style.marginTop = '20px';
-            panelConf.appendChild(auditorWrap);
-        }
-
-        if (hayDatos) {
-            const lineaRow = (label, detalle, valor) => `
-                <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
-                    <div style="flex:1;min-width:0;">
-                        <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
-                        <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
-                        ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
-                    </div>
-                    <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmtVal(valor)}</span>
-                </div>`;
-
-            const seccion = (titulo) =>
-                `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;padding-top:2px;">${titulo}</p>`;
-
-            let html = '';
-
-            // ZONA 1 — MATERIALES
-            if (auditLineas.length > 0) {
-                html += seccion('Materiales');
-                auditLineas.forEach(l => {
-                    html += lineaRow(
-                        l.mat,
-                        `${l.ancho}×${l.alto}cm | ${((l.ancho / 100) * (l.alto / 100)).toFixed(4)}m² × ${fmtVal(l.precioM2)}/m²${l.cant > 1 ? ` × ${l.cant} u` : ''}`,
-                        l.costoMatTotal
-                    );
-                });
-            }
-
-            // ZONA 2 — SERVICIO DE CORTE
-            const lineasConCorte = auditLineas.filter(l => l.costoCorteTotal > 0);
-            if (lineasConCorte.length > 0) {
-                html += seccion('Servicio de corte');
-                lineasConCorte.forEach(l => {
-                    html += lineaRow(
-                        l.mat,
-                        `${l.perimetro}cm × ${fmtVal(l.precioXcm)}/cm (${fmtVal(l.precioML)}/ML)${l.pasadas > 1 ? ` × ${l.pasadas} pas.` : ''}${l.cant > 1 ? ` × ${l.cant} u` : ''}`,
-                        l.costoCorteTotal
-                    );
-                });
-            }
-
-            // ZONA 3 — ACABADOS / VINILOS
-            if (auditAcabados.length > 0) {
-                html += seccion('Acabados / Vinilos');
-                auditAcabados.forEach(a => {
-                    html += lineaRow(a.mat, a.detalle, a.costoTotal);
-                });
-            }
-
-            // ZONA 4 — EXTRAS
-            if (desperdicioPct > 0 || extras > 0) {
-                html += seccion('Extras');
-                if (desperdicioPct > 0) html += lineaRow(`Desperdicio ${desperdicioPct}%`, '', totalMaterial * (desperdicioPct / 100));
-                if (extras > 0) html += lineaRow('Adicionales', '', extras);
-            }
-
-            // TOTAL
-            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
-                <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
-                <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
-            </div>`;
-
-            auditorWrap.innerHTML = `
-                <div class="card-gecko" style="margin-top:12px;">
-                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
-                    ${html}
-                </div>`;
-        } else {
-            auditorWrap.innerHTML = `
-                <div class="card-gecko" style="margin-top:0;">
-                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
-                    <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
-                </div>`;
-        }
-
-        // Botón añadir — siempre después del auditor
-        let btnWrap = document.getElementById('btnAnadirLaser');
-        if (!btnWrap) {
-            btnWrap = document.createElement('div');
+    // Mostrar / ocultar botón añadir
+    const btnExistente = document.getElementById('btnAnadirLaser');
+    if (!btnExistente) {
+        const panelConf = document.getElementById('panelConfigurador');
+        if (panelConf) {
+            const btnWrap = document.createElement('div');
             btnWrap.id = 'btnAnadirLaser';
-            btnWrap.style.marginTop = '12px';
+            btnWrap.className = 'mt-4';
+            // Usar id="btnConfirmarItem" para que agregarItemAlCarritoUI() lo encuentre
+            btnWrap.innerHTML = `
+                <button id="btnConfirmarItem" onclick="window.agregarItemAlCarritoUI()"
+                    class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                    + Añadir a Cotización
+                </button>`;
             panelConf.appendChild(btnWrap);
         }
-        btnWrap.innerHTML = `
-            <button id="btnConfirmarItem" onclick="window.agregarItemAlCarritoUI()"
-                class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
-                style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
-                + Añadir a Cotización
-            </button>`;
     }
 };
