@@ -207,10 +207,6 @@ window.GeckoCorte = {
                     </div>
                 </div>
 
-                <!-- BOTÓN FINAL -->
-                <button onclick="window.GeckoCorte.añadirAlPresupuesto()" class="w-full py-4 bg-gecko text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[12px] hover:bg-orange-600 transition-all shadow-lg shadow-gecko/20 mt-6">
-                    + AÑADIR COTIZACIÓN
-                </button>
             </div>
         `;
     },
@@ -345,16 +341,22 @@ window.GeckoCorte = {
             textoOpciones: matName
         };
 
-        // ── Auditor de cálculo — creado dinámicamente igual que laser.js ──────────
+        // ── Auditor + botón — appended directo a panelConfigurador (fuera del animate-in div) ──
         const panelConfCorte = document.getElementById('panelConfigurador');
         let auditorWrap = document.getElementById('geckoAuditorCorte');
         if (!auditorWrap && panelConfCorte) {
             auditorWrap = document.createElement('div');
             auditorWrap.id = 'geckoAuditorCorte';
-            // Insertar antes del botón final
-            const btnFinal = panelConfCorte.querySelector('button[onclick*="añadirAlPresupuesto"]');
-            if (btnFinal) btnFinal.before(auditorWrap);
-            else panelConfCorte.appendChild(auditorWrap);
+            panelConfCorte.appendChild(auditorWrap);
+        }
+        // Botón siempre después del auditor
+        let btnCorteWrap = document.getElementById('btnCorteAnadir');
+        if (!btnCorteWrap && panelConfCorte) {
+            btnCorteWrap = document.createElement('div');
+            btnCorteWrap.id = 'btnCorteAnadir';
+            btnCorteWrap.style.marginTop = '12px';
+            btnCorteWrap.innerHTML = `<button onclick="window.GeckoCorte.añadirAlPresupuesto()" class="w-full py-4 bg-gecko text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[12px] hover:bg-orange-600 transition-all shadow-lg shadow-gecko/20">+ AÑADIR COTIZACIÓN</button>`;
+            panelConfCorte.appendChild(btnCorteWrap);
         }
         if (auditorWrap) {
             const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
