@@ -333,7 +333,7 @@ window.calcularCostoCorte = function () {
         if (!auditorWrap) {
             auditorWrap = document.createElement('div');
             auditorWrap.id = 'geckoAuditorLaser';
-            auditorWrap.style.marginTop = '-33px';
+            auditorWrap.style.marginTop = '20px';
             panelConf.appendChild(auditorWrap);
         }
 
@@ -359,7 +359,7 @@ window.calcularCostoCorte = function () {
                 auditLineas.forEach(l => {
                     html += lineaRow(
                         l.mat,
-                        `${l.ancho}×${l.alto}cm | ${((l.ancho/100)*(l.alto/100)).toFixed(4)}m² × ${fmtVal(l.precioM2)}/m²${l.cant > 1 ? ` × ${l.cant} u` : ''}`,
+                        `${l.ancho}×${l.alto}cm | ${((l.ancho / 100) * (l.alto / 100)).toFixed(4)}m² × ${fmtVal(l.precioM2)}/m²${l.cant > 1 ? ` × ${l.cant} u` : ''}`,
                         l.costoMatTotal
                     );
                 });
