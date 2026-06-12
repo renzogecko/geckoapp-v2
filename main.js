@@ -1418,8 +1418,8 @@ window.cambiarCategoriaCotizador = function (cat) {
             </div>
         `;
         window.calcularCostoBastidores();
-    } else if (cat === 'corporeos' || cat === 'polifan' || cat === '3d') {
-        const modoInicial = (cat === '3d') ? '3d' : (window._corpModo || 'polifan');
+    } else if (cat === 'corporeos' || cat === 'polifan') {
+        const modoInicial = window._corpModo || 'polifan';
         panel.innerHTML = `<div id="corporeosDinamico" class="animate-in fade-in slide-in-from-bottom-4 duration-500"></div>`;
         setTimeout(() => window.setCorpModo(modoInicial), 50);
     } else if (cat === 'grafica') {
