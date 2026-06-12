@@ -1496,7 +1496,7 @@ window.cambiarCategoriaCotizador = function (cat) {
             <select id="graficaMatEspec" onchange="window.calcularCostoGrafica()" class="gecko-select-pro"required>
                 <option value="">Seleccionar material...</option>
             </select>
-            <p id="auditorMaterialGrafica" class="text-[11px] text-zinc-400 font-medium italic mt-2.5 px-1"></p>
+            <p id="auditorMaterialGrafica" class="hidden"></p>
         </div>
 
     </div>
@@ -1517,7 +1517,7 @@ window.cambiarCategoriaCotizador = function (cat) {
                             <input type="number" id="valRefilado" placeholder="0" oninput="window.calcularCostoGrafica()" onwheel="this.blur()" class="w-16 bg-transparent border-b border-zinc-800 py-1 text-white text-[13px] focus:outline-none focus:border-gecko transition-all">
                             <span class="text-[10px] font-black text-zinc-400 tracking-tighter">ML</span>
                         </div>
-                        <p id="auditorRefilado" class="text-[11px] text-zinc-400 font-medium mt-2.5 italic"></p>
+                        <p id="auditorRefilado" class="hidden"></p>
                     </div>
                     <div class="col-span-3 text-right text-[12px] font-black text-gecko" id="priceRefilado">$0</div>
                 </div>
@@ -1532,7 +1532,7 @@ window.cambiarCategoriaCotizador = function (cat) {
                             <input type="number" id="valBolsillo" placeholder="0" oninput="window.calcularCostoGrafica()" onwheel="this.blur()" class="w-16 bg-transparent border-b border-zinc-800 py-1 text-white text-[13px] focus:outline-none focus:border-gecko transition-all">
                             <span class="text-[10px] font-black text-zinc-400 tracking-tighter">ML</span>
                         </div>
-                        <p id="auditorBolsillo" class="text-[11px] text-zinc-400 font-medium mt-2.5 italic"></p>
+                        <p id="auditorBolsillo" class="hidden"></p>
                     </div>
                     <div class="col-span-3 text-right text-[12px] font-black text-gecko" id="priceBolsillo">$0</div>
                 </div>
@@ -1547,7 +1547,7 @@ window.cambiarCategoriaCotizador = function (cat) {
                             <input type="number" id="valOjales" placeholder="0" oninput="window.calcularCostoGrafica()" onwheel="this.blur()" class="w-16 bg-transparent border-b border-zinc-800 py-1 text-white text-[13px] focus:outline-none focus:border-gecko transition-all">
                             <span class="text-[10px] font-black text-zinc-400 tracking-tighter">CANT</span>
                         </div>
-                        <p id="auditorOjales" class="text-[11px] text-zinc-400 font-medium mt-2.5 italic"></p>
+                        <p id="auditorOjales" class="hidden"></p>
                     </div>
                     <div class="col-span-3 text-right text-[12px] font-black text-gecko" id="priceOjales">$0</div>
                 </div>
@@ -1567,7 +1567,7 @@ window.cambiarCategoriaCotizador = function (cat) {
                                 </svg>
                             </button>
                         </div>
-                        <p id="auditorLaminado" class="text-[11px] text-zinc-400 font-medium mt-2.5 italic"></p>
+                        <p id="auditorLaminado" class="hidden"></p>
                     </div>
                     <div class="col-span-3 text-right text-[12px] font-black text-gecko" id="priceLaminado">$0</div>
                 </div>
@@ -1582,7 +1582,7 @@ window.cambiarCategoriaCotizador = function (cat) {
             <input type="number" id="valMontado" placeholder="0" class="w-16 bg-transparent border-b border-zinc-800 py-1 text-white text-[13px] focus:outline-none focus:border-gecko" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
             <span class="text-[10px] font-black text-zinc-400 tracking-tighter">MT2</span>
         </div>
-        <p id="auditorMontado" class="text-[11px] text-zinc-400 font-medium mt-2.5 italic"></p>
+        <p id="auditorMontado" class="hidden"></p>
     </div>
     <div class="col-span-3 text-right text-[12px] font-black text-gecko" id="priceMontado">$0</div>
 </div>
@@ -1619,7 +1619,7 @@ window.cambiarCategoriaCotizador = function (cat) {
             <select id="graficaImpresionPlacas" onchange="window.calcularCostoGrafica()" class="gecko-select-pro w-full mb-1" required>
                 <option value="">Seleccionar Placa...</option>
             </select>
-            <p id="auditorPlacaRigida" class="text-[11px] text-zinc-400 font-medium mt-2.5 italic mb-4 px-1"></p>
+            <p id="auditorPlacaRigida" class="hidden"></p>
 
             <!-- Títulos de Columnas -->
             <div class="grid grid-cols-4 gap-4 px-1 mb-1">

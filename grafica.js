@@ -302,6 +302,7 @@ window.GeckoGrafica = {
         const matId = document.getElementById('graficaMatEspec')?.value;
         const mat = window.getGeckoItem(matId);
         let costoBase = 0;
+        let precioM2 = 0;
         if (mat) {
             const isGremio = document.getElementById('modoGremio')?.checked;
 
@@ -331,7 +332,7 @@ window.GeckoGrafica = {
                 precioVenta = precioGremio;
             }
 
-            const precioM2 = precioVenta;
+            precioM2 = precioVenta;
             if (mt2Totales > 0) costoBase = mt2Totales * precioM2;
 
             // Actualizar Auditor de Material
@@ -652,10 +653,8 @@ window.GeckoGrafica = {
                 </div>`;
 
                 auditorWrap.innerHTML = `
-                    <div class="card-gecko" style="margin-top:12px;">
-                        <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
-                        ${html}
-                    </div>`;
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                    ${html}`;
             } else {
                 auditorWrap.innerHTML = '';
             }
