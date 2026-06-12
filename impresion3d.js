@@ -56,7 +56,6 @@ window.calcularCosto3D = function () {
         panelConf3D.appendChild(btn3DWrap);
     }
     if (auditorWrap) {
-        const hayDatos = costoMaterial > 0 || costoServicio > 0;
         const lineaRow = (label, detalle, valor) => `
             <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
                 <div style="flex:1;min-width:0;">
@@ -69,32 +68,31 @@ window.calcularCosto3D = function () {
         const seccion = titulo =>
             `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;">${titulo}</p>`;
 
-        if (hayDatos) {
-            let html = '';
-            html += seccion('Material');
-            html += lineaRow(nombreMat || 'Filamento',
-                `${gramos}gr × ${fmt(precioVentaGr)}/gr`,
-                costoMaterial);
-            html += seccion('Servicio de impresión');
-            html += lineaRow('Tiempo máquina',
-                `${horas}hs × ${fmt(costoHora3D)}/hs`,
-                costoServicio);
+        // Siempre mostrar ambas zonas — precio de referencia visible aunque los campos estén en 0
+        let html = '';
+        html += seccion('Material');
+        html += lineaRow(
+            nombreMat || 'Sin filamento cargado',
+            gramos > 0 ? `${gramos}gr × ${fmt(precioVentaGr)}/gr` : `${fmt(precioVentaGr)}/gr (precio de referencia)`,
+            costoMaterial
+        );
+        html += seccion('Servicio de impresión');
+        html += lineaRow(
+            'Tiempo máquina',
+            horas > 0 ? `${horas}hs × ${fmt(costoHora3D)}/hs` : `${fmt(costoHora3D)}/hs (precio de referencia)`,
+            costoServicio
+        );
+        if (totalFinal > 0) {
             html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
                 <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
                 <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmt(totalFinal)}</span>
             </div>`;
-            auditorWrap.innerHTML = `
-                <div class="card-gecko" style="margin-top:0;">
-                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
-                    ${html}
-                </div>`;
-        } else {
-            auditorWrap.innerHTML = `
-                <div class="card-gecko" style="margin-top:0;">
-                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
-                    <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
-                </div>`;
         }
+        auditorWrap.innerHTML = `
+            <div class="card-gecko" style="margin-top:0;">
+                <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                ${html}
+            </div>`;
     }
 }
 
