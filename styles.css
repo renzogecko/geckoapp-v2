@@ -2487,21 +2487,3 @@
 .gpm-item-desc::placeholder { color: #52525b; }
 /* Presupuesto Manual — focus qty/precio */
 .gpm-qty:focus, .gpm-price:focus { border-color: #F15A24 !important; }
-
-/* ── Panel derecho cotizador: fixed para mantenerse visible al hacer scroll ── */
-@media (min-width: 1024px) {
-    #columnaResumenWrapper {
-        position: fixed;
-        top: 80px;
-        right: 0;
-        width: calc((100vw - 288px) * 5 / 12 - 20px);
-        max-height: calc(100vh - 96px);
-        overflow-y: auto;
-        z-index: 10;
-        padding-right: 40px;
-    }
-    /* Compensar el espacio vacío que deja el panel fixed en el grid */
-    .col-span-12.lg\:col-span-7 {
-        margin-right: calc((100vw - 288px) * 5 / 12 + 10px);
-    }
-}
