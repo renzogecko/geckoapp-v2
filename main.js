@@ -1314,7 +1314,8 @@ window.cambiarCategoriaCotizador = function (cat) {
             const mats = (window.materiales || []).filter(m => m.categoria === '3d');
             selMat.innerHTML = mats.map(m => `<option value="${m.costo || m.costoARS || 0}">${m.nombre}</option>`).join('') || '<option value="0">Sin materiales 3D</option>';
         }
-        window.calcularCosto3D();
+        // Delay para evitar condición de carrera con doble inicialización (DOMContentLoaded duplicado)
+        setTimeout(() => window.calcularCosto3D(), 50);
     } else if (cat === 'bastidores') {
         panel.innerHTML = `
             <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
