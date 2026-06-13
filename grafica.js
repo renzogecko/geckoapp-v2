@@ -26,6 +26,7 @@ window.GeckoGrafica = {
     },
 
     init: function () {
+        console.log("🔍 DIAGNOSTICO: GeckoGrafica.init() ejecutado", new Date().toISOString());
         console.log("🦎 GeckoGrafica: Inicializando módulo v2.1...");
         this.state.laminadoTouched = false;
 
@@ -562,7 +563,9 @@ window.GeckoGrafica = {
         // ── Auditor de cálculo ────────────────────────────────────────────────────
         const panelConfGrafica = document.getElementById('panelConfigurador');
         let auditorWrap = document.getElementById('geckoAuditorGrafica');
+        console.log('🔍 DIAGNOSTICO: auditorWrap encontrado =', !!auditorWrap, 'cantidad en DOM =', document.querySelectorAll('#geckoAuditorGrafica').length);
         if (!auditorWrap && panelConfGrafica) {
+            console.log('🔍 DIAGNOSTICO: creando NUEVO auditorWrap via appendChild');
             auditorWrap = document.createElement('div');
             auditorWrap.id = 'geckoAuditorGrafica';
             auditorWrap.style.marginTop = '-33px';

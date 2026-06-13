@@ -1199,6 +1199,8 @@ window.abrirPestaña = function (cat) {
 }
 
 window.cambiarCategoriaCotizador = function (cat) {
+    console.log('🔍 DIAGNOSTICO: cambiarCategoriaCotizador llamado con cat =', cat, new Date().toISOString());
+    console.trace();
     actualizarListas();
     const panel = document.getElementById('panelConfigurador');
     if (!panel) return;
