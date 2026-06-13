@@ -112,8 +112,9 @@ window.calcularCostoTextil = function () {
             otDetalle: `Material: ${largo}cm | Estampas: ${bajadas} | Prendas: ${cantPrendas}`
         };
 
-        // 4. Auditor unificado
-        const panelConfTextil = document.getElementById('panelConfigurador');
+        // 4. Auditor unificado — solo si Textil es la categoría activa
+        const categoriaActiva = localStorage.getItem('gecko_activeCategory');
+        const panelConfTextil = (categoriaActiva === 'textil') ? document.getElementById('panelConfigurador') : null;
         let auditorWrap = document.getElementById('geckoAuditorTextil');
         if (!auditorWrap && panelConfTextil) {
             auditorWrap = document.createElement('div');
@@ -130,7 +131,7 @@ window.calcularCostoTextil = function () {
             btnTextilWrap.innerHTML = `<button id="btnConfirmarItem" onclick="window.añadirTextilAlPresupuesto()" class="w-full py-3 bg-[#f15a24] text-white rounded-2xl font-black uppercase text-[11px] tracking-[3px] shadow-lg">+ AÑADIR A COTIZACIÓN</button>`;
             panelConfTextil.appendChild(btnTextilWrap);
         }
-        if (auditorWrap) {
+        if (auditorWrap && categoriaActiva === 'textil') {
             const hayDatos = subtotalMaterial > 0 || subtotalCorte > 0 || subtotalEstampas > 0 || subtotalPrendas > 0;
             const lineaRow = (label, detalle, valor) => `
                 <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
