@@ -12,16 +12,10 @@ window.calcularCosto3D = function () {
 
     const selMat = document.getElementById('preciso3dMaterial');
     const nombreMat = selMat?.options[selMat.selectedIndex]?.text;
-    const matObj = materiales.find(m => m.nombre === nombreMat);
 
-    const getPV = (m) => {
-        if (!m) return 0;
-        const base = Math.round(m.costo || m.costoReal || m.costoARS || (m.costoUSD * cotiz) || 0);
-        const mult = m.multiplicador || multGlobal;
-        return Math.round(base * mult);
-    };
-
-    const precioVentaGr = matObj ? getPV(matObj) : 0;
+    // Usar getGeckoItem() como lookup canónico de precio (incluye precioVenta guardado)
+    const itemMat = (nombreMat && typeof window.getGeckoItem === 'function') ? window.getGeckoItem(nombreMat) : null;
+    const precioVentaGr = itemMat ? (parseFloat(itemMat.precioVenta) || 0) : 0;
 
     const costoMaterial = gramos * precioVentaGr;
     const costoServicio = horas * costoHora3D;
