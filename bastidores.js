@@ -107,9 +107,8 @@ window.calcularCostoBastidores = function () {
             const costoBase = matEstructura.costo || matEstructura.costoARS || 0;
             const mult = matEstructura.multiplicador || 3;
             const precioVentaML = matEstructura.precioVenta || Math.round(costoBase * mult);
-            // Una barra = 6 metros lineales
-            const unidad = (matEstructura.unidad || '').toLowerCase();
-            costoPorBarra = unidad === 'barra' ? precioVentaML : precioVentaML * 6;
+            // precioVentaML es siempre precio de venta por metro lineal; una barra = 6 metros lineales
+            costoPorBarra = precioVentaML * 6;
         }
     }
 
@@ -160,7 +159,6 @@ window.calcularCostoBastidores = function () {
 
     const costoEsqueletoNeto = barras6m * costoPorBarra;
     const costoNetoTotal = costoEsqueletoNeto + costoRevestimientoTotalNeto;
-    console.log('🔍 DEBUG BASTIDORES:', { metrosLinealesTotales, barras6m, costoPorBarra, costoEsqueletoNeto, costoRevestimientoTotalNeto, costoNetoTotal });
     const modo = globalEstimationMode || 'simple';
     let precioFinal = 0;
     if (modo === 'simple') {
@@ -217,14 +215,8 @@ window.calcularCostoBastidores = function () {
 
     const auditEsqueleto = [];
     if (materialCodigo && costoPorBarra > 0) {
-        const matAud = (window.materiales || []).find(m =>
-            String(m.id) === String(materialCodigo) || m.nombre === materialCodigo
-        ) || window.getGeckoItem(materialCodigo);
-        const costoBaseAud = matAud ? (matAud.costo || matAud.costoARS || 0) : 0;
-        const multAud = matAud ? (matAud.multiplicador || 3) : 3;
-        const pvML = Math.round(matAud ? (matAud.precioVenta || Math.round(costoBaseAud * multAud)) : 0);
-        const totalEsqueleto = Math.round(metrosLinealesTotales * pvML);
-        auditEsqueleto.push({ nombre: materialNombre, detalle: `${metrosLinealesTotales.toFixed(1)}ml × $${pvML.toLocaleString('es-AR')}/ml`, valor: totalEsqueleto });
+        const totalEsqueleto = barras6m * costoPorBarra;
+        auditEsqueleto.push({ nombre: materialNombre, detalle: `${metrosLinealesTotales.toFixed(1)}ml necesarios → ${barras6m} barra${barras6m > 1 ? 's' : ''} de 6m × $${costoPorBarra.toLocaleString('es-AR')}/barra`, valor: totalEsqueleto });
     }
 
     // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
