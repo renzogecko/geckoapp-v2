@@ -681,6 +681,13 @@ window._confirmarConversionOT = function (id) {
     if (!p) return;
     p.status = 'OT';
     p.estado_ot = 'En Proceso';
+    // Preservar fecha de entrega del presupuesto original si existe
+    if (!p.fecha_entrega && p.metadata) {
+        try {
+            const meta = typeof p.metadata === 'string' ? JSON.parse(p.metadata) : p.metadata;
+            if (meta.fechaEntrega) p.fecha_entrega = meta.fechaEntrega;
+        } catch(e) {}
+    }
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
     if (typeof window.mostrarExito === 'function') window.mostrarExito(`OT #${id} generada`, '¡Listo!');
     window.renderPresupuestos();
