@@ -958,7 +958,20 @@ window.calcularChapaAcrilico = function () {
     const perimetroMl = perimetro / 100;
 
     // Función de normalización solicitada
-    const normalizar = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalizar = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
+
+    // Helper: buscar servicio de corte l\u00e1ser SOLO en geckoServicios (evita matchear contra materiales)
+    const getServicioCorte = (nombreMaterial) => {
+        const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+        const qNorm = normalizar("CORTE LASER " + nombreMaterial);
+        // 1. Match exacto
+        let serv = servicios.find(s => normalizar(s.nombre) === qNorm);
+        // 2. Match parcial: el nombre del servicio normalizado est\u00e1 contenido en la query
+        if (!serv) serv = servicios.find(s => normalizar(s.nombre).startsWith("CORTELASER") && qNorm.includes(normalizar(s.nombre)));
+        // 3. Fallback gen\u00e9rico METAL
+        if (!serv) serv = servicios.find(s => normalizar(s.nombre) === normalizar("CORTE LASER - METAL"));
+        return serv || null;
+    };
 
     // 2. Lógica del Cuerpo (Fleje)
     let costoFleje = 0;
@@ -1017,7 +1030,7 @@ window.calcularChapaAcrilico = function () {
         const subtotalFrente = areaM2 * precioM2Frente;
         costoPlacas += subtotalFrente;
         auditPlacas.push({ nombre: `Frente: ${itFrente.nombre}`, detalle: `${areaM2.toFixed(4)}m² × $${precioM2Frente.toLocaleString('es-AR')}/m²`, valor: subtotalFrente });
-        const servCorteFrente = window.getGeckoItem("CORTE LASER - " + itFrente.nombre) || window.getGeckoItem("CORTE LASER - METAL");
+        const servCorteFrente = getServicioCorte(itFrente.nombre);
         if (servCorteFrente) {
             const precioCorteFrente = window.getCorpPrecio(servCorteFrente);
             const subtotalCorteFrente = perimetroMl * precioCorteFrente;
@@ -1039,7 +1052,7 @@ window.calcularChapaAcrilico = function () {
             const subtotalFondo = areaM2 * precioM2Fondo;
             costoPlacas += subtotalFondo;
             auditPlacas.push({ nombre: `Fondo: ${itFondo.nombre}`, detalle: `${areaM2.toFixed(4)}m² × $${precioM2Fondo.toLocaleString('es-AR')}/m²`, valor: subtotalFondo });
-            const servCorteFondo = window.getGeckoItem("CORTE LASER - " + itFondo.nombre) || window.getGeckoItem("CORTE LASER - METAL");
+            const servCorteFondo = getServicioCorte(itFondo.nombre);
             if (servCorteFondo) {
                 const precioCorteFondo = window.getCorpPrecio(servCorteFondo);
                 const subtotalCorteFondo = perimetroMl * precioCorteFondo;
