@@ -353,7 +353,6 @@ window.setCorpModo = function (modo) {
                 </div>
             </div>
 
-            <button onclick="window.addChapaAlPresupuesto()" class="w-full py-4 bg-gecko text-white font-black rounded-xl hover:bg-orange-700 uppercase tracking-widest text-[12px] transition-all shadow-lg shadow-orange-500/10">+ Añadir a cotización</button>
         `;
 
         window.initChapaAcrilicoSelects();
@@ -981,6 +980,36 @@ window.calcularChapaAcrilico = function () {
     if (!valFleje || valFleje === 'SELECCIONAR') {
         if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = "$0";
         window.itemActualPolifan = { tipo: 'corporeos', nombre: 'Chapa / Acrílico', costo: 0, otDetalle: 'Faltan datos: seleccionar material Fleje' };
+        const auditorViejoEarly = document.getElementById('auditorChapaCuerpo');
+        if (auditorViejoEarly) auditorViejoEarly.style.display = 'none';
+        const panelConfEarly = document.getElementById('panelConfigurador');
+        if (panelConfEarly) {
+            let auditorWrapEarly = document.getElementById('geckoAuditorChapa');
+            if (!auditorWrapEarly) {
+                auditorWrapEarly = document.createElement('div');
+                auditorWrapEarly.id = 'geckoAuditorChapa';
+                auditorWrapEarly.style.marginTop = '20px';
+                panelConfEarly.appendChild(auditorWrapEarly);
+            }
+            auditorWrapEarly.innerHTML = `
+                <div class="card-gecko" style="margin-top:0;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                    <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                </div>`;
+            let btnWrapEarly = document.getElementById('btnAnadirChapa');
+            if (!btnWrapEarly) {
+                btnWrapEarly = document.createElement('div');
+                btnWrapEarly.id = 'btnAnadirChapa';
+                btnWrapEarly.style.marginTop = '12px';
+                panelConfEarly.appendChild(btnWrapEarly);
+            }
+            btnWrapEarly.innerHTML = `
+                <button onclick="window.addChapaAlPresupuesto()"
+                    class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                    + Añadir a Cotización
+                </button>`;
+        }
         return;
     }
     const nomFleje = selFleje?.options[selFleje.selectedIndex]?.text || '';
@@ -1241,6 +1270,21 @@ window.calcularChapaAcrilico = function () {
                     <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
                 </div>`;
         }
+
+        // Botón añadir — siempre después del auditor
+        let btnWrapChapa = document.getElementById('btnAnadirChapa');
+        if (!btnWrapChapa) {
+            btnWrapChapa = document.createElement('div');
+            btnWrapChapa.id = 'btnAnadirChapa';
+            btnWrapChapa.style.marginTop = '12px';
+            panelConf.appendChild(btnWrapChapa);
+        }
+        btnWrapChapa.innerHTML = `
+            <button onclick="window.addChapaAlPresupuesto()"
+                class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                + Añadir a Cotización
+            </button>`;
     }
 
     if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
