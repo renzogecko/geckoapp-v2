@@ -174,7 +174,6 @@ window.setCorpModo = function (modo) {
                 </div>
             </div>
 
-            <button onclick="window.addPolifanAlPresupuesto()" class="w-full py-4 bg-gecko text-white font-black rounded-xl hover:bg-orange-700 uppercase tracking-widest text-[12px] transition-all shadow-lg shadow-orange-500/10">+ Añadir a cotización</button>
         `;
 
         // --- Lógica de Población Dinámica ---
@@ -228,6 +227,8 @@ window.setCorpModo = function (modo) {
             if (wrapper) wrapper.classList.toggle('hidden', !chk.checked);
             window.calcularCostoPolifan();
         };
+
+        setTimeout(() => window.calcularCostoPolifan(), 50);
 
     } else if (modo === 'chapa-acrilico') {
         container.innerHTML = `
@@ -765,6 +766,10 @@ window.calcularCostoPolifan = function () {
     const areaM2 = (ancho * alto) / 10000;
     const perimetroMl = perimetro / 100;
 
+    const auditCuerpo = [];
+    const auditCorte = [];
+    const auditFrente = [];
+
     // 1. Cuerpo
     const selEsp = document.getElementById('polifanEspesor');
     const espesorText = selEsp?.options[selEsp.selectedIndex]?.text || '';
@@ -779,17 +784,16 @@ window.calcularCostoPolifan = function () {
         // Si tiene dimensiones de placa en GDM: precio es por placa, calcular $/m² (redondeado)
         const precioM2 = Math.round(areaPlacaGDM ? (precioItem / areaPlacaGDM) : precioItem);
         costoCuerpo = areaM2 * precioM2;
-        const auditor = document.getElementById('auditorEspesorPolifan');
-        if (auditor) auditor.innerText = `$${Math.round(precioM2)}/m² | Mat: ${itemPolifan.nombre}${document.getElementById('modoGremio')?.checked ? ' (Gremio)' : ''}`;
+        auditCuerpo.push({ nombre: itemPolifan.nombre, detalle: `${areaM2.toFixed(4)}m² × $${precioM2.toLocaleString('es-AR')}/m²${document.getElementById('modoGremio')?.checked ? ' (Gremio)' : ''}`, valor: costoCuerpo });
     }
 
     // 2. Corte Polifan
     const itemCortePoli = window.getGeckoItem("CORTE DE POLIFÁN");
     let costoCortePoli = 0;
     if (itemCortePoli) {
-        costoCortePoli = perimetroMl * window.getCorpPrecio(itemCortePoli);
-        const auditor = document.getElementById('auditorCortePolifan');
-        if (auditor) auditor.innerText = `Servicio: CORTE DE POLIFÁN | Precio: $${Math.round(window.getCorpPrecio(itemCortePoli))}/ml`;
+        const precioCorte = Math.round(window.getCorpPrecio(itemCortePoli));
+        costoCortePoli = perimetroMl * precioCorte;
+        if (perimetroMl > 0) auditCorte.push({ nombre: itemCortePoli.nombre, detalle: `${perimetroMl.toFixed(2)}ml × $${precioCorte.toLocaleString('es-AR')}/ml`, valor: costoCortePoli });
     }
 
     // 3. Frente (Capas)
@@ -834,21 +838,8 @@ window.calcularCostoPolifan = function () {
         costoFrenteTotal = cBaseMat + cBaseCorte + cTermMat + cTermMontado;
         descFrente = ` | Frente: ${nomBase}${valTerm !== 'NINGUNA' ? ' + ' + nomTerm : ''}`;
 
-        const auditor = document.getElementById('auditorFrentePro');
-        if (auditor) {
-            auditor.innerHTML = `
-                <div class="text-[11px] text-zinc-400 space-y-1 mt-2">
-                   <p>• Placa Base + Corte: <span class="text-white">$${Math.round(cBaseMat + cBaseCorte).toLocaleString('es-AR')}</span></p>
-                   <p>• Vinilo Adicional: <span class="text-white">$${Math.round(cTermMat).toLocaleString('es-AR')}</span></p>
-                   <p>• Servicio de Montado: <span class="text-white">$${Math.round(cTermMontado).toLocaleString('es-AR')}</span></p>
-                   <hr class="border-zinc-700 my-1">
-                   <p class="font-bold text-gecko">TOTAL FRENTE: $${Math.round(costoFrenteTotal).toLocaleString('es-AR')}</p>
-                </div>
-            `;
-        }
-    } else {
-        const auditor = document.getElementById('auditorFrentePro');
-        if (auditor) auditor.innerText = "";
+        if (cBaseMat + cBaseCorte > 0) auditFrente.push({ nombre: `Frente: ${nomBase}`, detalle: `Placa base + corte`, valor: cBaseMat + cBaseCorte });
+        if (cTermMat + cTermMontado > 0) auditFrente.push({ nombre: `Vinilo: ${nomTerm}`, detalle: `Vinilo adicional + montado`, valor: cTermMat + cTermMontado });
     }
 
     // 4. Pintura
@@ -864,8 +855,97 @@ window.calcularCostoPolifan = function () {
     const fmt = (v) => '$' + Math.round(v).toLocaleString('es-AR');
 
     if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
-    if (document.getElementById('detMaterialBase')) document.getElementById('detMaterialBase').innerText = fmt((costoCuerpo + costoFrenteTotal) * cantidad);
-    if (document.getElementById('detServicio')) document.getElementById('detServicio').innerText = fmt((costoCortePoli + costoPintura) * cantidad);
+
+    // Ocultar auditores viejos inline (regla: ocultar, nunca eliminar)
+    ['auditorEspesorPolifan', 'auditorCortePolifan', 'auditorFrentePro'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    // ── Auditor de cálculo unificado (estilo Láser/CNC) ────────────────────────
+    const panelConfPolifan = document.getElementById('panelConfigurador');
+    if (panelConfPolifan) {
+        const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
+        const hayDatosPolifan = auditCuerpo.length > 0 || auditCorte.length > 0 || auditFrente.length > 0;
+
+        let auditorWrapPolifan = document.getElementById('geckoAuditorPolifan');
+        if (!auditorWrapPolifan) {
+            auditorWrapPolifan = document.createElement('div');
+            auditorWrapPolifan.id = 'geckoAuditorPolifan';
+            auditorWrapPolifan.style.marginTop = '20px';
+            panelConfPolifan.appendChild(auditorWrapPolifan);
+        }
+
+        if (hayDatosPolifan) {
+            const lineaRow = (label, detalle, valor) => `
+                <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                    <div style="flex:1;min-width:0;">
+                        <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                        <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                        ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                    </div>
+                    <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmtVal(valor)}</span>
+                </div>`;
+
+            const seccion = (titulo) =>
+                `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;padding-top:2px;">${titulo}</p>`;
+
+            let html = '';
+
+            if (auditCuerpo.length > 0) {
+                html += seccion('Cuerpo (Espesor)');
+                auditCuerpo.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+            }
+            if (auditCorte.length > 0) {
+                html += seccion('Servicio de corte');
+                auditCorte.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+            }
+            if (auditFrente.length > 0) {
+                html += seccion('Frente (Capas)');
+                auditFrente.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+            }
+            if (costoPintura > 0) {
+                html += seccion('Pintura');
+                html += lineaRow('Pintura', document.getElementById('pinturaColores')?.value || '', costoPintura);
+            }
+            if (cantidad > 1) {
+                html += seccion('Cantidad');
+                html += lineaRow(`Subtotal × ${cantidad} unidades`, '', totalUnitario * cantidad);
+            }
+
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+                <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+                <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
+            </div>`;
+
+            auditorWrapPolifan.innerHTML = `
+                <div class="card-gecko" style="margin-top:12px;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                    ${html}
+                </div>`;
+        } else {
+            auditorWrapPolifan.innerHTML = `
+                <div class="card-gecko" style="margin-top:0;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                    <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                </div>`;
+        }
+
+        // Botón añadir — siempre después del auditor
+        let btnWrapPolifan = document.getElementById('btnAnadirPolifan');
+        if (!btnWrapPolifan) {
+            btnWrapPolifan = document.createElement('div');
+            btnWrapPolifan.id = 'btnAnadirPolifan';
+            btnWrapPolifan.style.marginTop = '12px';
+            panelConfPolifan.appendChild(btnWrapPolifan);
+        }
+        btnWrapPolifan.innerHTML = `
+            <button onclick="window.addPolifanAlPresupuesto()"
+                class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                + Añadir a Cotización
+            </button>`;
+    }
 
     window.itemActualPolifan = {
         tipo: 'corporeos',
