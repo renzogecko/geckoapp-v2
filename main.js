@@ -2127,40 +2127,11 @@ window.renderizarPresupuesto = function () {
     }).join('');
 
     const subtotal = presupuesto.reduce((acc, it) => acc + Math.round(it.costo), 0);
-    const isGremioActive = document.getElementById('check-gremio')?.checked || false;
-    const gremioPorcentaje = parseFloat(document.getElementById('porcentaje-gremio')?.value) || 20;
 
-    if (mode === 'simple') {
-        seccionGremio.style.display = 'flex';
-        seccionGremio.className = "flex items-center justify-between my-8 px-3 py-1 bg-zinc-900/80 rounded-full border border-zinc-700/50 w-full max-w-[210px] ml-auto transition-all shadow-xl";
-
-        if (!document.getElementById('check-gremio')) {
-            seccionGremio.innerHTML = `
-            <div class="flex items-center gap-2 pl-1">
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="check-gremio" class="sr-only peer" ${isGremioActive ? 'checked' : ''} onchange="window.renderizarPresupuesto()">
-                    <div class="w-8 h-4 bg-zinc-800 rounded-full peer peer-checked:bg-gecko after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div>
-                </label>
-                <span class="text-[11px] font-black text-zinc-300 uppercase tracking-widest mt-0.5">Gremio</span>
-            </div>
-            <div id="wrap-porcentaje-gremio" class="flex items-center gap-0.5 pr-1" style="display: ${isGremioActive ? 'flex' : 'none'}">
-                <input type="number" id="porcentaje-gremio" value="${gremioPorcentaje}" onchange="window.renderizarPresupuesto()" class="w-8 bg-transparent border-none p-0 text-right font-black text-gecko text-[13px] outline-none">
-                <span class="text-[11px] font-black text-gecko mt-0.5">%</span>
-            </div>`;
-        } else {
-            document.getElementById('check-gremio').checked = isGremioActive;
-            document.getElementById('porcentaje-gremio').value = gremioPorcentaje;
-            document.getElementById('wrap-porcentaje-gremio').style.display = isGremioActive ? 'flex' : 'none';
-        }
-    } else {
-        seccionGremio.style.display = 'none';
-        seccionGremio.innerHTML = '';
-    }
+    seccionGremio.style.display = 'none';
+    seccionGremio.innerHTML = '';
 
     let totalFinal = subtotal;
-    if (mode === 'simple' && isGremioActive) {
-        totalFinal = Math.round(subtotal * (1 - (gremioPorcentaje / 100)));
-    }
 
     labelTotal.innerText = '$' + totalFinal.toLocaleString('es-AR');
     labelTotal.className = "text-5xl font-black text-gecko mb-8 block tracking-tighter animate-in fade-in zoom-in-95 duration-300";
