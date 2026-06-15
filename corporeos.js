@@ -760,7 +760,7 @@ window.calcularCorporeos = function () {
 window.calcularCostoPolifan = function () {
     const ancho = parseFloat(document.getElementById('polifanAncho')?.value) || 0;
     const alto = parseFloat(document.getElementById('polifanAlto')?.value) || 0;
-    const perimetro = parseFloat(document.getElementById('polifanPerimetro')?.value) || 1;
+    const perimetro = parseFloat(document.getElementById('polifanPerimetro')?.value) || 0;
     const cantidad = parseInt(document.getElementById('polifanCantidad')?.value) || 1;
 
     const areaM2 = (ancho * alto) / 10000;
@@ -838,8 +838,19 @@ window.calcularCostoPolifan = function () {
         costoFrenteTotal = cBaseMat + cBaseCorte + cTermMat + cTermMontado;
         descFrente = ` | Frente: ${nomBase}${valTerm !== 'NINGUNA' ? ' + ' + nomTerm : ''}`;
 
-        if (cBaseMat + cBaseCorte > 0) auditFrente.push({ nombre: `Frente: ${nomBase}`, detalle: `Placa base + corte`, valor: cBaseMat + cBaseCorte });
-        if (cTermMat + cTermMontado > 0) auditFrente.push({ nombre: `Vinilo: ${nomTerm}`, detalle: `Vinilo adicional + montado`, valor: cTermMat + cTermMontado });
+        if (cBaseMat > 0) auditFrente.push({ nombre: `Frente: ${nomBase}`, detalle: `${areaM2.toFixed(4)}m² × $${Math.round(window.getCorpPrecio(itBase)).toLocaleString('es-AR')}/m²`, valor: cBaseMat });
+        if (cBaseCorte > 0) {
+            const itCorteLaserAud = window.getGeckoItem("CORTE LASER - " + itBase.nombre);
+            auditFrente.push({ nombre: `Corte ${itCorteLaserAud ? itCorteLaserAud.nombre : nomBase}`, detalle: `${perimetroMl.toFixed(2)}ml × $${Math.round(window.getCorpPrecio(itCorteLaserAud)).toLocaleString('es-AR')}/ml`, valor: cBaseCorte });
+        }
+        if (cTermMat > 0) {
+            const itTermAud = window.getGeckoItem(nomTerm);
+            auditFrente.push({ nombre: `Vinilo: ${nomTerm}`, detalle: `${areaM2.toFixed(4)}m² × $${Math.round(window.getCorpPrecio(itTermAud)).toLocaleString('es-AR')}/m²`, valor: cTermMat });
+        }
+        if (cTermMontado > 0) {
+            const itMontadoAud = window.getGeckoItem("MONTADO");
+            auditFrente.push({ nombre: 'Servicio de Montado', detalle: `${areaM2.toFixed(4)}m² × $${Math.round(window.getCorpPrecio(itMontadoAud)).toLocaleString('es-AR')}/m²`, valor: cTermMontado });
+        }
     }
 
     // 4. Pintura
