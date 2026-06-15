@@ -417,7 +417,6 @@ window.setCorpModo = function (modo) {
                 </div>
             </div>
 
-            <button onclick="window.addLetras3DAlPresupuesto()" class="w-full py-4 bg-gecko text-white font-black rounded-xl hover:bg-orange-700 uppercase tracking-widest text-[12px] transition-all shadow-lg shadow-orange-500/10">+ Añadir a cotización</button>
         `;
 
         const selMat = document.getElementById('3dMaterial');
@@ -578,8 +577,8 @@ window.actualizarStockCuerpo = function () {
 window.calcularLetras3D = function () {
     const ancho = parseFloat(document.getElementById('3dAncho')?.value) || 0;
     const alto = parseFloat(document.getElementById('3dAlto')?.value) || 0;
-    const perimetro = parseFloat(document.getElementById('3dPerimetro')?.value) || 1;
-    const profundidad = parseFloat(document.getElementById('3dProfundidad')?.value) || 1;
+    const perimetro = parseFloat(document.getElementById('3dPerimetro')?.value) || 0;
+    const profundidad = parseFloat(document.getElementById('3dProfundidad')?.value) || 0;
 
     // Cálculo de volumen estimado
     const gramos = perimetro * profundidad * 0.15;
@@ -620,19 +619,79 @@ window.calcularLetras3D = function () {
     // Actualizar columna derecha
     if (document.getElementById('subtotalEstimado'))
         document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
-    if (document.getElementById('detMaterialBase'))
-        document.getElementById('detMaterialBase').innerText = fmt(costoMaterial);
-    if (document.getElementById('detServicio'))
-        document.getElementById('detServicio').innerText = fmt(costoServicio);
-    if (document.getElementById('detTerminaciones'))
-        document.getElementById('detTerminaciones').innerText = fmt(totalFinal);
 
-    // Auditor visual bajo el selector de material
-    const auditor = document.getElementById('auditor3D');
-    if (auditor) {
-        auditor.innerText = matObj
-            ? `GDM: ${nombreMat} | $${Math.round(precioPorGramo)}/gr | Hora máquina: ${fmt(costoHora3D)}/hs`
-            : 'Selecioná un material para calcular';
+    // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
+    const auditorViejo3D = document.getElementById('auditor3D');
+    if (auditorViejo3D) auditorViejo3D.style.display = 'none';
+
+    // ── Auditor de cálculo unificado (estilo Láser/CNC) ────────────────────────
+    const panelConf3D = document.getElementById('panelConfigurador');
+    if (panelConf3D) {
+        const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
+        const hayDatos3D = matObj && gramos > 0;
+
+        let auditorWrap3D = document.getElementById('geckoAuditor3DEstimado');
+        if (!auditorWrap3D) {
+            auditorWrap3D = document.createElement('div');
+            auditorWrap3D.id = 'geckoAuditor3DEstimado';
+            auditorWrap3D.style.marginTop = '20px';
+            panelConf3D.appendChild(auditorWrap3D);
+        }
+
+        if (hayDatos3D) {
+            const lineaRow = (label, detalle, valor) => `
+                <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                    <div style="flex:1;min-width:0;">
+                        <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                        <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                        ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                    </div>
+                    <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmtVal(valor)}</span>
+                </div>`;
+
+            const seccion = (titulo) =>
+                `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;padding-top:2px;">${titulo}</p>`;
+
+            let html = '';
+
+            html += seccion('Material (Filamento)');
+            html += lineaRow(nombreMat, `${Math.round(gramos)}gr × $${Math.round(precioPorGramo).toLocaleString('es-AR')}/gr`, costoMaterial);
+
+            html += seccion('Servicio de Impresión');
+            html += lineaRow('Hora máquina', `${horas.toFixed(1)}hs × $${Math.round(costoHora3D).toLocaleString('es-AR')}/hs`, costoServicio);
+
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+                <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+                <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
+            </div>`;
+
+            auditorWrap3D.innerHTML = `
+                <div class="card-gecko" style="margin-top:12px;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                    ${html}
+                </div>`;
+        } else {
+            auditorWrap3D.innerHTML = `
+                <div class="card-gecko" style="margin-top:0;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                    <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                </div>`;
+        }
+
+        // Botón añadir — siempre después del auditor
+        let btnWrap3D = document.getElementById('btnAnadir3DEstimado');
+        if (!btnWrap3D) {
+            btnWrap3D = document.createElement('div');
+            btnWrap3D.id = 'btnAnadir3DEstimado';
+            btnWrap3D.style.marginTop = '12px';
+            panelConf3D.appendChild(btnWrap3D);
+        }
+        btnWrap3D.innerHTML = `
+            <button onclick="window.addLetras3DAlPresupuesto()"
+                class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                + Añadir a Cotización
+            </button>`;
     }
 
     // Guardar para el carrito
