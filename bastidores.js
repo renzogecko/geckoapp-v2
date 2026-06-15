@@ -160,6 +160,7 @@ window.calcularCostoBastidores = function () {
 
     const costoEsqueletoNeto = barras6m * costoPorBarra;
     const costoNetoTotal = costoEsqueletoNeto + costoRevestimientoTotalNeto;
+    console.log('🔍 DEBUG BASTIDORES:', { metrosLinealesTotales, barras6m, costoPorBarra, costoEsqueletoNeto, costoRevestimientoTotalNeto, costoNetoTotal });
     const modo = globalEstimationMode || 'simple';
     let precioFinal = 0;
     if (modo === 'simple') {
