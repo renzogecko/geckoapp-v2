@@ -162,8 +162,10 @@ window.calcularCostoBastidores = function () {
     const costoNetoTotal = costoEsqueletoNeto + costoRevestimientoTotalNeto;
     const modo = globalEstimationMode || 'simple';
     let precioFinal = 0;
-    if (modo === 'simple') precioFinal = costoNetoTotal * 3;
-    else {
+    if (modo === 'simple') {
+        // costoEsqueletoNeto y costoRevestimientoTotalNeto ya son precios de venta (incluyen multiplicador)
+        precioFinal = costoNetoTotal;
+    } else {
         const horasEstimadas = 1 + (metrosLinealesTotales / 4);
         const costoManoObra = horasEstimadas * (GECKO_SETTINGS.valorHoraHombre || 3500);
         precioFinal = costoNetoTotal + costoManoObra;
