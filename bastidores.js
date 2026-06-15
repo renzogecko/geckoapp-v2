@@ -208,6 +208,69 @@ window.calcularCostoBastidores = function () {
     const subtotalEl2 = document.getElementById('subtotalEstimado');
     if (subtotalEl2) subtotalEl2.innerText = fmt(totalRedondeado);
 
+    // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
+    const auditorEsqueleto = document.getElementById('auditorBastidor');
+    if (auditorEsqueleto) auditorEsqueleto.style.display = 'none';
+
+    const auditEsqueleto = [];
+    if (materialCodigo && costoPorBarra > 0) {
+        const matAud = (window.materiales || []).find(m =>
+            String(m.id) === String(materialCodigo) || m.nombre === materialCodigo
+        ) || window.getGeckoItem(materialCodigo);
+        const costoBaseAud = matAud ? (matAud.costo || matAud.costoARS || 0) : 0;
+        const multAud = matAud ? (matAud.multiplicador || 3) : 3;
+        const pvML = Math.round(matAud ? (matAud.precioVenta || Math.round(costoBaseAud * multAud)) : 0);
+        const totalEsqueleto = Math.round(metrosLinealesTotales * pvML);
+        auditEsqueleto.push({ nombre: materialNombre, detalle: `${metrosLinealesTotales.toFixed(1)}ml × $${pvML.toLocaleString('es-AR')}/ml`, valor: totalEsqueleto });
+    }
+
+    // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
+    const auditorRevest = document.getElementById('auditorRevestimiento');
+    if (auditorRevest) auditorRevest.style.display = 'none';
+
+    const auditRevest = [];
+    if (llevaRevest && materialRevest) {
+            const esLonaR = materialRevest.toLowerCase().includes('lona') ||
+                            materialRevest.toLowerCase().includes('front') ||
+                            materialRevest.toLowerCase().includes('banner');
+            const matR2 = window.getGeckoItem(materialRevest);
+            const costoBaseR2 = matR2 ? (matR2.costo || matR2.costoARS || 0) : 0;
+            const multR2 = matR2 ? (matR2.multiplicador || 3) : 3;
+            const pvRevest = matR2 ? (matR2.precioVenta || Math.round(costoBaseR2 * multR2)) : 0;
+
+            if (esLonaR) {
+                let areaAud = 0, perimetroAud = 0;
+                document.querySelectorAll('.fila-bastidor').forEach(fila => {
+                    const a = parseFloat(fila.querySelector('.input-ancho')?.value) || 0;
+                    const h = parseFloat(fila.querySelector('.input-alto')?.value) || 0;
+                    const c = parseInt(fila.querySelector('.input-cantidad')?.value) || 1;
+                    if (a > 0 && h > 0) {
+                        areaAud += ((a + 20) * (h + 20) / 10000) * c;
+                        perimetroAud += (((a + 20) * 2 + (h + 20) * 2) / 100) * c;
+                    }
+                });
+                const servsTens2 = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+                const servTens2 = servsTens2.find(s => (s.nombre || '').toUpperCase().includes('TENSADO'));
+                const pTens2 = Math.round(servTens2 ? (servTens2.precio || servTens2.precioVenta || 4000) : 4000);
+                const pvRevestR = Math.round(pvRevest);
+                const totalLona = Math.round(areaAud * pvRevestR);
+                const totalTensado = Math.round(perimetroAud * pTens2);
+                auditRevest.push({ nombre: `Lona: ${materialRevest}`, detalle: `${areaAud.toFixed(2)}m² × $${pvRevestR.toLocaleString('es-AR')}/m² (con demasía)`, valor: totalLona });
+                auditRevest.push({ nombre: 'Servicio de Tensado', detalle: `${perimetroAud.toFixed(1)}ml × $${pTens2.toLocaleString('es-AR')}/ml`, valor: totalTensado });
+            } else {
+                let areaRigido = 0;
+                document.querySelectorAll('.fila-bastidor').forEach(fila => {
+                    const a = parseFloat(fila.querySelector('.input-ancho')?.value) || 0;
+                    const h = parseFloat(fila.querySelector('.input-alto')?.value) || 0;
+                    const c = parseInt(fila.querySelector('.input-cantidad')?.value) || 1;
+                    if (a > 0 && h > 0) areaRigido += (a * h / 10000) * c;
+                });
+                const pvRevestRig = Math.round(pvRevest);
+                const totalRigido = Math.round(areaRigido * pvRevestRig);
+                auditRevest.push({ nombre: `Revestimiento: ${materialRevest}`, detalle: `${areaRigido.toFixed(2)}m² × $${pvRevestRig.toLocaleString('es-AR')}/m²`, valor: totalRigido });
+            }
+    }
+
     // ── Auditor de cálculo unificado (estilo Láser/CNC) ────────────────────────
     const panelConf = document.getElementById('panelConfigurador');
     if (panelConf) {
@@ -274,69 +337,6 @@ window.calcularCostoBastidores = function () {
                 style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
                 + Añadir a Cotización
             </button>`;
-    }
-
-    // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
-    const auditorEsqueleto = document.getElementById('auditorBastidor');
-    if (auditorEsqueleto) auditorEsqueleto.style.display = 'none';
-
-    const auditEsqueleto = [];
-    if (materialCodigo && costoPorBarra > 0) {
-        const matAud = (window.materiales || []).find(m =>
-            String(m.id) === String(materialCodigo) || m.nombre === materialCodigo
-        ) || window.getGeckoItem(materialCodigo);
-        const costoBaseAud = matAud ? (matAud.costo || matAud.costoARS || 0) : 0;
-        const multAud = matAud ? (matAud.multiplicador || 3) : 3;
-        const pvML = Math.round(matAud ? (matAud.precioVenta || Math.round(costoBaseAud * multAud)) : 0);
-        const totalEsqueleto = Math.round(metrosLinealesTotales * pvML);
-        auditEsqueleto.push({ nombre: materialNombre, detalle: `${metrosLinealesTotales.toFixed(1)}ml × $${pvML.toLocaleString('es-AR')}/ml`, valor: totalEsqueleto });
-    }
-
-    // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
-    const auditorRevest = document.getElementById('auditorRevestimiento');
-    if (auditorRevest) auditorRevest.style.display = 'none';
-
-    const auditRevest = [];
-    if (llevaRevest && materialRevest) {
-            const esLonaR = materialRevest.toLowerCase().includes('lona') ||
-                            materialRevest.toLowerCase().includes('front') ||
-                            materialRevest.toLowerCase().includes('banner');
-            const matR2 = window.getGeckoItem(materialRevest);
-            const costoBaseR2 = matR2 ? (matR2.costo || matR2.costoARS || 0) : 0;
-            const multR2 = matR2 ? (matR2.multiplicador || 3) : 3;
-            const pvRevest = matR2 ? (matR2.precioVenta || Math.round(costoBaseR2 * multR2)) : 0;
-
-            if (esLonaR) {
-                let areaAud = 0, perimetroAud = 0;
-                document.querySelectorAll('.fila-bastidor').forEach(fila => {
-                    const a = parseFloat(fila.querySelector('.input-ancho')?.value) || 0;
-                    const h = parseFloat(fila.querySelector('.input-alto')?.value) || 0;
-                    const c = parseInt(fila.querySelector('.input-cantidad')?.value) || 1;
-                    if (a > 0 && h > 0) {
-                        areaAud += ((a + 20) * (h + 20) / 10000) * c;
-                        perimetroAud += (((a + 20) * 2 + (h + 20) * 2) / 100) * c;
-                    }
-                });
-                const servsTens2 = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
-                const servTens2 = servsTens2.find(s => (s.nombre || '').toUpperCase().includes('TENSADO'));
-                const pTens2 = Math.round(servTens2 ? (servTens2.precio || servTens2.precioVenta || 4000) : 4000);
-                const pvRevestR = Math.round(pvRevest);
-                const totalLona = Math.round(areaAud * pvRevestR);
-                const totalTensado = Math.round(perimetroAud * pTens2);
-                auditRevest.push({ nombre: `Lona: ${materialRevest}`, detalle: `${areaAud.toFixed(2)}m² × $${pvRevestR.toLocaleString('es-AR')}/m² (con demasía)`, valor: totalLona });
-                auditRevest.push({ nombre: 'Servicio de Tensado', detalle: `${perimetroAud.toFixed(1)}ml × $${pTens2.toLocaleString('es-AR')}/ml`, valor: totalTensado });
-            } else {
-                let areaRigido = 0;
-                document.querySelectorAll('.fila-bastidor').forEach(fila => {
-                    const a = parseFloat(fila.querySelector('.input-ancho')?.value) || 0;
-                    const h = parseFloat(fila.querySelector('.input-alto')?.value) || 0;
-                    const c = parseInt(fila.querySelector('.input-cantidad')?.value) || 1;
-                    if (a > 0 && h > 0) areaRigido += (a * h / 10000) * c;
-                });
-                const pvRevestRig = Math.round(pvRevest);
-                const totalRigido = Math.round(areaRigido * pvRevestRig);
-                auditRevest.push({ nombre: `Revestimiento: ${materialRevest}`, detalle: `${areaRigido.toFixed(2)}m² × $${pvRevestRig.toLocaleString('es-AR')}/m²`, valor: totalRigido });
-            }
     }
 
     // Plano de FILA ACTIVA o ÚLTIMA
