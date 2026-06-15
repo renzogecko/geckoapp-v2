@@ -35,6 +35,13 @@ window.GeckoCorte = {
         this.render();
         this.poblarMateriales();
         this.poblarPlacas();
+        // Asegurar que el toggle de montado arranque siempre desactivado
+        const switchMontado = document.getElementById('switch-montado-corte');
+        if (switchMontado) {
+            switchMontado.checked = false;
+            const detMontado = document.getElementById('detallesMontadoCorte');
+            if (detMontado) detMontado.classList.add('hidden');
+        }
         // Inicializar auditor y botón aunque no haya datos cargados
         setTimeout(() => this.calcular(), 50);
     },
