@@ -46,7 +46,42 @@ window.calcularCostoBastidores = function () {
         }
     });
 
-    if (metrosLinealesTotales === 0) return;
+    if (metrosLinealesTotales === 0) {
+        const subtotalElEmpty = document.getElementById('subtotalEstimado');
+        if (subtotalElEmpty) subtotalElEmpty.innerText = '$0';
+        window.itemActualCotizado = { tipo: 'bastidores', textoOpciones: 'Estructura (sin datos)', costo: 0, otDetalle: 'Faltan datos: cargar medidas' };
+
+        const panelConfEmpty = document.getElementById('panelConfigurador');
+        if (panelConfEmpty) {
+            let auditorWrapEmpty = document.getElementById('geckoAuditorBastidores');
+            if (!auditorWrapEmpty) {
+                auditorWrapEmpty = document.createElement('div');
+                auditorWrapEmpty.id = 'geckoAuditorBastidores';
+                auditorWrapEmpty.style.marginTop = '20px';
+                panelConfEmpty.appendChild(auditorWrapEmpty);
+            }
+            auditorWrapEmpty.innerHTML = `
+                <div class="card-gecko" style="margin-top:0;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                    <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                </div>`;
+
+            let btnWrapEmpty = document.getElementById('btnAnadirBastidores');
+            if (!btnWrapEmpty) {
+                btnWrapEmpty = document.createElement('div');
+                btnWrapEmpty.id = 'btnAnadirBastidores';
+                btnWrapEmpty.style.marginTop = '12px';
+                panelConfEmpty.appendChild(btnWrapEmpty);
+            }
+            btnWrapEmpty.innerHTML = `
+                <button id="btnConfirmarItem" onclick="window.agregarItemAlCarritoUI()"
+                    class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                    + Añadir a Cotización
+                </button>`;
+        }
+        return;
+    }
 
     const barras6m = Math.ceil(metrosLinealesTotales / 6);
     const cotiz = GECKO_SETTINGS.cotizacionDolar || 1420;
@@ -169,48 +204,100 @@ window.calcularCostoBastidores = function () {
         modoCalculo: modo
     };
 
-    // FIX 2: Actualizar columna derecha de desglose de costos
     const fmt = v => '$' + Math.round(v).toLocaleString('es-AR');
-    const detMat = document.getElementById('detMaterialBase');
-    if (detMat) detMat.innerText = fmt(costoEsqueletoNeto);
-    const detServ = document.getElementById('detServicio');
-    if (detServ) detServ.innerText = fmt(costoRevestimientoTotalNeto);
-    const detExtra = document.getElementById('detTerminaciones');
-    if (detExtra) detExtra.innerText = fmt(totalRedondeado);
     const subtotalEl2 = document.getElementById('subtotalEstimado');
     if (subtotalEl2) subtotalEl2.innerText = fmt(totalRedondeado);
 
-    // FIX 3A: Auditor Tarjeta 03 — Esqueleto
-    const auditorEsqueleto = document.getElementById('auditorBastidor');
-    if (auditorEsqueleto) {
-        if (!materialCodigo || costoPorBarra === 0) {
-            auditorEsqueleto.innerText = materialCodigo
-                ? '⚠️ Material no encontrado en inventario'
-                : 'Selecioná un material para ver el detalle';
-            auditorEsqueleto.style.color = materialCodigo ? '#ef4444' : '#71717a';
-        } else {
-            const matAud = (window.materiales || []).find(m =>
-                String(m.id) === String(materialCodigo) || m.nombre === materialCodigo
-            ) || window.getGeckoItem(materialCodigo);
-            const costoBaseAud = matAud ? (matAud.costo || matAud.costoARS || 0) : 0;
-            const multAud = matAud ? (matAud.multiplicador || 3) : 3;
-            const pvML = matAud ? (matAud.precioVenta || Math.round(costoBaseAud * multAud)) : 0;
-            const totalEsqueleto = Math.round(metrosLinealesTotales * pvML);
-            auditorEsqueleto.innerHTML =
-                `• MATERIAL: ${materialNombre} | ` +
-                `Precio de venta: $${pvML.toLocaleString('es-AR')}/ml | ` +
-                `ML necesarios: ${metrosLinealesTotales.toFixed(1)} | ` +
-                `Total: $${totalEsqueleto.toLocaleString('es-AR')}`;
-            auditorEsqueleto.style.color = '#a1a1aa';
+    // ── Auditor de cálculo unificado (estilo Láser/CNC) ────────────────────────
+    const panelConf = document.getElementById('panelConfigurador');
+    if (panelConf) {
+        const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
+
+        let auditorWrap = document.getElementById('geckoAuditorBastidores');
+        if (!auditorWrap) {
+            auditorWrap = document.createElement('div');
+            auditorWrap.id = 'geckoAuditorBastidores';
+            auditorWrap.style.marginTop = '20px';
+            panelConf.appendChild(auditorWrap);
         }
+
+        const lineaRow = (label, detalle, valor) => `
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                <div style="flex:1;min-width:0;">
+                    <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                    <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                    ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                </div>
+                <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmtVal(valor)}</span>
+            </div>`;
+
+        const seccion = (titulo) =>
+            `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;padding-top:2px;">${titulo}</p>`;
+
+        let html = '';
+
+        if (auditEsqueleto.length > 0) {
+            html += seccion('Esqueleto (Estructura)');
+            auditEsqueleto.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+        } else {
+            html += seccion('Esqueleto (Estructura)');
+            html += `<p style="font-size:11px;color:#52525b;padding:4px 0;">Seleccioná un material para ver el detalle</p>`;
+        }
+
+        if (auditRevest.length > 0) {
+            html += seccion('Revestimiento');
+            auditRevest.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+        }
+
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+            <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+            <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalRedondeado)}</span>
+        </div>`;
+
+        auditorWrap.innerHTML = `
+            <div class="card-gecko" style="margin-top:12px;">
+                <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                ${html}
+            </div>`;
+
+        // Botón añadir — siempre después del auditor
+        let btnWrap = document.getElementById('btnAnadirBastidores');
+        if (!btnWrap) {
+            btnWrap = document.createElement('div');
+            btnWrap.id = 'btnAnadirBastidores';
+            btnWrap.style.marginTop = '12px';
+            panelConf.appendChild(btnWrap);
+        }
+        btnWrap.innerHTML = `
+            <button id="btnConfirmarItem" onclick="window.agregarItemAlCarritoUI()"
+                class="w-full py-3 rounded-2xl text-white font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]"
+                style="background:#f15a24;box-shadow:0 4px 16px rgba(241,90,36,0.3);">
+                + Añadir a Cotización
+            </button>`;
     }
 
-    // FIX 3B: Auditor Tarjeta 04 — Revestimiento
+    // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
+    const auditorEsqueleto = document.getElementById('auditorBastidor');
+    if (auditorEsqueleto) auditorEsqueleto.style.display = 'none';
+
+    const auditEsqueleto = [];
+    if (materialCodigo && costoPorBarra > 0) {
+        const matAud = (window.materiales || []).find(m =>
+            String(m.id) === String(materialCodigo) || m.nombre === materialCodigo
+        ) || window.getGeckoItem(materialCodigo);
+        const costoBaseAud = matAud ? (matAud.costo || matAud.costoARS || 0) : 0;
+        const multAud = matAud ? (matAud.multiplicador || 3) : 3;
+        const pvML = Math.round(matAud ? (matAud.precioVenta || Math.round(costoBaseAud * multAud)) : 0);
+        const totalEsqueleto = Math.round(metrosLinealesTotales * pvML);
+        auditEsqueleto.push({ nombre: materialNombre, detalle: `${metrosLinealesTotales.toFixed(1)}ml × $${pvML.toLocaleString('es-AR')}/ml`, valor: totalEsqueleto });
+    }
+
+    // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
     const auditorRevest = document.getElementById('auditorRevestimiento');
-    if (auditorRevest) {
-        if (!llevaRevest || !materialRevest) {
-            auditorRevest.innerHTML = '';
-        } else {
+    if (auditorRevest) auditorRevest.style.display = 'none';
+
+    const auditRevest = [];
+    if (llevaRevest && materialRevest) {
             const esLonaR = materialRevest.toLowerCase().includes('lona') ||
                             materialRevest.toLowerCase().includes('front') ||
                             materialRevest.toLowerCase().includes('banner');
@@ -232,13 +319,12 @@ window.calcularCostoBastidores = function () {
                 });
                 const servsTens2 = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
                 const servTens2 = servsTens2.find(s => (s.nombre || '').toUpperCase().includes('TENSADO'));
-                const pTens2 = servTens2 ? (servTens2.precio || servTens2.precioVenta || 4000) : 4000;
-                const totalLona = Math.round(areaAud * pvRevest);
+                const pTens2 = Math.round(servTens2 ? (servTens2.precio || servTens2.precioVenta || 4000) : 4000);
+                const pvRevestR = Math.round(pvRevest);
+                const totalLona = Math.round(areaAud * pvRevestR);
                 const totalTensado = Math.round(perimetroAud * pTens2);
-                auditorRevest.innerHTML =
-                    `<span class="block">• LONA: ${materialRevest} | Precio de venta: $${pvRevest.toLocaleString('es-AR')}/m² | Área con demasía: ${areaAud.toFixed(2)} m² | Total: $${totalLona.toLocaleString('es-AR')}</span>` +
-                    `<span class="block mt-1">• TENSADO: $${pTens2.toLocaleString('es-AR')}/ml | Perímetro: ${perimetroAud.toFixed(1)}ml | Total: $${totalTensado.toLocaleString('es-AR')}</span>`;
-                auditorRevest.style.color = '#a1a1aa';
+                auditRevest.push({ nombre: `Lona: ${materialRevest}`, detalle: `${areaAud.toFixed(2)}m² × $${pvRevestR.toLocaleString('es-AR')}/m² (con demasía)`, valor: totalLona });
+                auditRevest.push({ nombre: 'Servicio de Tensado', detalle: `${perimetroAud.toFixed(1)}ml × $${pTens2.toLocaleString('es-AR')}/ml`, valor: totalTensado });
             } else {
                 let areaRigido = 0;
                 document.querySelectorAll('.fila-bastidor').forEach(fila => {
@@ -247,15 +333,10 @@ window.calcularCostoBastidores = function () {
                     const c = parseInt(fila.querySelector('.input-cantidad')?.value) || 1;
                     if (a > 0 && h > 0) areaRigido += (a * h / 10000) * c;
                 });
-                const totalRigido = Math.round(areaRigido * pvRevest);
-                auditorRevest.innerHTML =
-                    `• REVESTIMIENTO: ${materialRevest} | ` +
-                    `Precio de venta: $${pvRevest.toLocaleString('es-AR')}/m² | ` +
-                    `Área: ${areaRigido.toFixed(2)} m² | ` +
-                    `Total: $${totalRigido.toLocaleString('es-AR')}`;
-                auditorRevest.style.color = '#a1a1aa';
+                const pvRevestRig = Math.round(pvRevest);
+                const totalRigido = Math.round(areaRigido * pvRevestRig);
+                auditRevest.push({ nombre: `Revestimiento: ${materialRevest}`, detalle: `${areaRigido.toFixed(2)}m² × $${pvRevestRig.toLocaleString('es-AR')}/m²`, valor: totalRigido });
             }
-        }
     }
 
     // Plano de FILA ACTIVA o ÚLTIMA
