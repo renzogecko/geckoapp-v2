@@ -356,6 +356,7 @@ window.setCorpModo = function (modo) {
         `;
 
         window.initChapaAcrilicoSelects();
+        setTimeout(() => window.calcularChapaAcrilico(), 50);
 
         window.toggleChapaVinilo = function () {
             const chk = document.getElementById('chkChapaVinilo');
@@ -980,7 +981,7 @@ window.calcularChapaAcrilico = function () {
     if (!valFleje || valFleje === 'SELECCIONAR') {
         if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = "$0";
         window.itemActualPolifan = { tipo: 'corporeos', nombre: 'Chapa / Acrílico', costo: 0, otDetalle: 'Faltan datos: seleccionar material Fleje' };
-        const auditorViejoEarly = document.getElementById('auditorChapaCuerpo');
+        const auditorViejoEarly = document.getElementById('auditorChapa');
         if (auditorViejoEarly) auditorViejoEarly.style.display = 'none';
         const panelConfEarly = document.getElementById('panelConfigurador');
         if (panelConfEarly) {
@@ -1199,7 +1200,7 @@ window.calcularChapaAcrilico = function () {
     const fmt = (v) => '$' + Math.round(v).toLocaleString('es-AR');
 
     // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
-    const auditorViejo = document.getElementById('auditorChapaCuerpo');
+    const auditorViejo = document.getElementById('auditorChapa');
     if (auditorViejo) auditorViejo.style.display = 'none';
 
     // ── Auditor de cálculo unificado (estilo Láser/CNC) ────────────────────────
