@@ -776,8 +776,8 @@ window.calcularCostoPolifan = function () {
         const altoPlaca = (itemPolifan.alto || itemPolifan.altoPlaca || 0) / 100;   // cm -> m
         const areaPlacaGDM = anchoPlaca > 0 && altoPlaca > 0 ? anchoPlaca * altoPlaca : null;
         const precioItem = window.getCorpPrecio(itemPolifan);
-        // Si tiene dimensiones de placa en GDM: precio es por placa, calcular $/m²
-        const precioM2 = areaPlacaGDM ? (precioItem / areaPlacaGDM) : precioItem;
+        // Si tiene dimensiones de placa en GDM: precio es por placa, calcular $/m² (redondeado)
+        const precioM2 = Math.round(areaPlacaGDM ? (precioItem / areaPlacaGDM) : precioItem);
         costoCuerpo = areaM2 * precioM2;
         const auditor = document.getElementById('auditorEspesorPolifan');
         if (auditor) auditor.innerText = `$${Math.round(precioM2)}/m² | Mat: ${itemPolifan.nombre}${document.getElementById('modoGremio')?.checked ? ' (Gremio)' : ''}`;
