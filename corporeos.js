@@ -962,6 +962,7 @@ window.calcularChapaAcrilico = function () {
 
     // 2. Lógica del Cuerpo (Fleje)
     let costoFleje = 0;
+    const auditEstructura = [];
     const selFleje = document.getElementById('chapaFlejeMat');
     const valFleje = selFleje?.value;
     if (!valFleje || valFleje === 'SELECCIONAR') {
@@ -973,7 +974,9 @@ window.calcularChapaAcrilico = function () {
     const itemFleje = window.getGeckoItem(nomFleje);
 
     if (itemFleje) {
-        costoFleje = (perimetro * profundidad / 10000) * itemFleje.precioVenta;
+        const areaFlejeM2 = (perimetro * profundidad / 10000);
+        costoFleje = areaFlejeM2 * itemFleje.precioVenta;
+        auditEstructura.push({ nombre: nomFleje, detalle: `${areaFlejeM2.toFixed(4)}m² × $${Math.round(itemFleje.precioVenta).toLocaleString('es-AR')}/m²`, valor: costoFleje });
     }
 
     // Corte Inteligente Fleje
@@ -991,12 +994,14 @@ window.calcularChapaAcrilico = function () {
         const servCorte = window.getGeckoItem(queryCorte);
         if (servCorte) {
             costoCorteFleje = perimetroMl * servCorte.precioVenta;
+            auditEstructura.push({ nombre: `Corte ${servCorte.nombre}`, detalle: `${perimetroMl.toFixed(2)}ml × $${Math.round(servCorte.precioVenta).toLocaleString('es-AR')}/ml`, valor: costoCorteFleje });
         }
     }
 
     // 3. Frente y Fondo (Placas)
     let costoPlacas = 0;
     let costoCortePlacas = 0;
+    const auditPlacas = [];
 
     // Frente
     const selFrente = document.getElementById('chapaFrenteMat');
@@ -1008,10 +1013,17 @@ window.calcularChapaAcrilico = function () {
         const altoPlacaM = ((itFrente.alto || itFrente.altoPlaca || 0)) / 100;
         const areaPlacaGDM = anchoPlacaM > 0 && altoPlacaM > 0 ? anchoPlacaM * altoPlacaM : null;
         const precioPlaca = window.getCorpPrecio(itFrente);
-        const precioM2Frente = areaPlacaGDM ? (precioPlaca / areaPlacaGDM) : precioPlaca;
-        costoPlacas += areaM2 * precioM2Frente;
+        const precioM2Frente = Math.round(areaPlacaGDM ? (precioPlaca / areaPlacaGDM) : precioPlaca);
+        const subtotalFrente = areaM2 * precioM2Frente;
+        costoPlacas += subtotalFrente;
+        auditPlacas.push({ nombre: `Frente: ${itFrente.nombre}`, detalle: `${areaM2.toFixed(4)}m² × $${precioM2Frente.toLocaleString('es-AR')}/m²`, valor: subtotalFrente });
         const servCorteFrente = window.getGeckoItem("CORTE LASER - " + itFrente.nombre) || window.getGeckoItem("CORTE LASER - METAL");
-        if (servCorteFrente) costoCortePlacas += perimetroMl * window.getCorpPrecio(servCorteFrente);
+        if (servCorteFrente) {
+            const precioCorteFrente = window.getCorpPrecio(servCorteFrente);
+            const subtotalCorteFrente = perimetroMl * precioCorteFrente;
+            costoCortePlacas += subtotalCorteFrente;
+            auditPlacas.push({ nombre: `Corte ${servCorteFrente.nombre}`, detalle: `${perimetroMl.toFixed(2)}ml × $${Math.round(precioCorteFrente).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFrente });
+        }
     }
 
     const selFondo = document.getElementById('chapaFondoMat');
@@ -1023,23 +1035,41 @@ window.calcularChapaAcrilico = function () {
             const altoPlacaM = ((itFondo.alto || itFondo.altoPlaca || 0)) / 100;
             const areaPlacaGDM = anchoPlacaM > 0 && altoPlacaM > 0 ? anchoPlacaM * altoPlacaM : null;
             const precioPlaca = window.getCorpPrecio(itFondo);
-            const precioM2Fondo = areaPlacaGDM ? (precioPlaca / areaPlacaGDM) : precioPlaca;
-            costoPlacas += areaM2 * precioM2Fondo;
+            const precioM2Fondo = Math.round(areaPlacaGDM ? (precioPlaca / areaPlacaGDM) : precioPlaca);
+            const subtotalFondo = areaM2 * precioM2Fondo;
+            costoPlacas += subtotalFondo;
+            auditPlacas.push({ nombre: `Fondo: ${itFondo.nombre}`, detalle: `${areaM2.toFixed(4)}m² × $${precioM2Fondo.toLocaleString('es-AR')}/m²`, valor: subtotalFondo });
             const servCorteFondo = window.getGeckoItem("CORTE LASER - " + itFondo.nombre) || window.getGeckoItem("CORTE LASER - METAL");
-            if (servCorteFondo) costoCortePlacas += perimetroMl * window.getCorpPrecio(servCorteFondo);
+            if (servCorteFondo) {
+                const precioCorteFondo = window.getCorpPrecio(servCorteFondo);
+                const subtotalCorteFondo = perimetroMl * precioCorteFondo;
+                costoCortePlacas += subtotalCorteFondo;
+                auditPlacas.push({ nombre: `Corte ${servCorteFondo.nombre}`, detalle: `${perimetroMl.toFixed(2)}ml × $${Math.round(precioCorteFondo).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFondo });
+            }
         }
     }
 
     // 4. Vinilo / Montado
     let costoViniloTotal = 0;
+    const auditVinilo = [];
     if (document.getElementById('chkChapaVinilo')?.checked) {
         const selVinilo = document.getElementById('chapaViniloMat');
         const valVinilo = selVinilo?.value;
         const itVinilo = (valVinilo && valVinilo !== 'SELECCIONAR') ? window.getGeckoItem(selVinilo.options[selVinilo.selectedIndex].text) : null;
         const itMontado = window.getGeckoItem("MONTADO");
 
-        if (itVinilo) costoViniloTotal += areaM2 * window.getCorpPrecio(itVinilo);
-        if (itMontado) costoViniloTotal += areaM2 * window.getCorpPrecio(itMontado);
+        if (itVinilo) {
+            const pVinilo = Math.round(window.getCorpPrecio(itVinilo));
+            const subtotalVinilo = areaM2 * pVinilo;
+            costoViniloTotal += subtotalVinilo;
+            auditVinilo.push({ nombre: itVinilo.nombre, detalle: `${areaM2.toFixed(4)}m² × $${pVinilo.toLocaleString('es-AR')}/m²`, valor: subtotalVinilo });
+        }
+        if (itMontado) {
+            const pMontado = Math.round(window.getCorpPrecio(itMontado));
+            const subtotalMontado = areaM2 * pMontado;
+            costoViniloTotal += subtotalMontado;
+            auditVinilo.push({ nombre: 'Servicio de Montado', detalle: `${areaM2.toFixed(4)}m² × $${pMontado.toLocaleString('es-AR')}/m²`, valor: subtotalMontado });
+        }
     }
 
     // 5. Iluminación y Fuentes
@@ -1126,18 +1156,78 @@ window.calcularChapaAcrilico = function () {
 
     const fmt = (v) => '$' + Math.round(v).toLocaleString('es-AR');
 
-    // Actualizar Auditor
-    const auditor = document.getElementById('auditorChapaCuerpo');
-    if (auditor) {
-        auditor.innerHTML = `
-            <p>Estructura: <span class="text-white">${fmt(estructuraTotal)}</span></p>
-            <p>Corte Láser: <span class="text-white">${fmt(corteTotal)}</span></p>
-            <p>Iluminación (LEDs + Fuente): <span class="text-white">${fmt(costoIlumTotal + costoFuente)}</span></p>
-            <p>Vinilos (Material + Montado): <span class="text-white">${fmt(costoViniloTotal)}</span></p>
-            <div class="border-t border-zinc-800 pt-2 mt-2">
-                <p class="text-sm font-black text-gecko uppercase italic">TOTAL ITEM: <span id="totalChapa">${fmt(totalFinal)}</span></p>
-            </div>
-        `;
+    // Ocultar auditor inline viejo (regla: ocultar, nunca eliminar)
+    const auditorViejo = document.getElementById('auditorChapaCuerpo');
+    if (auditorViejo) auditorViejo.style.display = 'none';
+
+    // ── Auditor de cálculo unificado (estilo Láser/CNC) ────────────────────────
+    const panelConf = document.getElementById('panelConfigurador');
+    if (panelConf) {
+        const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
+        const hayDatos = auditEstructura.length > 0 || auditPlacas.length > 0;
+
+        let auditorWrap = document.getElementById('geckoAuditorChapa');
+        if (!auditorWrap) {
+            auditorWrap = document.createElement('div');
+            auditorWrap.id = 'geckoAuditorChapa';
+            auditorWrap.style.marginTop = '20px';
+            panelConf.appendChild(auditorWrap);
+        }
+
+        if (hayDatos) {
+            const lineaRow = (label, detalle, valor) => `
+                <div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1f1f23;">
+                    <div style="flex:1;min-width:0;">
+                        <span style="color:#F15A24;font-size:10px;margin-right:6px;">•</span>
+                        <span style="color:#d4d4d8;font-size:12px;font-weight:700;">${label}</span>
+                        ${detalle ? `<span style="display:block;color:#71717a;font-size:10px;margin-left:16px;margin-top:2px;">${detalle}</span>` : ''}
+                    </div>
+                    <span style="color:white;font-size:13px;font-weight:900;font-family:monospace;margin-left:12px;white-space:nowrap;">${fmtVal(valor)}</span>
+                </div>`;
+
+            const seccion = (titulo) =>
+                `<p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:14px 0 6px;padding-top:2px;">${titulo}</p>`;
+
+            let html = '';
+
+            if (auditEstructura.length > 0) {
+                html += seccion('Estructura (Fleje)');
+                auditEstructura.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+            }
+
+            if (auditPlacas.length > 0) {
+                html += seccion('Frente / Fondo');
+                auditPlacas.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+            }
+
+            if (auditVinilo.length > 0) {
+                html += seccion('Vinilos / Montado');
+                auditVinilo.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+            }
+
+            if (costoIlumTotal > 0 || costoFuente > 0) {
+                html += seccion('Iluminación');
+                if (costoIlumTotal > 0) html += lineaRow('LEDs', descIlum, costoIlumTotal);
+                if (costoFuente > 0) html += lineaRow('Fuente', fuenteRecomendada, costoFuente);
+            }
+
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
+                <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
+                <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
+            </div>`;
+
+            auditorWrap.innerHTML = `
+                <div class="card-gecko" style="margin-top:12px;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 14px;">Auditor de cálculo</p>
+                    ${html}
+                </div>`;
+        } else {
+            auditorWrap.innerHTML = `
+                <div class="card-gecko" style="margin-top:0;">
+                    <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 10px;">Auditor de cálculo</p>
+                    <p style="font-size:11px;color:#52525b;text-align:center;padding:8px 0;">Completá los campos para ver el desglose</p>
+                </div>`;
+        }
     }
 
     if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
