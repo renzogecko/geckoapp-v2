@@ -348,7 +348,7 @@ window.setCorpModo = function (modo) {
                     <p>LEDs: 0 unidades + Fuente Recomendada: <span class="text-white">$0</span></p>
                     <p>Vinilos: Material + Montado: <span class="text-white">$0</span></p>
                     <div class="border-t border-zinc-800 pt-2 mt-2">
-                        <p class="text-sm font-black text-gecko uppercase italic">TOTAL ITEM: <span id="totalChapa">$-</span></p>
+                        <p class="text-sm font-black text-gecko uppercase italic">TOTAL ITEM: <span id="totalChapa">$0</span></p>
                     </div>
                 </div>
             </div>
@@ -965,7 +965,8 @@ window.calcularChapaAcrilico = function () {
     const selFleje = document.getElementById('chapaFlejeMat');
     const valFleje = selFleje?.value;
     if (!valFleje || valFleje === 'SELECCIONAR') {
-        if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = "$-";
+        if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = "$0";
+        window.itemActualPolifan = { tipo: 'corporeos', nombre: 'Chapa / Acrílico', costo: 0, otDetalle: 'Faltan datos: seleccionar material Fleje' };
         return;
     }
     const nomFleje = selFleje?.options[selFleje.selectedIndex]?.text || '';
