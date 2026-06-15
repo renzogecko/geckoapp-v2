@@ -808,13 +808,27 @@ window.calcularCostoPolifan = function () {
         // Costo Base (Mat + Corte Laser)
         let cBaseMat = 0;
         let cBaseCorte = 0;
+        let precioCorteBase = 0;
+        let nombreCorteBase = '';
         if (itBase) {
             cBaseMat = areaM2 * window.getCorpPrecio(itBase);
-            // Búsqueda de corte laser específico
-            const itCorteLaser = window.getGeckoItem("CORTE LASER - " + itBase.nombre);
-            if (itCorteLaser) {
-                cBaseCorte = perimetroMl * window.getCorpPrecio(itCorteLaser);
+            // 1. Usar precio de corte propio del material si existe (precioCorteMl)
+            if (itBase.precioCorteMl && parseFloat(itBase.precioCorteMl) > 0) {
+                precioCorteBase = parseFloat(itBase.precioCorteMl);
+                nombreCorteBase = `Corte Láser - ${itBase.nombre}`;
+            } else {
+                // 2. Fallback: buscar servicio específico SOLO en geckoServicios
+                const serviciosCorte = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+                const normC = (t) => String(t || '').toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Z0-9]/g, "");
+                const qNormC = normC("CORTE LASER " + itBase.nombre);
+                let servC = serviciosCorte.find(s => normC(s.nombre) === qNormC);
+                if (!servC) servC = serviciosCorte.find(s => normC(s.nombre).startsWith("CORTELASER") && qNormC.includes(normC(s.nombre).replace("CORTELASER", "")));
+                if (servC) {
+                    precioCorteBase = window.getCorpPrecio(servC);
+                    nombreCorteBase = servC.nombre;
+                }
             }
+            if (precioCorteBase > 0) cBaseCorte = perimetroMl * precioCorteBase;
         }
 
         // Costo Terminación (Vinilo + Montado)
@@ -840,8 +854,7 @@ window.calcularCostoPolifan = function () {
 
         if (cBaseMat > 0) auditFrente.push({ nombre: `Frente: ${nomBase}`, detalle: `${areaM2.toFixed(4)}m² × $${Math.round(window.getCorpPrecio(itBase)).toLocaleString('es-AR')}/m²`, valor: cBaseMat });
         if (cBaseCorte > 0) {
-            const itCorteLaserAud = window.getGeckoItem("CORTE LASER - " + itBase.nombre);
-            auditFrente.push({ nombre: `Corte ${itCorteLaserAud ? itCorteLaserAud.nombre : nomBase}`, detalle: `${perimetroMl.toFixed(2)}ml × $${Math.round(window.getCorpPrecio(itCorteLaserAud)).toLocaleString('es-AR')}/ml`, valor: cBaseCorte });
+            auditFrente.push({ nombre: nombreCorteBase, detalle: `${perimetroMl.toFixed(2)}ml × $${Math.round(precioCorteBase).toLocaleString('es-AR')}/ml`, valor: cBaseCorte });
         }
         if (cTermMat > 0) {
             const itTermAud = window.getGeckoItem(nomTerm);
