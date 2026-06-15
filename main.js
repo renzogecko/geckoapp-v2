@@ -4120,10 +4120,14 @@ window.itemActualPolifan = null;
 window.calcularPolifan = window.calcularCostoPolifan;
 
 function agregarItemAlCarrito(catOverride) {
-    const tipo = catOverride || 'grafica';
+    const tipo = catOverride || (window.itemActualCotizado && window.itemActualCotizado.tipo) || 'grafica';
     let item = null;
 
-    if (tipo === 'polifan') {
+    if (tipo === 'bastidores') {
+        if (window.itemActualCotizado && window.itemActualCotizado.costo > 0) {
+            item = { ...window.itemActualCotizado };
+        }
+    } else if (tipo === 'polifan') {
         if (!window.itemActualPolifan) window.calcularCostoPolifan();
         item = { ...window.itemActualPolifan };
     } else if (tipo === 'grafica') {
