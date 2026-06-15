@@ -3,6 +3,8 @@
 // Helper global: devuelve precioGremio (con fallback) o precioVenta según switch activo
 window.getCorpPrecio = function (item) {
     if (!item) return 0;
+    // Si el ítem tiene precio de venta final directo (servicios), usarlo sin multiplicar
+    if (item.precio && item.precio > 0) return item.precio;
     const isGremio = document.getElementById('modoGremio')?.checked;
     const costoARS = item.costo || item.costoReal || item.costoARS || (item.costoUSD * (window.GECKO_SETTINGS?.cotizacionDolar || 1415)) || 0;
     const mult = item.multiplicador || window.GECKO_SETTINGS?.multiplicadorGlobal || 2.0;
