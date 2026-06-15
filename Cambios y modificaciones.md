@@ -57,7 +57,12 @@
 - MutationObserver en main.js restaura `document.body.style.overflow` automáticamente al cerrar cualquier modal.
 
 
+Cambios pendientes. 
+- dejar la tarjeta de item actual fija flotante. 
+- Re editar los items cargados al carrito.
 
 
 ## BUGS DETECTADOR POR MI 
+
+
 
