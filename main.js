@@ -2270,6 +2270,7 @@ window.switchTabPedidos = function (tab) {
 };
 
 window.switchTabFinanzas = function (tab) {
+    localStorage.setItem('gecko_finanzas_tab', tab);
     const tabs = ['contentFin-movimientos', 'contentFin-gastos', 'contentFin-reportes'];
     tabs.forEach(t => {
         const el = document.getElementById(t);
@@ -3206,6 +3207,8 @@ window.switchMenu = function (view) {
         hSub.innerText = "Panel centralizado de presupuestos y órdenes de trabajo.";
         hSub.style.display = 'block';
     } else if (view === 'finanzas') {
+        const tabGuardado = localStorage.getItem('gecko_finanzas_tab') || 'movimientos';
+        setTimeout(() => window.switchTabFinanzas(tabGuardado), 50);
         hTitle.innerHTML = `<span class="font-bold">Finanzas y Cajas</span>`;
         hSub.innerText = 'Gestión de flujo de caja, control de ingresos y reportes operativos';
         hSub.style.display = 'block';
