@@ -2464,7 +2464,7 @@ function filtrarMovimientos(filtro) {
 }
 
 function renderReportesDashboard() {
-    const reportes = window.listaPresupuestos || [];
+    const reportes = listaPresupuestos || window.listaPresupuestos || [];
     if (!reportes || reportes.length === 0) return;
     const ahora = new Date();
     const mesActual = ahora.getMonth();
