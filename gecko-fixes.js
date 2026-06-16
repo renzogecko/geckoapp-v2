@@ -2095,16 +2095,20 @@ window.revertirPagoGastoFijo = function (idx) {
 
     document.getElementById('_geckoRevertirOk').onclick = function () {
         modal.remove();
-        if (g.movimientoId) {
-            const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-            const idx2 = movs.findIndex(m => m.id === g.movimientoId);
-            if (idx2 !== -1) movs.splice(idx2, 1);
+        const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+        // Buscar el movimiento de egreso asociado (por id guardado, o por detalle+monto como fallback)
+        let movIdx = g.movimientoId ? movs.findIndex(m => m.id === g.movimientoId) : -1;
+        if (movIdx === -1) movIdx = movs.findIndex(m => m.tipo === 'Egreso' && m.detalle === g.concepto && m.monto === g.monto);
+        let cajaNombreRevertir = g.cajaPago;
+        if (movIdx !== -1) {
+            cajaNombreRevertir = cajaNombreRevertir || movs[movIdx].caja;
+            movs.splice(movIdx, 1);
             localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
             window.LISTA_MOVIMIENTOS = movs;
         }
-        if (g.cajaPago) {
+        if (cajaNombreRevertir) {
             const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-            const cajaObj = cajas.find(c => c.nombre === g.cajaPago);
+            const cajaObj = cajas.find(c => c.nombre === cajaNombreRevertir);
             if (cajaObj) { cajaObj.saldo += g.monto; localStorage.setItem('gecko_cajas', JSON.stringify(cajas)); }
         }
         g.estado = 'Pendiente';
@@ -2499,19 +2503,79 @@ window.ejecutarCierreMensual = function () {
         });
         const ing = movsMes.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + m.monto, 0);
         const egr = movsMes.filter(m => m.tipo === 'Egreso').reduce((a, m) => a + m.monto, 0);
+        const gastosFijos = window.LISTA_GASTOS_FIJOS || [];
+
+        // Guardar en historial
+        const cierre = {
+            id: 'cierre_' + Date.now(),
+            periodo: `${meses[ahora.getMonth()]} ${ahora.getFullYear()}`,
+            mes: ahora.getMonth(),
+            anio: ahora.getFullYear(),
+            ingresos: ing,
+            gastos: egr,
+            balance: ing - egr,
+            fecha_cierre: ahora.toLocaleDateString('es-AR'),
+            movimientos: movsMes.length,
+            gastos_fijos: gastosFijos.length
+        };
         const hist = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
-        hist.push({ periodo: `${meses[ahora.getMonth()]} ${ahora.getFullYear()}`, ingresos: ing, gastos: egr, balance: ing - egr, fecha_cierre: ahora.toLocaleDateString('es-AR') });
+        hist.push(cierre);
         window.HISTORICO_CIERRES = hist;
         localStorage.setItem('gecko_historico_cierres', JSON.stringify(hist));
-        const gastos = window.LISTA_GASTOS_FIJOS || [];
-        gastos.forEach(g => { g.estado = 'Pendiente'; delete g.movimientoId; delete g.cajaPago; });
-        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(gastos));
 
-        // Generar PDF del balance mensual y guardarlo en el historial
-        window._generarPDFCierreMes(meses[ahora.getMonth()], ahora.getFullYear(), ing, egr, movsMes, gastos);
+        // Reiniciar gastos fijos
+        gastosFijos.forEach(g => { g.estado = 'Pendiente'; delete g.movimientoId; delete g.cajaPago; });
+        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(gastosFijos));
+        window.LISTA_GASTOS_FIJOS = gastosFijos;
+
         if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
         if (typeof window.renderGastosFijos === 'function') window.renderGastosFijos();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito(`Cierre de ${mesNom} procesado.`, '¡Mes Cerrado!');
+
+        // Mostrar modal de resultado con descarga PDF
+        const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+        const modalResult = document.createElement('div');
+        modalResult.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;';
+        modalResult.innerHTML = `
+            <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:36px;text-align:center;">
+                <div style="width:64px;height:64px;background:rgba(34,197,94,0.1);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                    <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 6px;">Mes cerrado</p>
+                <h3 style="color:white;font-size:22px;font-weight:900;margin:0 0 4px;">${meses[ahora.getMonth()]} ${ahora.getFullYear()}</h3>
+                <p style="color:#71717a;font-size:12px;margin:0 0 24px;">${ahora.toLocaleDateString('es-AR')} · ${movsMes.length} movimientos</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;">
+                    <div style="background:#1e1f20;border-radius:12px;padding:12px 8px;">
+                        <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Ingresos</div>
+                        <div style="font-size:14px;font-weight:900;color:#22c55e;">${fmt(ing)}</div>
+                    </div>
+                    <div style="background:#1e1f20;border-radius:12px;padding:12px 8px;">
+                        <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Egresos</div>
+                        <div style="font-size:14px;font-weight:900;color:#ef4444;">${fmt(egr)}</div>
+                    </div>
+                    <div style="background:#1e1f20;border-radius:12px;padding:12px 8px;">
+                        <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Balance</div>
+                        <div style="font-size:14px;font-weight:900;color:${ing-egr>=0?'#22c55e':'#ef4444'};">${fmt(ing-egr)}</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <button id="_geckoCierreDescargar"
+                        style="flex:1;padding:13px;background:#1e1f20;border:1px solid #27272a;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Descargar PDF
+                    </button>
+                    <button id="_geckoCierreCerrar"
+                        style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">
+                        Listo
+                    </button>
+                </div>
+            </div>`;
+        document.body.appendChild(modalResult);
+        document.getElementById('_geckoCierreDescargar').onclick = function () {
+            window._generarPDFCierreMes(meses[ahora.getMonth()], ahora.getFullYear(), ing, egr, movsMes, gastosFijos);
+        };
+        document.getElementById('_geckoCierreCerrar').onclick = function () {
+            modalResult.remove();
+        };
     };
 };
 

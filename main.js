@@ -2704,7 +2704,27 @@ function renderReportesDashboard() {
     // 9. HISTORIAL CIERRES
     const contenedorHistorial = document.getElementById('contenedorHistorialCierres');
     if (contenedorHistorial) {
-        if (HISTORICO_CIERRES.length === 0) {
+        const histCierres = window.HISTORICO_CIERRES || HISTORICO_CIERRES || [];
+        const contHistorial = document.getElementById('repoHistorialCierres');
+        if (contHistorial) {
+            contHistorial.innerHTML = histCierres.length === 0
+                ? `<p style="color:#52525b;font-size:11px;font-style:italic;text-align:center;padding:8px 0;">No hay registros aún.</p>`
+                : histCierres.slice().reverse().map(c => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #27272a;">
+                    <div>
+                        <p style="color:white;font-size:12px;font-weight:900;margin:0 0 2px;">${c.periodo}</p>
+                        <p style="color:#71717a;font-size:10px;margin:0;">${c.fecha_cierre} · ${c.movimientos || 0} movimientos</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <p style="font-size:13px;font-weight:900;margin:0 0 2px;color:${c.balance>=0?'#22c55e':'#ef4444'};">$${Math.round(c.balance).toLocaleString('es-AR')}</p>
+                        <button onclick="window._generarPDFCierreMes('${c.periodo}','',${c.ingresos},${c.gastos},[],$[])"
+                            style="font-size:9px;color:#F15A24;background:none;border:none;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:0;">
+                            ↓ PDF
+                        </button>
+                    </div>
+                </div>`).join('');
+        }
+        if (histCierres.length === 0) {
             contenedorHistorial.innerHTML = `<p class="text-gray-400 font-medium italic text-xs text-center">No hay registros aún.</p>`;
         } else {
             contenedorHistorial.innerHTML = HISTORICO_CIERRES.slice().reverse().map(c => `
