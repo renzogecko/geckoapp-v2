@@ -1954,7 +1954,12 @@ window.renderGastosFijos = function () {
                         onmouseover="this.style.background='rgba(34,197,94,0.2)';this.style.borderColor='#22c55e';this.style.color='#22c55e'"
                         onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='#ccc'">
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </button>` : ''}
+                    </button>` : `<button onclick="window.revertirPagoGastoFijo(${idx})" title="Revertir pago"
+                        style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#ccc;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;"
+                        onmouseover="this.style.background='rgba(241,90,36,0.2)';this.style.borderColor='#F15A24';this.style.color='#F15A24'"
+                        onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='#ccc'">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                    </button>`}
                     <button onclick="window.editarGastoFijo(${idx})" title="Ver/Editar"
                         style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#ccc;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;"
                         onmouseover="this.style.background='rgba(241,90,36,0.2)';this.style.borderColor='#F15A24';this.style.color='#F15A24'"
@@ -2047,8 +2052,10 @@ window.confirmarPagoGastoFijo = function () {
     localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
     window.LISTA_MOVIMIENTOS = movs;
 
-    // 3. Actualizar estado del Gasto a "Pagado"
+    // 3. Actualizar estado del Gasto a "Pagado" y guardar referencia al movimiento para poder revertirlo
     g.estado = 'Pagado';
+    g.movimientoId = mov.id;
+    g.cajaPago = cajaNombre;
     localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
     window.LISTA_GASTOS_FIJOS = lista;
 
@@ -2059,6 +2066,57 @@ window.confirmarPagoGastoFijo = function () {
     if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
     if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
     if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${cajaNombre}.`, '\u00a1Abonado!');
+};
+
+window.revertirPagoGastoFijo = function (idx) {
+    const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    const g = lista[idx];
+    if (!g || g.estado !== 'Pagado') return;
+
+    const modal = document.createElement('div');
+    modal.id = '_geckoConfirmRevertirPago';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:rgba(241,90,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#F15A24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Revertir pago</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se revertirá el pago de <strong style="color:white;">${g.concepto}</strong>${g.cajaPago ? ` y se devolverá el monto a <strong style="color:white;">${g.cajaPago}</strong>` : ''}.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('_geckoConfirmRevertirPago').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button id="_geckoRevertirOk"
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Revertir</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    document.getElementById('_geckoRevertirOk').onclick = function () {
+        modal.remove();
+        if (g.movimientoId) {
+            const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+            const idx2 = movs.findIndex(m => m.id === g.movimientoId);
+            if (idx2 !== -1) movs.splice(idx2, 1);
+            localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+            window.LISTA_MOVIMIENTOS = movs;
+        }
+        if (g.cajaPago) {
+            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const cajaObj = cajas.find(c => c.nombre === g.cajaPago);
+            if (cajaObj) { cajaObj.saldo += g.monto; localStorage.setItem('gecko_cajas', JSON.stringify(cajas)); }
+        }
+        g.estado = 'Pendiente';
+        delete g.movimientoId;
+        delete g.cajaPago;
+        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
+        window.LISTA_GASTOS_FIJOS = lista;
+        window.renderGastosFijos();
+        if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+        if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`Pago de ${g.concepto} revertido.`, '¡Revertido!');
+    };
 };
 
 window.eliminarGastoFijo = function (idx) {
@@ -2255,11 +2313,18 @@ window.renderReportesDashboard = function () {
         return p.status === 'OT' && parseInt(pts[1]) - 1 === ahora.getMonth() && parseInt(pts[2]) === ahora.getFullYear();
     });
 
-    const counts = { 'Gráfica': 0, 'Industrial': 0 };
-    otsMes.forEach(p => {
-        const cat = p.categoria || (typeof window._detectarCategoria === 'function' ? window._detectarCategoria(p) : null) || 'Gráfica';
-        counts[cat] = (counts[cat] || 0) + 1;
-    });
+    const counts = { 'Gráfica': 0, 'Corpóreos': 0, 'Láser/CNC': 0, 'Industrial': 0 };
+    const tipoARubro = {
+        'grafica': 'Gráfica', 'corte': 'Gráfica',
+        'corporeos': 'Corpóreos',
+        'laser_cnc': 'Láser/CNC',
+        'bastidores': 'Industrial', 'textil': 'Industrial',
+        '3d': 'Industrial', 'impresion3d': 'Industrial'
+    };
+    otsMes.forEach(p => (p.items || []).forEach(it => {
+        const rubro = tipoARubro[it.tipo] || 'Industrial';
+        if (counts[rubro] !== undefined) counts[rubro]++;
+    }));
 
     const total = otsMes.length || 1;
     const ranking = Object.entries(counts).sort((a, b) => b[1] - a[1]);
@@ -2439,12 +2504,87 @@ window.ejecutarCierreMensual = function () {
         window.HISTORICO_CIERRES = hist;
         localStorage.setItem('gecko_historico_cierres', JSON.stringify(hist));
         const gastos = window.LISTA_GASTOS_FIJOS || [];
-        gastos.forEach(g => { g.estado = 'Pendiente'; });
+        gastos.forEach(g => { g.estado = 'Pendiente'; delete g.movimientoId; delete g.cajaPago; });
         localStorage.setItem('gecko_gastos_fijos', JSON.stringify(gastos));
+
+        // Generar PDF del balance mensual y guardarlo en el historial
+        window._generarPDFCierreMes(meses[ahora.getMonth()], ahora.getFullYear(), ing, egr, movsMes, gastos);
         if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
         if (typeof window.renderGastosFijos === 'function') window.renderGastosFijos();
         if (typeof window.mostrarExito === 'function') window.mostrarExito(`Cierre de ${mesNom} procesado.`, '¡Mes Cerrado!');
     };
+};
+
+window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimientos, gastosFijos) {
+    const balance = ingresos - egresos;
+    const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+    const filasMov = movimientos.map(m => `
+        <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:6px 8px;font-size:11px;color:#555;">${m.fecha}</td>
+            <td style="padding:6px 8px;font-size:11px;">${m.detalle}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#777;">${m.categoria || ''}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#777;">${m.caja || ''}</td>
+            <td style="padding:6px 8px;font-size:11px;text-align:right;font-weight:700;color:${m.tipo==='Ingreso'?'#16a34a':'#dc2626'};">${m.tipo==='Ingreso'?'+':'−'}${fmt(m.monto)}</td>
+        </tr>`).join('');
+    const filasGastos = gastosFijos.map(g => `
+        <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:6px 8px;font-size:11px;">${g.concepto}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#777;">${g.categoria || ''}</td>
+            <td style="padding:6px 8px;font-size:11px;text-align:right;font-weight:700;">${fmt(g.monto)}</td>
+            <td style="padding:6px 8px;font-size:11px;text-align:center;">
+                <span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${g.estado==='Pagado'?'#dcfce7':'#fef9c3'};color:${g.estado==='Pagado'?'#16a34a':'#ca8a04'};">${g.estado}</span>
+            </td>
+        </tr>`).join('');
+
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+        <title>Cierre ${mesNom} ${anio} — Gecko Estudio</title>
+        <style>
+            body { font-family: Arial, sans-serif; color: #1a1a1a; margin: 0; padding: 32px; }
+            h1 { color: #F15A24; font-size: 22px; margin: 0; }
+            h2 { font-size: 13px; color: #555; margin: 4px 0 24px; font-weight: normal; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #F15A24; padding-bottom: 16px; margin-bottom: 24px; }
+            .logo { font-size: 28px; font-weight: 900; color: #F15A24; letter-spacing: -1px; }
+            .kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 28px; }
+            .kpi { background: #f8f8f8; border-radius: 10px; padding: 14px 16px; }
+            .kpi-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+            .kpi-value { font-size: 20px; font-weight: 900; }
+            .section-title { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #F15A24; margin: 20px 0 8px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { background: #f3f3f3; padding: 7px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
+            .footer { margin-top: 32px; border-top: 1px solid #eee; padding-top: 12px; font-size: 10px; color: #aaa; text-align: center; }
+        </style>
+    </head><body>
+        <div class="header">
+            <div>
+                <div class="logo">gecko</div>
+                <h1>Balance Mensual — ${mesNom} ${anio}</h1>
+                <h2>Gecko Estudio Creativo · Fecha de cierre: ${new Date().toLocaleDateString('es-AR')}</h2>
+            </div>
+        </div>
+        <div class="kpis">
+            <div class="kpi"><div class="kpi-label">Ingresos del mes</div><div class="kpi-value" style="color:#16a34a;">${fmt(ingresos)}</div></div>
+            <div class="kpi"><div class="kpi-label">Egresos del mes</div><div class="kpi-value" style="color:#dc2626;">${fmt(egresos)}</div></div>
+            <div class="kpi"><div class="kpi-label">Balance neto</div><div class="kpi-value" style="color:${balance>=0?'#16a34a':'#dc2626'};">${fmt(balance)}</div></div>
+        </div>
+        <div class="section-title">Movimientos del mes (${movimientos.length})</div>
+        <table>
+            <thead><tr><th>Fecha</th><th>Detalle</th><th>Categoría</th><th>Caja</th><th style="text-align:right;">Monto</th></tr></thead>
+            <tbody>${filasMov || '<tr><td colspan="5" style="padding:12px;text-align:center;color:#aaa;font-size:11px;">Sin movimientos registrados</td></tr>'}</tbody>
+        </table>
+        <div class="section-title">Gastos fijos del mes (${gastosFijos.length})</div>
+        <table>
+            <thead><tr><th>Concepto</th><th>Categoría</th><th style="text-align:right;">Monto</th><th style="text-align:center;">Estado</th></tr></thead>
+            <tbody>${filasGastos || '<tr><td colspan="4" style="padding:12px;text-align:center;color:#aaa;font-size:11px;">Sin gastos fijos</td></tr>'}</tbody>
+        </table>
+        <div class="footer">Gecko Estudio Creativo · Balance generado automáticamente por GeckoApp v2</div>
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) {
+        win.document.write(html);
+        win.document.close();
+        setTimeout(() => { win.print(); }, 500);
+    }
 };
 
 // ── Hook switchTabFinanzas para asegurar que siempre se actualice filtroCajaActual ──
