@@ -312,14 +312,14 @@ try {
         if ($method === 'POST') {
             $b = json_decode(file_get_contents('php://input'), true);
             $id = $b['id'] ?? uniqid('gf_');
-            $stmt = $pdo->prepare("INSERT INTO gastos_fijos (id, concepto, monto, vencimiento, estado, caja) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE concepto=VALUES(concepto), monto=VALUES(monto), vencimiento=VALUES(vencimiento), estado=VALUES(estado), caja=VALUES(caja)");
-            $stmt->execute([$id, $b['concepto']??'', $b['monto']??0, $b['vencimiento']??'', $b['estado']??'Pendiente', $b['caja']??'']);
+            $stmt = $pdo->prepare("INSERT INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria) VALUES (?,?,?,?,?,?)");
+            $stmt->execute([$id, $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1', $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null]);
             echo json_encode(['success'=>true,'id'=>$id]); exit;
         }
         if ($method === 'PUT') {
             $b = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("UPDATE gastos_fijos SET concepto=?, monto=?, vencimiento=?, estado=?, caja=? WHERE id=?");
-            $stmt->execute([$b['concepto']??'', $b['monto']??0, $b['vencimiento']??'', $b['estado']??'Pendiente', $b['caja']??'', $b['id']]);
+            $stmt = $pdo->prepare("REPLACE INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria) VALUES (?,?,?,?,?,?)");
+            $stmt->execute([$b['id'], $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1', $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null]);
             echo json_encode(['success'=>true]); exit;
         }
         if ($method === 'DELETE') {
