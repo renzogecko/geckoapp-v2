@@ -199,12 +199,18 @@ async function _sincronizarArray(lsKey, nuevoArray) {
     }
 
     for (const itemAntiguo of anterior) {
-        if (!nuevoArray.find(n => String(n.id) === String(itemAntiguo.id))) {
+        if (!itemAntiguo.id) continue; // ignorar items sin id
+        if (!nuevoArray.find(n => n.id && String(n.id) === String(itemAntiguo.id))) {
             await _apiPost(endpoint, 'DELETE', { id: itemAntiguo.id });
         }
     }
     for (const item of nuevoArray) {
-        const existia = anterior.find(a => String(a.id) === String(item.id));
+        // Si el item no tiene id, siempre es nuevo → POST directo
+        if (!item.id) {
+            await _apiPost(endpoint, 'POST', item);
+            continue;
+        }
+        const existia = anterior.find(a => a.id && String(a.id) === String(item.id));
         if (!existia) {
             await _apiPost(endpoint, 'POST', item);
         } else if (JSON.stringify(existia) !== JSON.stringify(item)) {
@@ -221,6 +227,13 @@ async function _sincronizarObjeto(lsKey, objeto) {
     _cache[lsKey] = objeto;
 }
 
+let _syncQueue = Promise.resolve();
+
+Object.defineProperty(window, '_syncQueue', {
+    get: () => _syncQueue,
+    configurable: true
+});
+
 const _localStorageProxy = {
     getItem(key)    { return window._localStorage_original.getItem(key); },
     removeItem(key) { window._localStorage_original.removeItem(key); },
@@ -234,9 +247,9 @@ const _localStorageProxy = {
             try {
                 const parsed = JSON.parse(value);
                 if (Array.isArray(parsed)) {
-                    _sincronizarArray(key, parsed);
+                    _syncQueue = _syncQueue.then(() => _sincronizarArray(key, parsed));
                 } else if (typeof parsed === 'object' && parsed !== null) {
-                    _sincronizarObjeto(key, parsed);
+                    _syncQueue = _syncQueue.then(() => _sincronizarObjeto(key, parsed));
                 }
             } catch (e) { /* JSON inválido */ }
         }

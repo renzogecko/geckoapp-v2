@@ -2217,7 +2217,7 @@ window.editarGastoFijo = function (idx) {
     document.body.appendChild(modal);
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
-    document.getElementById('_editGastoGuardarBtn').onclick = function () {
+    document.getElementById('_editGastoGuardarBtn').onclick = async function () {
         const concepto = modal.querySelector('#_editGastoConcepto').value.trim();
         const monto = parseFloat(modal.querySelector('#_editGastoMonto').value) || 0;
         const vencimiento = modal.querySelector('#_editGastoVencimiento').value.trim() || '1';
@@ -2228,6 +2228,7 @@ window.editarGastoFijo = function (idx) {
         arr[idx] = { ...arr[idx], concepto, monto, vencimiento, categoria };
         window.LISTA_GASTOS_FIJOS = arr;
         localStorage.setItem('gecko_gastos_fijos', JSON.stringify(arr));
+        if (window._syncQueue) await window._syncQueue;
         modal.remove();
         window.renderGastosFijos();
         if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} actualizado.`, '\u00a1Guardado!');
@@ -2291,15 +2292,24 @@ window.abrirModalNuevoGastoFijo = function () {
     document.body.appendChild(modal);
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
-    document.getElementById('_gastoGuardarBtn').onclick = function () {
+    document.getElementById('_gastoGuardarBtn').onclick = async function () {
         const concepto = modal.querySelector('#_gastoConcepto').value.trim();
         const monto = parseFloat(modal.querySelector('#_gastoMonto').value) || 0;
         const vencimiento = modal.querySelector('#_gastoVencimiento').value.trim() || '1';
         const categoria = modal.querySelector('#_gastoCategoria').value;
         if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
         if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-        window.LISTA_GASTOS_FIJOS.push({ concepto, monto, vencimiento, categoria, estado: 'Pendiente' });
+        const nuevoGasto = {
+            id: 'gf_' + Date.now().toString(16) + Math.random().toString(16).slice(2, 7),
+            concepto,
+            monto,
+            vencimiento,
+            categoria,
+            estado: 'Pendiente'
+        };
+        window.LISTA_GASTOS_FIJOS.push(nuevoGasto);
         localStorage.setItem('gecko_gastos_fijos', JSON.stringify(window.LISTA_GASTOS_FIJOS));
+        if (window._syncQueue) await window._syncQueue;
         modal.remove();
         window.renderGastosFijos();
         if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '\u00a1Guardado!');
