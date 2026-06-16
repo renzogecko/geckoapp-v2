@@ -296,6 +296,40 @@ try {
         }
     }
 
+    elseif ($endpoint === 'gastos_fijos') {
+        if ($method === 'GET') {
+            $stmt = $pdo->query("CREATE TABLE IF NOT EXISTS gastos_fijos (
+                id VARCHAR(64) PRIMARY KEY,
+                concepto VARCHAR(255) NOT NULL,
+                monto DECIMAL(15,2) DEFAULT 0,
+                vencimiento VARCHAR(10) DEFAULT '',
+                estado VARCHAR(50) DEFAULT 'Pendiente',
+                caja VARCHAR(100) DEFAULT ''
+            )");
+            $stmt = $pdo->query("SELECT * FROM gastos_fijos ORDER BY concepto ASC");
+            echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC)); exit;
+        }
+        if ($method === 'POST') {
+            $b = json_decode(file_get_contents('php://input'), true);
+            $id = $b['id'] ?? uniqid('gf_');
+            $stmt = $pdo->prepare("INSERT INTO gastos_fijos (id, concepto, monto, vencimiento, estado, caja) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE concepto=VALUES(concepto), monto=VALUES(monto), vencimiento=VALUES(vencimiento), estado=VALUES(estado), caja=VALUES(caja)");
+            $stmt->execute([$id, $b['concepto']??'', $b['monto']??0, $b['vencimiento']??'', $b['estado']??'Pendiente', $b['caja']??'']);
+            echo json_encode(['success'=>true,'id'=>$id]); exit;
+        }
+        if ($method === 'PUT') {
+            $b = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("UPDATE gastos_fijos SET concepto=?, monto=?, vencimiento=?, estado=?, caja=? WHERE id=?");
+            $stmt->execute([$b['concepto']??'', $b['monto']??0, $b['vencimiento']??'', $b['estado']??'Pendiente', $b['caja']??'', $b['id']]);
+            echo json_encode(['success'=>true]); exit;
+        }
+        if ($method === 'DELETE') {
+            $b = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("DELETE FROM gastos_fijos WHERE id=?");
+            $stmt->execute([$b['id']]);
+            echo json_encode(['success'=>true]); exit;
+        }
+    }
+
     // ══════════════════════════════════════════
     // MOVIMIENTOS
     // ══════════════════════════════════════════
