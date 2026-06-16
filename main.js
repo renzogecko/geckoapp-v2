@@ -2721,7 +2721,7 @@ function renderReportesDashboard() {
     // 9. HISTORIAL CIERRES
     const contenedorHistorial = document.getElementById('contenedorHistorialCierres');
     if (contenedorHistorial) {
-        const histCierres = window.HISTORICO_CIERRES || HISTORICO_CIERRES || [];
+        const histCierres = window.HISTORICO_CIERRES || HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
         contenedorHistorial.innerHTML = histCierres.length === 0
             ? `<p style="color:#52525b;font-size:11px;font-style:italic;text-align:center;padding:8px 0;">No hay cierres registrados aún.</p>`
             : histCierres.slice().reverse().map(c => `
