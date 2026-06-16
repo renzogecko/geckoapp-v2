@@ -46,10 +46,11 @@ window.setTextilModo = function (modo) {
         container.innerHTML = `
             <div class="grid grid-cols-2 gap-6">
                 <div>
-                    <label class="${labelStyle}">Ancho Fijo (Visual)</label>
+                    <label class="${labelStyle}">Ancho del rollo</label>
                     <div class="w-full h-12 px-4 bg-zinc-900/30 border border-zinc-800 rounded-2xl text-zinc-500 font-bold flex items-center cursor-not-allowed">
                         ${ancho}
                     </div>
+                    <p class="text-[10px] text-zinc-600 font-bold mt-1 ml-1">Ancho estándar del rollo · no modificable</p>
                 </div>
                 <div>
                     <label class="${labelStyle}">Largo (cm)</label>

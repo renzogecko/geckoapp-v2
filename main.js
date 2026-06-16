@@ -77,7 +77,12 @@ window.getGeckoItem = function (query) {
     });
 
     if (!item) {
-        console.warn(`🦎 GECKO GDM: No se encontró el ítem "${query}" (Norm: ${qNorm})`);
+        // Silenciar warnings de fallbacks opcionales conocidos que pueden no estar en el inventario
+        const fallbacksSilenciados = ['CORTELASERMETAL', 'CORTELASER'];
+        const esFallback = fallbacksSilenciados.some(f => qNorm === f);
+        if (!esFallback) {
+            console.warn(`🦎 GECKO GDM: No se encontró el ítem "${query}" (Norm: ${qNorm})`);
+        }
         return null;
     }
 
