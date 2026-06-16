@@ -2377,6 +2377,30 @@ window.renderReportesDashboard = function () {
     const elCobrar = document.getElementById('metricCobrar');
     if (elCobrar) elCobrar.innerText = `$${Math.round(porCobrar).toLocaleString('es-AR')}`;
 
+    // ── Historial de cierres ──
+    const contenedorHistorialCierres = document.getElementById('contenedorHistorialCierres');
+    if (contenedorHistorialCierres) {
+        const histCierres = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+        if (histCierres.length === 0) {
+            contenedorHistorialCierres.innerHTML = '<p style="color:#52525b;font-size:11px;font-style:italic;text-align:center;padding:16px 0;">No hay cierres registrados aún.</p>';
+        } else {
+            contenedorHistorialCierres.innerHTML = histCierres.slice().reverse().map(c => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #27272a;">
+                    <div>
+                        <p style="color:white;font-size:12px;font-weight:900;margin:0 0 2px;">${c.periodo}</p>
+                        <p style="color:#71717a;font-size:10px;margin:0;">${c.fecha_cierre} · ${c.movimientos || 0} movimientos</p>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                        <p style="font-size:13px;font-weight:900;margin:0;color:${(c.balance||0)>=0?'#22c55e':'#ef4444'};">$${Math.round(c.balance||0).toLocaleString('es-AR')}</p>
+                        <button onclick="window._generarPDFCierreMes('${c.periodo}','',${c.ingresos||0},${c.gastos||0},[],[])"
+                            style="font-size:9px;color:#F15A24;background:none;border:none;cursor:pointer;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:0;">
+                            ↓ PDF
+                        </button>
+                    </div>
+                </div>`).join('');
+        }
+    }
+
     // ── Gráfico de líneas: Ingresos por Categoría (últimos 6 meses) ──
     const svgChart = document.getElementById('svgIngresosCategoria');
     const labelsContainer = document.getElementById('chartIngresosLabels');
