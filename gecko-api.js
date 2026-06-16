@@ -14,12 +14,13 @@ const GECKO_KEY_MAP = {
     'gecko_listaPresupuestos': 'presupuestos',
     'gecko_cajas':             'cajas',
     'gecko_movimientos':       'movimientos',
+    'gecko_gastos_fijos':      'gastos_fijos',
     'GECKO_SETTINGS':          'configuracion'
 };
 
 const GECKO_ARRAY_KEYS = [
     'gecko_materiales', 'geckoServicios', 'clientes',
-    'gecko_listaPresupuestos', 'gecko_cajas', 'gecko_movimientos'
+    'gecko_listaPresupuestos', 'gecko_cajas', 'gecko_movimientos', 'gecko_gastos_fijos'
 ];
 
 // Campos que MySQL devuelve como string pero deben ser números
@@ -28,6 +29,7 @@ const GECKO_NUMERIC_FIELDS = {
     'geckoServicios':   ['costo','precio'],
     'gecko_cajas':      ['saldo'],
     'gecko_movimientos':['monto'],
+    'gecko_gastos_fijos':['monto'],
     'gecko_listaPresupuestos': ['total','sena']
 };
 
@@ -138,6 +140,28 @@ async function _inicializarDesdeAPI() {
     }
 
     _inicializado = true;
+
+    // SINCRONIZACIÓN FORZADA: subir a MySQL ítems que estén en localStorage pero no en la API
+    // Esto resuelve el caso de ítems cargados antes de que la conexión estuviera lista
+    for (const [lsKey, endpoint] of Object.entries(GECKO_KEY_MAP)) {
+        if (!GECKO_ARRAY_KEYS.includes(lsKey)) continue;
+        try {
+            const enMySQL = Array.isArray(_cache[lsKey]) ? _cache[lsKey] : [];
+            const enLocal = JSON.parse(window._localStorage_original.getItem(lsKey) || '[]');
+            if (!Array.isArray(enLocal) || enLocal.length === 0) continue;
+            const faltanEnMySQL = enLocal.filter(loc => loc.id && !enMySQL.find(m => String(m.id) === String(loc.id)));
+            if (faltanEnMySQL.length > 0) {
+                console.log(`🦎 GECKO-API: Sincronizando ${faltanEnMySQL.length} ítems faltantes en MySQL (${endpoint})...`);
+                for (const item of faltanEnMySQL) {
+                    await _apiPost(endpoint, 'POST', item);
+                }
+                _cache[lsKey] = enLocal;
+            }
+        } catch(e) {
+            console.warn(`🦎 GECKO-API: Error en sync forzado de ${endpoint}:`, e);
+        }
+    }
+
     console.log('%c 🦎 GECKO-API: MySQL sincronizado ✓ ', 'background:#16a34a;color:white;font-weight:bold;padding:3px 8px;border-radius:4px;');
 
     // Seed servicios láser faltantes (solo si MySQL no los tiene aún)
