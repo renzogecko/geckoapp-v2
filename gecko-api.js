@@ -184,13 +184,18 @@ async function _inicializarDesdeAPI() {
 async function _sincronizarArray(lsKey, nuevoArray) {
     const endpoint = GECKO_KEY_MAP[lsKey];
     if (!endpoint || !Array.isArray(nuevoArray)) return;
-    const anterior = Array.isArray(_cache[lsKey]) ? _cache[lsKey] : [];
 
-    // PROTECCIÓN ANTI-BORRADO MASIVO:
-    // Si se intenta borrar más del 50% de los ítems en una sola operación,
-    // casi seguro es un error de sincronización, no una acción real del usuario.
+    // Usar localStorage como fuente de verdad del estado anterior (no _cache que puede estar desactualizado por async)
+    let anterior;
+    try {
+        anterior = JSON.parse(window._localStorage_original.getItem(lsKey) || '[]');
+        if (!Array.isArray(anterior)) anterior = [];
+    } catch(e) { anterior = []; }
+
+    // PROTECCIÓN ANTI-BORRADO MASIVO: solo aplica si hay más de 3 ítems previos
+    // y se intenta borrar más del 70% (para no bloquear operaciones legítimas de edición)
     const cantidadABorrar = anterior.filter(a => !nuevoArray.find(n => String(n.id) === String(a.id))).length;
-    if (anterior.length > 0 && cantidadABorrar > Math.max(1, Math.floor(anterior.length * 0.5))) {
+    if (anterior.length > 3 && cantidadABorrar > Math.floor(anterior.length * 0.7)) {
         console.warn(`🦎 GECKO-API: BORRADO MASIVO BLOQUEADO en "${lsKey}" — intentaba borrar ${cantidadABorrar} de ${anterior.length} ítems. Operación cancelada.`);
         return;
     }
