@@ -122,8 +122,13 @@ async function _inicializarDesdeAPI() {
             if (GECKO_ARRAY_KEYS.includes(lsKey) && Array.isArray(datos) && datos.length === 0) {
                 const localActual = JSON.parse(window._localStorage_original.getItem(lsKey) || '[]');
                 if (Array.isArray(localActual) && localActual.length > 0) {
-                    console.warn(`⚠️ GECKO-API: ${endpoint} devolvió vacío pero hay ${localActual.length} ítems locales — se mantiene el cache local.`);
+                    console.warn(`⚠️ GECKO-API: ${endpoint} devolvió vacío pero hay ${localActual.length} ítems locales — subiendo a MySQL...`);
                     _cache[lsKey] = localActual;
+                    // Subir todos los items locales a MySQL ya que la tabla está vacía
+                    for (const item of localActual) {
+                        if (item.id) await _apiPost(endpoint, 'POST', item);
+                    }
+                    console.log(`✅ GECKO-API: ${localActual.length} ítems de ${endpoint} sincronizados a MySQL.`);
                     continue;
                 }
             }
