@@ -2724,19 +2724,6 @@ function renderReportesDashboard() {
                     </div>
                 </div>`).join('');
         }
-        if (histCierres.length === 0) {
-            contenedorHistorial.innerHTML = `<p class="text-gray-400 font-medium italic text-xs text-center">No hay registros aún.</p>`;
-        } else {
-            contenedorHistorial.innerHTML = HISTORICO_CIERRES.slice().reverse().map(c => `
-                        <div class="bg-gray-50/50 dark:bg-darkBg p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                            <div>
-                                <p class="text-[10px] font-black text-gecko uppercase mb-0.5">${c.periodo}</p>
-                                <p class="text-xs font-black dark:text-white">Bal: <span class="${c.balance >= 0 ? 'text-emerald-500' : 'text-red-500'}">$${Math.round(c.balance).toLocaleString('es-AR')}</span></p>
-                            </div>
-                            <svg class="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                        </div>
-                    `).join('');
-        }
     }
 }
 
