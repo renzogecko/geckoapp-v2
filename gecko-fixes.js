@@ -257,6 +257,10 @@ window._guardarManual = function (status) {
     const total = items.reduce((acc, it) => acc + it.costo, 0);
     const cat = document.getElementById('manualCategoria')?.value || 'Gráfica';
 
+    // Asignar tipo correcto a cada ítem según la categoría para que el Mix de Ventas funcione
+    const catATipo = { 'Gráfica': 'grafica', 'Industrial': 'bastidores', 'Corpóreos': 'corporeos', 'Láser/CNC': 'laser_cnc', 'Textil': 'textil' };
+    items.forEach(it => { it.tipo = catATipo[cat] || 'grafica'; });
+
     // Garantizar ID único
     const _listaActual = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const _maxId = _listaActual.length > 0 ? Math.max(..._listaActual.map(x => parseInt(x.id) || 0)) : 1000;
