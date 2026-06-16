@@ -2484,7 +2484,8 @@ window.renderReportesDashboard = function () {
 };
 
 // ── Cierre mensual con modal Gecko ──
-window.ejecutarCierreMensual = function () {
+window._ejecutarCierreMensualGecko = function () {
+window.ejecutarCierreMensual = window._ejecutarCierreMensualGecko;
     document.getElementById('_geckoConfirmCierre')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmCierre';
@@ -2542,15 +2543,20 @@ window.ejecutarCierreMensual = function () {
         localStorage.setItem('gecko_gastos_fijos', JSON.stringify(gastosFijos));
         window.LISTA_GASTOS_FIJOS = gastosFijos;
 
-        if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
         if (typeof window.renderGastosFijos === 'function') window.renderGastosFijos();
+        if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
+
+        // Guardar en MySQL via localStorage proxy
+        window.HISTORICO_CIERRES = hist;
+        localStorage.setItem('gecko_historico_cierres', JSON.stringify(hist));
 
         // Mostrar modal de resultado con descarga PDF
         const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
         const modalResult = document.createElement('div');
-        modalResult.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;';
+        modalResult.id = '_geckoModalResultCierre';
+        modalResult.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10001;background:rgba(10,12,20,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;';
         modalResult.innerHTML = `
-            <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:36px;text-align:center;">
+            <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:460px;padding:36px;text-align:center;">
                 <div style="width:64px;height:64px;background:rgba(34,197,94,0.1);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
                     <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>

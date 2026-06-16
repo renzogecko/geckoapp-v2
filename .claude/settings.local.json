@@ -21,7 +21,12 @@
       "Bash(findstr /n \"Generar\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
       "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" diff gecko-fixes.js)",
       "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" add gecko-fixes.js)",
-      "Bash(git -C 'h:/Mi unidad/GeckoApp_v2' commit -m ' *)"
+      "Bash(git -C 'h:/Mi unidad/GeckoApp_v2' commit -m ' *)",
+      "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" diff gecko-api.js)",
+      "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" add gecko-api.js)",
+      "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" push origin main)",
+      "PowerShell(git -C \"h:\\\\Mi unidad\\\\GeckoApp_v2\" status)",
+      "PowerShell(git -C \"h:\\\\Mi unidad\\\\GeckoApp_v2\" add \"Cambios y modificaciones.md\" GECKO_CONTEXT.md)"
     ]
   }
 }

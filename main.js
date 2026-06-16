@@ -2728,44 +2728,9 @@ function renderReportesDashboard() {
 }
 
 function ejecutarCierreMensual() {
-    if (!confirm("¿Estás seguro de cerrar el mes? Se reiniciarán los gastos fijos a 'Pendiente' y se archivará el balance actual.")) return;
-
-    const ahora = new Date();
-    const mesActual = ahora.getMonth();
-    const anioActual = ahora.getFullYear();
-    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-    const movimientosMes = LISTA_MOVIMIENTOS.filter(m => {
-        const [d, mo, y] = m.fecha.split('/');
-        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
-    });
-
-    const ingresos = movimientosMes.filter(m => m.tipo === 'Ingreso').reduce((acc, curr) => acc + curr.monto, 0);
-    const egresos = movimientosMes.filter(m => m.tipo === 'Egreso').reduce((acc, curr) => acc + curr.monto, 0);
-    const balance = ingresos - egresos;
-
-    // 1. Guardar en Histórico
-    const cierre = {
-        periodo: `${meses[mesActual]} ${anioActual}`,
-        ingresos: ingresos,
-        gastos: egresos,
-        balance: balance,
-        fecha_cierre: ahora.toLocaleDateString('es-AR')
-    };
-
-    HISTORICO_CIERRES.push(cierre);
-    localStorage.setItem('gecko_historico_cierres', JSON.stringify(HISTORICO_CIERRES));
-
-    // 2. Reiniciar Gastos Fijos
-    LISTA_GASTOS_FIJOS.forEach(g => {
-        g.estado = 'Pendiente';
-    });
-    localStorage.setItem('gecko_gastos_fijos', JSON.stringify(LISTA_GASTOS_FIJOS));
-
-    // 3. Notificar y refrescar
-    renderReportesDashboard();
-    if (typeof renderGastosFijos === 'function') renderGastosFijos();
-    mostrarExito(`Cierre de ${meses[mesActual]} procesado. Todos los gastos fijos volvieron a 'Pendiente'.`, "¡Mes Cerrado!");
+    if (typeof window._ejecutarCierreMensualGecko === 'function') {
+        window._ejecutarCierreMensualGecko();
+    }
 }
 
 function abrirModalCierreMensual() {
