@@ -2309,7 +2309,7 @@ window.abrirModalNuevoGastoFijo = function () {
         };
         window.LISTA_GASTOS_FIJOS.push(nuevoGasto);
         localStorage.setItem('gecko_gastos_fijos', JSON.stringify(window.LISTA_GASTOS_FIJOS));
-        if (window._syncQueue) await window._syncQueue;
+        await window._syncQueue;
         modal.remove();
         window.renderGastosFijos();
         if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '\u00a1Guardado!');
