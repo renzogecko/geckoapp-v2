@@ -18,7 +18,10 @@
       "Bash(findstr /n \"todos.length\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
       "Bash(findstr /n \"Generar Presupuesto\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
       "Bash(findstr /n \"todos\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
-      "Bash(findstr /n \"Generar\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")"
+      "Bash(findstr /n \"Generar\" \"h:\\\\Mi unidad\\\\GeckoApp_v2\\\\gecko-fixes.js\")",
+      "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" diff gecko-fixes.js)",
+      "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" add gecko-fixes.js)",
+      "Bash(git -C 'h:/Mi unidad/GeckoApp_v2' commit -m ' *)"
     ]
   }
 }

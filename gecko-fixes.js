@@ -330,7 +330,7 @@ window._descargarDocumento = async function (id) {
     const clienteSlug = (p.cliente || 'cliente').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_');
     const tituloSlug = (p.titulo || '').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_');
     const nombreArchivo = esOT
-        ? `OT_${String(id).padStart(4,'0')}_${clienteSlug}`
+        ? `OT_${String(id).padStart(4, '0')}_${clienteSlug}`
         : `Pres_${clienteSlug}${tituloSlug ? '_' + tituloSlug : ''}`;
 
     const win = window.open('', '_blank', 'width=900,height=700');
@@ -348,7 +348,7 @@ window._descargarDocumento = async function (id) {
     win.document.close();
 };
 
-window._descargarDesdePopup = function() {
+window._descargarDesdePopup = function () {
     // Descargar directamente desde el contenido del popup actual
     const { jsPDF } = window.jspdf;
     const nombreArchivo = document.title || 'presupuesto';
@@ -690,7 +690,7 @@ window._confirmarConversionOT = function (id) {
         try {
             const meta = typeof p.metadata === 'string' ? JSON.parse(p.metadata) : p.metadata;
             if (meta.fechaEntrega) p.fecha_entrega = meta.fechaEntrega;
-        } catch(e) {}
+        } catch (e) { }
     }
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
     if (typeof window.mostrarExito === 'function') window.mostrarExito(`OT #${id} generada`, '¡Listo!');
@@ -2568,7 +2568,7 @@ window.ejecutarCierreMensual = function () {
                     </div>
                     <div style="background:#1e1f20;border-radius:12px;padding:12px 8px;">
                         <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Balance</div>
-                        <div style="font-size:14px;font-weight:900;color:${ing-egr>=0?'#22c55e':'#ef4444'};">${fmt(ing-egr)}</div>
+                        <div style="font-size:14px;font-weight:900;color:${ing - egr >= 0 ? '#22c55e' : '#ef4444'};">${fmt(ing - egr)}</div>
                     </div>
                 </div>
                 <div style="display:flex;gap:10px;">
@@ -2602,7 +2602,7 @@ window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimie
             <td style="padding:6px 8px;font-size:11px;">${m.detalle}</td>
             <td style="padding:6px 8px;font-size:11px;color:#777;">${m.categoria || ''}</td>
             <td style="padding:6px 8px;font-size:11px;color:#777;">${m.caja || ''}</td>
-            <td style="padding:6px 8px;font-size:11px;text-align:right;font-weight:700;color:${m.tipo==='Ingreso'?'#16a34a':'#dc2626'};">${m.tipo==='Ingreso'?'+':'−'}${fmt(m.monto)}</td>
+            <td style="padding:6px 8px;font-size:11px;text-align:right;font-weight:700;color:${m.tipo === 'Ingreso' ? '#16a34a' : '#dc2626'};">${m.tipo === 'Ingreso' ? '+' : '−'}${fmt(m.monto)}</td>
         </tr>`).join('');
     const filasGastos = gastosFijos.map(g => `
         <tr style="border-bottom:1px solid #eee;">
@@ -2610,7 +2610,7 @@ window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimie
             <td style="padding:6px 8px;font-size:11px;color:#777;">${g.categoria || ''}</td>
             <td style="padding:6px 8px;font-size:11px;text-align:right;font-weight:700;">${fmt(g.monto)}</td>
             <td style="padding:6px 8px;font-size:11px;text-align:center;">
-                <span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${g.estado==='Pagado'?'#dcfce7':'#fef9c3'};color:${g.estado==='Pagado'?'#16a34a':'#ca8a04'};">${g.estado}</span>
+                <span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${g.estado === 'Pagado' ? '#dcfce7' : '#fef9c3'};color:${g.estado === 'Pagado' ? '#16a34a' : '#ca8a04'};">${g.estado}</span>
             </td>
         </tr>`).join('');
 
@@ -2642,7 +2642,7 @@ window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimie
         <div class="kpis">
             <div class="kpi"><div class="kpi-label">Ingresos del mes</div><div class="kpi-value" style="color:#16a34a;">${fmt(ingresos)}</div></div>
             <div class="kpi"><div class="kpi-label">Egresos del mes</div><div class="kpi-value" style="color:#dc2626;">${fmt(egresos)}</div></div>
-            <div class="kpi"><div class="kpi-label">Balance neto</div><div class="kpi-value" style="color:${balance>=0?'#16a34a':'#dc2626'};">${fmt(balance)}</div></div>
+            <div class="kpi"><div class="kpi-label">Balance neto</div><div class="kpi-value" style="color:${balance >= 0 ? '#16a34a' : '#dc2626'};">${fmt(balance)}</div></div>
         </div>
         <div class="section-title">Movimientos del mes (${movimientos.length})</div>
         <table>
@@ -2997,7 +2997,7 @@ window.addEventListener('load', function () {
             if (Array.isArray(cliente.cuits) && cliente.cuits.length > 0) {
                 cuitsNorm = cliente.cuits;
             } else if (typeof cliente.cuits === 'string' && cliente.cuits.startsWith('[')) {
-                try { cuitsNorm = JSON.parse(cliente.cuits); } catch(e) { cuitsNorm = []; }
+                try { cuitsNorm = JSON.parse(cliente.cuits); } catch (e) { cuitsNorm = []; }
             }
             if (cuitsNorm.length === 0 && cliente.cuit) cuitsNorm = [{ numero: cliente.cuit, etiqueta: '' }];
             if (cuitsNorm.length === 0) cuitsNorm = [{ numero: '', etiqueta: '' }];
@@ -3020,7 +3020,7 @@ window.addEventListener('load', function () {
             if (Array.isArray(cliente.telefonos) && cliente.telefonos.length > 0) {
                 telefonosNorm = cliente.telefonos;
             } else if (typeof cliente.telefonos === 'string' && cliente.telefonos.startsWith('[')) {
-                try { telefonosNorm = JSON.parse(cliente.telefonos); } catch(e) { telefonosNorm = []; }
+                try { telefonosNorm = JSON.parse(cliente.telefonos); } catch (e) { telefonosNorm = []; }
             }
             if (telefonosNorm.length === 0 && cliente.tel) telefonosNorm = [{ numero: cliente.tel, etiqueta: '' }];
             if (telefonosNorm.length === 0) telefonosNorm = [{ numero: '', etiqueta: '' }];
@@ -3043,7 +3043,7 @@ window.addEventListener('load', function () {
             if (Array.isArray(cliente.emails) && cliente.emails.length > 0) {
                 emailsNorm = cliente.emails;
             } else if (typeof cliente.emails === 'string' && cliente.emails.startsWith('[')) {
-                try { emailsNorm = JSON.parse(cliente.emails); } catch(e) { emailsNorm = []; }
+                try { emailsNorm = JSON.parse(cliente.emails); } catch (e) { emailsNorm = []; }
             }
             if (emailsNorm.length === 0 && cliente.email) emailsNorm = [cliente.email];
             if (emailsNorm.length === 0) emailsNorm = [''];
@@ -3901,42 +3901,42 @@ window._geckoRenderFijo = function () {
 
     bdClientes.forEach(c => {
         try {
-        if (termino) {
-            const matchNombre = c.nombre.toLowerCase().includes(termino);
-            const matchCuit = (c.cuit || '').toLowerCase().includes(termino);
-            const matchCuits = (c.cuits || []).some(cu =>
-                (typeof cu === 'string' ? cu : cu.numero || '').includes(termino) ||
-                (typeof cu === 'object' ? (cu.etiqueta || '').toLowerCase().includes(termino) : false)
-            );
-            const matchRubro = (c.rubro || '').toLowerCase().includes(termino);
-            const matchTel = (c.telefonos || []).some(t => (t.numero || '').includes(termino) || (t.etiqueta || '').toLowerCase().includes(termino));
-            if (!matchNombre && !matchCuit && !matchCuits && !matchRubro && !matchTel) return;
-        }
+            if (termino) {
+                const matchNombre = c.nombre.toLowerCase().includes(termino);
+                const matchCuit = (c.cuit || '').toLowerCase().includes(termino);
+                const matchCuits = (c.cuits || []).some(cu =>
+                    (typeof cu === 'string' ? cu : cu.numero || '').includes(termino) ||
+                    (typeof cu === 'object' ? (cu.etiqueta || '').toLowerCase().includes(termino) : false)
+                );
+                const matchRubro = (c.rubro || '').toLowerCase().includes(termino);
+                const matchTel = (c.telefonos || []).some(t => (t.numero || '').includes(termino) || (t.etiqueta || '').toLowerCase().includes(termino));
+                if (!matchNombre && !matchCuit && !matchCuits && !matchRubro && !matchTel) return;
+            }
 
-        const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-        let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);
+            const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);
 
-        // Normalizar telefonos: puede ser string JSON legacy, array de strings, o array de {numero, etiqueta}
-        let telefonosArr = [];
-        if (Array.isArray(c.telefonos)) {
-            telefonosArr = c.telefonos;
-        } else if (typeof c.telefonos === 'string' && c.telefonos.startsWith('[')) {
-            try { telefonosArr = JSON.parse(c.telefonos); } catch(e) { telefonosArr = []; }
-        }
-        let wp = telefonosArr.length > 0
-            ? telefonosArr.map(t => {
-                const num = typeof t === 'string' ? t : (t.numero || '');
-                const etq = typeof t === 'string' ? '' : (t.etiqueta || '');
-                if (!num) return '';
-                return `<a href="https://wa.me/${num.replace(/\D/g, '')}" target="_blank" class="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-colors text-[10px] font-bold" title="WhatsApp ${etq || num}" onclick="event.stopPropagation()"><svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg>${etq || num}</a>`;
-              }).join('')
-            : c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
-        let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
+            // Normalizar telefonos: puede ser string JSON legacy, array de strings, o array de {numero, etiqueta}
+            let telefonosArr = [];
+            if (Array.isArray(c.telefonos)) {
+                telefonosArr = c.telefonos;
+            } else if (typeof c.telefonos === 'string' && c.telefonos.startsWith('[')) {
+                try { telefonosArr = JSON.parse(c.telefonos); } catch (e) { telefonosArr = []; }
+            }
+            let wp = telefonosArr.length > 0
+                ? telefonosArr.map(t => {
+                    const num = typeof t === 'string' ? t : (t.numero || '');
+                    const etq = typeof t === 'string' ? '' : (t.etiqueta || '');
+                    if (!num) return '';
+                    return `<a href="https://wa.me/${num.replace(/\D/g, '')}" target="_blank" class="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-colors text-[10px] font-bold" title="WhatsApp ${etq || num}" onclick="event.stopPropagation()"><svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg>${etq || num}</a>`;
+                }).join('')
+                : c.tel ? `<a href="https://wa.me/${c.tel.replace(/\D/g, '')}" target="_blank" class="w-7 h-7 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors" title="WhatsApp" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.657l-3.324.87 1.011-3.213C8.163 17.65 7.159 15.65 7.159 13.5c0-4.142 3.866-7.5 8.636-7.5 4.771 0 8.636 3.358 8.636 7.5 0 4.143-3.865 7.5-8.636 7.5-1.523 0-2.95-.342-4.178-.936l-3.586 1.593z"/></svg></a>` : '';
+            let em = (c.emails && c.emails[0]) || c.email ? `<a href="mailto:${(c.emails && c.emails[0]) || c.email}" class="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors" title="Email" onclick="event.stopPropagation()"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a>` : '';
 
-        const tr = document.createElement('tr');
-        tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
 
-        tr.innerHTML = `
+            tr.innerHTML = `
             <td class="py-4 px-6" data-accion="ficha">
                 <div class="flex items-center">
                     <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
@@ -3958,20 +3958,20 @@ window._geckoRenderFijo = function () {
                 </div>
             </td>`;
 
-        // Delegación de eventos — un solo listener en el tr que distingue la acción
-        tr.addEventListener('click', function (e) {
-            const accion = e.target.closest('[data-accion]')?.dataset?.accion;
-            if (accion === 'editar') {
-                if (typeof window.editarCliente === 'function') window.editarCliente(c.nombre);
-            } else if (accion === 'eliminar') {
-                if (typeof window.eliminarCliente === 'function') window.eliminarCliente(c.nombre);
-            } else if (accion === 'ficha' || !accion) {
-                if (typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre);
-            }
-        });
+            // Delegación de eventos — un solo listener en el tr que distingue la acción
+            tr.addEventListener('click', function (e) {
+                const accion = e.target.closest('[data-accion]')?.dataset?.accion;
+                if (accion === 'editar') {
+                    if (typeof window.editarCliente === 'function') window.editarCliente(c.nombre);
+                } else if (accion === 'eliminar') {
+                    if (typeof window.eliminarCliente === 'function') window.eliminarCliente(c.nombre);
+                } else if (accion === 'ficha' || !accion) {
+                    if (typeof abrirFichaCliente === 'function') abrirFichaCliente(c.nombre);
+                }
+            });
 
-        tbody.appendChild(tr);
-        } catch(e) { console.warn('GECKO: error renderizando cliente', c.nombre, e); }
+            tbody.appendChild(tr);
+        } catch (e) { console.warn('GECKO: error renderizando cliente', c.nombre, e); }
     });
 };
 
@@ -4643,7 +4643,7 @@ window._gpmGuardar = function (status) {
             const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
             const doc = lista.find(x => String(x.id) === String(_editId));
             return doc?.status || status;
-          })()
+        })()
         : status;
 
     // Marcar timestamp único para identificar el doc recién guardado
