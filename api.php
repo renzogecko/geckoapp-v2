@@ -297,18 +297,20 @@ try {
     }
 
     elseif ($endpoint === 'gastos_fijos') {
+
         if ($method === 'GET') {
-            $stmt = $pdo->query("CREATE TABLE IF NOT EXISTS gastos_fijos (
+            $pdo->query("CREATE TABLE IF NOT EXISTS gastos_fijos (
                 id VARCHAR(64) PRIMARY KEY,
                 concepto VARCHAR(255) NOT NULL,
                 monto DECIMAL(15,2) DEFAULT 0,
                 vencimiento VARCHAR(10) DEFAULT '',
                 estado VARCHAR(50) DEFAULT 'Pendiente',
-                caja VARCHAR(100) DEFAULT ''
+                categoria VARCHAR(100) DEFAULT NULL
             )");
             $stmt = $pdo->query("SELECT * FROM gastos_fijos ORDER BY concepto ASC");
             echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC)); exit;
         }
+
         if ($method === 'POST') {
             $b = json_decode(file_get_contents('php://input'), true);
             $id = $b['id'] ?? uniqid('gf_');
@@ -316,12 +318,14 @@ try {
             $stmt->execute([$id, $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1', $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null]);
             echo json_encode(['success'=>true,'id'=>$id]); exit;
         }
+
         if ($method === 'PUT') {
             $b = json_decode(file_get_contents('php://input'), true);
             $stmt = $pdo->prepare("REPLACE INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria) VALUES (?,?,?,?,?,?)");
             $stmt->execute([$b['id'], $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1', $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null]);
             echo json_encode(['success'=>true]); exit;
         }
+
         if ($method === 'DELETE') {
             $b = json_decode(file_get_contents('php://input'), true);
             $stmt = $pdo->prepare("DELETE FROM gastos_fijos WHERE id=?");
