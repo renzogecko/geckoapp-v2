@@ -185,12 +185,10 @@ async function _sincronizarArray(lsKey, nuevoArray) {
     const endpoint = GECKO_KEY_MAP[lsKey];
     if (!endpoint || !Array.isArray(nuevoArray)) return;
 
-    // Usar localStorage como fuente de verdad del estado anterior (no _cache que puede estar desactualizado por async)
-    let anterior;
-    try {
-        anterior = JSON.parse(window._localStorage_original.getItem(lsKey) || '[]');
-        if (!Array.isArray(anterior)) anterior = [];
-    } catch(e) { anterior = []; }
+    // _cache representa lo que MySQL conoce actualmente — es la fuente correcta para comparar
+    const anterior = Array.isArray(_cache[lsKey]) ? [..._cache[lsKey]] : [];
+    // Actualizar _cache inmediatamente para evitar race conditions en llamadas async consecutivas
+    _cache[lsKey] = nuevoArray;
 
     // PROTECCIÓN ANTI-BORRADO MASIVO: solo aplica si hay más de 3 ítems previos
     // y se intenta borrar más del 70% (para no bloquear operaciones legítimas de edición)
