@@ -2321,6 +2321,14 @@ const _renderReportesOriginal = window.renderReportesDashboard;
 window.renderReportesDashboard = function () {
     if (typeof _renderReportesOriginal === 'function') _renderReportesOriginal();
 
+    // Asegurar que HISTORICO_CIERRES esté cargado antes de renderizar
+    if (!window.HISTORICO_CIERRES || window.HISTORICO_CIERRES.length === 0) {
+        const local = JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+        if (local.length > 0) {
+            window.HISTORICO_CIERRES = local;
+        }
+    }
+
     // Sobreescribir sección ranking con 2 categorías
     const ahora = new Date();
     const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
@@ -2331,18 +2339,11 @@ window.renderReportesDashboard = function () {
         return p.status === 'OT' && parseInt(pts[1]) - 1 === ahora.getMonth() && parseInt(pts[2]) === ahora.getFullYear();
     });
 
-    const counts = { 'Gráfica': 0, 'Corpóreos': 0, 'Láser/CNC': 0, 'Industrial': 0 };
-    const tipoARubro = {
-        'grafica': 'Gráfica', 'corte': 'Gráfica',
-        'corporeos': 'Corpóreos',
-        'laser_cnc': 'Láser/CNC',
-        'bastidores': 'Industrial', 'textil': 'Industrial',
-        '3d': 'Industrial', 'impresion3d': 'Industrial'
-    };
-    otsMes.forEach(p => (p.items || []).forEach(it => {
-        const rubro = tipoARubro[it.tipo] || 'Industrial';
-        if (counts[rubro] !== undefined) counts[rubro]++;
-    }));
+    const counts = { 'Gráfica': 0, 'Industrial': 0 };
+    otsMes.forEach(p => {
+        const cat = p.categoria === 'Gráfica' ? 'Gráfica' : 'Industrial';
+        counts[cat]++;
+    });
 
     const total = otsMes.length || 1;
     const ranking = Object.entries(counts).sort((a, b) => b[1] - a[1]);
