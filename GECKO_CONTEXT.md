@@ -143,12 +143,11 @@ Los cambios de Design System (modales de finanzas) están en local y GitHub pero
 ---
 
 ## PRIORIDAD INMEDIATA
-1. Corregir bug F5 → modalEditarCaja pantalla completa
-2. Terminar ajustes visuales modales de Finanzas
-3. Ajustes visuales sección Clientes
-4. Cambiar botones provisorios en Materiales
-5. Subir todo a Hostinger y usar en producción real
-6. Desarrollar cotizadores Láser / CNC
+1. Cotizador Gráfica — tarjeta "montado": unidades en alto/ancho (m, cm, mm)
+2. Cotizador Gráfica — tarjeta "montado": calcular precio aunque no haya metros lineales de corte
+3. Mensajes de confirmación en formularios que guardan en silencio (Costos Operativos, Parámetros Láser)
+4. Tarjeta de item actual fija flotante en cotizadores
+5. Re-editar items cargados al carrito
 
 ---
 
