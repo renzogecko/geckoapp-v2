@@ -142,20 +142,23 @@ async function _inicializarDesdeAPI() {
     _inicializado = true;
 
     // SINCRONIZACIÓN FORZADA: subir a MySQL ítems que estén en localStorage pero no en la API
-    // Esto resuelve el caso de ítems cargados antes de que la conexión estuviera lista
+    // Usa localStorage como fuente de verdad (no _cache, que puede estar vacío si MySQL estaba vacío)
     for (const [lsKey, endpoint] of Object.entries(GECKO_KEY_MAP)) {
         if (!GECKO_ARRAY_KEYS.includes(lsKey)) continue;
         try {
-            const enMySQL = Array.isArray(_cache[lsKey]) ? _cache[lsKey] : [];
             const enLocal = JSON.parse(window._localStorage_original.getItem(lsKey) || '[]');
             if (!Array.isArray(enLocal) || enLocal.length === 0) continue;
-            const faltanEnMySQL = enLocal.filter(loc => loc.id && !enMySQL.find(m => String(m.id) === String(loc.id)));
+            // Re-consultar MySQL para tener el estado más fresco
+            const enMySQL = await _apiGet(endpoint, lsKey);
+            const enMySQLArray = Array.isArray(enMySQL) ? enMySQL : [];
+            const faltanEnMySQL = enLocal.filter(loc => loc.id && !enMySQLArray.find(m => String(m.id) === String(loc.id)));
             if (faltanEnMySQL.length > 0) {
                 console.log(`🦎 GECKO-API: Sincronizando ${faltanEnMySQL.length} ítems faltantes en MySQL (${endpoint})...`);
                 for (const item of faltanEnMySQL) {
                     await _apiPost(endpoint, 'POST', item);
                 }
                 _cache[lsKey] = enLocal;
+                window._localStorage_original.setItem(lsKey, JSON.stringify(enLocal));
             }
         } catch(e) {
             console.warn(`🦎 GECKO-API: Error en sync forzado de ${endpoint}:`, e);
