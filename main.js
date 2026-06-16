@@ -2701,6 +2701,23 @@ function renderReportesDashboard() {
         elMasActiva.innerText = cajaMasActivaName ? `${cajaMasActivaName} (${actividadCajas[cajaMasActivaName]} mov.)` : 'Sin datos';
     }
 
+    // ── Historial de cierres — cargar desde MySQL si no hay datos locales ──
+    if (!window.HISTORICO_CIERRES || window.HISTORICO_CIERRES.length === 0) {
+        const localHist = JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+        if (localHist.length === 0) {
+            fetch('/app/api.php?endpoint=historico_cierres')
+                .then(r => r.json())
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        window.HISTORICO_CIERRES = data;
+                        localStorage.setItem('gecko_historico_cierres', JSON.stringify(data));
+                        if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
+                    }
+                }).catch(() => {});
+        } else {
+            window.HISTORICO_CIERRES = localHist;
+        }
+    }
     // 9. HISTORIAL CIERRES
     const contenedorHistorial = document.getElementById('contenedorHistorialCierres');
     if (contenedorHistorial) {

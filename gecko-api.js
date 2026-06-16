@@ -8,19 +8,21 @@
 const GECKO_API_URL = '/app/api.php';
 
 const GECKO_KEY_MAP = {
-    'gecko_materiales':        'materiales',
-    'geckoServicios':          'servicios',
-    'clientes':                'clientes',
-    'gecko_listaPresupuestos': 'presupuestos',
-    'gecko_cajas':             'cajas',
-    'gecko_movimientos':       'movimientos',
-    'gecko_gastos_fijos':      'gastos_fijos',
-    'GECKO_SETTINGS':          'configuracion'
+    'gecko_materiales':          'materiales',
+    'geckoServicios':            'servicios',
+    'clientes':                  'clientes',
+    'gecko_listaPresupuestos':   'presupuestos',
+    'gecko_cajas':               'cajas',
+    'gecko_movimientos':         'movimientos',
+    'gecko_gastos_fijos':        'gastos_fijos',
+    'gecko_historico_cierres':   'historico_cierres',
+    'GECKO_SETTINGS':            'configuracion'
 };
 
 const GECKO_ARRAY_KEYS = [
     'gecko_materiales', 'geckoServicios', 'clientes',
-    'gecko_listaPresupuestos', 'gecko_cajas', 'gecko_movimientos', 'gecko_gastos_fijos'
+    'gecko_listaPresupuestos', 'gecko_cajas', 'gecko_movimientos',
+    'gecko_gastos_fijos', 'gecko_historico_cierres'
 ];
 
 // Campos que MySQL devuelve como string pero deben ser números

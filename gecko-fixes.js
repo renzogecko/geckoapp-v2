@@ -2549,6 +2549,12 @@ window.ejecutarCierreMensual = window._ejecutarCierreMensualGecko;
         // Guardar en MySQL via localStorage proxy
         window.HISTORICO_CIERRES = hist;
         localStorage.setItem('gecko_historico_cierres', JSON.stringify(hist));
+        // Sincronizar cierre individual con MySQL directamente
+        fetch('/app/api.php?endpoint=historico_cierres', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cierre)
+        }).catch(e => console.warn('GECKO: Error guardando cierre en MySQL:', e));
 
         // Mostrar modal de resultado con descarga PDF
         const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');

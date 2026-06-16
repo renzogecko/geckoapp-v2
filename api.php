@@ -422,6 +422,42 @@ try {
     }
 
     // ══════════════════════════════════════════
+    // HISTORICO CIERRES
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'historico_cierres') {
+
+        if ($method === 'GET') {
+            $stmt = $pdo->query("SELECT * FROM historico_cierres ORDER BY anio ASC, mes ASC");
+            responder($stmt->fetchAll(PDO::FETCH_ASSOC));
+        }
+
+        if ($method === 'POST') {
+            $d = $body;
+            $stmt = $pdo->prepare("INSERT INTO historico_cierres (id, periodo, mes, anio, ingresos, gastos, balance, fecha_cierre, movimientos, gastos_fijos) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([
+                $d['id'] ?? uniqid('cierre_'),
+                $d['periodo'] ?? '',
+                $d['mes'] ?? 0,
+                $d['anio'] ?? 0,
+                $d['ingresos'] ?? 0,
+                $d['gastos'] ?? 0,
+                $d['balance'] ?? 0,
+                $d['fecha_cierre'] ?? '',
+                $d['movimientos'] ?? 0,
+                $d['gastos_fijos'] ?? 0
+            ]);
+            responder(["success" => true, "message" => "Cierre guardado."]);
+        }
+
+        if ($method === 'DELETE') {
+            $d = $body;
+            $stmt = $pdo->prepare("DELETE FROM historico_cierres WHERE id = ?");
+            $stmt->execute([$d['id']]);
+            responder(["success" => true, "message" => "Cierre eliminado."]);
+        }
+    }
+
+    // ══════════════════════════════════════════
     // CONFIGURACION (GECKO_SETTINGS)
     // ══════════════════════════════════════════
     elseif ($endpoint === 'configuracion') {
