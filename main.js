@@ -2624,9 +2624,16 @@ function renderReportesDashboard() {
     }
 
     // --- 6. RANKING MIX ---
-    const counts = { 'Gráfica': 0, 'Corpóreos': 0, 'Estampados': 0, 'Industrial': 0 };
-    otsMes.forEach(p => p.items.forEach(it => {
-        const rubro = it.tipo === 'grafica' ? 'Gráfica' : (it.tipo === 'corporeos' ? 'Corpóreos' : (it.tipo === 'estampados' ? 'Estampados' : 'Industrial'));
+    const counts = { 'Gráfica': 0, 'Corpóreos': 0, 'Láser/CNC': 0, 'Industrial': 0 };
+    const tipoARubro = {
+        'grafica': 'Gráfica', 'corte': 'Gráfica',
+        'corporeos': 'Corpóreos',
+        'laser_cnc': 'Láser/CNC',
+        'bastidores': 'Industrial', 'textil': 'Industrial',
+        '3d': 'Industrial', 'impresion3d': 'Industrial'
+    };
+    otsMes.forEach(p => (p.items || []).forEach(it => {
+        const rubro = tipoARubro[it.tipo] || 'Industrial';
         if (counts[rubro] !== undefined) counts[rubro]++;
     }));
     const ranking = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
