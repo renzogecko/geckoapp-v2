@@ -421,7 +421,7 @@ window.GeckoGrafica = {
         if (this.isTermActive('checkMontado')) {
             const valMontado = parseFloat(document.getElementById('valMontado')?.value) || 1;
             const servMont = window.getGeckoItem("MONTADO") || window.getGeckoItem("SERVICIO DE MONTADO");
-            const precioBase = servMont ? servMont.precioVenta : 1800;
+            const precioBase = servMont ? (servMont.precio || servMont.precioVenta || 1800) : 1800;
 
             const sub = valMontado * precioBase;
             serviciosCostos += sub;
@@ -514,9 +514,9 @@ window.GeckoGrafica = {
         // 7. Troquelado (Búsqueda en Mano de Obra con Fallback)
         if (this.isTermActive('checkTroquelado')) {
             const ml = parseFloat(document.getElementById('valTroquelado')?.value) || 1;
-            // Búsqueda de fexible: Categoría MANO OBRA y nombre que incluya PLOTER y 60
-            const servTroq = window.getGeckoItem("PLOTER 60") || window.getGeckoItem("SERVICIO DE CORTE");
-            const precioServ = servTroq ? servTroq.precioVenta : 7800;
+            // Búsqueda flexible: primero por nombre "Troquelado", luego aliases
+            const servTroq = window.getGeckoItem("Troquelado") || window.getGeckoItem("TROQUELADO") || window.getGeckoItem("PLOTER 60") || window.getGeckoItem("SERVICIO DE CORTE");
+            const precioServ = servTroq ? (servTroq.precio || servTroq.precioVenta || 7800) : 7800;
 
             if (precioServ === 7800 && !servTroq) {
                 console.warn("🦎 GECKO - Usando precio de respaldo para Troquelado: $7.800");
@@ -640,8 +640,8 @@ window.GeckoGrafica = {
                 }
                 if (this.isTermActive('checkTroquelado')) {
                     const ml = parseFloat(document.getElementById('valTroquelado')?.value) || 1;
-                    const serv = window.getGeckoItem('PLOTER 60') || window.getGeckoItem('SERVICIO DE CORTE');
-                    const precio = serv ? serv.precioVenta : 7800;
+                    const serv = window.getGeckoItem('Troquelado') || window.getGeckoItem('TROQUELADO') || window.getGeckoItem('PLOTER 60') || window.getGeckoItem('SERVICIO DE CORTE');
+                    const precio = serv ? (serv.precio || serv.precioVenta || 7800) : 7800;
                     termActivas.push({ label: 'Troquelado', detalle: `${ml}ml × ${fmtVal(precio)}/ml`, valor: ml * precio });
                 }
 
