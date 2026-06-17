@@ -514,8 +514,11 @@ window.GeckoGrafica = {
         // 7. Troquelado (Búsqueda en Mano de Obra con Fallback)
         if (this.isTermActive('checkTroquelado')) {
             const ml = parseFloat(document.getElementById('valTroquelado')?.value) || 1;
-            // Búsqueda flexible: primero por nombre "Troquelado", luego aliases
-            const servTroq = window.getGeckoItem("Troquelado") || window.getGeckoItem("TROQUELADO") || window.getGeckoItem("PLOTER 60") || window.getGeckoItem("SERVICIO DE CORTE");
+            // Búsqueda SOLO en servicios para evitar conflicto con materiales homónimos
+            const _serviciosTroq = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+            const servTroq = _serviciosTroq.find(s => s.nombre?.toLowerCase().includes('troquel'))
+                || window.getGeckoItem("PLOTER 60")
+                || window.getGeckoItem("SERVICIO DE CORTE");
             const precioServ = servTroq ? (servTroq.precio || servTroq.precioVenta || 7800) : 7800;
 
             if (precioServ === 7800 && !servTroq) {
@@ -640,7 +643,10 @@ window.GeckoGrafica = {
                 }
                 if (this.isTermActive('checkTroquelado')) {
                     const ml = parseFloat(document.getElementById('valTroquelado')?.value) || 1;
-                    const serv = window.getGeckoItem('Troquelado') || window.getGeckoItem('TROQUELADO') || window.getGeckoItem('PLOTER 60') || window.getGeckoItem('SERVICIO DE CORTE');
+                    const _servsTroqDetalle = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+                    const serv = _servsTroqDetalle.find(s => s.nombre?.toLowerCase().includes('troquel'))
+                        || window.getGeckoItem('PLOTER 60')
+                        || window.getGeckoItem('SERVICIO DE CORTE');
                     const precio = serv ? (serv.precio || serv.precioVenta || 7800) : 7800;
                     termActivas.push({ label: 'Troquelado', detalle: `${ml}ml × ${fmtVal(precio)}/ml`, valor: ml * precio });
                 }
