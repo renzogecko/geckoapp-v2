@@ -1081,10 +1081,10 @@ window.editarOT = function (id) {
     modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);padding:16px;';
 
     modal.innerHTML = `
-        <div style="background:#141414;border-radius:20px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;position:relative;">
+        <div style="background:#141414;border-radius:20px;width:100%;max-width:720px;max-height:95vh;overflow-y:auto;display:flex;flex-direction:column;position:relative;">
 
             <!-- Header — igual que modalMaterial -->
-            <div style="padding:32px 36px 24px 36px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="padding:32px 44px 24px 44px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:flex-start;">
                 <div>
                     <h2 style="color:white;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:-0.02em;margin:0 0 4px 0;">EDITAR ORDEN DE TRABAJO</h2>
                     <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0;">OT #${String(id).padStart(4, '0')} · ${(ot.cliente || '').toUpperCase()}</p>
@@ -1098,7 +1098,7 @@ window.editarOT = function (id) {
             </div>
 
             <!-- Body -->
-            <div style="padding:28px 36px;display:flex;flex-direction:column;gap:24px;flex:1;">
+            <div style="padding:32px 44px;display:flex;flex-direction:column;gap:30px;flex:1;">
 
                 <!-- Ítems solo lectura -->
                 <div>
@@ -1138,13 +1138,13 @@ window.editarOT = function (id) {
                     </label>
                     <textarea id="otEditInstrucciones" rows="4"
                         placeholder="Ej: Pintar el corpóreo con verde furioso, cuidar que no chorree la pintura en los bordes..."
-                        style="width:100%;background:#0f0f0f;border:1px solid #1f1f1f;border-left:3px solid #F15A24;border-radius:10px;padding:12px 14px;color:white;font-size:13px;font-weight:500;outline:none;box-sizing:border-box;font-family:inherit;resize:vertical;line-height:1.6;">${ot.instrucciones || ''}</textarea>
+                        style="width:100%;background:#0f0f0f;border:1px solid #1f1f1f;border-left:3px solid #F15A24;border-radius:16px;padding:16px 18px;color:#a1a1aa;font-size:13px;font-weight:500;outline:none;box-sizing:border-box;font-family:inherit;resize:vertical;line-height:1.6;">${ot.instrucciones || ''}</textarea>
                 </div>
 
             </div>
 
             <!-- Footer — igual que modalMaterial: Cancelar gris + botón acción naranja -->
-            <div style="padding:20px 36px 28px 36px;border-top:1px solid #1f1f1f;display:flex;gap:12px;">
+            <div style="padding:20px 44px 32px 44px;border-top:1px solid #1f1f1f;display:flex;gap:12px;">
                 <button onclick="document.getElementById('modalEditarOT').remove()"
                     style="flex:1;padding:15px;background:transparent;border:1px solid #2a2a2a;color:#52525b;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:all 0.15s;"
                     onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'"
