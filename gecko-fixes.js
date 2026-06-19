@@ -380,7 +380,7 @@ window._descargarDesdePopup = function () {
 // ESTADOS OT
 // ══════════════════════════════════════════════════════
 
-const ESTADOS_OT = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado'];
+const _EST = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado'];
 const ESTADO_COLORS = {
     'En Proceso': { bg: '#F15A24', text: 'white' },
     'En Taller': { bg: '#8b5cf6', text: 'white' },
@@ -464,37 +464,58 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
     const dd = document.getElementById('estado-ot-dropdown-' + id);
     if (dd) dd.style.display = 'none';
 
-    const COLORES = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#eab308', 'Entregado': '#6b7280' };
+    const COLORES = {
+        'En Proceso': '#F15A24',
+        'En Taller': '#8b5cf6',
+        'Impresión': '#3b82f6',
+        'Terminaciones': '#f59e0b',
+        'Listo': '#10b981',
+        'Pendiente de Pago': '#ef4444',
+        'Entregado': '#6b7280'
+    };
 
     if (nuevoEstado === 'Entregado') {
-        // Mostrar modal de confirmación de archivo
+        // Mostrar modal de confirmación con 3 opciones
         const modalExist = document.getElementById('_geckoModalArchivarOT');
         if (modalExist) modalExist.remove();
 
         const modal = document.createElement('div');
         modal.id = '_geckoModalArchivarOT';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.75);backdrop-filter:blur(4px);';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.80);backdrop-filter:blur(4px);padding:16px;';
         modal.innerHTML = `
-            <div style="background:#1e1f20;border:1px solid #27272a;border-radius:20px;width:100%;max-width:420px;padding:36px;text-align:center;margin:16px;">
+            <div style="background:#1e1f20;border:1px solid #27272a;border-radius:20px;width:100%;max-width:440px;padding:36px;text-align:center;">
                 <div style="width:56px;height:56px;background:rgba(16,185,129,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
                     <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 </div>
                 <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 8px 0;">Orden de Trabajo</p>
                 <h3 style="color:white;font-size:20px;font-weight:900;margin:0 0 12px 0;text-transform:uppercase;">¿Archivar trabajo?</h3>
-                <p style="color:#71717a;font-size:13px;margin:0 0 32px 0;line-height:1.6;">El trabajo fue entregado y cobrado.<br>Va a pasar al <strong style="color:white;">historial</strong> y salir de la lista activa.</p>
-                <div style="display:flex;gap:12px;">
-                    <button id="_geckoArchivarCancelar" style="flex:1;padding:14px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
-                        Cancelar
+                <p style="color:#71717a;font-size:13px;margin:0 0 32px 0;line-height:1.6;">Antes de archivar, verificá que el trabajo esté completamente cobrado.<br>Si falta registrar un pago, usá el botón correspondiente.</p>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <button id="_geckoArchivarRegistrarPago" style="width:100%;padding:14px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
+                        Registrar Pago
                     </button>
-                    <button id="_geckoArchivarConfirmar" style="flex:1;padding:14px;background:#10b981;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
-                        Sí, archivar
+                    <button id="_geckoArchivarConfirmar" style="width:100%;padding:14px;background:transparent;border:1px solid #10b981;color:#10b981;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
+                        Ya está cobrado — Archivar
+                    </button>
+                    <button id="_geckoArchivarCancelar" style="width:100%;padding:12px;background:transparent;border:1px solid #27272a;color:#52525b;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
+                        Cancelar
                     </button>
                 </div>
             </div>`;
         document.body.appendChild(modal);
 
-        document.getElementById('_geckoArchivarCancelar').onclick = function () { modal.remove(); };
-        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+        document.getElementById('_geckoArchivarCancelar').onclick = function () {
+            modal.remove();
+        };
+
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) modal.remove();
+        });
+
+        document.getElementById('_geckoArchivarRegistrarPago').onclick = function () {
+            modal.remove();
+            if (typeof window.abrirModalSena === 'function') window.abrirModalSena(id);
+        };
 
         document.getElementById('_geckoArchivarConfirmar').onclick = function () {
             modal.remove();
@@ -507,10 +528,11 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
             if (typeof window.mostrarExito === 'function') window.mostrarExito('OT archivada correctamente.', '¡Listo!');
             setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
         };
+
         return;
     }
 
-    // Para todos los demás estados: aplicar directo
+    // Para todos los demás estados: aplicar directamente sin modal
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const idx = lista.findIndex(x => String(x.id) === String(id));
     if (idx === -1) return;
@@ -899,10 +921,10 @@ window.renderOts = async function () {
 
     tbody.innerHTML = filtrados.map(ot => {
         const estado = ot.estado_ot || 'En Proceso';
-        const COLORES_OT = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#eab308', 'Entregado': '#6b7280' };
+        const COLORES_OT = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#ef4444', 'Entregado': '#6b7280' };
         const color = COLORES_OT[estado] || '#F15A24';
         const saldo = (ot.total || 0) - (ot.sena || 0);
-        const estadoOpts = ESTADOS_OT.map(e =>
+        const estadoOpts = _EST.map(e =>
             `<div onclick="window._seleccionarEstadoOT('${ot.id}','${e}');event.stopPropagation()"
                   style="padding:8px 14px;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;color:${COLORES_OT[e] || '#F15A24'};letter-spacing:0.5px;"
                   onmouseover="this.style.background='#1f1f23'" onmouseout="this.style.background='transparent'">${e}</div>`
@@ -2456,8 +2478,8 @@ window.renderReportesDashboard = function () {
                         <p style="color:#71717a;font-size:10px;margin:0;">${c.fecha_cierre} · ${c.movimientos || 0} movimientos</p>
                     </div>
                     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                        <p style="font-size:13px;font-weight:900;margin:0;color:${(c.balance||0)>=0?'#22c55e':'#ef4444'};">$${Math.round(c.balance||0).toLocaleString('es-AR')}</p>
-                        <button onclick="window._generarPDFCierreMes('${c.periodo}','',${c.ingresos||0},${c.gastos||0},[],[])"
+                        <p style="font-size:13px;font-weight:900;margin:0;color:${(c.balance || 0) >= 0 ? '#22c55e' : '#ef4444'};">$${Math.round(c.balance || 0).toLocaleString('es-AR')}</p>
+                        <button onclick="window._generarPDFCierreMes('${c.periodo}','',${c.ingresos || 0},${c.gastos || 0},[],[])"
                             style="font-size:9px;color:#F15A24;background:none;border:none;cursor:pointer;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:0;">
                             ↓ PDF
                         </button>
@@ -2575,7 +2597,7 @@ window.renderReportesDashboard = function () {
 
 // ── Cierre mensual con modal Gecko ──
 window._ejecutarCierreMensualGecko = function () {
-window.ejecutarCierreMensual = window._ejecutarCierreMensualGecko;
+    window.ejecutarCierreMensual = window._ejecutarCierreMensualGecko;
     document.getElementById('_geckoConfirmCierre')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmCierre';
@@ -2804,7 +2826,7 @@ window.addEventListener('load', function () {
             }
 
             const _EST = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado'];
-            const _COL = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#eab308', 'Entregado': '#6b7280' };
+            const _COL = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#ef4444', 'Entregado': '#6b7280' };
 
             tbody.innerHTML = filtrados.map(ot => {
                 const estado = ot.estado_ot || 'En Proceso';
