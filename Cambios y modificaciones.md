@@ -2,6 +2,11 @@
 
 ## PENDIENTES
 
+
+- Revisar convertir a orden en presupeustos, q no se va automaticamente a OT 
+- Agregar boton de  "+ Nuevo " en la misma linea de cliente en el presupuestador manual , el cual nos abre el modal de "nuevo cliente" para hacer una carga rapida de un nuevo cliente sin salir del presupuesto manual. 
+- Seccion clientes , al editar un cliente no se puede cambiar el nombre. reveer eso  
+- Agregar una advertencia cuando en cualquier cotizador se continua a presupeusto manual, pero debe salir una advertencia que no se cargo nada en el carrito, o que hay una cotizacion sin cargar al carrito. 
 - En el cotizador de gráfica, tarjeta de "montado": agregarle las unidades a los items de alto y ancho (metros, centímetros, milímetros) lo que corresponda. Ej: 1.5mts o 150cm. Siempre tiene que estar en la unidad que cargaste el item.
 - En el cotizador de gráfica, tarjeta de "montado": el precio se debe calcular siempre aunque no se carguen los metros lineales. Si no se cargan los metros lineales de corte, igual tiene que calcular el precio con los otros datos. Si se cargan los metros lineales de corte, automáticamente se suma. Si se deja en 0, el sistema debe detectar que debe calcular por la suma de los ítems.
 - Mensajes de confirmación consistentes en formularios que hoy guardan en silencio (Costos Operativos, Parámetros Láser, otros).
