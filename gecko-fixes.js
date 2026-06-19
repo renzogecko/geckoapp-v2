@@ -453,11 +453,43 @@ window._cambiarEstadoOTDesplegable = function (id, nuevoEstado) {
 
 window._toggleEstadoDropdown = function (id, event) {
     event.stopPropagation();
+
+    // Cerrar todos los demás dropdowns abiertos
     document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => {
         if (d.id !== 'estado-ot-dropdown-' + id) d.style.display = 'none';
     });
+
     const dd = document.getElementById('estado-ot-dropdown-' + id);
-    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    if (!dd) return;
+
+    const isOpen = dd.style.display === 'block';
+    if (isOpen) {
+        dd.style.display = 'none';
+        return;
+    }
+
+    // Calcular posición del trigger en pantalla
+    const trigger = event.currentTarget;
+    const rect = trigger.getBoundingClientRect();
+
+    // Posicionar el dropdown con fixed para que salga de cualquier contenedor con overflow
+    dd.style.position = 'fixed';
+    dd.style.top = (rect.bottom + 4) + 'px';
+    dd.style.left = rect.left + 'px';
+    dd.style.zIndex = '999999';
+    dd.style.display = 'block';
+
+    // Ajustar si se sale por la derecha de la pantalla
+    setTimeout(() => {
+        const ddRect = dd.getBoundingClientRect();
+        if (ddRect.right > window.innerWidth - 8) {
+            dd.style.left = (rect.right - ddRect.width) + 'px';
+        }
+        // Ajustar si se sale por abajo de la pantalla
+        if (ddRect.bottom > window.innerHeight - 8) {
+            dd.style.top = (rect.top - ddRect.height - 4) + 'px';
+        }
+    }, 0);
 };
 
 window._seleccionarEstadoOT = function (id, nuevoEstado) {
@@ -989,7 +1021,7 @@ window.renderOts = async function () {
                         <span id="estado-ot-label-${ot.id}" style="color:${color};font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;flex:1;">${estado}</span>
                         <span style="color:${color};font-size:8px;flex-shrink:0;">▼</span>
                     </div>
-                    <div id="estado-ot-dropdown-${ot.id}" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#141417;border:1px solid #27272a;border-radius:12px;z-index:1000;min-width:140px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+                    <div id="estado-ot-dropdown-${ot.id}" style="display:none;background:#18181b;border:1px solid #27272a;border-radius:14px;padding:6px;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
                         ${estadoOpts}
                     </div>
                 </div>
@@ -2905,7 +2937,7 @@ window.addEventListener('load', function () {
                                 <span id="estado-ot-label-${ot.id}" style="color:${color};font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;flex:1;">${estado}</span>
                                 <span style="color:${color};font-size:8px;flex-shrink:0;">▼</span>
                             </div>
-                            <div id="estado-ot-dropdown-${ot.id}" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#141417;border:1px solid #27272a;border-radius:12px;z-index:1000;min-width:140px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+                            <div id="estado-ot-dropdown-${ot.id}" style="display:none;background:#18181b;border:1px solid #27272a;border-radius:14px;padding:6px;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
                                 ${estadoOpts}
                             </div>
                         </div>
@@ -4984,3 +5016,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }, 1500);
 });
+
+document.addEventListener('click', function() {
+    document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => {
+        d.style.display = 'none';
+    });
+});
+
+document.addEventListener('scroll', function() {
+    document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => {
+        d.style.display = 'none';
+    });
+}, true);
