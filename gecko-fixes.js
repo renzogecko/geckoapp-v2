@@ -1207,114 +1207,153 @@ window.abrirModalSena = function (id) {
     const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
     const totalPendiente = (ot.total || 0) - (ot.sena || 0);
 
-    const inputStyle = 'width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:10px 14px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;font-family:inherit;';
-    const labelStyle = 'display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:7px;';
+    const inputStyle = 'width:100%;background:rgba(24,24,27,0.5);border:1px solid #333333;border-radius:12px;padding:11px 14px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;font-family:inherit;transition:border-color 0.2s;';
+    const labelStyle = 'display:block;color:#52525b;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;';
 
     const modal = document.createElement('div');
     modal.id = 'modalSena';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);padding:16px;';
 
     const formasPago = ['Efectivo', 'Transferencia', 'Débito', 'Crédito', 'MercadoPago'];
     const cajasList = cajas.map(c => c.nombre);
     const cajasDefault = cajasList[0] || '';
 
     modal.innerHTML = `
-    <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <div>
-                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">Registro de Pago</p>
-                <h2 style="color:white;font-size:18px;font-weight:900;margin:0;">OT #${String(id).padStart(4, '0')} · ${ot.cliente}</h2>
-            </div>
-            <button onclick="document.getElementById('modalSena').remove()" style="background:#27272a;border:none;color:#71717a;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px;">✕</button>
-        </div>
+        <div style="background:#141414;border-radius:20px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;position:relative;">
 
-        <!-- Resumen -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
-            <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
-                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Total OT</p>
-                <p style="color:white;font-size:16px;font-weight:900;">$${Math.round(ot.total || 0).toLocaleString('es-AR')}</p>
-            </div>
-            <div style="background:#09090b;border:1px solid #27272a;border-radius:12px;padding:12px;">
-                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Pagado</p>
-                <p style="color:#10b981;font-size:16px;font-weight:900;">$${Math.round(ot.sena || 0).toLocaleString('es-AR')}</p>
-            </div>
-            <div style="background:#09090b;border:1px solid ${totalPendiente > 0 ? '#ef4444' : '#10b981'};border-radius:12px;padding:12px;">
-                <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Saldo</p>
-                <p style="color:${totalPendiente > 0 ? '#ef4444' : '#10b981'};font-size:16px;font-weight:900;">$${Math.round(totalPendiente).toLocaleString('es-AR')}</p>
-            </div>
-        </div>
-
-        <!-- Tipo de pago -->
-        <div style="margin-bottom:16px;">
-            <label style="${labelStyle}">Tipo de pago</label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <button id="tipoPagoSeña" onclick="window._toggleTipoPago('seña')"
-                    style="padding:10px;background:#1A1A1A;border:1px solid #3f3f46;color:#a1a1aa;border-radius:10px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">
-                    Seña / Parcial
-                </button>
-                <button id="tipoPagoSaldo" onclick="window._toggleTipoPago('saldo')"
-                    style="padding:10px;background:#09090b;border:1px solid #27272a;color:#71717a;border-radius:10px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">
-                    Saldo Final
+            <div style="padding:32px 36px 24px 36px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                    <h2 style="color:white;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:-0.02em;margin:0 0 4px 0;">REGISTRO DE PAGO</h2>
+                    <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0;">OT #${String(id).padStart(4, '0')} · ${(ot.cliente || '').toUpperCase()}</p>
+                </div>
+                <button onclick="document.getElementById('modalSena').remove()"
+                    style="width:36px;height:36px;border-radius:10px;background:#1f1f1f;border:1px solid #2a2a2a;color:#52525b;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;"
+                    onmouseover="this.style.background='#2a1212';this.style.borderColor='#ef4444';this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
+                    onmouseout="this.style.background='#1f1f1f';this.style.borderColor='#2a2a2a';this.style.color='#52525b';this.style.transform='rotate(0deg)'">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-        </div>
 
-        <!-- Pago 1 -->
-        <div style="background:#09090b;border:1px solid #27272a;border-radius:14px;padding:16px;margin-bottom:12px;">
-            <p style="color:#F15A24;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">Pago 1</p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                <div>
-                    <label style="${labelStyle}">Monto</label>
-                    <input type="number" id="sena1Monto" placeholder="$0" style="${inputStyle}" oninput="window._calcularResto('${id}')">
+            <div style="padding:28px 36px;display:flex;flex-direction:column;gap:24px;flex:1;">
+
+                <!-- Recuadros Total / Pagado / Saldo -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                    <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:12px;padding:14px;">
+                        <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px 0;">Total OT</p>
+                        <p style="color:white;font-size:16px;font-weight:900;margin:0;">$${Math.round(ot.total || 0).toLocaleString('es-AR')}</p>
+                    </div>
+                    <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:12px;padding:14px;">
+                        <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px 0;">Pagado</p>
+                        <p style="color:#10b981;font-size:16px;font-weight:900;margin:0;">$${Math.round(ot.sena || 0).toLocaleString('es-AR')}</p>
+                    </div>
+                    <div style="background:#0f0f0f;border:1px solid ${totalPendiente > 0 ? '#ef444455' : '#10b98155'};border-radius:12px;padding:14px;">
+                        <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px 0;">Saldo</p>
+                        <p style="color:${totalPendiente > 0 ? '#ef4444' : '#10b981'};font-size:16px;font-weight:900;margin:0;">$${Math.round(totalPendiente).toLocaleString('es-AR')}</p>
+                    </div>
                 </div>
+
+                <!-- Tipo de pago -->
                 <div>
-                    <label style="${labelStyle}">Forma de pago</label>
-                    ${window._htmlDropdownPago('sena1Forma', formasPago, 'Efectivo')}
+                    <label style="${labelStyle}">Tipo de pago</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <button id="tipoPagoSeña" onclick="window._toggleTipoPago('seña')"
+                            style="padding:13px;background:#27272a;border:1px solid #3f3f46;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;">
+                            Seña / Parcial
+                        </button>
+                        <button id="tipoPagoSaldo" onclick="window._toggleTipoPago('saldo')"
+                            style="padding:13px;background:transparent;border:1px solid #2a2a2a;color:#52525b;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;">
+                            Saldo Final
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div>
-                <label style="${labelStyle}">Ingresa a caja</label>
-                ${cajasList.length > 0 ? window._htmlDropdownPago('sena1Caja', cajasList, cajasDefault) : '<p style="color:#52525b;font-size:11px;padding:8px 0;">Sin cajas creadas</p><input type="hidden" id="sena1Caja" value="">'}
-            </div>
-        </div>
 
-        <!-- Pago 2 (opcional) -->
-        <div id="pago2Container" style="display:none;background:#09090b;border:1px solid #27272a;border-radius:14px;padding:16px;margin-bottom:12px;">
-            <p style="color:#3b82f6;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">Pago 2 <span style="color:#52525b;">(ej: resto en efectivo)</span></p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <!-- Pago 1 -->
+                <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:14px;padding:18px;">
+                    <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 14px 0;">Pago 1</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                        <div>
+                            <label style="${labelStyle}">Monto</label>
+                            <input type="number" id="sena1Monto" placeholder="$0" style="${inputStyle}" oninput="window._calcularResto('${id}')"
+                                onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
+                        </div>
+                        <div>
+                            <label style="${labelStyle}">Forma de pago</label>
+                            ${window._htmlDropdownPago('sena1Forma', formasPago, 'Efectivo')}
+                        </div>
+                    </div>
+                    <div>
+                        <label style="${labelStyle}">Ingresa a caja</label>
+                        ${cajasList.length > 0 ? `
+                        <select id="sena1Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
+                            onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
+                            ${cajasList.map(c => `<option value="${c}" ${c === cajasDefault ? 'selected' : ''}>${c}</option>`).join('')}
+                        </select>` : `<p style="color:#ef4444;font-size:11px;">No hay cajas creadas. Creá una en Finanzas.</p>`}
+                    </div>
+                </div>
+
+                <!-- Toggle segundo pago -->
+                <button id="btnToggleSegundoPago" onclick="window._toggleSegundoPago && window._toggleSegundoPago('${id}')"
+                    style="background:transparent;border:1px dashed #2a2a2a;color:#52525b;border-radius:12px;padding:12px;font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all 0.2s;"
+                    onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'"
+                    onmouseout="this.style.borderColor='#2a2a2a';this.style.color='#52525b'">
+                    + Agregar segundo pago (ej: parte en transferencia + parte en efectivo)
+                </button>
+
+                <div id="bloquePago2" style="display:none;background:#0f0f0f;border:1px solid #1f1f1f;border-radius:14px;padding:18px;">
+                    <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 14px 0;">Pago 2</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                        <div>
+                            <label style="${labelStyle}">Monto</label>
+                            <input type="number" id="sena2Monto" placeholder="$0" style="${inputStyle}"
+                                onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
+                        </div>
+                        <div>
+                            <label style="${labelStyle}">Forma de pago</label>
+                            ${window._htmlDropdownPago('sena2Forma', formasPago, 'Efectivo')}
+                        </div>
+                    </div>
+                    <div>
+                        <label style="${labelStyle}">Ingresa a caja</label>
+                        ${cajasList.length > 0 ? `
+                        <select id="sena2Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
+                            onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
+                            ${cajasList.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>` : ''}
+                    </div>
+                </div>
+
+                <!-- Nota opcional -->
                 <div>
-                    <label style="${labelStyle}">Monto</label>
-                    <input type="number" id="sena2Monto" placeholder="$0" style="${inputStyle}">
+                    <label style="${labelStyle}">Nota (opcional)</label>
+                    <input type="text" id="senaNota" placeholder="Ej: Seña 60% por transferencia"
+                        style="width:100%;background:transparent;border:none;border-bottom:1px solid #1f1f1f;outline:none;color:white;font-size:13px;font-weight:600;padding:0 0 8px 0;font-family:inherit;box-sizing:border-box;">
                 </div>
-                <div>
-                    <label style="${labelStyle}">Forma de pago</label>
-                    ${window._htmlDropdownPago('sena2Forma', formasPago, 'Efectivo')}
-                </div>
+
             </div>
-            <div>
-                <label style="${labelStyle}">Ingresa a caja</label>
-                ${cajasList.length > 0 ? window._htmlDropdownPago('sena2Caja', cajasList, cajasDefault) : '<p style="color:#52525b;font-size:11px;padding:8px 0;">Sin cajas creadas</p><input type="hidden" id="sena2Caja" value="">'}
+
+            <div style="padding:20px 36px 28px 36px;border-top:1px solid #1f1f1f;display:flex;gap:12px;">
+                <button onclick="document.getElementById('modalSena').remove()"
+                    style="flex:1;padding:15px;background:transparent;border:1px solid #2a2a2a;color:#52525b;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:all 0.15s;"
+                    onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'"
+                    onmouseout="this.style.borderColor='#2a2a2a';this.style.color='#52525b'">
+                    Cancelar
+                </button>
+                <button onclick="window._registrarSena('${id}')"
+                    style="flex:2;padding:15px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;"
+                    onmouseover="this.style.background='#d94e1a'"
+                    onmouseout="this.style.background='#F15A24'">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Registrar Pago
+                </button>
             </div>
-        </div>
 
-        <button onclick="window._togglePago2()" id="btnTogglePago2"
-            style="width:100%;padding:10px;background:transparent;border:1px dashed #27272a;color:#52525b;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:16px;">
-            + Agregar segundo pago (ej: parte en transferencia + parte en efectivo)
-        </button>
+        </div>`;
 
-        <div style="margin-bottom:20px;">
-            <label style="${labelStyle}">Nota (opcional)</label>
-            <input type="text" id="senaNota" placeholder="Ej: Seña 60% por transferencia" style="${inputStyle}">
-        </div>
-
-        <div style="display:flex;gap:10px;">
-            <button onclick="document.getElementById('modalSena').remove()" style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
-            <button onclick="window._registrarSena('${id}')" style="flex:2;padding:13px;background:#22c55e;border:none;color:white;border-radius:12px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">Registrar Pago</button>
-        </div>
-    </div>`;
-
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
-    window._tipoPagoActual = 'seña';
+
+    // Marcar "Seña/Parcial" como seleccionado visualmente por defecto al abrir
+    window._tipoPagoActual = window._tipoPagoActual || 'seña';
     window._senaPendiente = totalPendiente;
 };
 
@@ -1333,9 +1372,9 @@ window._toggleTipoPago = function (tipo) {
     }
 };
 
-window._togglePago2 = function () {
-    const container = document.getElementById('pago2Container');
-    const btn = document.getElementById('btnTogglePago2');
+window._toggleSegundoPago = function () {
+    const container = document.getElementById('bloquePago2');
+    const btn = document.getElementById('btnToggleSegundoPago');
     if (!container) return;
     const visible = container.style.display !== 'none';
     container.style.display = visible ? 'none' : 'block';
