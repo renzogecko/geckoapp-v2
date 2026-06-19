@@ -2554,11 +2554,16 @@
             clip-path: unset !important;
         }
 /* ── Placeholder textarea instrucciones OT ── */
-#otEditInstrucciones::placeholder {
-    color: #52525b !important;
+#otEditInstrucciones::placeholder,
+#otEditInstrucciones::-webkit-input-placeholder,
+#otEditInstrucciones::-moz-placeholder,
+#otEditInstrucciones:-ms-input-placeholder {
+    color: #4b4b52 !important;
     opacity: 1 !important;
+    font-weight: 400 !important;
 }
 
 #otEditInstrucciones {
     color: #a1a1aa !important;
+    font-weight: 500 !important;
 }
