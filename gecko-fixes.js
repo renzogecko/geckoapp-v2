@@ -380,7 +380,7 @@ window._descargarDesdePopup = function () {
 // ESTADOS OT
 // ══════════════════════════════════════════════════════
 
-const ESTADOS_OT = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Entregado'];
+const ESTADOS_OT = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado'];
 const ESTADO_COLORS = {
     'En Proceso': { bg: '#F15A24', text: 'white' },
     'En Taller': { bg: '#8b5cf6', text: 'white' },
@@ -460,10 +460,75 @@ window._toggleEstadoDropdown = function (id, event) {
     if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
 };
 
-window._seleccionarEstadoOT = function (id, estado) {
+window._seleccionarEstadoOT = function (id, nuevoEstado) {
     const dd = document.getElementById('estado-ot-dropdown-' + id);
     if (dd) dd.style.display = 'none';
-    window._cambiarEstadoOTDesplegable(id, estado);
+
+    const COLORES = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#eab308', 'Entregado': '#6b7280' };
+
+    if (nuevoEstado === 'Entregado') {
+        // Mostrar modal de confirmación de archivo
+        const modalExist = document.getElementById('_geckoModalArchivarOT');
+        if (modalExist) modalExist.remove();
+
+        const modal = document.createElement('div');
+        modal.id = '_geckoModalArchivarOT';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.75);backdrop-filter:blur(4px);';
+        modal.innerHTML = `
+            <div style="background:#1e1f20;border:1px solid #27272a;border-radius:20px;width:100%;max-width:420px;padding:36px;text-align:center;margin:16px;">
+                <div style="width:56px;height:56px;background:rgba(16,185,129,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                    <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 8px 0;">Orden de Trabajo</p>
+                <h3 style="color:white;font-size:20px;font-weight:900;margin:0 0 12px 0;text-transform:uppercase;">¿Archivar trabajo?</h3>
+                <p style="color:#71717a;font-size:13px;margin:0 0 32px 0;line-height:1.6;">El trabajo fue entregado y cobrado.<br>Va a pasar al <strong style="color:white;">historial</strong> y salir de la lista activa.</p>
+                <div style="display:flex;gap:12px;">
+                    <button id="_geckoArchivarCancelar" style="flex:1;padding:14px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
+                        Cancelar
+                    </button>
+                    <button id="_geckoArchivarConfirmar" style="flex:1;padding:14px;background:#10b981;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
+                        Sí, archivar
+                    </button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+
+        document.getElementById('_geckoArchivarCancelar').onclick = function () { modal.remove(); };
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+
+        document.getElementById('_geckoArchivarConfirmar').onclick = function () {
+            modal.remove();
+            let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            const idx = lista.findIndex(x => String(x.id) === String(id));
+            if (idx !== -1) {
+                lista[idx].estado_ot = 'Entregado';
+                localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+            }
+            if (typeof window.mostrarExito === 'function') window.mostrarExito('OT archivada correctamente.', '¡Listo!');
+            setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
+        };
+        return;
+    }
+
+    // Para todos los demás estados: aplicar directo
+    let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const idx = lista.findIndex(x => String(x.id) === String(id));
+    if (idx === -1) return;
+    lista[idx].estado_ot = nuevoEstado;
+    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+
+    const color = COLORES[nuevoEstado] || '#F15A24';
+    const wrapper = document.getElementById('estado-ot-' + id);
+    if (wrapper) {
+        const trigger = wrapper.querySelector('div');
+        if (trigger) {
+            trigger.style.background = color + '22';
+            trigger.style.borderColor = color + '55';
+            trigger.querySelectorAll('span').forEach(s => s.style.color = color);
+        }
+        const label = document.getElementById('estado-ot-label-' + id);
+        if (label) label.textContent = nuevoEstado;
+    }
 };
 
 // Cerrar dropdowns al hacer clic fuera
@@ -834,7 +899,7 @@ window.renderOts = async function () {
 
     tbody.innerHTML = filtrados.map(ot => {
         const estado = ot.estado_ot || 'En Proceso';
-        const COLORES_OT = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Entregado': '#6b7280' };
+        const COLORES_OT = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#eab308', 'Entregado': '#6b7280' };
         const color = COLORES_OT[estado] || '#F15A24';
         const saldo = (ot.total || 0) - (ot.sena || 0);
         const estadoOpts = ESTADOS_OT.map(e =>
@@ -2738,8 +2803,8 @@ window.addEventListener('load', function () {
                 return;
             }
 
-            const _EST = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Entregado'];
-            const _COL = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Entregado': '#6b7280' };
+            const _EST = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado'];
+            const _COL = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#eab308', 'Entregado': '#6b7280' };
 
             tbody.innerHTML = filtrados.map(ot => {
                 const estado = ot.estado_ot || 'En Proceso';
