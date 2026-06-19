@@ -2543,3 +2543,13 @@
         .gpm-price:focus {
             border-color: #F15A24 !important;
         }
+
+        #tbodyOts tr td {
+            overflow: visible !important;
+        }
+
+        [id^="estado-ot-dropdown-"] {
+            overflow: visible !important;
+            clip: unset !important;
+            clip-path: unset !important;
+        }
