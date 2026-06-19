@@ -185,3 +185,41 @@ Antes de escribir cualquier prompt para el agente, siempre seguir estos pasos:
 5. Nueva conversación en Antigravity → pegar prompt
 6. Verificar en browser (Ctrl+Shift+R para limpiar caché)
 7. Commit + push
+
+---
+
+## APRENDIZAJES TÉCNICOS — Sesión 16/06/2026
+
+### getGeckoItem — conflicto materiales vs servicios
+`getGeckoItem` busca en un pool combinado de materiales + servicios. Si un material tiene un nombre similar al servicio buscado, lo encuentra primero y devuelve valores incorrectos (ej: buscar "Troquelado" encuentra "Sticker Troquelado - Simple" en vinilos_lonas con precioVenta calculado incorrecto).
+**Regla:** Para terminaciones y servicios, NO usar `getGeckoItem`. Siempre buscar directamente:
+```js
+const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+const serv = servicios.find(s => s.nombre?.toLowerCase().includes('nombre_servicio'));
+const precio = serv ? (serv.precio || serv.precioVenta || FALLBACK) : FALLBACK;
+```
+
+### precio vs precioVenta en servicios
+Los servicios cargados manualmente tienen `precio` como campo principal. `precioVenta` es un campo calculado automáticamente (costoARS × multiplicador) que puede dar 0 si el costo es 0. Siempre leer `serv.precio || serv.precioVenta || fallback`.
+
+### contenedorHistorialCierres — ID real en el HTML
+El contenedor del historial de cierres en `index.html` tiene id `contenedorHistorialCierres`. No existe ningún elemento hijo `repoHistorialCierres`. Escribir siempre directo en `contenedorHistorialCierres.innerHTML`.
+
+### main.js pisa overrides de gecko-fixes.js
+`main.js` carga después de `gecko-fixes.js` y redefine funciones como `renderReportesDashboard` y `ejecutarCierreMensual`. Si un fix en `gecko-fixes.js` no tiene efecto, verificar si `main.js` tiene su propia versión que la pisa. Solución: en `gecko-fixes.js` renombrar la función con prefijo `_gecko` y hacer que `main.js` delegue a ella.
+
+### HISTORICO_CIERRES — carga al inicio
+`window.HISTORICO_CIERRES` puede estar `undefined` cuando `renderReportesDashboard` corre por primera vez. Siempre usar como fallback:
+```js
+const hist = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+```
+
+### Cierre de mes — flujo completo
+1. `ejecutarCierreMensual()` en main.js delega a `window._ejecutarCierreMensualGecko()` en gecko-fixes.js
+2. Al confirmar: reinicia gastos fijos, guarda cierre en localStorage Y en MySQL via fetch POST a `api.php?endpoint=historico_cierres`
+3. Muestra modal con balance (Ingresos / Egresos / Balance neto) + botón Descargar PDF
+4. PDF generado por `window._generarPDFCierreMes()`
+
+### Tabla historico_cierres en MySQL
+Columnas: `id, periodo, mes, anio, ingresos, gastos, balance, fecha_cierre, movimientos, gastos_fijos`
+Mapeada en gecko-api.js como `gecko_historico_cierres → historico_cierres`
