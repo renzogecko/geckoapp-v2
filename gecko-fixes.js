@@ -1138,7 +1138,9 @@ window.editarOT = function (id) {
                     </label>
                     <textarea id="otEditInstrucciones" rows="4"
                         placeholder="Ej: Pintar el corpóreo con verde furioso, cuidar que no chorree la pintura en los bordes..."
-                        style="width:100%;background:#0f0f0f;border:1px solid #1f1f1f;border-left:3px solid #F15A24;border-radius:16px;padding:16px 18px;color:#a1a1aa;font-size:13px;font-weight:500;outline:none;box-sizing:border-box;font-family:inherit;resize:vertical;line-height:1.6;">${ot.instrucciones || ''}</textarea>
+                        style="width:100%;color:rgb(161,161,170);font-size:14px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:80px;background:rgba(24,24,27,0.5) !important;border:1px solid rgb(51,51,51) !important;border-radius:12px !important;padding:12px 16px !important;"
+                        onfocus="this.style.setProperty('border-color','#F15A24','important')"
+                        onblur="this.style.setProperty('border-color','#333333','important')">${ot.instrucciones || ''}</textarea>
                 </div>
 
             </div>
@@ -5069,13 +5071,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 1500);
 });
 
-document.addEventListener('click', function() {
+document.addEventListener('click', function () {
     document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => {
         d.style.display = 'none';
     });
 });
 
-document.addEventListener('scroll', function() {
+document.addEventListener('scroll', function () {
     document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => {
         d.style.display = 'none';
     });
