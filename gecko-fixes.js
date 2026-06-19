@@ -1219,9 +1219,9 @@ window.abrirModalSena = function (id) {
     const cajasDefault = cajasList[0] || '';
 
     modal.innerHTML = `
-        <div style="background:#141414;border-radius:20px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;position:relative;">
+        <div style="background:#141414;border-radius:20px;width:100%;max-width:720px;max-height:95vh;overflow-y:auto;display:flex;flex-direction:column;position:relative;">
 
-            <div style="padding:32px 36px 24px 36px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="padding:32px 44px 24px 44px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:flex-start;">
                 <div>
                     <h2 style="color:white;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:-0.02em;margin:0 0 4px 0;">REGISTRO DE PAGO</h2>
                     <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0;">OT #${String(id).padStart(4, '0')} · ${(ot.cliente || '').toUpperCase()}</p>
@@ -1234,7 +1234,7 @@ window.abrirModalSena = function (id) {
                 </button>
             </div>
 
-            <div style="padding:28px 36px;display:flex;flex-direction:column;gap:24px;flex:1;">
+            <div style="padding:32px 44px;display:flex;flex-direction:column;gap:28px;flex:1;">
 
                 <!-- Recuadros Total / Pagado / Saldo -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
@@ -1331,7 +1331,7 @@ window.abrirModalSena = function (id) {
 
             </div>
 
-            <div style="padding:20px 36px 28px 36px;border-top:1px solid #1f1f1f;display:flex;gap:12px;">
+            <div style="padding:20px 44px 32px 44px;border-top:1px solid #1f1f1f;display:flex;gap:12px;">
                 <button onclick="document.getElementById('modalSena').remove()"
                     style="flex:1;padding:15px;background:transparent;border:1px solid #2a2a2a;color:#52525b;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:all 0.15s;"
                     onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'"
