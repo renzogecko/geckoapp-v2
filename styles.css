@@ -2553,3 +2553,12 @@
             clip: unset !important;
             clip-path: unset !important;
         }
+/* ── Placeholder textarea instrucciones OT ── */
+#otEditInstrucciones::placeholder {
+    color: #52525b !important;
+    opacity: 1 !important;
+}
+
+#otEditInstrucciones {
+    color: #a1a1aa !important;
+}
