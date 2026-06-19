@@ -1067,57 +1067,98 @@ window.editarOT = function (id) {
     if (!ot) return;
 
     document.getElementById('modalEditarOT')?.remove();
-    const modal = document.createElement('div');
-    modal.id = 'modalEditarOT';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
-
-    const inputStyle = 'width:100%;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:10px 14px;color:white;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;font-family:inherit;';
-    const labelStyle = 'display:block;color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:7px;';
 
     const itemsHTML = (ot.items || []).map((it, i) => `
-        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1f1f23;">
-            <span style="color:#52525b;font-size:9px;font-family:monospace;">${String(i + 1).padStart(2, '0')}</span>
-            <span style="color:white;font-size:11px;font-weight:600;flex:1;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
-            <span style="color:#F15A24;font-size:11px;font-family:monospace;">$${Math.round(it.costo || 0).toLocaleString('es-AR')}</span>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #1f1f23;">
+            <span style="color:#3f3f46;font-size:9px;font-weight:900;font-family:monospace;min-width:18px;">${String(i + 1).padStart(2, '0')}</span>
+            <span style="color:#a1a1aa;font-size:12px;font-weight:600;flex:1;line-height:1.4;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
+            <span style="color:#F15A24;font-size:12px;font-weight:900;font-family:monospace;">$${Math.round(it.costo || 0).toLocaleString('es-AR')}</span>
         </div>
     `).join('');
 
-    modal.innerHTML = `
-    <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <div>
-                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">🔧 Orden de Trabajo #${String(id).padStart(4, '0')}</p>
-                <h2 style="color:white;font-size:18px;font-weight:900;margin:0;">Editar OT</h2>
-            </div>
-            <button onclick="document.getElementById('modalEditarOT').remove()" style="background:#27272a;border:none;color:#71717a;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px;">✕</button>
-        </div>
-        <div style="background:#09090b;border:1px solid #27272a;border-radius:14px;padding:12px 16px;margin-bottom:16px;">
-            <p style="color:#71717a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Ítems del trabajo</p>
-            ${itemsHTML || '<p style="color:#52525b;font-size:11px;">Sin ítems</p>'}
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">Cliente</label>
-            <input type="text" id="otEditCliente" value="${ot.cliente || ''}" style="${inputStyle}">
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">Área / Operario asignado</label>
-            <input type="text" id="otEditArea" value="${ot.area || ''}" placeholder="Ej: Taller Gráfica · Juan" style="${inputStyle}">
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">Fecha de entrega</label>
-            <input type="text" id="otEditEntrega" value="${ot.fecha_entrega || ''}" placeholder="Ej: 30/05/2026" style="${inputStyle}">
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="${labelStyle}">⚠ Instrucciones especiales de producción</label>
-            <textarea id="otEditInstrucciones" rows="5" placeholder="Ej: Pintar con verde furioso..." style="${inputStyle}resize:vertical;border-left:3px solid #F15A24;">${ot.instrucciones || ''}</textarea>
-        </div>
-        <div style="display:flex;gap:10px;">
-            <button onclick="document.getElementById('modalEditarOT').remove()" style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
-            <button onclick="window._guardarEdicionOT('${id}')" style="flex:1;padding:13px;background:#1A1A1A;border:1px solid #27272a;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">💾 Guardar</button>
-            <button onclick="window._reimprimir('${id}')" style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">🖨 Reimprimir</button>
-        </div>
-    </div>`;
+    const modal = document.createElement('div');
+    modal.id = 'modalEditarOT';
+    modal.className = 'gecko-modal-overlay';
+    modal.style.display = 'flex';
 
+    modal.innerHTML = `
+        <div class="gecko-modal-box" style="max-width:560px;width:100%;max-height:90vh;overflow-y:auto;">
+
+            <!-- Header -->
+            <button onclick="document.getElementById('modalEditarOT').remove()"
+                style="position:absolute;top:20px;right:20px;width:36px;height:36px;border-radius:10px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"
+                onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
+                onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+
+            <p class="gecko-modal-subtitle">OT #${String(id).padStart(4, '0')}</p>
+            <h2 class="gecko-modal-title">EDITAR ORDEN DE TRABAJO</h2>
+
+            <!-- Ítems (solo lectura) -->
+            <div style="background:#131314;border:1px solid #27272a;border-radius:14px;padding:14px 16px;margin:24px 0 20px 0;">
+                <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 10px 0;">Ítems del trabajo · solo lectura</p>
+                ${itemsHTML || '<p style="color:#3f3f46;font-size:11px;margin:0;">Sin ítems registrados.</p>'}
+            </div>
+
+            <!-- Campos editables -->
+            <div style="display:flex;flex-direction:column;gap:18px;">
+
+                <div>
+                    <label class="gecko-label">Cliente</label>
+                    <input type="text" id="otEditCliente" value="${(ot.cliente || '').replace(/"/g, '&quot;')}"
+                        class="gecko-input-line" style="width:100%;">
+                </div>
+
+                <div>
+                    <label class="gecko-label">Área / Operario asignado</label>
+                    <input type="text" id="otEditArea" value="${(ot.area || '').replace(/"/g, '&quot;')}"
+                        placeholder="Ej: Taller Gráfica · Juan"
+                        class="gecko-input-line" style="width:100%;">
+                </div>
+
+                <div>
+                    <label class="gecko-label">Fecha de entrega</label>
+                    <input type="text" id="otEditEntrega" value="${(ot.fecha_entrega || '').replace(/"/g, '&quot;')}"
+                        placeholder="Ej: 30/06/2026"
+                        class="gecko-input-line" style="width:100%;">
+                </div>
+
+                <div>
+                    <label class="gecko-label" style="color:#F15A24;">
+                        <svg style="display:inline;vertical-align:middle;margin-right:4px;" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                        Instrucciones especiales de producción
+                    </label>
+                    <textarea id="otEditInstrucciones" rows="4"
+                        placeholder="Ej: Pintar el corpóreo con verde furioso, cuidar que no chorree la pintura en los bordes..."
+                        style="width:100%;background:#131314;border:1px solid #27272a;border-left:3px solid #F15A24;border-radius:12px;padding:12px 14px;color:white;font-size:13px;font-weight:500;outline:none;box-sizing:border-box;font-family:inherit;resize:vertical;line-height:1.6;">${ot.instrucciones || ''}</textarea>
+                </div>
+
+            </div>
+
+            <!-- Footer con botones -->
+            <div class="gecko-modal-footer" style="margin-top:28px;display:flex;gap:10px;">
+                <button onclick="document.getElementById('modalEditarOT').remove()"
+                    class="gecko-btn-cancel" style="flex:1;">
+                    Cancelar
+                </button>
+                <button onclick="window._reimprimir('${id}')"
+                    style="flex:1;padding:13px;background:#27272a;border:1px solid #3f3f46;color:#a1a1aa;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;transition:all 0.15s;"
+                    onmouseover="this.style.background='#3f3f46';this.style.color='white'"
+                    onmouseout="this.style.background='#27272a';this.style.color='#a1a1aa'">
+                    <svg style="display:inline;vertical-align:middle;margin-right:4px;" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Reimprimir
+                </button>
+                <button onclick="window._guardarEdicionOT('${id}')"
+                    class="gecko-btn-primary" style="flex:1;">
+                    <svg style="display:inline;vertical-align:middle;margin-right:4px;" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Guardar
+                </button>
+            </div>
+
+        </div>`;
+
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
 };
 
