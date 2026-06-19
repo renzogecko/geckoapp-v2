@@ -475,29 +475,34 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
     };
 
     if (nuevoEstado === 'Entregado') {
-        // Mostrar modal de confirmación con 3 opciones
         const modalExist = document.getElementById('_geckoModalArchivarOT');
         if (modalExist) modalExist.remove();
 
+        const btnStyle = 'width:100%;padding:15px;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:transform 0.15s ease, box-shadow 0.15s ease;';
+        const btnHover = 'onmouseover="this.style.transform=\'scale(1.03)\';this.style.boxShadow=\'0 4px 20px rgba(0,0,0,0.3)\'" onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'none\'"';
+
         const modal = document.createElement('div');
         modal.id = '_geckoModalArchivarOT';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.80);backdrop-filter:blur(4px);padding:16px;';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.82);backdrop-filter:blur(5px);padding:16px;';
         modal.innerHTML = `
-            <div style="background:#1e1f20;border:1px solid #27272a;border-radius:20px;width:100%;max-width:440px;padding:36px;text-align:center;">
-                <div style="width:56px;height:56px;background:rgba(16,185,129,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
-                    <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <div style="background:#1e1f20;border:1px solid #2a2a2e;border-radius:22px;width:100%;max-width:420px;padding:36px;text-align:center;">
+                <div style="width:52px;height:52px;background:rgba(16,185,129,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 </div>
                 <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 8px 0;">Orden de Trabajo</p>
-                <h3 style="color:white;font-size:20px;font-weight:900;margin:0 0 12px 0;text-transform:uppercase;">¿Archivar trabajo?</h3>
-                <p style="color:#71717a;font-size:13px;margin:0 0 32px 0;line-height:1.6;">Antes de archivar, verificá que el trabajo esté completamente cobrado.<br>Si falta registrar un pago, usá el botón correspondiente.</p>
+                <h3 style="color:white;font-size:19px;font-weight:900;margin:0 0 10px 0;text-transform:uppercase;">¿Archivar trabajo?</h3>
+                <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;line-height:1.65;">Verificá que el trabajo esté cobrado antes de archivar. Si falta registrar un pago, usá el botón naranja.</p>
                 <div style="display:flex;flex-direction:column;gap:10px;">
-                    <button id="_geckoArchivarRegistrarPago" style="width:100%;padding:14px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
+                    <button id="_geckoArchivarRegistrarPago" ${btnHover}
+                        style="${btnStyle}background:#F15A24;border:none;color:white;">
                         Registrar Pago
                     </button>
-                    <button id="_geckoArchivarConfirmar" style="width:100%;padding:14px;background:transparent;border:1px solid #10b981;color:#10b981;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
-                        Ya está cobrado — Archivar
+                    <button id="_geckoArchivarConfirmar" ${btnHover}
+                        style="${btnStyle}background:#27272a;border:1px solid #3f3f46;color:#a1a1aa;">
+                        Ya está cobrado — <strong style="color:white;">ARCHIVAR</strong>
                     </button>
-                    <button id="_geckoArchivarCancelar" style="width:100%;padding:12px;background:transparent;border:1px solid #27272a;color:#52525b;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;">
+                    <button id="_geckoArchivarCancelar" ${btnHover}
+                        style="${btnStyle}background:#1c1c1f;border:1px solid #27272a;color:#52525b;">
                         Cancelar
                     </button>
                 </div>
@@ -514,25 +519,20 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
 
         document.getElementById('_geckoArchivarRegistrarPago').onclick = function () {
             modal.remove();
+            // Abrir modal de pago. Al confirmar el pago, archivar automáticamente.
+            window._archivarDespuesDePago = id;
             if (typeof window.abrirModalSena === 'function') window.abrirModalSena(id);
         };
 
         document.getElementById('_geckoArchivarConfirmar').onclick = function () {
             modal.remove();
-            let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            const idx = lista.findIndex(x => String(x.id) === String(id));
-            if (idx !== -1) {
-                lista[idx].estado_ot = 'Entregado';
-                localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
-            }
-            if (typeof window.mostrarExito === 'function') window.mostrarExito('OT archivada correctamente.', '¡Listo!');
-            setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
+            window._archivarOT(id);
         };
 
         return;
     }
 
-    // Para todos los demás estados: aplicar directamente sin modal
+    // Para todos los demás estados: aplicar directo sin modal
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const idx = lista.findIndex(x => String(x.id) === String(id));
     if (idx === -1) return;
@@ -551,6 +551,29 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
         const label = document.getElementById('estado-ot-label-' + id);
         if (label) label.textContent = nuevoEstado;
     }
+};
+
+window._archivarOT = function (id) {
+    let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const idx = lista.findIndex(x => String(x.id) === String(id));
+    if (idx !== -1) {
+        lista[idx].estado_ot = 'Entregado';
+        localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    }
+    if (typeof window.mostrarExito === 'function') window.mostrarExito('OT archivada correctamente.', '¡Listo!');
+    setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
+};
+
+window._desarchivarOT = function (id) {
+    if (!confirm('¿Querés desarchivar esta OT y devolverla a la lista activa?')) return;
+    let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const idx = lista.findIndex(x => String(x.id) === String(id));
+    if (idx !== -1) {
+        lista[idx].estado_ot = 'En Proceso';
+        localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    }
+    if (typeof window.mostrarExito === 'function') window.mostrarExito('OT devuelta a lista activa.', '¡Listo!');
+    setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
 };
 
 // Cerrar dropdowns al hacer clic fuera
@@ -930,6 +953,23 @@ window.renderOts = async function () {
                   onmouseover="this.style.background='#1f1f23'" onmouseout="this.style.background='transparent'">${e}</div>`
         ).join('');
 
+        const _botonesAccion = mostrarHistorial ? `
+    <td class="py-4 px-6 text-right">
+        <div class="flex justify-end gap-2">
+            <button onclick="window.verDocumento('${ot.id}')" title="Ver OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+            <button onclick="window._desarchivarOT('${ot.id}')" title="Desarchivar" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-amber-400 hover:border-amber-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></button>
+            <button onclick="window.eliminarOT('${ot.id}')" title="Eliminar" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-red-400 hover:border-red-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        </div>
+    </td>` : `
+    <td class="py-4 px-6 text-right">
+        <div class="flex justify-end gap-2">
+            <button onclick="window.verDocumento('${ot.id}')" title="Ver OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+            <button onclick="window.editarOT('${ot.id}')" title="Editar OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+            <button onclick="window.abrirModalSena('${ot.id}')" title="Registrar Pago" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>
+            <button onclick="window.eliminarOT('${ot.id}')" title="Eliminar OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-red-400 hover:border-red-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        </div>
+    </td>`;
+
         return `
         <tr draggable="true" data-drag-key="${ot.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800" style="cursor:grab;">
             <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500">#${ot.id}</td>
@@ -960,26 +1000,7 @@ window.renderOts = async function () {
             <td class="py-4 px-6 text-right font-black text-[14px] ${saldo > 0 ? 'text-red-400' : 'text-emerald-400'}">
                 $${Math.round(saldo).toLocaleString('es-AR')}
             </td>
-            <td class="py-4 px-6 text-right">
-                <div class="flex justify-end gap-2">
-                    <button onclick="window.verDocumento('${ot.id}')"
-                        class="p-2 bg-zinc-700/50 text-zinc-300 rounded-lg hover:bg-zinc-600 hover:text-white transition-all" title="Ver OT">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                    </button>
-                    <button onclick="window.editarOT('${ot.id}')"
-                        class="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all" title="Editar OT">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </button>
-                    <button onclick="window.abrirModalSena('${ot.id}')"
-                        class="p-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500 hover:text-white transition-all" title="Registrar Pago">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </button>
-                    <button onclick="window.eliminarOT('${ot.id}')"
-                        class="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all" title="Eliminar OT">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                </div>
-            </td>
+            ${_botonesAccion}
         </tr>`;
     }).join('');
     if (typeof window._geckoDragTable === 'function') {
@@ -1344,6 +1365,13 @@ window._registrarSena = function (id) {
     if (typeof window.renderOts === 'function') window.renderOts();
     if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
     if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+
+    // Auto-archivar si el pago vino desde el modal de archivo
+    if (window._archivarDespuesDePago) {
+        const _idParaArchivar = window._archivarDespuesDePago;
+        window._archivarDespuesDePago = null;
+        setTimeout(() => { window._archivarOT(_idParaArchivar); }, 400);
+    }
 };
 
 
@@ -2838,6 +2866,23 @@ window.addEventListener('load', function () {
                           onmouseover="this.style.background='#1f1f23'" onmouseout="this.style.background='transparent'">${e}</div>`
                 ).join('');
 
+                const _botonesAccion = mostrarHistorial ? `
+    <td class="py-4 px-6 text-right">
+        <div class="flex justify-end gap-2">
+            <button onclick="window.verDocumento('${ot.id}')" title="Ver OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+            <button onclick="window._desarchivarOT('${ot.id}')" title="Desarchivar" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-amber-400 hover:border-amber-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></button>
+            <button onclick="window.eliminarOT('${ot.id}')" title="Eliminar" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-red-400 hover:border-red-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        </div>
+    </td>` : `
+    <td class="py-4 px-6 text-right">
+        <div class="flex justify-end gap-2">
+            <button onclick="window.verDocumento('${ot.id}')" title="Ver OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+            <button onclick="window.editarOT('${ot.id}')" title="Editar OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+            <button onclick="window.abrirModalSena('${ot.id}')" title="Registrar Pago" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>
+            <button onclick="window.eliminarOT('${ot.id}')" title="Eliminar OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-red-400 hover:border-red-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        </div>
+    </td>`;
+
                 return `
                 <tr draggable="true" data-drag-key="${ot.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800" style="cursor:grab;">
                     <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500">#${ot.id}</td>
@@ -2871,26 +2916,7 @@ window.addEventListener('load', function () {
                     <td class="py-4 px-6 text-right font-black text-[14px] ${saldo > 0 ? 'text-red-400' : 'text-emerald-400'}">
                         $${Math.round(saldo).toLocaleString('es-AR')}
                     </td>
-                    <td class="py-4 px-6 text-right">
-                        <div class="flex justify-end gap-2">
-                            <button onclick="window.verDocumento('${ot.id}')" title="Ver OT"
-                                class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            </button>
-                            <button onclick="window.editarOT('${ot.id}')" title="Editar OT"
-                                class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            </button>
-                            <button onclick="window.abrirModalSena('${ot.id}')" title="Registrar Pago"
-                                class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </button>
-                            <button onclick="window.eliminarOT('${ot.id}')" title="Eliminar OT"
-                                class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </div>
-                    </td>
+                    ${_botonesAccion}
                 </tr>`;
             }).join('');
             if (typeof window._geckoDragTable === 'function') {
