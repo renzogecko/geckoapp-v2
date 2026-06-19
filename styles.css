@@ -1704,6 +1704,401 @@
             color: white;
         }
 
+/* ══════════════════════════════════════════════════════════════
+   GECKO MODAL SYSTEM v2 — Sistema unificado y definitivo
+   Usar SIEMPRE estas clases en cualquier modal nuevo del sistema.
+   No crear estilos propios de modal: usar esto.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── OVERLAY (fondo oscuro detrás del modal) ── */
+.gecko-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 16px;
+}
+
+/* ── CAJA DEL MODAL ── */
+.gecko-modal-box {
+    background: #141414;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 92vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.gecko-modal-box.gecko-modal-wide {
+    max-width: 720px;
+}
+
+.gecko-modal-box.gecko-modal-narrow {
+    max-width: 440px;
+}
+
+/* ── HEADER ── */
+.gecko-modal-header {
+    padding: 32px 36px 24px 36px;
+    border-bottom: 1px solid #1f1f1f;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.gecko-modal-title {
+    color: white;
+    font-size: 22px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px 0;
+}
+
+.gecko-modal-subtitle {
+    color: #F15A24;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin: 0;
+}
+
+/* ── BOTÓN CERRAR (X) — gira 90° y se pone rojo en hover ── */
+.gecko-modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    color: #52525b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.gecko-modal-close:hover {
+    background: #2a1212;
+    border-color: #ef4444;
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+/* ── BODY ── */
+.gecko-modal-body {
+    padding: 28px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    flex: 1;
+}
+
+.gecko-modal-box.gecko-modal-wide .gecko-modal-body {
+    padding: 32px 44px;
+    gap: 30px;
+}
+
+.gecko-modal-box.gecko-modal-wide .gecko-modal-header {
+    padding: 32px 44px 24px 44px;
+}
+
+.gecko-modal-box.gecko-modal-wide .gecko-modal-footer {
+    padding: 20px 44px 32px 44px;
+}
+
+/* ── SECCIÓN DE SOLO LECTURA (ej: lista de ítems) ── */
+.gecko-modal-readonly-label {
+    color: #3f3f46;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin: 0 0 6px 0;
+}
+
+.gecko-modal-readonly-box {
+    background: #0f0f0f;
+    border: 1px solid #1f1f1f;
+    border-radius: 12px;
+    padding: 4px 14px;
+}
+
+.gecko-modal-readonly-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.gecko-modal-readonly-row:last-child {
+    border-bottom: none;
+}
+
+.gecko-modal-readonly-index {
+    color: #3f3f46;
+    font-size: 9px;
+    font-weight: 900;
+    font-family: monospace;
+    min-width: 20px;
+}
+
+.gecko-modal-readonly-text {
+    color: #71717a;
+    font-size: 12px;
+    font-weight: 600;
+    flex: 1;
+}
+
+.gecko-modal-readonly-value {
+    color: #F15A24;
+    font-size: 12px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── CAMPO TIPO RENGLÓN (underline, sin caja) — para Cliente, Fecha, etc ── */
+.gecko-field-row {
+    border-bottom: 1px solid #1f1f1f;
+    padding-bottom: 4px;
+}
+
+.gecko-field-row label,
+.gecko-row-label {
+    display: block;
+    color: #52525b;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+}
+
+.gecko-field-row input,
+.gecko-input-line {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.gecko-field-row input::placeholder,
+.gecko-input-line::placeholder {
+    color: #3f3f46;
+    font-weight: 400;
+}
+
+/* ── CAMPO TIPO CAJA (con fondo, borde, focus naranja) — para textareas y selects ── */
+.gecko-field-box {
+    width: 100%;
+    background: rgba(24, 24, 27, 0.5);
+    border: 1px solid #333333;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #a1a1aa;
+    font-size: 14px;
+    font-weight: 500;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: none;
+    transition: border-color 0.2s ease;
+}
+
+.gecko-field-box:focus {
+    border-color: #F15A24 !important;
+}
+
+.gecko-field-box::placeholder {
+    color: #4b4b52 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+}
+
+/* Variante con filete naranja a la izquierda (campos de instrucciones/notas importantes) */
+.gecko-field-box.gecko-field-accent {
+    border-left: 3px solid #F15A24;
+}
+
+.gecko-field-box.gecko-field-accent ~ label,
+label.gecko-row-label-accent {
+    color: #F15A24 !important;
+}
+
+/* ── SELECT GECKO PRO — flecha blanca, usar dentro de cualquier modal ── */
+.gecko-modal-box select,
+select.gecko-select-modal {
+    width: 100%;
+    background-color: rgba(24, 24, 27, 0.5);
+    border: 1px solid #333333;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #a1a1aa;
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 13px;
+    transition: border-color 0.2s ease;
+}
+
+.gecko-modal-box select:focus,
+select.gecko-select-modal:focus {
+    border-color: #F15A24;
+}
+
+.gecko-modal-box select option,
+select.gecko-select-modal option {
+    background: #18181b;
+    color: white;
+}
+
+/* ── INPUT NUMÉRICO CON PREFIJO DE MONEDA Y SEPARADOR DE MILES ── */
+.gecko-money-wrap {
+    display: flex;
+    align-items: center;
+    background: rgba(24, 24, 27, 0.5);
+    border: 1px solid #333333;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.gecko-money-wrap:focus-within {
+    border-color: #F15A24;
+}
+
+.gecko-money-prefix {
+    padding: 12px 14px;
+    color: #71717a;
+    font-size: 13px;
+    font-weight: 900;
+    border-right: 1px solid #333333;
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.gecko-money-wrap input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Nota de implementación: el separador de miles (punto cada 3 cifras, formato es-AR)
+   se aplica con JS al momento de mostrar el valor, usando:
+   numero.toLocaleString('es-AR')
+   Esta clase solo define el estilo visual del campo. */
+
+/* ── FOOTER CON BOTONES ── */
+.gecko-modal-footer {
+    padding: 20px 36px 28px 36px;
+    border-top: 1px solid #1f1f1f;
+    display: flex;
+    gap: 12px;
+}
+
+/* Botón base de modal — efecto "se prende" en hover (glow, no zoom) */
+.gecko-btn-modal {
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+/* Botón Cancelar — gris, se ilumina sutil en hover */
+.gecko-btn-cancel {
+    flex: 1;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    color: #52525b;
+}
+
+.gecko-btn-cancel:hover {
+    border-color: #3f3f46;
+    color: #a1a1aa;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Botón secundario — gris medio, se ilumina más marcado (efecto "prenderse") */
+.gecko-btn-secondary {
+    flex: 1;
+    background: #27272a;
+    border: 1px solid #2a2a2a;
+    color: #a1a1aa;
+}
+
+.gecko-btn-secondary:hover {
+    background: #3f3f46;
+    border-color: #52525b;
+    color: white;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Botón principal — naranja pleno, efecto "se prende" con glow naranja */
+.gecko-btn-primary {
+    flex: 2;
+    background: #F15A24;
+    border: none;
+    color: white;
+    box-shadow: 0 0 0 0 rgba(241, 90, 36, 0);
+}
+
+.gecko-btn-primary:hover {
+    background: #ff6b32;
+    box-shadow: 0 0 24px rgba(241, 90, 36, 0.45), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.gecko-btn-primary:active,
+.gecko-btn-secondary:active,
+.gecko-btn-cancel:active {
+    transform: scale(0.98);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIN GECKO MODAL SYSTEM v2
+   ══════════════════════════════════════════════════════════════ */
+
         /* ═══════════════════════════════════════════════════════
            MODAL GECKO PRO (MGP) — Estilo unificado basado en Insumos
            Usar: class="mgp-card" en el contenedor principal
