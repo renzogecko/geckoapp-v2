@@ -728,7 +728,7 @@ window.renderPresupuestos = async function () {
     }
 
     tbody.innerHTML = filtrados.map(p => {
-        const resumen = (p.items || []).map(it => it.nombre || it.textoOpciones || '').filter(Boolean).join(' · ') || 'Sin ítems';
+        const resumen = p.titulo || (p.items || []).map(it => it.nombre || it.textoOpciones).filter(Boolean).join(' · ') || 'Sin título';
         return `
         <tr draggable="true" data-drag-key="${p.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" style="cursor:grab;">
             <td class="py-4 px-6 font-black text-zinc-400 text-[11px]">#${p.id}</td>
@@ -1008,9 +1008,10 @@ window.renderOts = async function () {
             <td class="py-4 px-6">
                 <span class="text-[14px] font-extrabold dark:text-white uppercase">${ot.cliente || 'S/N'}</span>
             </td>
-            <td class="py-4 px-6">
-                <div class="flex flex-wrap gap-1">
-                    ${(ot.items || []).map(it => `<span class="text-[9px] font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded uppercase">${it.textoOpciones || it.nombre || ''}</span>`).join('')}
+            <td class="py-4 px-6 max-w-[200px]">
+                <div class="flex flex-col">
+                    ${window._tagCategoria(ot)}
+                    <span class="text-[11px] text-zinc-500 font-medium truncate">${ot.titulo || (ot.items || []).map(it => it.textoOpciones || it.nombre).filter(Boolean).join(' · ') || 'Sin título'}</span>
                 </div>
             </td>
             <td class="py-4 px-6 text-[11px] text-zinc-400 font-bold">${ot.fecha_entrega || '—'}</td>
@@ -3009,9 +3010,7 @@ window.addEventListener('load', function () {
                     <td class="py-4 px-6 max-w-[200px]">
                         <div class="flex flex-col">
                             ${window._tagCategoria(ot)}
-                            <div class="flex flex-wrap gap-1 mt-0.5">
-                                ${(ot.items || []).map(it => `<span class="text-[9px] font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded uppercase">${it.textoOpciones || it.nombre || ''}</span>`).join('')}
-                            </div>
+                            <span class="text-[11px] text-zinc-500 font-medium truncate">${ot.titulo || (ot.items || []).map(it => it.textoOpciones || it.nombre).filter(Boolean).join(' · ') || 'Sin título'}</span>
                         </div>
                     </td>
                     <td class="py-4 px-6 text-[11px] text-zinc-400 font-bold">${ot.fecha_entrega || '—'}</td>
@@ -4843,6 +4842,18 @@ window._gpmGuardar = function (status) {
     const cliente = document.getElementById('gpmCliente')?.value?.trim();
     if (!cliente) { alert('Ingresá el nombre del cliente.'); document.getElementById('gpmCliente')?.focus(); return; }
 
+    const _tituloPresupuesto = document.getElementById('gpmTitulo')?.value?.trim() || '';
+    if (!_tituloPresupuesto) {
+        const _inputTitulo = document.getElementById('gpmTitulo');
+        if (_inputTitulo) {
+            _inputTitulo.style.setProperty('border-color', '#ef4444', 'important');
+            _inputTitulo.focus();
+            _inputTitulo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        alert('Falta completar el Título del presupuesto. Es un campo obligatorio para poder guardar.');
+        return;
+    }
+
     const items = [];
     document.querySelectorAll('#gpm-items-list .gpm-item').forEach(item => {
         const titulo = item.querySelector('.gpm-item-title')?.value?.trim();
@@ -4883,7 +4894,7 @@ window._gpmGuardar = function (status) {
     if (ivaOn) total *= 1.21;
 
     const categoria = document.getElementById('gpmCategoria')?.value || 'Gráfica';
-    const titulo = document.getElementById('gpmTitulo')?.value?.trim() || '';
+    const titulo = _tituloPresupuesto;
     const notasInternas = document.getElementById('gpmNotasInternas')?.value?.trim() || '';
     const condiciones = document.getElementById('gpmCondiciones')?.value?.trim() || '';
     const fechaEntrega = document.getElementById('gpmEntrega')?.value || '';
