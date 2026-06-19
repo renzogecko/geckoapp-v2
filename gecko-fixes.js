@@ -1069,90 +1069,101 @@ window.editarOT = function (id) {
     document.getElementById('modalEditarOT')?.remove();
 
     const itemsHTML = (ot.items || []).map((it, i) => `
-        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #1f1f23;">
-            <span style="color:#3f3f46;font-size:9px;font-weight:900;font-family:monospace;min-width:18px;">${String(i + 1).padStart(2, '0')}</span>
-            <span style="color:#a1a1aa;font-size:12px;font-weight:600;flex:1;line-height:1.4;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
-            <span style="color:#F15A24;font-size:12px;font-weight:900;font-family:monospace;">$${Math.round(it.costo || 0).toLocaleString('es-AR')}</span>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a1a;">
+            <span style="color:#3f3f46;font-size:9px;font-weight:900;font-family:monospace;min-width:20px;">${String(i + 1).padStart(2, '0')}</span>
+            <span style="color:#71717a;font-size:12px;font-weight:600;flex:1;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
+            <span style="color:#F15A24;font-size:12px;font-weight:900;">$${Math.round(it.costo || 0).toLocaleString('es-AR')}</span>
         </div>
     `).join('');
 
     const modal = document.createElement('div');
     modal.id = 'modalEditarOT';
-    modal.className = 'gecko-modal-overlay';
-    modal.style.display = 'flex';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);padding:16px;';
 
     modal.innerHTML = `
-        <div class="gecko-modal-box" style="max-width:560px;width:100%;max-height:90vh;overflow-y:auto;">
+        <div style="background:#141414;border-radius:20px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;position:relative;">
 
-            <!-- Header -->
-            <button onclick="document.getElementById('modalEditarOT').remove()"
-                style="position:absolute;top:20px;right:20px;width:36px;height:36px;border-radius:10px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"
-                onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'"
-                onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-
-            <p class="gecko-modal-subtitle">OT #${String(id).padStart(4, '0')}</p>
-            <h2 class="gecko-modal-title">EDITAR ORDEN DE TRABAJO</h2>
-
-            <!-- Ítems (solo lectura) -->
-            <div style="background:#131314;border:1px solid #27272a;border-radius:14px;padding:14px 16px;margin:24px 0 20px 0;">
-                <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 10px 0;">Ítems del trabajo · solo lectura</p>
-                ${itemsHTML || '<p style="color:#3f3f46;font-size:11px;margin:0;">Sin ítems registrados.</p>'}
+            <!-- Header — igual que modalMaterial -->
+            <div style="padding:32px 36px 24px 36px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                    <h2 style="color:white;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:-0.02em;margin:0 0 4px 0;">EDITAR ORDEN DE TRABAJO</h2>
+                    <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0;">OT #${String(id).padStart(4, '0')} · ${(ot.cliente || '').toUpperCase()}</p>
+                </div>
+                <button onclick="document.getElementById('modalEditarOT').remove()"
+                    style="width:36px;height:36px;border-radius:10px;background:#1f1f1f;border:1px solid #2a2a2a;color:#52525b;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;"
+                    onmouseover="this.style.background='#2a2a2a';this.style.color='white'"
+                    onmouseout="this.style.background='#1f1f1f';this.style.color='#52525b'">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </div>
 
-            <!-- Campos editables -->
-            <div style="display:flex;flex-direction:column;gap:18px;">
+            <!-- Body -->
+            <div style="padding:28px 36px;display:flex;flex-direction:column;gap:24px;flex:1;">
 
+                <!-- Ítems solo lectura -->
                 <div>
-                    <label class="gecko-label">Cliente</label>
-                    <input type="text" id="otEditCliente" value="${(ot.cliente || '').replace(/"/g, '&quot;')}"
-                        class="gecko-input-line" style="width:100%;">
+                    <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 6px 0;">Ítems del trabajo — solo lectura</p>
+                    <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:12px;padding:4px 14px;">
+                        ${itemsHTML || '<p style="color:#3f3f46;font-size:11px;padding:8px 0;margin:0;">Sin ítems registrados.</p>'}
+                    </div>
                 </div>
 
-                <div>
-                    <label class="gecko-label">Área / Operario asignado</label>
+                <!-- Cliente -->
+                <div style="border-bottom:1px solid #1f1f1f;padding-bottom:4px;">
+                    <label style="display:block;color:#52525b;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Cliente</label>
+                    <input type="text" id="otEditCliente" value="${(ot.cliente || '').replace(/"/g, '&quot;')}"
+                        style="width:100%;background:transparent;border:none;outline:none;color:white;font-size:14px;font-weight:600;padding:0;font-family:inherit;box-sizing:border-box;">
+                </div>
+
+                <!-- Área / Operario -->
+                <div style="border-bottom:1px solid #1f1f1f;padding-bottom:4px;">
+                    <label style="display:block;color:#52525b;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Área / Operario asignado</label>
                     <input type="text" id="otEditArea" value="${(ot.area || '').replace(/"/g, '&quot;')}"
                         placeholder="Ej: Taller Gráfica · Juan"
-                        class="gecko-input-line" style="width:100%;">
+                        style="width:100%;background:transparent;border:none;outline:none;color:white;font-size:14px;font-weight:600;padding:0;font-family:inherit;box-sizing:border-box;">
                 </div>
 
-                <div>
-                    <label class="gecko-label">Fecha de entrega</label>
+                <!-- Fecha de entrega -->
+                <div style="border-bottom:1px solid #1f1f1f;padding-bottom:4px;">
+                    <label style="display:block;color:#52525b;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Fecha de entrega</label>
                     <input type="text" id="otEditEntrega" value="${(ot.fecha_entrega || '').replace(/"/g, '&quot;')}"
                         placeholder="Ej: 30/06/2026"
-                        class="gecko-input-line" style="width:100%;">
+                        style="width:100%;background:transparent;border:none;outline:none;color:white;font-size:14px;font-weight:600;padding:0;font-family:inherit;box-sizing:border-box;">
                 </div>
 
+                <!-- Instrucciones especiales -->
                 <div>
-                    <label class="gecko-label" style="color:#F15A24;">
-                        <svg style="display:inline;vertical-align:middle;margin-right:4px;" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                    <label style="display:block;color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">
                         Instrucciones especiales de producción
                     </label>
                     <textarea id="otEditInstrucciones" rows="4"
                         placeholder="Ej: Pintar el corpóreo con verde furioso, cuidar que no chorree la pintura en los bordes..."
-                        style="width:100%;background:#131314;border:1px solid #27272a;border-left:3px solid #F15A24;border-radius:12px;padding:12px 14px;color:white;font-size:13px;font-weight:500;outline:none;box-sizing:border-box;font-family:inherit;resize:vertical;line-height:1.6;">${ot.instrucciones || ''}</textarea>
+                        style="width:100%;background:#0f0f0f;border:1px solid #1f1f1f;border-left:3px solid #F15A24;border-radius:10px;padding:12px 14px;color:white;font-size:13px;font-weight:500;outline:none;box-sizing:border-box;font-family:inherit;resize:vertical;line-height:1.6;">${ot.instrucciones || ''}</textarea>
                 </div>
 
             </div>
 
-            <!-- Footer con botones -->
-            <div class="gecko-modal-footer" style="margin-top:28px;display:flex;gap:10px;">
+            <!-- Footer — igual que modalMaterial: Cancelar gris + botón acción naranja -->
+            <div style="padding:20px 36px 28px 36px;border-top:1px solid #1f1f1f;display:flex;gap:12px;">
                 <button onclick="document.getElementById('modalEditarOT').remove()"
-                    class="gecko-btn-cancel" style="flex:1;">
+                    style="flex:1;padding:15px;background:transparent;border:1px solid #2a2a2a;color:#52525b;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:all 0.15s;"
+                    onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'"
+                    onmouseout="this.style.borderColor='#2a2a2a';this.style.color='#52525b'">
                     Cancelar
                 </button>
                 <button onclick="window._reimprimir('${id}')"
-                    style="flex:1;padding:13px;background:#27272a;border:1px solid #3f3f46;color:#a1a1aa;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;transition:all 0.15s;"
-                    onmouseover="this.style.background='#3f3f46';this.style.color='white'"
-                    onmouseout="this.style.background='#27272a';this.style.color='#a1a1aa'">
-                    <svg style="display:inline;vertical-align:middle;margin-right:4px;" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    style="flex:1;padding:15px;background:transparent;border:1px solid #2a2a2a;color:#52525b;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;"
+                    onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'"
+                    onmouseout="this.style.borderColor='#2a2a2a';this.style.color='#52525b'">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Reimprimir
                 </button>
                 <button onclick="window._guardarEdicionOT('${id}')"
-                    class="gecko-btn-primary" style="flex:1;">
-                    <svg style="display:inline;vertical-align:middle;margin-right:4px;" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    Guardar
+                    style="flex:2;padding:15px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;"
+                    onmouseover="this.style.background='#d94e1a'"
+                    onmouseout="this.style.background='#F15A24'">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Guardar cambios
                 </button>
             </div>
 
