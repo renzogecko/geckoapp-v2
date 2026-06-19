@@ -1284,7 +1284,7 @@ window.abrirModalSena = function (id) {
                     <div>
                         <label style="${labelStyle}">Ingresa a caja</label>
                         ${cajasList.length > 0 ? `
-                        <select id="sena1Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
+                        <select id="sena1Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
                             onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
                             ${cajasList.map(c => `<option value="${c}" ${c === cajasDefault ? 'selected' : ''}>${c}</option>`).join('')}
                         </select>` : `<p style="color:#ef4444;font-size:11px;">No hay cajas creadas. Creá una en Finanzas.</p>`}
@@ -1315,7 +1315,7 @@ window.abrirModalSena = function (id) {
                     <div>
                         <label style="${labelStyle}">Ingresa a caja</label>
                         ${cajasList.length > 0 ? `
-                        <select id="sena2Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
+                        <select id="sena2Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
                             onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
                             ${cajasList.map(c => `<option value="${c}">${c}</option>`).join('')}
                         </select>` : ''}
