@@ -3180,13 +3180,17 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-8">
+            <div class="gecko-modal-footer" style="align-items:center;justify-content:center;gap:12px;margin-top:32px;">
                 <button onclick="intentarCerrarModal('modalNuevoCliente')"
-                    class="gecko-btn-cancel">
+                    style="flex:1;padding:15px;background:transparent;border:1px solid #2a2a2a;color:#52525b;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:0.15s;"
+                    onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'"
+                    onmouseout="this.style.borderColor='#2a2a2a';this.style.color='#52525b'">
                     Cancelar
                 </button>
                 <button onclick="window.guardarCliente()"
-                    class="gecko-btn-primary">
+                    style="flex:2;padding:15px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:0.15s;"
+                    onmouseover="this.style.background='#d94e1a'"
+                    onmouseout="this.style.background='#F15A24'">
                     Guardar Cliente
                 </button>
             </div>
