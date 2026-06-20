@@ -819,7 +819,10 @@ window.eliminarPresupuesto = function (id) {
 // ──────────────────────────────────────────────────────
 // CONVERTIR PRESUPUESTO → OT  (con modal de seña)
 // ──────────────────────────────────────────────────────
-window._confirmarConversionOT = function (id) {
+window._confirmarConversionOT = async function (id) {
+    if (window._geckoAPIPromise) {
+        await window._geckoAPIPromise;
+    }
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const p = lista.find(x => String(x.id) === String(id));
     if (!p) return;
