@@ -376,6 +376,14 @@ window.verDocumento = async function (id) {
 // MODAL DE CONFIGURACIÓN Y GENERACIÓN
 // ══════════════════════════════════════════════════════════════
 window.abrirModalDoc = function (tipo) {
+    if (!window.presupuesto || window.presupuesto.length === 0) {
+        if (typeof window.mostrarAdvertencia === 'function') {
+            window.mostrarAdvertencia('No cargaste ningún ítem al carrito. Agregá al menos un producto antes de continuar.', 'Carrito vacío');
+        } else {
+            alert('No cargaste ningún ítem al carrito. Agregá al menos un producto antes de continuar.');
+        }
+        return;
+    }
     const esOT = tipo === 'OT';
     const { items, cliente } = _getDatosActuales();
 

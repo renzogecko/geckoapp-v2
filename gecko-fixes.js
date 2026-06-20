@@ -3651,6 +3651,14 @@ window.addEventListener('load', function () {
 
             setTimeout(() => { window.renderClientes(); }, 100);
             if (typeof window.actualizarSugerenciaClientes === 'function') window.actualizarSugerenciaClientes();
+            if (window._gpmAbiertoDesdePresupuesto) {
+                const nombreClienteNuevo = document.getElementById('nuevoClienteNombre')?.value?.trim();
+                const inputClientePresupuesto = document.getElementById('gpmCliente');
+                if (inputClientePresupuesto && nombreClienteNuevo) {
+                    inputClientePresupuesto.value = nombreClienteNuevo;
+                }
+                window._gpmAbiertoDesdePresupuesto = false;
+            }
         };
 
         // ── Lógica Modal Cobro ──
@@ -4305,6 +4313,14 @@ window.guardarCliente = function () {
 
     if (typeof window.mostrarExito === 'function') window.mostrarExito("El cliente " + nombre + " ha sido registrado.", "¡Cliente Guardado!");
     window._geckoRenderFijo();
+    if (window._gpmAbiertoDesdePresupuesto) {
+        const nombreClienteNuevo = document.getElementById('nuevoClienteNombre')?.value?.trim();
+        const inputClientePresupuesto = document.getElementById('gpmCliente');
+        if (inputClientePresupuesto && nombreClienteNuevo) {
+            inputClientePresupuesto.value = nombreClienteNuevo;
+        }
+        window._gpmAbiertoDesdePresupuesto = false;
+    }
 };
 
 
@@ -4360,7 +4376,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">Datos generales</p>
         <div style="display:grid;grid-template-columns:1fr 180px;gap:14px;margin-bottom:14px;">
           <div>
-            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Cliente</label>
+            <label style="display:flex;align-items:center;gap:8px;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Cliente<button type="button" onclick="window._gpmAbiertoDesdePresupuesto=true;window.abrirModalNuevoCliente()" title="Nuevo cliente" class="w-6 h-6 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></label>
             <input id="gpmCliente" type="text" list="gpm-clientes-list"
               placeholder="Nombre del cliente..." value="${clienteInicial}"
               autocomplete="off"
