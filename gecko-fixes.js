@@ -632,9 +632,9 @@ window.eliminarOT = function (id) {
             <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Esta acción no se puede deshacer. La OT será eliminada permanentemente.</p>
             <div style="display:flex;gap:10px;">
                 <button onclick="document.getElementById('modalConfirmEliminarOT').remove()"
-                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
                 <button onclick="window._confirmarEliminarOT('${id}')"
-                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#f87171'" onmouseout="this.style.background='#ef4444'">Eliminar</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
@@ -800,9 +800,9 @@ window.eliminarPresupuesto = function (id) {
             <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Esta acción no se puede deshacer. El presupuesto será eliminado permanentemente.</p>
             <div style="display:flex;gap:10px;">
                 <button onclick="document.getElementById('_geckoConfirmElimPres').remove()"
-                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
                 <button id="_geckoElimPresOk"
-                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#f87171'" onmouseout="this.style.background='#ef4444'">Eliminar</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
@@ -853,9 +853,9 @@ window._confirmarConversionOT = function (id) {
                 <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">¿El cliente realizó un pago de seña o adelanto?</p>
                 <div style="display:flex;gap:10px;">
                     <button onclick="document.getElementById('_geckoConfirmSena').remove()"
-                        style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">No, después</button>
+                        style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">No, después</button>
                     <button id="_geckoSenaSi"
-                        style="flex:1;padding:13px;background:#22c55e;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Sí, registrar</button>
+                        style="flex:1;padding:13px;background:#22c55e;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#4ade80'" onmouseout="this.style.background='#22c55e'">Sí, registrar</button>
                 </div>
             </div>`;
         document.body.appendChild(m2);
@@ -880,9 +880,9 @@ window.convertirPresupuestoAOT = function (id) {
             <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">El presupuesto <strong style="color:white;">#${id}</strong> pasará al tablero de Órdenes de Trabajo.</p>
             <div style="display:flex;gap:10px;">
                 <button onclick="document.getElementById('_geckoConfirmConvOT').remove()"
-                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
                 <button id="_geckoConvOTOk"
-                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Convertir</button>
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#ff6b32'" onmouseout="this.style.background='#F15A24'">Convertir</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
@@ -2320,9 +2320,9 @@ window.revertirPagoGastoFijo = function (idx) {
             <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se revertirá el pago de <strong style="color:white;">${g.concepto}</strong>${g.cajaPago ? ` y se devolverá el monto a <strong style="color:white;">${g.cajaPago}</strong>` : ''}.</p>
             <div style="display:flex;gap:10px;">
                 <button onclick="document.getElementById('_geckoConfirmRevertirPago').remove()"
-                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
                 <button id="_geckoRevertirOk"
-                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Revertir</button>
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#ff6b32'" onmouseout="this.style.background='#F15A24'">Revertir</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
@@ -2375,9 +2375,9 @@ window.eliminarGastoFijo = function (idx) {
             <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se eliminará <strong style="color:white;">${g.concepto}</strong> de la lista de gastos fijos.</p>
             <div style="display:flex;gap:10px;">
                 <button onclick="document.getElementById('_geckoConfirmElimGasto').remove()"
-                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
                 <button id="_geckoElimGastoOk"
-                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#f87171'" onmouseout="this.style.background='#ef4444'">Eliminar</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
@@ -2757,9 +2757,9 @@ window._ejecutarCierreMensualGecko = function () {
             <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se archivará el balance actual y todos los gastos fijos volverán a estado <strong style="color:white;">Pendiente</strong>.</p>
             <div style="display:flex;gap:10px;">
                 <button onclick="document.getElementById('_geckoConfirmCierre').remove()"
-                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
                 <button id="_geckoCierreOk"
-                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cerrar mes</button>
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#ff6b32'" onmouseout="this.style.background='#F15A24'">Cerrar mes</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
@@ -3201,8 +3201,8 @@ window.addEventListener('load', function () {
                     <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Eliminar Cliente</h3>
                     <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se eliminará a <strong style="color:white;">${nombre}</strong> del sistema. Esta acción no se puede deshacer.</p>
                     <div style="display:flex;gap:10px;">
-                        <button onclick="document.getElementById('_geckoConfirmElimCli').remove()" style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
-                        <button id="_geckoElimCliOk" style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+                        <button onclick="document.getElementById('_geckoConfirmElimCli').remove()" style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
+                        <button id="_geckoElimCliOk" style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#f87171'" onmouseout="this.style.background='#ef4444'">Eliminar</button>
                     </div>
                 </div>`;
             document.body.appendChild(modal);
@@ -3468,9 +3468,9 @@ window.addEventListener('load', function () {
                     <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se eliminará <strong style="color:white;">${mov.detalle}</strong> y se revertirá el saldo en la caja.</p>
                     <div style="display:flex;gap:10px;">
                         <button onclick="document.getElementById('_geckoConfirmElimMov').remove()"
-                            style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                            style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
                         <button id="_geckoElimMovOk"
-                            style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+                            style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#f87171'" onmouseout="this.style.background='#ef4444'">Eliminar</button>
                     </div>
                 </div>`;
             document.body.appendChild(modal);
