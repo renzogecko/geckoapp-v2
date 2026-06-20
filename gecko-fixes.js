@@ -4376,15 +4376,30 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">Datos generales</p>
         <div style="display:grid;grid-template-columns:1fr 180px;gap:14px;margin-bottom:14px;">
           <div>
-            <label style="display:flex;align-items:center;gap:8px;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Cliente<button type="button" onclick="window._gpmAbiertoDesdePresupuesto=true;window.abrirModalNuevoCliente()" title="Nuevo cliente" class="w-6 h-6 rounded-lg bg-orange-500/10 text-gecko hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center shrink-0"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button></label>
-            <input id="gpmCliente" type="text" list="gpm-clientes-list"
-              placeholder="Nombre del cliente..." value="${clienteInicial}"
-              autocomplete="off"
-              style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;"
-              onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'" />
-            <datalist id="gpm-clientes-list">
-              ${(JSON.parse(localStorage.getItem('clientes') || '[]')).map(c => `<option value="${c.nombre || c.name || ''}"></option>`).join('')}
-            </datalist>
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Cliente</label>
+            <div style="display:flex;gap:8px;align-items:stretch;">
+              <div style="flex:1;position:relative;">
+                <input id="gpmCliente" type="text" list="gpm-clientes-list"
+                  placeholder="Nombre del cliente..." value="${clienteInicial}"
+                  autocomplete="off"
+                  style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:white;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;"
+                  onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'" />
+                <datalist id="gpm-clientes-list">
+                  ${(JSON.parse(localStorage.getItem('clientes') || '[]')).map(c => `<option value="${c.nombre || c.name || ''}"></option>`).join('')}
+                </datalist>
+              </div>
+              <button type="button"
+                onclick="window._gpmAbiertoDesdePresupuesto=true;window.abrirModalNuevoCliente()"
+                style="white-space:nowrap;background:rgba(241,90,36,0.08);color:#F15A24;border:1px solid rgba(241,90,36,0.3);border-radius:2rem;padding:0.65rem 1.25rem;font-weight:700;font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:0.4rem;"
+                onmouseover="this.style.background='rgba(241,90,36,0.15)';this.style.borderColor='#F15A24'"
+                onmouseout="this.style.background='rgba(241,90,36,0.08)';this.style.borderColor='rgba(241,90,36,0.3)'"
+                title="Nuevo cliente">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nuevo
+              </button>
+            </div>
           </div>
           <div>
             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Fecha</label>
