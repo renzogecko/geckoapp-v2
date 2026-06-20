@@ -190,13 +190,11 @@ window.abrirCotizadorManual = function () {
             <span style="color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;">TOTAL</span>
             <span id="manualTotal" style="color:#F15A24;font-size:28px;font-weight:900;">$0</span>
         </div>
-        <div style="display:flex;gap:12px;">
-            <button onclick="window._guardarManual('Cotizado')"
-                style="flex:1;padding:14px;background:transparent;border:1px solid #F15A24;color:#F15A24;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">
+        <div style="display:flex;justify-content:flex-end;gap:12px;">
+            <button onclick="window._guardarManual('Cotizado')" class="gecko-btn-cancel" style="flex:none;width:auto;">
                 Generar Presupuesto
             </button>
-            <button onclick="window._guardarManual('OT')"
-                style="flex:1;padding:14px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">
+            <button onclick="window._guardarManual('OT')" class="gecko-btn-primary" style="flex:none;width:auto;">
                 Generar OT
             </button>
         </div>
@@ -4390,7 +4388,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
               </div>
               <button type="button"
                 onclick="window._gpmAbiertoDesdePresupuesto=true;window.abrirModalNuevoCliente()"
-                style="padding:15px 20px;background:transparent;border:1px solid rgb(217,78,26);color:rgb(217,78,26);border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:0.15s;white-space:nowrap;display:flex;align-items:center;gap:6px;"
+                style="padding:10px 15px;background:transparent;border:1px solid rgb(217,78,26);color:rgb(217,78,26);border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:0.15s;white-space:nowrap;display:flex;align-items:center;gap:6px;"
                 onmouseover="this.style.borderColor='#ff7a3d';this.style.color='#ff7a3d'"
                 onmouseout="this.style.borderColor='rgb(217,78,26)';this.style.color='rgb(217,78,26)'"
                 title="Nuevo cliente">
@@ -4569,17 +4567,14 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
       <!-- Footer acciones -->
       <div style="display:flex;justify-content:flex-end;align-items:center;padding:20px 0;gap:10px;">
         ${datosEdicion ? `
-          <button onclick="window._gpmGuardar('${datosEdicion.status || 'Cotizado'}')"
-            style="padding:12px 28px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
+          <button onclick="window._gpmGuardar('${datosEdicion.status || 'Cotizado'}')" class="gecko-btn-primary" style="flex:none;width:auto;">
             ${datosEdicion.status === 'OT' ? 'Actualizar OT' : 'Actualizar Presupuesto'}
           </button>
         ` : `
-          <button onclick="window._gpmGuardar('Cotizado')"
-            style="padding:12px 20px;background:transparent;border:1px solid #333333;border-radius:12px;color:#a1a1aa;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
+          <button onclick="window._gpmGuardar('Cotizado')" class="gecko-btn-cancel" style="flex:none;width:auto;">
             Generar Presupuesto
           </button>
-          <button onclick="window._gpmGuardar('OT')"
-            style="padding:12px 20px;background:#F15A24;border:none;border-radius:12px;color:white;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;">
+          <button onclick="window._gpmGuardar('OT')" class="gecko-btn-primary" style="flex:none;width:auto;">
             Generar OT
           </button>
         `}
