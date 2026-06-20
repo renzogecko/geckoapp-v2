@@ -2,7 +2,7 @@
 
 ## PENDIENTES
 
-
+- dashboard
 - Revisar convertir a orden en presupeustos, q no se va automaticamente a OT 
 - Agregar boton de  "+ Nuevo " en la misma linea de cliente en el presupuestador manual , el cual nos abre el modal de "nuevo cliente" para hacer una carga rapida de un nuevo cliente sin salir del presupuesto manual. 
 - Seccion clientes , al editar un cliente no se puede cambiar el nombre. reveer eso  
