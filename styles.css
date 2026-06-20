@@ -2708,24 +2708,28 @@ select.gecko-select-modal option {
         }
 
         .gecko-btn-danger {
-            background: transparent !important;
-            color: #ef4444 !important;
-            border: 1.5px solid #ef4444 !important;
-            border-radius: 2rem !important;
-            padding: 0.65rem 1.75rem !important;
-            font-weight: 700 !important;
-            font-size: 0.8rem !important;
-            letter-spacing: 0.1em !important;
-            text-transform: uppercase !important;
-            cursor: pointer !important;
-            transition: all 0.2s !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 0.4rem !important;
+            flex: 1;
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #52525b;
+            padding: 15px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
         }
 
         .gecko-btn-danger:hover {
-            background: rgba(239, 68, 68, 0.1) !important;
+            border-color: #3f3f46;
+            color: #a1a1aa;
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .gecko-btn-success {
