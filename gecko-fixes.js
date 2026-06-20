@@ -191,10 +191,10 @@ window.abrirCotizadorManual = function () {
             <span id="manualTotal" style="color:#F15A24;font-size:28px;font-weight:900;">$0</span>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:12px;">
-            <button onclick="window._guardarManual('Cotizado')" class="gecko-btn-cancel" style="flex:none;width:auto;">
+            <button onclick="window._guardarManual('Cotizado')" class="gecko-btn-primary" style="flex:none;width:auto;">
                 Generar Presupuesto
             </button>
-            <button onclick="window._guardarManual('OT')" class="gecko-btn-primary" style="flex:none;width:auto;">
+            <button onclick="window._guardarManual('OT')" class="gecko-btn-cancel" style="flex:none;width:auto;">
                 Generar OT
             </button>
         </div>
@@ -4571,10 +4571,10 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
             ${datosEdicion.status === 'OT' ? 'Actualizar OT' : 'Actualizar Presupuesto'}
           </button>
         ` : `
-          <button onclick="window._gpmGuardar('Cotizado')" class="gecko-btn-cancel" style="flex:none;width:auto;">
+          <button onclick="window._gpmGuardar('Cotizado')" class="gecko-btn-primary" style="flex:none;width:auto;">
             Generar Presupuesto
           </button>
-          <button onclick="window._gpmGuardar('OT')" class="gecko-btn-primary" style="flex:none;width:auto;">
+          <button onclick="window._gpmGuardar('OT')" class="gecko-btn-cancel" style="flex:none;width:auto;">
             Generar OT
           </button>
         `}
