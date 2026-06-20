@@ -4390,14 +4390,14 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
               </div>
               <button type="button"
                 onclick="window._gpmAbiertoDesdePresupuesto=true;window.abrirModalNuevoCliente()"
-                style="white-space:nowrap;background:rgba(241,90,36,0.08);color:#F15A24;border:1px solid rgba(241,90,36,0.3);border-radius:2rem;padding:0.65rem 1.25rem;font-weight:700;font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:0.4rem;"
-                onmouseover="this.style.background='rgba(241,90,36,0.15)';this.style.borderColor='#F15A24'"
-                onmouseout="this.style.background='rgba(241,90,36,0.08)';this.style.borderColor='rgba(241,90,36,0.3)'"
+                style="padding:15px 20px;background:transparent;border:1px solid rgb(217,78,26);color:rgb(217,78,26);border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:0.15s;white-space:nowrap;display:flex;align-items:center;gap:6px;"
+                onmouseover="this.style.borderColor='#ff7a3d';this.style.color='#ff7a3d'"
+                onmouseout="this.style.borderColor='rgb(217,78,26)';this.style.color='rgb(217,78,26)'"
                 title="Nuevo cliente">
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
-                Nuevo
+                Nuevo Cliente
               </button>
             </div>
           </div>
