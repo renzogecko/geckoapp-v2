@@ -727,6 +727,7 @@ window.renderPresupuestos = async function () {
 
     tbody.innerHTML = filtrados.map(p => {
         const resumen = p.titulo || (p.items || []).map(it => it.nombre || it.textoOpciones).filter(Boolean).join(' · ') || 'Sin título';
+        const esOTEnHistorial = mostrarHistorial && p.status === 'OT';
         return `
         <tr draggable="true" data-drag-key="${p.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" style="cursor:grab;">
             <td class="py-4 px-6 font-black text-zinc-400 text-[11px]">#${p.id}</td>
@@ -735,7 +736,8 @@ window.renderPresupuestos = async function () {
                 <span class="font-extrabold dark:text-white text-[14px] uppercase">${p.cliente || 'S/N'}</span>
             </td>
             <td class="py-4 px-6 max-w-[220px]">
-                <div class="flex flex-col">
+                <div class="flex flex-col gap-1">
+                    ${esOTEnHistorial ? '<span style="display:inline-block;background:rgba(241,90,36,0.1);color:#F15A24;padding:4px 10px;border-radius:8px;font-size:10px;text-transform:uppercase;font-weight:900;width:fit-content;">Convertido a OT #' + p.id + '</span>' : ''}
                     ${window._tagCategoria(p)}
                     <span class="text-[11px] text-zinc-500 font-medium truncate">${resumen}</span>
                 </div>
@@ -747,14 +749,14 @@ window.renderPresupuestos = async function () {
                         class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
-                    <button onclick="window.editarPresupuesto(${p.id})" title="Editar"
+                    <button onclick="${esOTEnHistorial ? 'window.reutilizarPresupuesto(' + p.id + ')' : 'window.editarPresupuesto(' + p.id + ')'}" title="${esOTEnHistorial ? 'Reutilizar como nuevo presupuesto' : 'Editar'}"
                         class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
-                    <button onclick="window.convertirPresupuestoAOT(${p.id})" title="Convertir a OT"
+                    ${esOTEnHistorial ? '' : `<button onclick="window.convertirPresupuestoAOT(${p.id})" title="Convertir a OT"
                         class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </button>
+                    </button>`}
                     <button onclick="window.eliminarPresupuesto(${p.id})" title="Eliminar"
                         class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -927,6 +929,31 @@ window.editarPresupuesto = function (id) {
     }, 150);
 };
 
+window.reutilizarPresupuesto = function (id) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const p = lista.find(x => String(x.id) === String(id));
+    if (!p) return;
+
+    window.presupuesto = (p.items || []).map(it => ({ ...it }));
+
+    const clienteInput = document.getElementById('clienteNombre');
+    if (clienteInput) clienteInput.value = p.cliente || '';
+
+    window._editandoPresupuestoId = null;
+
+    if (typeof window.renderizarPresupuesto === 'function') window.renderizarPresupuesto();
+    if (typeof window.switchMenu === 'function') window.switchMenu('cotizadores');
+
+    setTimeout(() => {
+        const catSelect = document.getElementById('categoriaPedido');
+        if (catSelect && p.categoria) catSelect.value = p.categoria;
+        const activeCat = localStorage.getItem('gecko_activeCategory') || 'grafica';
+        if (typeof window.cambiarCategoriaCotizador === 'function') {
+            window.cambiarCategoriaCotizador(activeCat);
+        }
+    }, 150);
+};
+
 // Hook switchMenu unificado — pedidos, finanzas, presupuestoManual
 const _switchMenuOriginal = window.switchMenu;
 window.switchMenu = function (view) {
@@ -956,7 +983,7 @@ window.renderOts = async function () {
     if (!tbody) return;
 
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const ots = lista.filter(p => p.status === 'OT');
+    const ots = lista.filter(p => p.status === 'OT').sort((a, b) => parseInt(b.id) - parseInt(a.id));
     const mostrarHistorial = window._mostrarHistorialOts || false;
     const busqueda = document.getElementById('filtroOtBusqueda')?.value?.toLowerCase() || '';
 
