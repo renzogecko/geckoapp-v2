@@ -717,6 +717,7 @@ window.renderPresupuestos = async function () {
         if (busqueda && !p.cliente?.toLowerCase().includes(busqueda)) return false;
         return true;
     });
+    filtrados.sort((a, b) => parseInt(b.id) - parseInt(a.id));
 
     if (filtrados.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="py-16 text-center text-zinc-500 font-medium italic">
