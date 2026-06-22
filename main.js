@@ -205,7 +205,7 @@ window.importarGeckoDB = function (input) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function (e) {
+    reader.onload = async function (e) {
         try {
             const data = JSON.parse(e.target.result);
 
@@ -268,7 +268,9 @@ window.importarGeckoDB = function (input) {
                 if (data.movimientos) localStorage.setItem('gecko_movimientos', JSON.stringify(data.movimientos));
                 if (data.historico_cierres) localStorage.setItem('gecko_historico_cierres', JSON.stringify(data.historico_cierres));
 
-                alert(`Fusión exitosa: Se agregaron ${matsAgregados} materiales nuevos a los que ya tenías.`);
+                alert(`Subiendo ${matsAgregados} materiales nuevos a la base. Esperá el cartel de confirmación.`);
+                if (typeof window.geckoSyncQueue === 'function') { try { await window.geckoSyncQueue(); } catch(e){} }
+                alert('Datos sincronizados con la base. Recargando.');
                 location.reload();
             }
         } catch (err) {

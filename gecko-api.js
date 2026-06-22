@@ -289,3 +289,5 @@ window.geckoApiEliminar = async function (lsKey, id) {
         console.warn(`🦎 GECKO-API: error al eliminar ${endpoint} id=${id}:`, e);
     }
 };
+
+window.geckoSyncQueue = () => _syncQueue;
