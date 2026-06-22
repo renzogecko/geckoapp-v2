@@ -190,18 +190,22 @@ async function _sincronizarArray(lsKey, nuevoArray) {
     // _cache representa lo que MySQL conoce actualmente — es la fuente correcta para comparar
     const anterior = Array.isArray(_cache[lsKey]) ? [..._cache[lsKey]] : [];
 
-    // PROTECCIÓN ANTI-BORRADO MASIVO: solo aplica si hay más de 3 ítems previos
-    // y se intenta borrar más del 70% (para no bloquear operaciones legítimas de edición)
-    const cantidadABorrar = anterior.filter(a => !nuevoArray.find(n => String(n.id) === String(a.id))).length;
-    if (anterior.length > 3 && cantidadABorrar > Math.floor(anterior.length * 0.7)) {
-        console.warn(`🦎 GECKO-API: BORRADO MASIVO BLOQUEADO en "${lsKey}" — intentaba borrar ${cantidadABorrar} de ${anterior.length} ítems. Operación cancelada.`);
-        return;
-    }
-
-    for (const itemAntiguo of anterior) {
-        if (!itemAntiguo.id) continue; // ignorar items sin id
-        if (!nuevoArray.find(n => n.id && String(n.id) === String(itemAntiguo.id))) {
-            await _apiPost(endpoint, 'DELETE', { id: itemAntiguo.id });
+    // CATÁLOGO (materiales): la base es el seguro. NUNCA se borra por diferencia de
+    // array — un navegador con copia incompleta no puede vaciar la base. El borrado
+    // intencional va por window.geckoApiEliminar().
+    const GECKO_CATALOG_KEYS = ['gecko_materiales'];
+    if (!GECKO_CATALOG_KEYS.includes(lsKey)) {
+        // PROTECCIÓN ANTI-BORRADO MASIVO (solo tablas transaccionales)
+        const cantidadABorrar = anterior.filter(a => !nuevoArray.find(n => String(n.id) === String(a.id))).length;
+        if (anterior.length > 3 && cantidadABorrar > Math.floor(anterior.length * 0.7)) {
+            console.warn(`🦎 GECKO-API: BORRADO MASIVO BLOQUEADO en "${lsKey}" — intentaba borrar ${cantidadABorrar} de ${anterior.length} ítems. Operación cancelada.`);
+            return;
+        }
+        for (const itemAntiguo of anterior) {
+            if (!itemAntiguo.id) continue;
+            if (!nuevoArray.find(n => n.id && String(n.id) === String(itemAntiguo.id))) {
+                await _apiPost(endpoint, 'DELETE', { id: itemAntiguo.id });
+            }
         }
     }
     for (const item of nuevoArray) {
@@ -270,3 +274,18 @@ try {
 window._geckoAPIPromise = _inicializarDesdeAPI();
 
 console.log('🦎 GECKO-API Bridge v2.2 cargado.');
+
+// Borrado INTENCIONAL de un ítem de catálogo directo a MySQL (no por diff de array).
+window.geckoApiEliminar = async function (lsKey, id) {
+    const endpoint = GECKO_KEY_MAP[lsKey];
+    if (!endpoint || id == null) return;
+    try {
+        await _apiPost(endpoint, 'DELETE', { id: id });
+        if (Array.isArray(_cache[lsKey])) {
+            _cache[lsKey] = _cache[lsKey].filter(x => String(x.id) !== String(id));
+        }
+        console.log(`🦎 GECKO-API: ${endpoint} id=${id} eliminado de MySQL (intencional).`);
+    } catch (e) {
+        console.warn(`🦎 GECKO-API: error al eliminar ${endpoint} id=${id}:`, e);
+    }
+};

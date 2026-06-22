@@ -3687,6 +3687,7 @@ function eliminarMaterial(id) {
         materiales = materiales.filter(m => String(m.id) !== String(id));
         window.materiales = materiales;
         localStorage.setItem('gecko_materiales', JSON.stringify(materiales));
+        if (typeof window.geckoApiEliminar === 'function') window.geckoApiEliminar('gecko_materiales', id);
         renderInsumos();
         if (typeof window.poblarMaterialesGrafica === 'function') window.poblarMaterialesGrafica();
         if (typeof window.poblarSelectoresCorpóreos === 'function') window.poblarSelectoresCorpóreos();
