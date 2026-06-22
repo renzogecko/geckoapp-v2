@@ -46,6 +46,19 @@ GeckoApp es una SPA (Single Page Application) de gestión interna para **Gecko E
 6. **`gecko-mock-data.js` NO se sube a producción** — solo existe para desarrollo local
 7. **No hacer commits automáticos** sin confirmación explícita del usuario
 
+## REGLA FIJA: Limpieza de código duplicado
+
+Cada vez que se detecte código duplicado, funciones viejas sin usar, o dos sistemas paralelos
+resolviendo lo mismo (ej: dos definiciones CSS de la misma clase, dos funciones con nombres
+similares para la misma acción), el agente debe:
+
+1. Confirmar que ningún otro lugar del código llama a la versión vieja antes de tocar nada.
+2. Eliminar el código viejo/duplicado por completo (no dejarlo comentado "por las dudas").
+3. Informar en su respuesta qué se eliminó y por qué.
+
+Motivo: en GeckoApp ya se generaron bugs reales por código duplicado acumulado de sesiones
+anteriores (ej: doble definición de .gecko-btn-primary con !important, sistema viejo
+confirmarConversionOT() conviviendo con el nuevo window._confirmarConversionOT()).
 ---
 
 ## DESIGN SYSTEM — clases gecko-*
