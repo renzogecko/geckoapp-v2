@@ -2992,6 +2992,7 @@ window.addEventListener('load', function () {
                 if (busqueda && !ot.cliente?.toLowerCase().includes(busqueda)) return false;
                 return true;
             });
+            filtrados.sort((a, b) => parseInt(b.id) - parseInt(a.id));
 
             if (filtrados.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" class="py-20 text-center text-gray-400 font-medium italic">
