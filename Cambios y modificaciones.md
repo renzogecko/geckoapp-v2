@@ -2,6 +2,9 @@
 
 ## PENDIENTES
 
+- Revisar por que no carga 2 imagenes en el presupuesto. 
+- En el presupuesto no hay una seccion que lleva los datos del cuadro de condiciones para el cliente. (no se imprimen en el prespuesto)
+- Lista de servicios - Revisar al editar que no lleva datos / al elimnar no desaparece de la lista. 
 - dashboard - Cambiar estilo por algo mas moderno 
 - Crear seccion de agenda persona estilo TO DO de microsoft. 
 - Revisar convertir a orden en presupeustos, q no se va automaticamente a OT 
