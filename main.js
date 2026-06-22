@@ -2580,33 +2580,44 @@ function renderReportesDashboard() {
         elMetricVar.className = `text-4xl font-black ${variacion >= 0 ? 'text-emerald-500' : 'text-red-500'} leading-none mb-2`;
     }
 
-    // --- 6. RANKING MIX ---
-    const counts = { 'Gráfica': 0, 'Corpóreos': 0, 'Láser/CNC': 0, 'Industrial': 0 };
-    const tipoARubro = {
-        'grafica': 'Gráfica', 'corte': 'Gráfica',
-        'corporeos': 'Corpóreos',
-        'laser_cnc': 'Láser/CNC',
-        'bastidores': 'Industrial', 'textil': 'Industrial',
-        '3d': 'Industrial', 'impresion3d': 'Industrial'
+    // --- 6. RANKING MIX (canónico por it.tipo) ---
+    const RUBRO_COLORS = {
+        'Gráfica': '#F15A24', 'Láser/CNC': '#E07A4E', 'Corpóreos': '#C98A5E',
+        'Textil': '#6FA8A0', 'Industrial': '#5E84A8', 'Impresión 3D': '#8C7BA6', 'Otros': '#71717a'
     };
+    function rubroDeItem(it, p) {
+        const t = (it.tipo || '').toLowerCase();
+        if (t === 'grafica' || t === 'corte') return 'Gráfica';
+        if (t === 'corporeos') return 'Corpóreos';
+        if (t === 'laser_cnc') return 'Láser/CNC';
+        if (t === 'textil') return 'Textil';
+        if (t === '3d' || t === 'impresion3d') return 'Impresión 3D';
+        if (t === 'bastidores') return 'Industrial';
+        if (t === 'manual') return (p && p.categoria === 'Industrial') ? 'Industrial' : 'Gráfica';
+        return 'Otros';
+    }
+    const counts = {};
     otsMes.forEach(p => (p.items || []).forEach(it => {
-        const rubro = tipoARubro[it.tipo] || 'Industrial';
-        if (counts[rubro] !== undefined) counts[rubro]++;
+        const rubro = rubroDeItem(it, p);
+        counts[rubro] = (counts[rubro] || 0) + 1;
     }));
-    const ranking = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    const totalPedidos = otsMes.length || 1;
+    const ranking = Object.entries(counts).filter(([, c]) => c > 0).sort((a, b) => b[1] - a[1]);
+    const totalItems = ranking.reduce((a, [, c]) => a + c, 0) || 1;
+    window.GECKO_MIX_RANKING = ranking;
     const contRanking = document.getElementById('repoRankingProductos');
     if (contRanking) {
-        contRanking.innerHTML = ranking.map(([rubro, count], idx) => `
+        contRanking.innerHTML = ranking.length === 0
+            ? `<p class="text-gray-400 text-[11px] italic">Sin ventas este mes.</p>`
+            : ranking.map(([rubro, count], idx) => `
                     <div class="flex items-center gap-4">
                         <div class="w-8 h-8 rounded-full bg-gray-50 dark:bg-darkBg flex items-center justify-center text-xs font-black dark:text-gray-400">#${idx + 1}</div>
                         <div class="flex-1">
                             <div class="flex justify-between items-end mb-1">
                                 <span class="text-[11px] font-black dark:text-white uppercase tracking-tight">${rubro}</span>
-                                <span class="text-[10px] text-gray-400 font-bold">${count} OTs</span>
+                                <span class="text-[10px] text-gray-400 font-bold">${count} trabajos</span>
                             </div>
                             <div class="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                                <div class="h-full bg-indigo-500" style="width: ${Math.min(100, (count / totalPedidos) * 100)}%"></div>
+                                <div class="h-full rounded-full" style="width: ${Math.min(100, (count / totalItems) * 100)}%;background:${RUBRO_COLORS[rubro] || '#71717a'}"></div>
                             </div>
                         </div>
                     </div>

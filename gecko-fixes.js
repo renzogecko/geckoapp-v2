@@ -2591,42 +2591,10 @@ window.renderReportesDashboard = function () {
         }
     }
 
-    // Sobreescribir sección ranking con 2 categorías
+    // (Ranking Mix de Ventas: ahora se calcula de forma canónica en main.js por it.tipo)
     const ahora = new Date();
     const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const otsMes = lista.filter(p => {
-        const pts = (p.fecha || '').split('/');
-        if (pts.length < 3) return false;
-        return p.status === 'OT' && parseInt(pts[1]) - 1 === ahora.getMonth() && parseInt(pts[2]) === ahora.getFullYear();
-    });
-
-    const counts = { 'Gráfica': 0, 'Industrial': 0 };
-    otsMes.forEach(p => {
-        const cat = p.categoria === 'Gráfica' ? 'Gráfica' : 'Industrial';
-        counts[cat]++;
-    });
-
-    const total = otsMes.length || 1;
-    const ranking = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const COLORS = { 'Gráfica': '#3b82f6', 'Industrial': '#a855f7' };
-
-    const contRanking = document.getElementById('repoRankingProductos');
-    if (contRanking) {
-        contRanking.innerHTML = ranking.map(([cat, count], idx) => `
-            <div class="flex items-center gap-4">
-                <div class="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-xs font-black text-zinc-400">#${idx + 1}</div>
-                <div class="flex-1">
-                    <div class="flex justify-between items-end mb-1">
-                        <span class="text-[11px] font-black text-white uppercase tracking-tight">${cat}</span>
-                        <span class="text-[10px] text-zinc-400 font-bold">${count} OTs</span>
-                    </div>
-                    <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div class="h-full rounded-full" style="width:${Math.min(100, (count / total) * 100)}%;background:${COLORS[cat] || '#F15A24'};"></div>
-                    </div>
-                </div>
-            </div>`).join('');
-    }
 
     // Total cajas en reportes
     const totalCajas = cajas.reduce((a, c) => a + (parseFloat(c.saldo) || 0), 0);
