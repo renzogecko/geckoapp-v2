@@ -2602,24 +2602,19 @@ function renderReportesDashboard() {
         counts[rubro] = (counts[rubro] || 0) + 1;
     }));
     const ranking = Object.entries(counts).filter(([, c]) => c > 0).sort((a, b) => b[1] - a[1]);
-    const totalItems = ranking.reduce((a, [, c]) => a + c, 0) || 1;
     window.GECKO_MIX_RANKING = ranking;
+    const mixTotal = ranking.reduce((a, [, c]) => a + c, 0);
+    const elMixCenter = document.getElementById('mixCenterTotal');
+    if (elMixCenter) elMixCenter.innerText = mixTotal;
     const contRanking = document.getElementById('repoRankingProductos');
     if (contRanking) {
         contRanking.innerHTML = ranking.length === 0
             ? `<p class="text-gray-400 text-[11px] italic">Sin ventas este mes.</p>`
-            : ranking.map(([rubro, count], idx) => `
-                    <div class="flex items-center gap-4">
-                        <div class="w-8 h-8 rounded-full bg-gray-50 dark:bg-darkBg flex items-center justify-center text-xs font-black dark:text-gray-400">#${idx + 1}</div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-end mb-1">
-                                <span class="text-[11px] font-black dark:text-white uppercase tracking-tight">${rubro}</span>
-                                <span class="text-[10px] text-gray-400 font-bold">${count} trabajos</span>
-                            </div>
-                            <div class="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full" style="width: ${Math.min(100, (count / totalItems) * 100)}%;background:${RUBRO_COLORS[rubro] || '#71717a'}"></div>
-                            </div>
-                        </div>
+            : ranking.map(([rubro, count]) => `
+                    <div class="flex items-center gap-2.5">
+                        <span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:${RUBRO_COLORS[rubro] || '#71717a'}"></span>
+                        <span class="flex-1 text-[11px] font-bold dark:text-gray-200 tracking-tight">${rubro}</span>
+                        <span class="text-[11px] text-gray-400 font-black">${count}</span>
                     </div>
                 `).join('');
     }

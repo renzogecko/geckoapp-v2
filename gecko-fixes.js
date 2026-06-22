@@ -2631,71 +2631,9 @@ window.renderReportesDashboard = function () {
         }
     }
 
-    // ── Gráfico de líneas: Ingresos por Categoría (últimos 6 meses) ──
-    const svgChart = document.getElementById('svgIngresosCategoria');
-    const labelsContainer = document.getElementById('chartIngresosLabels');
-    if (svgChart) {
-        const MESES_NOM = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const meses6 = [];
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
-            meses6.push({ m: d.getMonth(), y: d.getFullYear(), label: MESES_NOM[d.getMonth()] });
-        }
-
-        // Sample baseline — displayed only when real data is all-zero
-        const SAMPLE_GRAF = [85000, 120000, 95000, 160000, 130000, 195000];
-        const SAMPLE_IND = [35000, 48000, 62000, 52000, 80000, 95000];
-
-        const data6raw = meses6.map(mes => {
-            const otsDelMes = lista.filter(p => {
-                if (p.status !== 'OT') return false;
-                const pts = (p.fecha || '').split('/');
-                if (pts.length < 3) return false;
-                return parseInt(pts[1]) - 1 === mes.m && parseInt(pts[2]) === mes.y;
-            });
-            const graf = otsDelMes
-                .filter(p => (p.categoria || (typeof window._detectarCategoria === 'function' ? window._detectarCategoria(p) : 'Gráfica')) === 'Gráfica')
-                .reduce((a, p) => a + (p.total || 0), 0);
-            const ind = otsDelMes
-                .filter(p => (p.categoria || (typeof window._detectarCategoria === 'function' ? window._detectarCategoria(p) : 'Gráfica')) === 'Industrial')
-                .reduce((a, p) => a + (p.total || 0), 0);
-            return { ...mes, graf, ind };
-        });
-
-        const hasRealData = data6raw.some(d => d.graf > 0 || d.ind > 0);
-        const data6 = hasRealData
-            ? data6raw
-            : data6raw.map((d, i) => ({ ...d, graf: SAMPLE_GRAF[i] || 0, ind: SAMPLE_IND[i] || 0, isSample: true }));
-
-        const W = 400, H = 130;
-        const padL = 10, padR = 10, padT = 12, padB = 18;
-        const maxVal = Math.max(...data6.map(d => Math.max(d.graf, d.ind)), 1);
-        const xStep = (W - padL - padR) / (meses6.length - 1);
-        const toX = i => padL + i * xStep;
-        const toY = v => H - padB - ((v / maxVal) * (H - padT - padB));
-
-        const ptsGraf = data6.map((d, i) => `${toX(i).toFixed(1)},${toY(d.graf).toFixed(1)}`).join(' ');
-        const ptsInd = data6.map((d, i) => `${toX(i).toFixed(1)},${toY(d.ind).toFixed(1)}`).join(' ');
-        const dotsGraf = data6.map((d, i) => `<circle cx="${toX(i).toFixed(1)}" cy="${toY(d.graf).toFixed(1)}" r="3.5" fill="#3b82f6" stroke="#141417" stroke-width="1.5"/>`).join('');
-        const dotsInd = data6.map((d, i) => `<circle cx="${toX(i).toFixed(1)}" cy="${toY(d.ind).toFixed(1)}" r="3.5" fill="#a855f7" stroke="#141417" stroke-width="1.5"/>`).join('');
-
-        // Watermark text if sample data
-        const sampleNote = !hasRealData
-            ? `<text x="200" y="68" text-anchor="middle" fill="#3f3f46" font-size="9" font-weight="900" font-family="sans-serif" letter-spacing="2" text-transform="uppercase">DATOS DE EJEMPLO</text>`
-            : '';
-
-        svgChart.innerHTML =
-            `<polyline points="${ptsGraf}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>` +
-            `<polyline points="${ptsInd}"  fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>` +
-            dotsGraf + dotsInd + sampleNote;
-
-        if (labelsContainer) {
-            labelsContainer.innerHTML = meses6.map(mes =>
-                `<span style="font-size:9px;color:#52525b;font-weight:900;text-transform:uppercase;letter-spacing:1px;">${mes.label}</span>`
-            ).join('');
-            labelsContainer.style.cssText = 'display:flex;justify-content:space-between;padding:0 10px;margin-top:4px;';
-        }
-    }
+    // ── Gráficos Chart.js: Ingresos por Categoría (área) + Mix de Ventas (donut) ──
+    if (typeof window.renderChartIngresos === 'function') window.renderChartIngresos(lista, ahora);
+    if (typeof window.renderChartMix === 'function') window.renderChartMix();
 
     // ── Barras de Liquidez por caja ──
     const liquidezBarsEl = document.getElementById('liquidezBarsContainer');
@@ -5150,3 +5088,86 @@ document.addEventListener('scroll', function () {
         d.style.display = 'none';
     });
 }, true);
+
+// ════ Gráficos de Reportes con Chart.js ════
+window.renderChartIngresos = function (lista, ahora) {
+    const canvas = document.getElementById('canvasIngresosCategoria');
+    if (!canvas || typeof Chart === 'undefined') return;
+    lista = lista || JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    ahora = ahora || new Date();
+    const MESES_NOM = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const meses6 = [];
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+        meses6.push({ m: d.getMonth(), y: d.getFullYear(), label: MESES_NOM[d.getMonth()] });
+    }
+    const graf = [], ind = [];
+    meses6.forEach(mes => {
+        const ots = lista.filter(p => {
+            if (p.status !== 'OT') return false;
+            const pts = (p.fecha || '').split('/');
+            if (pts.length < 3) return false;
+            return parseInt(pts[1]) - 1 === mes.m && parseInt(pts[2]) === mes.y;
+        });
+        graf.push(ots.filter(p => p.categoria !== 'Industrial').reduce((a, p) => a + (p.total || 0), 0));
+        ind.push(ots.filter(p => p.categoria === 'Industrial').reduce((a, p) => a + (p.total || 0), 0));
+    });
+    const prev = Chart.getChart(canvas);
+    if (prev) prev.destroy();
+    const ctx = canvas.getContext('2d');
+    function grad(color) {
+        const g = ctx.createLinearGradient(0, 0, 0, 150);
+        g.addColorStop(0, color + '55');
+        g.addColorStop(1, color + '00');
+        return g;
+    }
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: meses6.map(m => m.label),
+            datasets: [
+                { label: 'Gráfica', data: graf, borderColor: '#378ADD', borderWidth: 2.5, tension: 0.4, pointRadius: 0, pointHoverRadius: 4, fill: true, backgroundColor: grad('#378ADD') },
+                { label: 'Industrial', data: ind, borderColor: '#7F77DD', borderWidth: 2.5, tension: 0.4, pointRadius: 0, pointHoverRadius: 4, fill: true, backgroundColor: grad('#7F77DD') }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, animation: { duration: 1400 },
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': $' + c.parsed.y.toLocaleString('es-AR') } } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#71717a', font: { size: 10 } } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#52525b', font: { size: 9 }, callback: v => { v = Math.abs(v); return '$' + (v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : (v / 1000).toFixed(0) + 'k'); } } }
+            }
+        }
+    });
+};
+
+window.renderChartMix = function () {
+    const canvas = document.getElementById('canvasMixVentas');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const ranking = window.GECKO_MIX_RANKING || [];
+    const COLORS = {
+        'Gráfica': '#F15A24', 'Láser/CNC': '#E07A4E', 'Corpóreos': '#C98A5E',
+        'Textil': '#6FA8A0', 'Industrial': '#5E84A8', 'Impresión 3D': '#8C7BA6', 'Otros': '#71717a'
+    };
+    const prev = Chart.getChart(canvas);
+    if (prev) prev.destroy();
+    if (ranking.length === 0) return;
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ranking.map(r => r[0]),
+            datasets: [{
+                data: ranking.map(r => r[1]),
+                backgroundColor: ranking.map(r => COLORS[r[0]] || '#71717a'),
+                borderColor: '#141417',
+                borderWidth: 3,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '72%',
+            animation: { animateRotate: true, duration: 1300 },
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' trabajos' } } }
+        }
+    });
+};
