@@ -843,7 +843,7 @@ window.calcularCostoPolifan = function () {
         // Si tiene dimensiones de placa en GDM: precio es por placa, calcular $/m² (redondeado)
         const precioM2 = Math.round(areaPlacaGDM ? (precioItem / areaPlacaGDM) : precioItem);
         costoCuerpo = areaM2 * precioM2;
-        auditCuerpo.push({ nombre: itemPolifan.nombre, detalle: `${areaM2.toFixed(4)}m² × $${precioM2.toLocaleString('es-AR')}/m²${document.getElementById('modoGremio')?.checked ? ' (Gremio)' : ''}`, valor: costoCuerpo });
+        auditCuerpo.push({ nombre: itemPolifan.nombre, detalle: `${parseFloat(areaM2.toFixed(2))}m² × $${precioM2.toLocaleString('es-AR')}/m²${document.getElementById('modoGremio')?.checked ? ' (Gremio)' : ''}`, valor: costoCuerpo });
     }
 
     // 2. Corte Polifan
@@ -1222,13 +1222,13 @@ window.calcularChapaAcrilico = function () {
         const precioM2Frente = Math.round(areaPlacaGDM ? (precioPlaca / areaPlacaGDM) : precioPlaca);
         const subtotalFrente = areaM2 * precioM2Frente;
         costoPlacas += subtotalFrente;
-        auditPlacas.push({ nombre: `Frente: ${itFrente.nombre}`, detalle: `${areaM2.toFixed(4)}m² × $${precioM2Frente.toLocaleString('es-AR')}/m²`, valor: subtotalFrente });
+        auditPlacas.push({ nombre: `Frente: ${itFrente.nombre}`, detalle: `${parseFloat(areaM2.toFixed(2))}m² × $${precioM2Frente.toLocaleString('es-AR')}/m²`, valor: subtotalFrente });
         const servCorteFrente = getServicioCorte(itFrente.nombre);
         if (servCorteFrente) {
             const precioCorteFrente = window.getCorpPrecio(servCorteFrente);
             const subtotalCorteFrente = perimetroMl * precioCorteFrente;
             costoCortePlacas += subtotalCorteFrente;
-            auditPlacas.push({ nombre: `Corte ${servCorteFrente.nombre}`, detalle: `${perimetroMl.toFixed(2)}ml × $${Math.round(precioCorteFrente).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFrente });
+            auditPlacas.push({ nombre: `Corte ${servCorteFrente.nombre}`, detalle: `${parseFloat(perimetroMl.toFixed(2))}ml × $${Math.round(precioCorteFrente).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFrente });
         }
     }
 

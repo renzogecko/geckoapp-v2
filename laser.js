@@ -256,7 +256,7 @@ window.calcularCostoCorte = function () {
             precioXcm,
             precioML: precioMLDisplay,
             pasadas,
-            texto: `${matNombre} | ${ancho}×${alto}cm | Área: ${areaM2.toFixed(4)}m² × ${fmt(precioM2)}/m² = ${fmt(costoMatUnit)}/u | ${corteInfo} | ×${cant} piezas = ${fmt(costoMatTotal + costoCorteTotal)}`
+            texto: `${matNombre} | ${ancho}×${alto}cm | Área: ${parseFloat(areaM2.toFixed(2))}m² × ${fmt(precioM2)}/m² = ${fmt(costoMatUnit)}/u | ${corteInfo} | ×${cant} piezas = ${fmt(costoMatTotal + costoCorteTotal)}`
         });
     });
 
@@ -281,7 +281,7 @@ window.calcularCostoCorte = function () {
             totalAcabados += costoFila;
             auditAcabados.push({
                 mat: matNombre,
-                detalle: `${areaEfectiva.toFixed(4)}m² × ${fmt(precioM2)}/m²${cant > 1 ? ` × ${cant} u` : ''}`,
+                detalle: `${parseFloat(areaEfectiva.toFixed(2))}m² × ${fmt(precioM2)}/m²${cant > 1 ? ` × ${cant} u` : ''}`,
                 costoTotal: costoFila
             });
         });
