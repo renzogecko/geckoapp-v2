@@ -5245,4 +5245,28 @@ window.eliminarMaterial = function (id) {
     });
 };
 // ── FIN FIX modales custom eliminar ─────────────────────────────────────────
+
+// ── FIX: Modal custom eliminar servicio y material ───────────────────────────
+window.eliminarTerminacion = function (id) {
+    window.confirmGecko('¿Estás seguro de que deseas eliminar este servicio definitivamente?', 'Eliminar servicio').then(function(confirmado) {
+        if (!confirmado) return;
+        var nuevos = (window.geckoServicios || []).filter(function(t) { return String(t.id) !== String(id); });
+        window.geckoServicios = nuevos;
+        localStorage.setItem('geckoServicios', JSON.stringify(nuevos));
+        if (typeof renderServicios === 'function') renderServicios();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
+    });
+};
+window.eliminarMaterial = function (id) {
+    window.confirmGecko('¿Seguro que querés eliminar este material?', 'Eliminar material').then(function(confirmado) {
+        if (!confirmado) return;
+        var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]').filter(function(m) { return String(m.id) !== String(id); });
+        window.materiales = mats;
+        localStorage.setItem('gecko_materiales', JSON.stringify(mats));
+        if (typeof renderInsumos === 'function') renderInsumos();
+        if (typeof window.poblarMaterialesGrafica === 'function') window.poblarMaterialesGrafica();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito('Material eliminado.', '¡Eliminado!');
+    });
+};
+// ── FIN FIX modales custom eliminar ─────────────────────────────────────────
 };
