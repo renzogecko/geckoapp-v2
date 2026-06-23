@@ -5218,4 +5218,31 @@ window.renderChartMix = function () {
             plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' trabajos' } } }
         }
     });
+
+// ── FIX: Modal custom para eliminar servicios (reemplaza confirm() nativo) ───
+window.eliminarTerminacion = function (id) {
+    window.confirmGecko('¿Estás seguro de que deseas eliminar este servicio definitivamente?', 'Eliminar servicio').then(confirmado => {
+        if (!confirmado) return;
+        const nuevosServicios = (window.geckoServicios || []).filter(t => String(t.id) !== String(id));
+        window.geckoServicios = nuevosServicios;
+        localStorage.setItem('geckoServicios', JSON.stringify(nuevosServicios));
+        if (typeof renderServicios === 'function') renderServicios();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
+    });
+};
+
+// ── FIX: Modal custom para eliminar materiales (reemplaza confirm() nativo) ──
+window.eliminarMaterial = function (id) {
+    window.confirmGecko('¿Seguro que querés eliminar este material del stock?\nEsta acción no se puede deshacer.', 'Eliminar material').then(confirmado => {
+        if (!confirmado) return;
+        let mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+        mats = mats.filter(m => String(m.id) !== String(id));
+        window.materiales = mats;
+        localStorage.setItem('gecko_materiales', JSON.stringify(mats));
+        if (typeof renderInsumos === 'function') renderInsumos();
+        if (typeof window.poblarMaterialesGrafica === 'function') window.poblarMaterialesGrafica();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito('Material eliminado del inventario.', '¡Eliminado!');
+    });
+};
+// ── FIN FIX modales custom eliminar ─────────────────────────────────────────
 };
