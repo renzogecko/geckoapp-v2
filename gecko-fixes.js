@@ -5746,3 +5746,57 @@ setTimeout(function () {
 }, 2000);
 // ── FIN FIX renderInsumos ────────────────────────────────────────────────────
 // ── FIN FIX BUG-001 v4 ───────────────────────────────────────────────────────
+
+// ── FIX renderInsumos v2: parchear DOM después del render ────────────────────
+// renderInsumos usa variable local 'materiales' (closure de main.js), no
+// window.materiales. La única forma de corregir los precios es parchear el
+// DOM después de que la función dibuje la tabla.
+setTimeout(function () {
+    var _origRI2 = window.renderInsumos;
+    if (typeof _origRI2 !== 'function') return;
+
+    window.renderInsumos = function () {
+        _origRI2.apply(this, arguments);
+        // Parchear precios en el DOM para materiales con estrategia FIJA
+        setTimeout(function () {
+            var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+            var tbody = document.getElementById('tablaMaterialesBody');
+            if (!tbody) return;
+            var rows = tbody.querySelectorAll('tr');
+            rows.forEach(function (tr) {
+                // Extraer ID del material desde el botón editar
+                var editBtn = tr.querySelector('button[onclick*="editarMaterial"]');
+                if (!editBtn) return;
+                var match = editBtn.getAttribute('onclick').match(/editarMaterial\('?([^')]+)'?\)/);
+                if (!match) return;
+                var id = match[1];
+                var mat = mats.find(function (m) { return String(m.id) === String(id); });
+                if (!mat || mat.estrategiaVenta !== 'fija') return;
+                if (!mat.precioVenta && !mat.precioGremio) return;
+
+                // Encontrar celdas de precio en la fila
+                var tds = tr.querySelectorAll('td');
+                // Celda VENTA (índice 3) y GREMIO (índice 4)
+                var ventaTd = tds[3];
+                var gremioTd = tds[4];
+                var fmt = function (n) {
+                    return new Intl.NumberFormat('es-AR', {
+                        style: 'currency', currency: 'ARS',
+                        minimumFractionDigits: 0, maximumFractionDigits: 0
+                    }).format(n);
+                };
+
+                if (ventaTd && mat.precioVenta > 0) {
+                    var ventaEl = ventaTd.querySelector('p.font-black, p.text-gecko, strong, p');
+                    if (ventaEl) ventaEl.textContent = fmt(mat.precioVenta);
+                }
+                if (gremioTd && mat.precioGremio > 0) {
+                    var gremioEl = gremioTd.querySelector('p.font-black, p, strong');
+                    if (gremioEl) gremioEl.textContent = fmt(mat.precioGremio);
+                }
+            });
+        }, 50);
+    };
+    console.log('🦎 GECKO-FIX: renderInsumos v2 — DOM patch activo.');
+}, 2100);
+// ── FIN FIX renderInsumos v2 ─────────────────────────────────────────────────
