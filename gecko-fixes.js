@@ -67,7 +67,9 @@ window.procesarGuardado = function (status) {
     }
 
     // INSERT new
-    const id = window.nextBudgetId || (parseInt(localStorage.getItem('gecko_nextId')) || 1001);
+    const _listaActual2 = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const _maxId2 = _listaActual2.length > 0 ? Math.max(..._listaActual2.map(p => parseInt(p.id) || 0)) : 1000;
+    const id = Math.max(window.nextBudgetId || 0, parseInt(localStorage.getItem('gecko_nextId')) || 0, _maxId2) + 1;
     const nuevo = {
         id, cliente, categoria,
         fecha: new Date().toLocaleDateString('es-AR'),
@@ -79,7 +81,27 @@ window.procesarGuardado = function (status) {
     };
 
     lista.push(nuevo);
-    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    // Fix A: Guardar en localStorage SIN imágenes para evitar QuotaExceededError
+    const listaParaStorage = lista.map(p => {
+        const copia = { ...p };
+        if (copia.imagenes) delete copia.imagenes;
+        if (copia.items) copia.items = copia.items.map(it => {
+            const itCopia = { ...it };
+            if (itCopia.imagenBase64) delete itCopia.imagenBase64;
+            if (itCopia.imagenes) delete itCopia.imagenes;
+            return itCopia;
+        });
+        return copia;
+    });
+    try {
+        localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaParaStorage));
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            if (typeof window.mostrarAdvertencia === 'function') {
+                window.mostrarAdvertencia('El presupuesto se guardó en la base de datos, pero el almacenamiento local está lleno. Recargá la página para verlo.', 'Atención');
+            }
+        }
+    }
 
     window.nextBudgetId = id + 1;
     localStorage.setItem('gecko_nextId', window.nextBudgetId);
@@ -4840,10 +4862,28 @@ window._gpmCerrar = function () {
 
 // ── Guardar ──
 window._gpmGuardar = function (status) {
+    // Fix B: Limpiar título guardado al confirmar guardado exitoso
+    localStorage.removeItem('gecko_gpm_titulo_draft');
     const cliente = document.getElementById('gpmCliente')?.value?.trim();
     if (!cliente) { alert('Ingresá el nombre del cliente.'); document.getElementById('gpmCliente')?.focus(); return; }
 
     const _tituloPresupuesto = document.getElementById('gpmTitulo')?.value?.trim() || '';
+    // Fix B: Guardar título en localStorage mientras el usuario escribe
+    const _inputTituloRef = document.getElementById('gpmTitulo');
+    if (_inputTituloRef && !_inputTituloRef.dataset.persistBound) {
+        _inputTituloRef.dataset.persistBound = '1';
+        _inputTituloRef.addEventListener('input', function() {
+            localStorage.setItem('gecko_gpm_titulo_draft', this.value);
+        });
+    }
+    // Fix B: Restaurar título si se recargó la página con un borrador guardado
+    if (!_tituloPresupuesto) {
+        const _draft = localStorage.getItem('gecko_gpm_titulo_draft');
+        const _inputTituloRestore = document.getElementById('gpmTitulo');
+        if (_draft && _inputTituloRestore && !_inputTituloRestore.value.trim()) {
+            _inputTituloRestore.value = _draft;
+        }
+    }
     if (!_tituloPresupuesto) {
         const _inputTitulo = document.getElementById('gpmTitulo');
         if (_inputTitulo) {
@@ -5180,33 +5220,33 @@ window.renderChartIngresos = function (lista, ahora) {
 
 window.renderChartMix = function () {
     const canvas = document.getElementById('canvasMixVentas');
-if (!canvas || typeof Chart === 'undefined') return;
-const ranking = window.GECKO_MIX_RANKING || [];
-const COLORS = {
-    'Gráfica': '#F15A24', 'Láser/CNC': '#E07A4E', 'Corpóreos': '#C98A5E',
-    'Textil': '#6FA8A0', 'Industrial': '#5E84A8', 'Impresión 3D': '#8C7BA6', 'Otros': '#71717a'
-};
-const prev = Chart.getChart(canvas);
-if (prev) prev.destroy();
-if (ranking.length === 0) return;
-new Chart(canvas, {
-    type: 'doughnut',
-    data: {
-        labels: ranking.map(r => r[0]),
-        datasets: [{
-            data: ranking.map(r => r[1]),
-            backgroundColor: ranking.map(r => COLORS[r[0]] || '#71717a'),
-            borderColor: '#141417',
-            borderWidth: 3,
-            hoverOffset: 6
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: false, cutout: '72%',
-        animation: { animateRotate: true, duration: 1300 },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' trabajos' } } }
-    }
-});
+    if (!canvas || typeof Chart === 'undefined') return;
+    const ranking = window.GECKO_MIX_RANKING || [];
+    const COLORS = {
+        'Gráfica': '#F15A24', 'Láser/CNC': '#E07A4E', 'Corpóreos': '#C98A5E',
+        'Textil': '#6FA8A0', 'Industrial': '#5E84A8', 'Impresión 3D': '#8C7BA6', 'Otros': '#71717a'
+    };
+    const prev = Chart.getChart(canvas);
+    if (prev) prev.destroy();
+    if (ranking.length === 0) return;
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ranking.map(r => r[0]),
+            datasets: [{
+                data: ranking.map(r => r[1]),
+                backgroundColor: ranking.map(r => COLORS[r[0]] || '#71717a'),
+                borderColor: '#141417',
+                borderWidth: 3,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '72%',
+            animation: { animateRotate: true, duration: 1300 },
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' trabajos' } } }
+        }
+    });
 };
 
 // ── FIX: Modal custom eliminar servicio y material ───────────────────────────
