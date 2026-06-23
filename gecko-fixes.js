@@ -4337,8 +4337,12 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
         const _todosEdit = lista.filter(x => String(x.id) === String(presupuestoEditId));
         datosEdicion = _todosEdit[_todosEdit.length - 1];
         window._editandoPresupuestoId = presupuestoEditId;
+        // Persistir ID en edición para sobrevivir recargas
+        localStorage.setItem('gecko_gpm_editing_id', String(presupuestoEditId));
     } else {
         window._editandoPresupuestoId = null;
+        // Limpiar draft solo si se abre en blanco explícitamente
+        localStorage.removeItem('gecko_gpm_editing_id');
         // NO resetear _gpmItemsDesdeCotzador aquí, se consume después de renderizar
     }
 
@@ -4857,6 +4861,7 @@ window._gpmCalc = function () {
 // ── Cerrar / Cancelar ──
 window._gpmCerrar = function () {
     window._editandoPresupuestoId = null;
+    localStorage.removeItem('gecko_gpm_editing_id');
     if (typeof window.switchMenu === 'function') window.switchMenu('pedidos');
 };
 
@@ -5062,16 +5067,22 @@ window.editarPresupuesto = function (id) {
 
 console.log('🦎 GECKO: Presupuestador Manual (sección nativa) v2.0 cargado.');
 
-// Auto-render presupuestoManual si la URL tiene #presupuestoManual al cargar
+// Auto-render presupuestoManual — restaura edición en curso si hubo recarga
 document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function () {
         const hash = window.location.hash;
+        const editingId = localStorage.getItem('gecko_gpm_editing_id');
         if (hash === '#presupuestoManual') {
             if (typeof window.abrirPresupuestadorManual === 'function') {
-                window.abrirPresupuestadorManual(null);
+                if (editingId) {
+                    if (typeof window.switchMenu === 'function') window.switchMenu('presupuestoManual');
+                    window.abrirPresupuestadorManual(editingId);
+                } else {
+                    window.abrirPresupuestadorManual(null);
+                }
             }
         }
-    }, 500);
+    }, 800);
 });
 
 // También escuchar el evento geckoDB_ready por si carga después
