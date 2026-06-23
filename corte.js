@@ -2,6 +2,20 @@
  * GECKO - Módulo de Vinilo de Corte (Nesting & Bobina)
  */
 
+// Helper: busca un servicio en geckoServicios cuyo nombre normalizado contenga todas las palabras clave
+// Normaliza: minúsculas, sin tildes, sin caracteres especiales
+function _geckoFindServicioPorKeywords(keywords) {
+    const norm = t => String(t || '').toLowerCase()
+        .normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-z0-9]/g, " ").replace(/\s+/g, " ").trim();
+    const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+    const kws = keywords.map(k => norm(k));
+    return servicios.find(s => {
+        const nombre = norm(s.nombre);
+        return kws.every(kw => nombre.includes(kw));
+    }) || null;
+}
+
 window.GeckoCorte = {
     state: {
         ancho: 0,
@@ -288,14 +302,19 @@ window.GeckoCorte = {
         let costoTransfer = 0;
         if (llevaTransfer) {
             let mlTransfer = (bobina === 120) ? mlTotales * 2 : mlTotales;
-            const matTransfer = window.getGeckoItem("Transfer") || window.getGeckoItem("CINTA POSICIONADORA");
-            const precioTranfer = matTransfer ? matTransfer.precioVenta : 0;
+            // Búsqueda flexible: encuentra cualquier servicio/material cuyo nombre contenga "transfer"
+            const matTransfer = _geckoFindServicioPorKeywords(["transfer"])
+                || window.getGeckoItem("Transfer")
+                || window.getGeckoItem("CINTA POSICIONADORA");
+            const precioTranfer = matTransfer ? (matTransfer.precioVenta || matTransfer.precio || 0) : 0;
             costoTransfer = mlTransfer * precioTranfer;
         }
 
-        // 4. CORTE PLOTTER (BÚSQUEDA EN MANO DE OBRA)
-        const servicioCorte = window.getGeckoItem("PLOTER DE CORTE - " + bobinaStr + "CM") || window.getGeckoItem("SERVICIO DE CORTE");
-        const precioServicioCorte = servicioCorte ? servicioCorte.precioVenta : 0;
+        // 4. CORTE PLOTTER (BÚSQUEDA FLEXIBLE — ignora mayúsculas, espacios y guiones)
+        const servicioCorte = _geckoFindServicioPorKeywords(["ploter", bobinaStr])
+            || _geckoFindServicioPorKeywords(["ploter", "corte", bobinaStr])
+            || window.getGeckoItem("SERVICIO DE CORTE");
+        const precioServicioCorte = servicioCorte ? (servicioCorte.precioVenta || servicioCorte.precio || 0) : 0;
         const costoCortePlotter = mlTotales * precioServicioCorte;
 
         // 5. MONTADO SOBRE RÍGIDOS
@@ -404,14 +423,18 @@ window.GeckoCorte = {
                 // ZONA 2 — SERVICIOS
                 const servicios = [];
                 if (costoCortePlotter > 0) {
-                    const servCorte = window.getGeckoItem('PLOTER DE CORTE - ' + bobinaStr + 'CM') || window.getGeckoItem('SERVICIO DE CORTE');
-                    const precioCorte = servCorte ? servCorte.precioVenta : 0;
+                    const servCorte = _geckoFindServicioPorKeywords(["ploter", bobinaStr])
+                        || _geckoFindServicioPorKeywords(["ploter", "corte", bobinaStr])
+                        || window.getGeckoItem('SERVICIO DE CORTE');
+                    const precioCorte = servCorte ? (servCorte.precioVenta || servCorte.precio || 0) : 0;
                     servicios.push({ label: 'Corte plotter', detalle: `${mlTotales.toFixed(2)}ML × ${fmtVal(precioCorte)}/ML`, valor: costoCortePlotter });
                 }
                 if (costoTransfer > 0) {
                     const mlT = bobina === 120 ? mlTotales * 2 : mlTotales;
-                    const matT = window.getGeckoItem('Transfer') || window.getGeckoItem('CINTA POSICIONADORA');
-                    const precioT = matT ? matT.precioVenta : 0;
+                    const matT = _geckoFindServicioPorKeywords(["transfer"])
+                        || window.getGeckoItem('Transfer')
+                        || window.getGeckoItem('CINTA POSICIONADORA');
+                    const precioT = matT ? (matT.precioVenta || matT.precio || 0) : 0;
                     servicios.push({ label: 'Transfer', detalle: `${mlT.toFixed(2)}ML × ${fmtVal(precioT)}/ML`, valor: costoTransfer });
                 }
                 if (servicios.length > 0) {
