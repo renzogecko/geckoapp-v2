@@ -5696,4 +5696,53 @@ window.addEventListener('load', function () {
 
     }, 1900);
 });
+
+// ── FIX renderInsumos: usar precioVenta y precioGremio guardados cuando existen ─
+// main.js líneas 3544-3545 siempre calcula costo × mult, ignorando m.precioVenta.
+// Este fix intercepta localStorage para parchear los materiales antes del render.
+setTimeout(function () {
+    var _origRenderInsumos = window.renderInsumos;
+    if (typeof _origRenderInsumos !== 'function') return;
+    window.renderInsumos = function () {
+        // Parchear temporalmente los materiales en memoria antes de renderizar
+        var mats = window.materiales || [];
+        mats.forEach(function (m) {
+            if (m.estrategiaVenta === 'fija') {
+                // Guardar multiplicadores reales para restaurar después
+                m._multOrig = m.multiplicador;
+                m._multGremioOrig = m.multGremio;
+                // Si tiene precioVenta guardado y costo=0, simular multiplicador=1
+                // y poner el precio directamente en costo para que mult×costo = precio
+                if (m.precioVenta > 0 && (m.costo === 0 || !m.costo)) {
+                    m._costoOrig = m.costo;
+                    m.costo = m.precioVenta;
+                    m.multiplicador = 1;
+                    if (m.precioGremio > 0) {
+                        m.multGremio = m.precioGremio / m.precioVenta;
+                    }
+                }
+            }
+        });
+        _origRenderInsumos.apply(this, arguments);
+        // Restaurar valores originales
+        mats.forEach(function (m) {
+            if (m.estrategiaVenta === 'fija') {
+                if (m._costoOrig !== undefined) {
+                    m.costo = m._costoOrig;
+                    delete m._costoOrig;
+                }
+                if (m._multOrig !== undefined) {
+                    m.multiplicador = m._multOrig;
+                    delete m._multOrig;
+                }
+                if (m._multGremioOrig !== undefined) {
+                    m.multGremio = m._multGremioOrig;
+                    delete m._multGremioOrig;
+                }
+            }
+        });
+    };
+    console.log('🦎 GECKO-FIX: renderInsumos parcheado para precioVenta fija.');
+}, 2000);
+// ── FIN FIX renderInsumos ────────────────────────────────────────────────────
 // ── FIN FIX BUG-001 v4 ───────────────────────────────────────────────────────
