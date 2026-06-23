@@ -5324,3 +5324,96 @@ window._gpmCerrar = function () {
     if (typeof _origGpmCerrarReload === 'function') _origGpmCerrarReload();
 };
 // ── FIN FIX restaurar edición tras recarga ───────────────────────────────────
+
+// ── FIX BUG-001: Alias para poblarMaterialesGraficaCascada (typo en main.js) ──
+// main.js line 4070 llama poblarMaterialesGraficaCascada() que no existe,
+// tirando error que corta el guardado antes de registrar los precios.
+window.poblarMaterialesGraficaCascada = function () {
+    if (typeof window.poblarMaterialesGrafica === 'function') {
+        window.poblarMaterialesGrafica();
+    }
+};
+
+// ── FIX: Persistir borrador del modal de material al cerrar accidentalmente ──
+// Si el usuario cierra el modal clickando afuera (sin guardar), los campos
+// se guardan en localStorage como borrador y se restauran al volver a abrir.
+
+// IDs de todos los campos del formulario de material
+var _GECKO_MAT_FIELDS = [
+    'matNombre','matCat','matSubCat','matUnidad','matUnidadVenta',
+    'matCostoUSD','matCostoReal','matContenido','matAncho','matLargo',
+    'matEspesor','matPeso','matStock','matNota','matMultiplicador',
+    'matPrecioVentaManual','matPrecioGremio','matMultGremio','matCortePrecioML',
+    'matCorteSpeed','matCortePower'
+];
+
+function _geckoSaveMatDraft() {
+    var draft = {};
+    var hasData = false;
+    _GECKO_MAT_FIELDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el.value) {
+            draft[id] = el.value;
+            hasData = true;
+        }
+    });
+    // Guardar editId si estamos editando
+    var form = document.getElementById('formMaterial');
+    if (form && form.dataset.editId) draft._editId = form.dataset.editId;
+    // Solo guardar si hay datos reales
+    if (hasData) {
+        localStorage.setItem('gecko_mat_draft', JSON.stringify(draft));
+    }
+}
+
+function _geckoRestoreMatDraft() {
+    var raw = localStorage.getItem('gecko_mat_draft');
+    if (!raw) return;
+    try {
+        var draft = JSON.parse(raw);
+        // Solo restaurar si NO es una edición nueva (no tenemos editId en el form)
+        var form = document.getElementById('formMaterial');
+        if (!form) return;
+        // Si el draft era de una edición, no restaurar (ya se carga desde editarMaterial)
+        if (draft._editId) return;
+        _GECKO_MAT_FIELDS.forEach(function(id) {
+            if (draft[id]) {
+                var el = document.getElementById(id);
+                if (el) el.value = draft[id];
+            }
+        });
+    } catch(e) {}
+}
+
+// Interceptar intentarCerrarModal para guardar borrador cuando cierra modalMaterial
+var _origIntentarCerrar = window.intentarCerrarModal;
+window.intentarCerrarModal = function(id) {
+    if (id === 'modalMaterial') {
+        var form = document.getElementById('formMaterial');
+        // Solo guardar borrador si el formulario tiene datos y NO fue submit (guardado real)
+        if (form && !form.dataset.editId) {
+            var nombre = document.getElementById('matNombre');
+            if (nombre && nombre.value.trim()) {
+                _geckoSaveMatDraft();
+            }
+        }
+    }
+    if (typeof _origIntentarCerrar === 'function') _origIntentarCerrar(id);
+};
+
+// Interceptar abrirModalMaterial para restaurar borrador
+var _origAbrirModalMaterial = window.abrirModalMaterial;
+window.abrirModalMaterial = function() {
+    if (typeof _origAbrirModalMaterial === 'function') _origAbrirModalMaterial();
+    // Restaurar borrador si existe (después del reset del original)
+    setTimeout(_geckoRestoreMatDraft, 50);
+};
+
+// Limpiar borrador al guardar exitosamente
+var _origFormMatSubmit = document.getElementById('formMaterial');
+if (_origFormMatSubmit) {
+    _origFormMatSubmit.addEventListener('submit', function() {
+        localStorage.removeItem('gecko_mat_draft');
+    }, true); // capture=true para correr antes del handler de main.js
+}
+// ── FIN FIX borrador modal material ─────────────────────────────────────────
