@@ -12,7 +12,7 @@
 - **Descripción:** Cuando cargo un nuevo material, le pongo los precios de venta y gremio, en el modal solo se mantiene el de gremio el de publico se borra  | en la lista los dos valores permanecen en $0 
 - **Estado:** 🔴 Pendiente
 
-### [BUG-003] Modale cliente - edicion  
+### [BUG-002] Modale cliente - edicion  
 - **Sección:** clientes 
 - **Descripción:** Al entrar a editar un cliente no se puede cambiar el nombre, esta bloqueado. Deberia poder modificarse 
 - **Estado:** 🔴 Pendiente

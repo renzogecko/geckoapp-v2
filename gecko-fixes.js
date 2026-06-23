@@ -5340,17 +5340,17 @@ window.poblarMaterialesGraficaCascada = function () {
 
 // IDs de todos los campos del formulario de material
 var _GECKO_MAT_FIELDS = [
-    'matNombre','matCat','matSubCat','matUnidad','matUnidadVenta',
-    'matCostoUSD','matCostoReal','matContenido','matAncho','matLargo',
-    'matEspesor','matPeso','matStock','matNota','matMultiplicador',
-    'matPrecioVentaManual','matPrecioGremio','matMultGremio','matCortePrecioML',
-    'matCorteSpeed','matCortePower'
+    'matNombre', 'matCat', 'matSubCat', 'matUnidad', 'matUnidadVenta',
+    'matCostoUSD', 'matCostoReal', 'matContenido', 'matAncho', 'matLargo',
+    'matEspesor', 'matPeso', 'matStock', 'matNota', 'matMultiplicador',
+    'matPrecioVentaManual', 'matPrecioGremio', 'matMultGremio', 'matCortePrecioML',
+    'matCorteSpeed', 'matCortePower'
 ];
 
 function _geckoSaveMatDraft() {
     var draft = {};
     var hasData = false;
-    _GECKO_MAT_FIELDS.forEach(function(id) {
+    _GECKO_MAT_FIELDS.forEach(function (id) {
         var el = document.getElementById(id);
         if (el && el.value) {
             draft[id] = el.value;
@@ -5376,18 +5376,18 @@ function _geckoRestoreMatDraft() {
         if (!form) return;
         // Si el draft era de una edición, no restaurar (ya se carga desde editarMaterial)
         if (draft._editId) return;
-        _GECKO_MAT_FIELDS.forEach(function(id) {
+        _GECKO_MAT_FIELDS.forEach(function (id) {
             if (draft[id]) {
                 var el = document.getElementById(id);
                 if (el) el.value = draft[id];
             }
         });
-    } catch(e) {}
+    } catch (e) { }
 }
 
 // Interceptar intentarCerrarModal para guardar borrador cuando cierra modalMaterial
 var _origIntentarCerrar = window.intentarCerrarModal;
-window.intentarCerrarModal = function(id) {
+window.intentarCerrarModal = function (id) {
     if (id === 'modalMaterial') {
         var form = document.getElementById('formMaterial');
         // Solo guardar borrador si el formulario tiene datos y NO fue submit (guardado real)
@@ -5403,7 +5403,7 @@ window.intentarCerrarModal = function(id) {
 
 // Interceptar abrirModalMaterial para restaurar borrador
 var _origAbrirModalMaterial = window.abrirModalMaterial;
-window.abrirModalMaterial = function() {
+window.abrirModalMaterial = function () {
     if (typeof _origAbrirModalMaterial === 'function') _origAbrirModalMaterial();
     // Restaurar borrador si existe (después del reset del original)
     setTimeout(_geckoRestoreMatDraft, 50);
@@ -5412,48 +5412,161 @@ window.abrirModalMaterial = function() {
 // Limpiar borrador al guardar exitosamente
 var _origFormMatSubmit = document.getElementById('formMaterial');
 if (_origFormMatSubmit) {
-    _origFormMatSubmit.addEventListener('submit', function() {
+    _origFormMatSubmit.addEventListener('submit', function () {
         localStorage.removeItem('gecko_mat_draft');
     }, true); // capture=true para correr antes del handler de main.js
 }
 // ── FIN FIX borrador modal material ─────────────────────────────────────────
 
-// ── FIX BUG-001: precioVenta no se guarda en materiales con costo=0 ──────────
-// main.js no incluye precioVenta en nuevoMat. Este listener corre 300ms después
-// del submit de main.js y parchea el material recién guardado.
-(function() {
-    var _formMat = document.getElementById('formMaterial');
-    if (!_formMat) return;
-    _formMat.addEventListener('submit', function() {
-        var _precioVenta = parseFloat(document.getElementById('matPrecioVentaManual')?.value) || 0;
-        var _precioGremio = parseFloat(document.getElementById('matPrecioGremio')?.value) || 0;
-        var _estrategia = document.getElementById('matEstrategia')?.value || 'dinamica';
-        var _editId = this.dataset.editId;
-        if (_estrategia !== 'fija' && _precioVenta === 0) return;
-        setTimeout(function() {
-            var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
-            var target = _editId
-                ? mats.find(function(m) { return String(m.id) === String(_editId); })
-                : mats[mats.length - 1];
-            if (target && _precioVenta > 0) {
-                target.precioVenta = _precioVenta;
-                if (_precioGremio > 0) target.precioGremio = _precioGremio;
-                localStorage.setItem('gecko_materiales', JSON.stringify(mats));
-                window.materiales = mats;
-                if (typeof renderInsumos === 'function') renderInsumos();
-                console.log('🦎 GECKO-FIX BUG-001: precioVenta parcheado →', _precioVenta);
+// ── FIX BUG-001 + BORRADOR MODAL MATERIAL (versión corregida) ────────────────
+window.addEventListener('load', function () {
+    setTimeout(function () {
+
+        // ── PARTE A: BUG-001 — precioVenta no se guardaba cuando costo=0 ──
+        // El listener se registra acá (no en parse time) para garantizar que
+        // formMaterial existe en el DOM.
+        var _fm2 = document.getElementById('formMaterial');
+        if (_fm2) {
+            _fm2.addEventListener('submit', function () {
+                // Capturar valores ANTES de que main.js resetee el formulario
+                var _pv = parseFloat(document.getElementById('matPrecioVentaManual')?.value) || 0;
+                var _pg = parseFloat(document.getElementById('matPrecioGremio')?.value) || 0;
+                var _est = document.getElementById('matEstrategia')?.value || 'dinamica';
+                var _eid = this.dataset.editId || null;
+                if (_est !== 'fija' || _pv === 0) return;
+                setTimeout(function () {
+                    var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+                    var target = _eid
+                        ? mats.find(function (m) { return String(m.id) === String(_eid); })
+                        : mats[mats.length - 1];
+                    if (target) {
+                        target.precioVenta = _pv;
+                        if (_pg > 0) target.precioGremio = _pg;
+                        localStorage.setItem('gecko_materiales', JSON.stringify(mats));
+                        window.materiales = mats;
+                        if (typeof renderInsumos === 'function') renderInsumos();
+                        console.log('🦎 GECKO-FIX BUG-001: precioVenta parcheado →', _pv);
+                    }
+                }, 350);
+            });
+        }
+
+        // ── PARTE B: BORRADOR — restaurar datos si modal se cerró accidentalmente ──
+
+        var _DRAFT_FIELDS = [
+            'matNom', 'matCat', 'matSubCat', 'matUnidad', 'matUnidadVenta',
+            'matContenidoUnidad', 'matCostUSD', 'matCostARS', 'matStock',
+            'matMult', 'matAncho', 'matLargo', 'matEspesor', 'matNota',
+            'matPrecioVentaManual', 'matPrecioGremio', 'matMultGremio',
+            'matCortePrecioML', 'matCorteSpeed', 'matCortePower'
+        ];
+
+        function _saveDraft2() {
+            var draft = { _est: document.getElementById('matEstrategia')?.value || 'dinamica' };
+            var hasData = false;
+            _DRAFT_FIELDS.forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el && el.value) { draft[id] = el.value; hasData = true; }
+            });
+            if (hasData) localStorage.setItem('gecko_mat_draft2', JSON.stringify(draft));
+        }
+
+        function _restoreDraft2() {
+            var raw = localStorage.getItem('gecko_mat_draft2');
+            if (!raw) return;
+            var form2 = document.getElementById('formMaterial');
+            if (form2 && form2.dataset.editId) return;
+            try {
+                var d = JSON.parse(raw);
+                _DRAFT_FIELDS.forEach(function (id) {
+                    if (d[id]) { var el = document.getElementById(id); if (el) el.value = d[id]; }
+                });
+                if (d._est && typeof setEstrategiaVenta === 'function') setEstrategiaVenta(d._est);
+            } catch (e) { }
+        }
+
+        // Cuando el usuario clickea "NUEVO INSUMO" explícitamente → limpiar borrador
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('button');
+            if (btn && (btn.textContent || '').toUpperCase().includes('NUEVO INSUMO')) {
+                localStorage.removeItem('gecko_mat_draft2');
             }
-        }, 300);
-    });
-})();
+        });
 
-// ── FIX BUG: Borrador modal material — debe estar dentro de load+setTimeout ──
-// intentarCerrarModal y abrirModalMaterial son definidos por main.js (defer),
-// por eso el override debe ejecutarse DESPUÉS de que main.js cargue.
-window.addEventListener('load', function() {
-    setTimeout(function() {
+        // Al cerrar modal accidentalmente → guardar borrador
+        var _origICM2 = window.intentarCerrarModal;
+        window.intentarCerrarModal = function (id) {
+            if (id === 'modalMaterial') {
+                var n = document.getElementById('matNom');
+                if (n && n.value.trim()) _saveDraft2();
+            }
+            if (typeof _origICM2 === 'function') _origICM2(id);
+        };
 
-        var _GECKO_DRAFT_FIELDS = [
+        // Al abrir modal → restaurar borrador si existe
+        var _origAMM2 = window.abrirModalMaterial;
+        window.abrirModalMaterial = function () {
+            if (typeof _origAMM2 === 'function') _origAMM2();
+            setTimeout(_restoreDraft2, 80);
+        };
+
+        // Al guardar correctamente → limpiar borrador
+        var _fm3 = document.getElementById('formMaterial');
+        if (_fm3) {
+            _fm3.addEventListener('submit', function () {
+                localStorage.removeItem('gecko_mat_draft2');
+            }, true);
+        }
+
+    }, 1700);
+});
+// ── FIN FIX BUG-001 + BORRADOR ───────────────────────────────────────────────
+
+// ── FIX BUG-001 + BORRADOR v3 (corrección definitiva) ────────────────────────
+window.addEventListener('load', function () {
+    setTimeout(function () {
+
+        // == BUG-001: Capturar precio ANTES de que main.js haga form.reset() ==
+        // El truco: capturar en el click del botón submit, antes del evento submit
+        var _geckoCaptura = null;
+        var _submitBtn = document.querySelector('#modalMaterial button[type="submit"]');
+        if (_submitBtn) {
+            _submitBtn.addEventListener('mousedown', function () {
+                _geckoCaptura = {
+                    pv: parseFloat(document.getElementById('matPrecioVentaManual')?.value) || 0,
+                    pg: parseFloat(document.getElementById('matPrecioGremio')?.value) || 0,
+                    est: document.getElementById('matEstrategia')?.value || 'dinamica',
+                    eid: document.getElementById('formMaterial')?.dataset?.editId || null
+                };
+            });
+        }
+
+        var _fm = document.getElementById('formMaterial');
+        if (_fm) {
+            _fm.addEventListener('submit', function () {
+                localStorage.removeItem('gecko_mat_draft3');
+                var cap = _geckoCaptura;
+                _geckoCaptura = null;
+                if (!cap || cap.est !== 'fija' || cap.pv === 0) return;
+                setTimeout(function () {
+                    var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+                    var target = cap.eid
+                        ? mats.find(function (m) { return String(m.id) === String(cap.eid); })
+                        : mats[mats.length - 1];
+                    if (target) {
+                        target.precioVenta = cap.pv;
+                        if (cap.pg > 0) target.precioGremio = cap.pg;
+                        localStorage.setItem('gecko_materiales', JSON.stringify(mats));
+                        window.materiales = mats;
+                        if (typeof renderInsumos === 'function') renderInsumos();
+                        console.log('🦎 BUG-001 parcheado: precioVenta =', cap.pv);
+                    }
+                }, 250);
+            });
+        }
+
+        // == BORRADOR: guardar al cerrar accidentalmente, restaurar al reabrir ==
+        var _DRAFT3_FIELDS = [
             'matNom','matCat','matSubCat','matUnidad','matUnidadVenta',
             'matContenidoUnidad','matCostUSD','matCostARS','matStock',
             'matMult','matAncho','matLargo','matEspesor','matNota',
@@ -5461,61 +5574,60 @@ window.addEventListener('load', function() {
             'matCortePrecioML','matCorteSpeed','matCortePower'
         ];
 
-        function _saveDraft() {
-            var draft = { _estrategia: document.getElementById('matEstrategia')?.value || 'dinamica' };
+        function _saveDraft3() {
+            var draft = { _est: document.getElementById('matEstrategia')?.value || 'dinamica' };
             var hasData = false;
-            _GECKO_DRAFT_FIELDS.forEach(function(id) {
+            _DRAFT3_FIELDS.forEach(function (id) {
                 var el = document.getElementById(id);
                 if (el && el.value) { draft[id] = el.value; hasData = true; }
             });
-            if (hasData) localStorage.setItem('gecko_mat_draft', JSON.stringify(draft));
+            if (hasData) localStorage.setItem('gecko_mat_draft3', JSON.stringify(draft));
         }
 
-        function _restoreDraft() {
-            var raw = localStorage.getItem('gecko_mat_draft');
+        function _restoreDraft3() {
+            var raw = localStorage.getItem('gecko_mat_draft3');
             if (!raw) return;
             var form = document.getElementById('formMaterial');
-            if (form && form.dataset.editId) return; // no restaurar si es edición
+            if (form && form.dataset.editId) return;
             try {
-                var draft = JSON.parse(raw);
-                _GECKO_DRAFT_FIELDS.forEach(function(id) {
-                    if (draft[id]) {
+                var d = JSON.parse(raw);
+                _DRAFT3_FIELDS.forEach(function (id) {
+                    if (d[id]) {
                         var el = document.getElementById(id);
-                        if (el) el.value = draft[id];
+                        if (el) el.value = d[id];
                     }
                 });
-                // Restaurar estrategia
-                if (draft._estrategia && typeof setEstrategiaVenta === 'function') {
-                    setEstrategiaVenta(draft._estrategia);
+                if (d._est && typeof setEstrategiaVenta === 'function') {
+                    setEstrategiaVenta(d._est);
                 }
-            } catch(e) {}
+            } catch (e) {}
         }
 
-        // Override intentarCerrarModal para guardar borrador
-        var _origICM = window.intentarCerrarModal;
-        window.intentarCerrarModal = function(id) {
+        // Cerrar accidentalmente (backdrop click) → guardar borrador
+        var _origICM3 = window.intentarCerrarModal;
+        window.intentarCerrarModal = function (id) {
             if (id === 'modalMaterial') {
-                var nombre = document.getElementById('matNom');
-                if (nombre && nombre.value.trim()) _saveDraft();
+                var n = document.getElementById('matNom');
+                if (n && n.value.trim()) _saveDraft3();
             }
-            if (typeof _origICM === 'function') _origICM(id);
+            if (typeof _origICM3 === 'function') _origICM3(id);
         };
 
-        // Override abrirModalMaterial para restaurar borrador
-        var _origAMM = window.abrirModalMaterial;
-        window.abrirModalMaterial = function() {
-            if (typeof _origAMM === 'function') _origAMM();
-            setTimeout(_restoreDraft, 80);
-        };
-
-        // Limpiar borrador al guardar
-        var _fm = document.getElementById('formMaterial');
-        if (_fm) {
-            _fm.addEventListener('submit', function() {
-                localStorage.removeItem('gecko_mat_draft');
-            }, true);
+        // Cancelar explícitamente → limpiar borrador
+        var _cancelBtn = document.querySelector('#modalMaterial .flex.gap-4 button[type="button"]');
+        if (_cancelBtn) {
+            _cancelBtn.addEventListener('click', function () {
+                localStorage.removeItem('gecko_mat_draft3');
+            });
         }
 
-    }, 1600);
+        // Abrir modal → restaurar borrador si existe
+        var _origAMM3 = window.abrirModalMaterial;
+        window.abrirModalMaterial = function () {
+            if (typeof _origAMM3 === 'function') _origAMM3();
+            setTimeout(_restoreDraft3, 100);
+        };
+
+    }, 1800);
 });
-// ── FIN FIX BUG-001 y borrador modal material ─────────────────────────────────
+// ── FIN FIX BUG-001 + BORRADOR v3 ────────────────────────────────────────────
