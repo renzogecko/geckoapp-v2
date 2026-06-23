@@ -4221,17 +4221,6 @@ window.abrirModalTerminacion = function (id = null) {
     if (typeof openModal === 'function') openModal('modalTerminacion');
 };
 
-window.eliminarTerminacion = function (id) {
-    window.confirmGecko('¿Estás seguro de que deseas eliminar este servicio definitivamente?', 'Eliminar servicio').then(confirmado => {
-        if (!confirmado) return;
-        const nuevosServicios = (window.geckoServicios || []).filter(t => String(t.id) !== String(id));
-        window.geckoServicios = nuevosServicios;
-        localStorage.setItem('geckoServicios', JSON.stringify(nuevosServicios));
-        if (typeof renderServicios === 'function') renderServicios();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
-    });
-};
-// ── FIN FIX Bug #5/#6 ────────────────────────────────────────────────────────
 
 // 🔥 GUARDIÁN: Sobrescribe constantemente para evitar que main.js recupere el control
 setInterval(() => {
@@ -5191,82 +5180,57 @@ window.renderChartIngresos = function (lista, ahora) {
 
 window.renderChartMix = function () {
     const canvas = document.getElementById('canvasMixVentas');
-    if (!canvas || typeof Chart === 'undefined') return;
-    const ranking = window.GECKO_MIX_RANKING || [];
-    const COLORS = {
-        'Gráfica': '#F15A24', 'Láser/CNC': '#E07A4E', 'Corpóreos': '#C98A5E',
-        'Textil': '#6FA8A0', 'Industrial': '#5E84A8', 'Impresión 3D': '#8C7BA6', 'Otros': '#71717a'
-    };
-    const prev = Chart.getChart(canvas);
-    if (prev) prev.destroy();
-    if (ranking.length === 0) return;
-    new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-            labels: ranking.map(r => r[0]),
-            datasets: [{
-                data: ranking.map(r => r[1]),
-                backgroundColor: ranking.map(r => COLORS[r[0]] || '#71717a'),
-                borderColor: '#141417',
-                borderWidth: 3,
-                hoverOffset: 6
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, cutout: '72%',
-            animation: { animateRotate: true, duration: 1300 },
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' trabajos' } } }
-        }
-    });
-
-// ── FIX: Modal custom para eliminar servicios (reemplaza confirm() nativo) ───
-window.eliminarTerminacion = function (id) {
-    window.confirmGecko('¿Estás seguro de que deseas eliminar este servicio definitivamente?', 'Eliminar servicio').then(confirmado => {
-        if (!confirmado) return;
-        const nuevosServicios = (window.geckoServicios || []).filter(t => String(t.id) !== String(id));
-        window.geckoServicios = nuevosServicios;
-        localStorage.setItem('geckoServicios', JSON.stringify(nuevosServicios));
-        if (typeof renderServicios === 'function') renderServicios();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
-    });
+if (!canvas || typeof Chart === 'undefined') return;
+const ranking = window.GECKO_MIX_RANKING || [];
+const COLORS = {
+    'Gráfica': '#F15A24', 'Láser/CNC': '#E07A4E', 'Corpóreos': '#C98A5E',
+    'Textil': '#6FA8A0', 'Industrial': '#5E84A8', 'Impresión 3D': '#8C7BA6', 'Otros': '#71717a'
 };
-
-// ── FIX: Modal custom para eliminar materiales (reemplaza confirm() nativo) ──
-window.eliminarMaterial = function (id) {
-    window.confirmGecko('¿Seguro que querés eliminar este material del stock?\nEsta acción no se puede deshacer.', 'Eliminar material').then(confirmado => {
-        if (!confirmado) return;
-        let mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
-        mats = mats.filter(m => String(m.id) !== String(id));
-        window.materiales = mats;
-        localStorage.setItem('gecko_materiales', JSON.stringify(mats));
-        if (typeof renderInsumos === 'function') renderInsumos();
-        if (typeof window.poblarMaterialesGrafica === 'function') window.poblarMaterialesGrafica();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito('Material eliminado del inventario.', '¡Eliminado!');
-    });
+const prev = Chart.getChart(canvas);
+if (prev) prev.destroy();
+if (ranking.length === 0) return;
+new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+        labels: ranking.map(r => r[0]),
+        datasets: [{
+            data: ranking.map(r => r[1]),
+            backgroundColor: ranking.map(r => COLORS[r[0]] || '#71717a'),
+            borderColor: '#141417',
+            borderWidth: 3,
+            hoverOffset: 6
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false, cutout: '72%',
+        animation: { animateRotate: true, duration: 1300 },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' trabajos' } } }
+    }
+});
 };
-// ── FIN FIX modales custom eliminar ─────────────────────────────────────────
 
 // ── FIX: Modal custom eliminar servicio y material ───────────────────────────
-window.eliminarTerminacion = function (id) {
-    window.confirmGecko('¿Estás seguro de que deseas eliminar este servicio definitivamente?', 'Eliminar servicio').then(function(confirmado) {
-        if (!confirmado) return;
-        var nuevos = (window.geckoServicios || []).filter(function(t) { return String(t.id) !== String(id); });
-        window.geckoServicios = nuevos;
-        localStorage.setItem('geckoServicios', JSON.stringify(nuevos));
-        if (typeof renderServicios === 'function') renderServicios();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
-    });
-};
-window.eliminarMaterial = function (id) {
-    window.confirmGecko('¿Seguro que querés eliminar este material?', 'Eliminar material').then(function(confirmado) {
-        if (!confirmado) return;
-        var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]').filter(function(m) { return String(m.id) !== String(id); });
-        window.materiales = mats;
-        localStorage.setItem('gecko_materiales', JSON.stringify(mats));
-        if (typeof renderInsumos === 'function') renderInsumos();
-        if (typeof window.poblarMaterialesGrafica === 'function') window.poblarMaterialesGrafica();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito('Material eliminado.', '¡Eliminado!');
-    });
-};
+setTimeout(function () {
+    window.eliminarTerminacion = function (id) {
+        window.confirmGecko('¿Estás seguro de que deseas eliminar este servicio definitivamente?', 'Eliminar servicio').then(function (confirmado) {
+            if (!confirmado) return;
+            var nuevos = (window.geckoServicios || []).filter(function (t) { return String(t.id) !== String(id); });
+            window.geckoServicios = nuevos;
+            localStorage.setItem('geckoServicios', JSON.stringify(nuevos));
+            if (typeof renderServicios === 'function') renderServicios();
+            if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
+        });
+    };
+    window.eliminarMaterial = function (id) {
+        window.confirmGecko('¿Seguro que querés eliminar este material?', 'Eliminar material').then(function (confirmado) {
+            if (!confirmado) return;
+            var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]').filter(function (m) { return String(m.id) !== String(id); });
+            window.materiales = mats;
+            localStorage.setItem('gecko_materiales', JSON.stringify(mats));
+            if (typeof renderInsumos === 'function') renderInsumos();
+            if (typeof window.poblarMaterialesGrafica === 'function') window.poblarMaterialesGrafica();
+            if (typeof window.mostrarExito === 'function') window.mostrarExito('Material eliminado.', '¡Eliminado!');
+        });
+    };
+}, 2000);
 // ── FIN FIX modales custom eliminar ─────────────────────────────────────────
-};
