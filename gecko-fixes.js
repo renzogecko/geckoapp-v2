@@ -4185,6 +4185,53 @@ window._geckoRenderFijo = function () {
     });
 };
 
+// ── FIX Bug #5/#6: botones editar/borrar servicios — ID type mismatch ──────
+// main.js compara t.id === id con strict equality, falla cuando el ID de MySQL
+// llega como string y el onclick lo pasa como número. Sobrescribimos con String().
+window.abrirModalTerminacion = function (id = null) {
+    const form = document.getElementById('formTerminacion');
+    if (!form) return;
+    form.reset();
+    delete form.dataset.editId;
+
+    if (id !== null && id !== undefined) {
+        const term = (window.geckoServicios || []).find(t => String(t.id) === String(id));
+        if (term) {
+            const termNom = document.getElementById('termNom');
+            const termCat = document.getElementById('termCat');
+            const termCosto = document.getElementById('termCosto');
+            const termUni = document.getElementById('termUni');
+            const termPrecio = document.getElementById('termPrecio');
+            if (termNom) termNom.value = term.nombre || '';
+            if (termCat) termCat.value = term.categoria || 'mano_obra';
+            if (termCosto) termCosto.value = term.costo || 0;
+            if (termUni) termUni.value = term.unidad || '';
+            if (termPrecio) termPrecio.value = term.precio || 0;
+            form.dataset.editId = String(id);
+            const titulo = document.querySelector('#modalTerminacion h3');
+            if (titulo) titulo.innerText = 'Editar Servicio';
+        } else {
+            console.warn('🦎 GECKO-FIXES: No se encontró servicio con id:', id, 'en geckoServicios');
+        }
+    } else {
+        const titulo = document.querySelector('#modalTerminacion h3');
+        if (titulo) titulo.innerText = 'Nuevo Servicio';
+    }
+
+    if (typeof openModal === 'function') openModal('modalTerminacion');
+};
+
+window.eliminarTerminacion = function (id) {
+    if (confirm('¿Estás seguro de que deseas eliminar este servicio definitivamente?')) {
+        const nuevosServicios = (window.geckoServicios || []).filter(t => String(t.id) !== String(id));
+        window.geckoServicios = nuevosServicios;
+        localStorage.setItem('geckoServicios', JSON.stringify(nuevosServicios));
+        if (typeof renderServicios === 'function') renderServicios();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
+    }
+};
+// ── FIN FIX Bug #5/#6 ────────────────────────────────────────────────────────
+
 // 🔥 GUARDIÁN: Sobrescribe constantemente para evitar que main.js recupere el control
 setInterval(() => {
     if (window.renderClientes !== window._geckoRenderFijo) {
