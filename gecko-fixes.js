@@ -4877,7 +4877,7 @@ window._gpmGuardar = function (status) {
     const _inputTituloRef = document.getElementById('gpmTitulo');
     if (_inputTituloRef && !_inputTituloRef.dataset.persistBound) {
         _inputTituloRef.dataset.persistBound = '1';
-        _inputTituloRef.addEventListener('input', function() {
+        _inputTituloRef.addEventListener('input', function () {
             localStorage.setItem('gecko_gpm_titulo_draft', this.value);
         });
     }
@@ -5285,3 +5285,42 @@ setTimeout(function () {
     };
 }, 2000);
 // ── FIN FIX modales custom eliminar ─────────────────────────────────────────
+
+// ── FIX: Restaurar presupuesto en edición tras F5 ────────────────────────────
+// Cuando el usuario edita un presupuesto manual y recarga, se reabre automáticamente.
+
+// 1. Guardar ID en edición cada vez que se abre un presupuesto para editar
+const _origEditarPresupuestoReload = window.editarPresupuesto;
+window.editarPresupuesto = function (id) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const p = lista.find(x => String(x.id) === String(id));
+    if (p) {
+        const esManual = p.items && p.items.length > 0 && p.items.every(it => it.tipo === 'manual');
+        if (esManual) {
+            localStorage.setItem('gecko_gpm_editing_id', String(id));
+        }
+    }
+    if (typeof _origEditarPresupuestoReload === 'function') _origEditarPresupuestoReload(id);
+};
+
+// 2. Al cargar la app, si había un presupuesto en edición, reabrirlo
+document.addEventListener('geckoDB_ready', function () {
+    const editingId = localStorage.getItem('gecko_gpm_editing_id');
+    if (!editingId) return;
+    const activeTab = localStorage.getItem('gecko_activeTab') || '';
+    if (activeTab !== 'presupuestoManual') return;
+    setTimeout(function () {
+        if (typeof window.switchMenu === 'function') window.switchMenu('presupuestoManual');
+        if (typeof window.abrirPresupuestadorManual === 'function') {
+            window.abrirPresupuestadorManual(editingId);
+        }
+    }, 600);
+});
+
+// 3. Limpiar el ID guardado cuando el usuario cancela o guarda
+const _origGpmCerrarReload = window._gpmCerrar;
+window._gpmCerrar = function () {
+    localStorage.removeItem('gecko_gpm_editing_id');
+    if (typeof _origGpmCerrarReload === 'function') _origGpmCerrarReload();
+};
+// ── FIN FIX restaurar edición tras recarga ───────────────────────────────────

@@ -7,8 +7,23 @@
 
 ## 🔴 CRÍTICOS — afectan cálculo de precios o pérdida de datos
 
-*(Ninguno pendiente)*
+### [BUG-001] Precio de nuevo materiales, CAtegoria productos gecko 
+- **Sección:** Materailes
+- **Descripción:** Cuando cargo un nuevo material, le pongo los precios de venta y gremio, en el modal solo se mantiene el de gremio el de publico se borra  | en la lista los dos valores permanecen en $0 
+- **Estado:** 🔴 Pendiente
 
+### [BUG-003] Modale cliente - edicion  
+- **Sección:** clientes 
+- **Descripción:** Al entrar a editar un cliente no se puede cambiar el nombre, esta bloqueado. Deberia poder modificarse 
+- **Estado:** 🔴 Pendiente
+
+
+### [BUG-003] Valor de cotizacion de dolar - en confoguraciones y en modal de materiales,
+- **Sección:** configuracion - modal Materiales
+- **Descripción:** el valor de la configuracion deberia estar linkeado con una api para mantenerse actualizada, de manera automatica, o en su defecto un boton para actualizarlo manualmente.
+Por el lado del modal de materiales , en la seccion de costo que tiene una calculadora automatica , eso esta harcodeado en 1420 hoy , pero ese valor se bee actualizar con el valor actual del dolar ya se por api o por un boton de actualizar. Elegir la mejor opcion 
+- **Estado:** 🔴 Pendiente
+ 
 ---
 
 ## 🟡 IMPORTANTES — datos o UI rotos, no bloquean operar pero degradan la experiencia
@@ -59,6 +74,16 @@
 ### [MEJ-004] Blindar tablas `servicios` y `clientes`
 - **Sección:** gecko-api.js
 - **Descripción:** aplicar misma protección que ya tiene `gecko_materiales` (agregar al array `GECKO_CATALOG_KEYS`).
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-005] Materiales
+- **Sección:** Materiales
+- **Descripción:** agregar una categoria para los materiales que son de impresion, para poder filtrarlos mas rapido. 
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-006] En materailes / categoria nueva "impresos"
+- **Sección:** Nueva categoria en materiales impresos. 
+- **Descripción:** en esta seccion los precios van de manera manual, pero quiero que en paralelo se calcule un valor en dolares para saber cuando esta al cambio. Pero tambien me gustaria que a la hora de actualizar los precios, podamos hacerlo desde ese valor de dolar. (funcionamiento similar al del campo de los multiplicadores cuando esta el toggle actiado en el modo FIJA (precio de mercado) donde ese campo se calcula automatico con el margen de ganancia real, pero en este casi seria, cuanto equivaldria en dolares
 - **Estado:** 🔵 Pendiente
 
 ---
