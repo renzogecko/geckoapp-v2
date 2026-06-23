@@ -4222,13 +4222,14 @@ window.abrirModalTerminacion = function (id = null) {
 };
 
 window.eliminarTerminacion = function (id) {
-    if (confirm('¿Estás seguro de que deseas eliminar este servicio definitivamente?')) {
+    window.confirmGecko('¿Estás seguro de que deseas eliminar este servicio definitivamente?', 'Eliminar servicio').then(confirmado => {
+        if (!confirmado) return;
         const nuevosServicios = (window.geckoServicios || []).filter(t => String(t.id) !== String(id));
         window.geckoServicios = nuevosServicios;
         localStorage.setItem('geckoServicios', JSON.stringify(nuevosServicios));
         if (typeof renderServicios === 'function') renderServicios();
         if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
-    }
+    });
 };
 // ── FIN FIX Bug #5/#6 ────────────────────────────────────────────────────────
 
