@@ -598,7 +598,7 @@ window.GeckoGrafica = {
                     html += seccion('Material');
                     html += lineaRow(
                         mat.nombre,
-                        `${mt2Totales.toFixed(4)}m² × ${fmtVal(precioM2)}/m²`,
+                        `${parseFloat(mt2Totales.toFixed(2))}m² × ${fmtVal(precioM2)}/m²`,
                         costoBase
                     );
                 }

@@ -355,7 +355,7 @@ window.GeckoCorte = {
         this.safeSetText('detTerminaciones', '$' + Math.round(totalFinal).toLocaleString('es-AR'));
 
         this.state.totalFinal = totalFinal;
-        this.state.detalle = `${matName} | ${cant} unid. | ${mlTotales.toFixed(2)} ML ${llevaMontado ? '+ Montado' : ''}`;
+        this.state.detalle = `${matName} | ${cant} unid. | ${parseFloat(mlTotales.toFixed(2))} ML ${llevaMontado ? '+ Montado' : ''}`;
         this.state.matName = matName;
 
         // Actualizar panel derecho (mismo patrón que grafica.js)
