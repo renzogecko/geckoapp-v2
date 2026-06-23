@@ -5631,3 +5631,69 @@ window.addEventListener('load', function () {
     }, 1800);
 });
 // ── FIN FIX BUG-001 + BORRADOR v3 ────────────────────────────────────────────
+
+// ── FIX BUG-001 v4: intercepción de localStorage + carga correcta en edición ──
+window.addEventListener('load', function () {
+    setTimeout(function () {
+
+        // PASO 1: Capturar precio manual ANTES del submit (mousedown en botón guardar)
+        var _geckoPrecioCaptura = null;
+
+        document.addEventListener('mousedown', function (e) {
+            var btn = e.target.closest('button[type="submit"]');
+            if (!btn) return;
+            var modal = btn.closest('#modalMaterial');
+            if (!modal) return;
+            var est = document.getElementById('matEstrategia')?.value;
+            if (est !== 'fija') return;
+            _geckoPrecioCaptura = {
+                pv: parseFloat(document.getElementById('matPrecioVentaManual')?.value) || 0,
+                pg: parseFloat(document.getElementById('matPrecioGremio')?.value) || 0,
+                eid: document.getElementById('formMaterial')?.dataset?.editId || null
+            };
+        }, true);
+
+        // PASO 2: Interceptar localStorage.setItem para inyectar precioVenta al guardar
+        var _origLS = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (key, value) {
+            if (key === 'gecko_materiales' && _geckoPrecioCaptura) {
+                try {
+                    var mats = JSON.parse(value);
+                    var cap = _geckoPrecioCaptura;
+                    var target = cap.eid
+                        ? mats.find(function (m) { return String(m.id) === String(cap.eid); })
+                        : mats[mats.length - 1];
+                    if (target && cap.pv > 0) {
+                        target.precioVenta = cap.pv;
+                        if (cap.pg > 0) target.precioGremio = cap.pg;
+                    }
+                    value = JSON.stringify(mats);
+                } catch (e) {}
+                _geckoPrecioCaptura = null;
+            }
+            _origLS.call(this, key, value);
+        };
+
+        // PASO 3: Override editarMaterial para cargar precioVenta correctamente
+        var _origEditarMat = window.editarMaterial;
+        window.editarMaterial = function (id) {
+            if (typeof _origEditarMat === 'function') _origEditarMat(id);
+            setTimeout(function () {
+                var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+                var mat = mats.find(function (m) { return String(m.id) === String(id); });
+                if (!mat || mat.estrategiaVenta !== 'fija') return;
+                // Restaurar precio venta real (main.js lo pisa con costo×mult)
+                if (mat.precioVenta > 0) {
+                    var el = document.getElementById('matPrecioVentaManual');
+                    if (el) el.value = mat.precioVenta;
+                }
+                if (mat.precioGremio > 0) {
+                    var elg = document.getElementById('matPrecioGremio');
+                    if (elg) elg.value = mat.precioGremio;
+                }
+            }, 150);
+        };
+
+    }, 1900);
+});
+// ── FIN FIX BUG-001 v4 ───────────────────────────────────────────────────────
