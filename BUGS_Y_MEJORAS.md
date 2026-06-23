@@ -7,27 +7,13 @@
 
 ## 🔴 CRÍTICOS — afectan cálculo de precios o pérdida de datos
 
-### [BUG-001] Polifán: cálculo de corte da $3.8M por 1m²
-- **Sección:** Cotizadores › Gráfica › Montado sobre rígido
-- **Síntoma:** 1m × 1m de polifán 30mm con corte 1500ml devuelve $3.853.089.
-- **Causa probable:** material sin `precioCorteMl` → fallback inventa número.
-- **Fix esperado:** si falta parámetro, auditor muestra "FALTA PARÁMETRO" y devuelve $0.
-- **Reportado:** 22/06/2026
-- **Estado:** 🔴 Pendiente
-
-### [BUG-002] Cotizador Gráfica/Corte: no llegan precios de Transfer y Ploter
-- **Sección:** Cotizadores › Gráfica › Corte
-- **Síntoma:** Transfer y Ploter 60cm/120cm no traen precio.
-- **Causa probable:** lookup por nombre exacto, IDs cambiaron tras re-importación.
-- **Fix esperado:** revisar lookup, normalizar nombre o migrar a búsqueda por id.
-- **Reportado:** 22/06/2026
-- **Estado:** 🔴 Pendiente
+*(Ninguno pendiente)*
 
 ---
 
 ## 🟡 IMPORTANTES — datos o UI rotos, no bloquean operar pero degradan la experiencia
 
-### [BUG-003] Parámetros de corte láser/CNC vaciados
+### [BUG-003] Parámetros de corte láser/CNC vaciados ⏳ PENDIENTE
 - **Sección:** Configuración › Parámetros Láser/CNC
 - **Síntoma:** todos los switches "¿Se puede cortar con láser?" en OFF, tabla vacía.
 - **Causa:** REPLACE INTO pisó `tieneParametrosCorte=false` desde el JSON.
@@ -41,18 +27,12 @@
 - **Reportado:** 22/06/2026
 - **Estado:** 🟡 Pendiente
 
-### [BUG-005] Servicios: botones editar y borrar no responden
-- **Sección:** Materiales › Servicios & Mano de Obra
-- **Síntoma:** clic en lápiz o tachito no hace nada.
-- **Causa probable:** IDs cambiaron tras re-importación, handlers buscan id inexistente.
-- **Reportado:** 22/06/2026
-- **Estado:** 🟡 Pendiente
-
-### [BUG-006] Modal editar servicio no trae datos pre-cargados
-- **Sección:** Materiales › Servicios & Mano de Obra › Editar
-- **Síntoma:** formulario abre vacío en lugar de con los datos del servicio.
-- **Causa probable:** relacionado con BUG-005.
-- **Reportado:** 22/06/2026
+### [BUG-007] Modal confirm() nativo en eliminar material/servicio no se reemplaza
+- **Sección:** Materiales › Servicios & Mano de Obra / Materiales
+- **Síntoma:** override de `confirm()` en gecko-fixes.js no toma efecto; main.js carga después y pisa el override.
+- **Causa probable:** orden de carga — main.js se ejecuta después de gecko-fixes.js y redefine las funciones.
+- **Fix esperado:** investigar orden de carga o mover el fix a un setTimeout en gecko-fixes.js.
+- **Reportado:** 23/06/2026
 - **Estado:** 🟡 Pendiente
 
 ---
@@ -107,6 +87,40 @@
 - **Resuelto:** 22/06/2026
 - **Cómo:** restauración por SQL directo (REPLACE INTO) desde JSON de backup. Tabla restaurada a 67 materiales y 38 servicios.
 
+### [RES-006] Polifán: cálculo de corte da $3.8M por 1m²
+- **Resuelto:** 23/06/2026
+- **Cómo:** búsqueda flexible de servicios en corte.js resolvió el fallback incorrecto. Función `_geckoFindServicioPorKeywords()` busca por keywords ignorando mayúsculas/espacios.
+- **Era:** BUG-001
+
+### [RES-007] Cotizador Gráfica/Corte: no llegan precios (Transfer, Ploter 60cm, 120cm)
+- **Resuelto:** 23/06/2026
+- **Cómo:** función `_geckoFindServicioPorKeywords()` en corte.js — búsqueda por keywords ignorando mayúsculas/espacios, reemplazando el lookup por nombre exacto.
+- **Era:** BUG-002
+
+### [RES-008] Servicios: botones editar y borrar no responden
+- **Resuelto:** 23/06/2026
+- **Cómo:** ID type mismatch resuelto en gecko-fixes.js — comparación con `String()` para unificar tipos.
+- **Era:** BUG-005
+
+### [RES-009] Modal editar servicio no trae datos pre-cargados
+- **Resuelto:** 23/06/2026
+- **Cómo:** relacionado con BUG-005/RES-008; fix de ID type mismatch en gecko-fixes.js resolvió también el formulario vacío.
+- **Era:** BUG-006
+
+---
+
+## Sesión 23/06/2026 — Fixes aplicados
+
+### ✅ Resueltos
+- Bug 1 + Bug 2: Búsqueda flexible servicios en corte.js (ploter, transfer, polifán)
+- Decimales excesivos en auditor: corporeos.js, laser.js, grafica.js, corte.js (toFixed(4)→parseFloat toFixed(2))
+- Bug 5/6: Botones editar/borrar servicios — ID type mismatch resuelto en gecko-fixes.js
+
+### ⚠️ Pendiente de fix (próxima sesión)
+- Modal confirm() nativo en eliminar material y eliminar servicio — override en gecko-fixes.js no toma efecto, main.js carga después y pisa. Investigar orden de carga o mover fix a setTimeout.
+- Bug 4: Precio fijo no guarda precioVenta
+- Bug 3: Parámetros láser vaciados
+
 ---
 
 ## 📋 Reglas de mantenimiento de este archivo (OBLIGATORIO para el agente)
@@ -135,4 +149,4 @@
 
 ---
 
-*Última actualización: 22 de junio 2026.*
+*Última actualización: 23 de junio 2026.*
