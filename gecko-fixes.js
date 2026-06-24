@@ -4015,6 +4015,29 @@ window.addEventListener('load', function () {
             window._geckoFixBotonesServicios();
             console.log('🦎 GECKO-FIX: Fix edición servicios activo (botones + data filling).');
         })();
+
+        // BUG-005: override switchParamsTab dentro del setTimeout para que pise el original de main.js
+        (function () {
+            var _origSwitch = window.switchParamsTab;
+            if (typeof _origSwitch !== 'function') return;
+            window.switchParamsTab = function (tab) {
+                _origSwitch.call(this, tab);
+                if (tab === 'grabado') {
+                    _ensureBotonAgregarGrabado();
+                    window.renderTablaParametrosGrabado();
+                }
+            };
+        })();
+
+        (function () {
+            var _origGuardar = window.guardarParametrosLaser;
+            if (typeof _origGuardar !== 'function') return;
+            window.guardarParametrosLaser = async function () {
+                await window._guardarParametrosGrabado();
+                await _origGuardar.call(this);
+                window.renderTablaParametrosGrabado();
+            };
+        })();
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
 // ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──
@@ -6043,5 +6066,292 @@ document.addEventListener('geckoDB_ready', function () {
             (servicios.length - filtrados.length) + ' servicio(s) láser post-sync.');
     }
 });
+
+// ── BUG-005: Sección Grabado en Configuración ──────────────────────────────
+
+window._grabadoEliminar = [];
+window._grabadoParamsTemp = {};
+
+window.renderTablaParametrosGrabado = function () {
+    var tbody = document.getElementById('tablaParametrosGrabado');
+    if (!tbody) return;
+
+    var servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+    var grabadoParams = JSON.parse(localStorage.getItem('gecko_grabadoParams') || '{}');
+    var eliminados = JSON.parse(localStorage.getItem('geckoLaserEliminados') || '[]');
+
+    var grabados = servicios.filter(function (s) {
+        return /grabado/i.test(s.nombre) && !eliminados.includes((s.nombre || '').toUpperCase());
+    });
+
+    if (grabados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-zinc-500 italic text-sm">' +
+            'Sin parámetros de grabado configurados.<br>' +
+            '<span class="text-[11px]">Usá el botón + para agregar uno.</span>' +
+            '</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = grabados.map(function (s) {
+        var nombreSeguro = (s.nombre || '').replace(/"/g, '&quot;');
+        var params = grabadoParams[s.nombre] || grabadoParams[(s.nombre || '').toUpperCase()] || {};
+        var precio = s.precioVenta || s.precio || params.precio || '';
+        var speed = params.speed !== undefined ? params.speed : '';
+        var power = params.power !== undefined ? params.power : '';
+        return '<tr class="hover:bg-white/3 transition-colors" data-id-servicio="' + (s.id || '') + '" data-nombre-original="' + nombreSeguro + '">' +
+            '<td style="padding:12px 20px;">' +
+            '<input type="text" data-servicio="' + nombreSeguro + '" data-campo="nombre"' +
+            ' value="' + nombreSeguro + '"' +
+            ' class="w-full bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-white font-bold text-[13px] py-1 uppercase tracking-wide"' +
+            ' style="min-width:180px;" oninput="window._actualizarParamGrabado(this)">' +
+            '<p style="color:#52525b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">MIN</p>' +
+            '</td>' +
+            '<td style="padding:12px 16px;text-align:center;">' +
+            '<input type="number" data-servicio="' + nombreSeguro + '" data-campo="speed"' +
+            ' value="' + speed + '" placeholder="—"' +
+            ' class="w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1"' +
+            ' oninput="window._actualizarParamGrabado(this)">' +
+            '</td>' +
+            '<td style="padding:12px 16px;text-align:center;">' +
+            '<input type="number" data-servicio="' + nombreSeguro + '" data-campo="power"' +
+            ' value="' + power + '" placeholder="—"' +
+            ' class="w-16 text-center bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-zinc-300 font-bold text-[13px] py-1"' +
+            ' oninput="window._actualizarParamGrabado(this)">' +
+            '</td>' +
+            '<td style="padding:12px 16px;text-align:right;">' +
+            '<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;">' +
+            '<span style="color:#52525b;font-size:12px;">$</span>' +
+            '<input type="number" data-servicio="' + nombreSeguro + '" data-campo="precio"' +
+            ' value="' + precio + '" placeholder="0"' +
+            ' class="w-24 text-right bg-transparent border-b border-zinc-800 focus:border-gecko outline-none text-gecko font-black text-[14px] py-1"' +
+            ' oninput="window._actualizarParamGrabado(this)">' +
+            '</div>' +
+            '</td>' +
+            '<td style="padding:12px;text-align:center;">' +
+            '<button onclick="window._eliminarFilaGrabado(this)"' +
+            ' style="width:28px;height:28px;border-radius:8px;background:transparent;border:1px solid rgba(239,68,68,0.2);color:#71717a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"' +
+            ' onmouseover="this.style.background=\'rgba(239,68,68,0.15)\';this.style.borderColor=\'rgba(239,68,68,0.5)\';this.style.color=\'#ef4444\'"' +
+            ' onmouseout="this.style.background=\'transparent\';this.style.borderColor=\'rgba(239,68,68,0.2)\';this.style.color=\'#71717a\'"' +
+            ' title="Eliminar">' +
+            '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>' +
+            '</svg></button>' +
+            '</td>' +
+            '</tr>';
+    }).join('');
+};
+
+window._actualizarParamGrabado = function (input) {
+    var servicio = input.dataset.servicio;
+    var campo = input.dataset.campo;
+    if (!window._grabadoParamsTemp[servicio]) window._grabadoParamsTemp[servicio] = {};
+    window._grabadoParamsTemp[servicio][campo] = parseFloat(input.value) || input.value;
+};
+
+window._eliminarFilaGrabado = function (btn) {
+    var tr = btn.closest('tr');
+    if (!tr) return;
+    var nombreOriginal = tr.dataset.nombreOriginal;
+    var idServicio = tr.dataset.idServicio;
+    var eliminados = JSON.parse(localStorage.getItem('geckoLaserEliminados') || '[]');
+    var key = (nombreOriginal || '').toUpperCase();
+    if (key && !eliminados.includes(key)) {
+        eliminados.push(key);
+        localStorage.setItem('geckoLaserEliminados', JSON.stringify(eliminados));
+    }
+    window._grabadoEliminar = window._grabadoEliminar || [];
+    window._grabadoEliminar.push({ nombre: nombreOriginal, id: idServicio });
+    tr.style.opacity = '0';
+    tr.style.transition = 'opacity 0.3s';
+    setTimeout(function () {
+        tr.remove();
+        var tbody = document.getElementById('tablaParametrosGrabado');
+        if (tbody && !tbody.querySelector('tr[data-nombre-original]') && !tbody.querySelector('.fila-grabado-nueva')) {
+            window.renderTablaParametrosGrabado();
+        }
+    }, 300);
+};
+
+window._agregarFilaGrabadoNueva = function () {
+    var tbody = document.getElementById('tablaParametrosGrabado');
+    if (!tbody) return;
+    var placeholder = tbody.querySelector('td[colspan]');
+    if (placeholder) tbody.innerHTML = '';
+
+    var tr = document.createElement('tr');
+    tr.className = 'fila-grabado-nueva';
+
+    var td1 = document.createElement('td');
+    td1.style.cssText = 'padding:12px 20px;';
+    var inp1 = document.createElement('input');
+    inp1.type = 'text';
+    inp1.className = 'fila-nueva-nombre';
+    inp1.placeholder = 'Ej: GRABADO LASER - MDF';
+    inp1.style.cssText = 'width:100%;background:transparent;border:none;outline:none;color:white;font-weight:700;font-size:13px;padding:2px 0;font-family:inherit;text-transform:uppercase;';
+    var sub1 = document.createElement('p');
+    sub1.textContent = 'MIN';
+    sub1.style.cssText = 'color:#52525b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;';
+    td1.appendChild(inp1);
+    td1.appendChild(sub1);
+
+    var mkTdCenter = function (cls) {
+        var td = document.createElement('td');
+        td.style.cssText = 'padding:12px 16px;text-align:center;';
+        var inp = document.createElement('input');
+        inp.type = 'number';
+        inp.className = cls;
+        inp.placeholder = '—';
+        inp.style.cssText = 'width:64px;text-align:center;background:transparent;border:none;border-bottom:1px solid #3f3f46;outline:none;color:#d4d4d8;font-weight:700;font-size:13px;padding:2px 0;font-family:inherit;';
+        td.appendChild(inp);
+        return td;
+    };
+
+    var td4 = document.createElement('td');
+    td4.style.cssText = 'padding:12px 16px;text-align:right;';
+    var wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:4px;';
+    var sign = document.createElement('span');
+    sign.textContent = '$';
+    sign.style.cssText = 'color:#52525b;font-size:12px;';
+    var inpPrecio = document.createElement('input');
+    inpPrecio.type = 'number';
+    inpPrecio.className = 'fila-nueva-precio';
+    inpPrecio.placeholder = '0';
+    inpPrecio.style.cssText = 'width:96px;text-align:right;background:transparent;border:none;border-bottom:1px solid #3f3f46;outline:none;color:#f15a24;font-weight:900;font-size:14px;padding:2px 0;font-family:inherit;';
+    wrapper.appendChild(sign);
+    wrapper.appendChild(inpPrecio);
+    td4.appendChild(wrapper);
+
+    var td5 = document.createElement('td');
+    td5.style.cssText = 'padding:12px;text-align:center;';
+    var btnElim = document.createElement('button');
+    btnElim.textContent = '✕';
+    btnElim.style.cssText = 'background:none;border:none;color:#3f3f46;font-size:16px;font-weight:900;cursor:pointer;line-height:1;';
+    btnElim.onmouseover = function () { this.style.color = '#ef4444'; };
+    btnElim.onmouseout = function () { this.style.color = '#3f3f46'; };
+    btnElim.onclick = function () { tr.remove(); };
+    td5.appendChild(btnElim);
+
+    tr.appendChild(td1);
+    tr.appendChild(mkTdCenter('fila-nueva-speed'));
+    tr.appendChild(mkTdCenter('fila-nueva-power'));
+    tr.appendChild(td4);
+    tr.appendChild(td5);
+
+    tbody.appendChild(tr);
+    inp1.focus();
+};
+
+window._guardarParametrosGrabado = async function () {
+    var servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+    var grabadoParams = JSON.parse(localStorage.getItem('gecko_grabadoParams') || '{}');
+
+    // a. Procesar eliminaciones pendientes
+    var pendElim = window._grabadoEliminar || [];
+    pendElim.forEach(function (e) {
+        var idx = servicios.findIndex(function (s) { return s.nombre === e.nombre || s.id === e.id; });
+        if (idx !== -1) servicios.splice(idx, 1);
+        delete grabadoParams[e.nombre];
+    });
+    if (pendElim.length > 0) {
+        await Promise.all(pendElim.filter(function (e) { return e.id; }).map(function (e) {
+            return fetch('/app/api.php?endpoint=servicios', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: e.id })
+            }).catch(function () { });
+        }));
+    }
+    window._grabadoEliminar = [];
+
+    // b. Procesar renombres de filas existentes
+    document.querySelectorAll('#tablaParametrosGrabado tr[data-nombre-original]').forEach(function (tr) {
+        var nombreOriginal = tr.dataset.nombreOriginal;
+        var inputNombre = tr.querySelector('input[data-campo="nombre"]');
+        var nombreNuevo = inputNombre ? inputNombre.value.trim().toUpperCase() : '';
+        if (!nombreNuevo || nombreNuevo === nombreOriginal) return;
+        var idx = servicios.findIndex(function (s) { return s.nombre === nombreOriginal; });
+        if (idx !== -1) {
+            servicios[idx].nombre = nombreNuevo;
+            if (grabadoParams[nombreOriginal]) {
+                grabadoParams[nombreNuevo] = grabadoParams[nombreOriginal];
+                delete grabadoParams[nombreOriginal];
+            }
+            tr.querySelectorAll('input[data-servicio]').forEach(function (inp) { inp.dataset.servicio = nombreNuevo; });
+            tr.dataset.nombreOriginal = nombreNuevo;
+        }
+    });
+
+    // c. Procesar speed/power/precio de filas existentes
+    document.querySelectorAll('#tablaParametrosGrabado tr[data-nombre-original]').forEach(function (tr) {
+        var nombre = tr.dataset.nombreOriginal;
+        if (!grabadoParams[nombre]) grabadoParams[nombre] = {};
+        tr.querySelectorAll('input[data-campo]').forEach(function (inp) {
+            var campo = inp.dataset.campo;
+            if (campo === 'nombre') return;
+            var val = parseFloat(inp.value);
+            if (!isNaN(val)) {
+                grabadoParams[nombre][campo] = val;
+                if (campo === 'precio') {
+                    var idx = servicios.findIndex(function (s) { return s.nombre === nombre; });
+                    if (idx !== -1) {
+                        servicios[idx].precio = val;
+                        servicios[idx].precioVenta = val;
+                    }
+                }
+            }
+        });
+    });
+
+    // d. Procesar filas nuevas
+    document.querySelectorAll('.fila-grabado-nueva').forEach(function (tr) {
+        var inpNombre = tr.querySelector('.fila-nueva-nombre');
+        var nombre = inpNombre ? inpNombre.value.trim().toUpperCase() : '';
+        if (!nombre) return;
+        var speed = parseFloat((tr.querySelector('.fila-nueva-speed') || {}).value) || 0;
+        var power = parseFloat((tr.querySelector('.fila-nueva-power') || {}).value) || 0;
+        var precio = parseFloat((tr.querySelector('.fila-nueva-precio') || {}).value) || 0;
+        var existeIdx = servicios.findIndex(function (s) { return (s.nombre || '').trim().toUpperCase() === nombre; });
+        if (existeIdx === -1) {
+            servicios.push({ id: 'grabado_' + Date.now(), nombre: nombre, unidad: 'min', precio: precio, precioVenta: precio, categoria: 'Servicios de Grabado', costo: 0 });
+        } else {
+            servicios[existeIdx].precio = precio;
+            servicios[existeIdx].precioVenta = precio;
+        }
+        grabadoParams[nombre] = { speed: speed, power: power, precio: precio };
+    });
+
+    // e. Persistir en localStorage
+    localStorage.setItem('geckoServicios', JSON.stringify(servicios));
+    localStorage.setItem('gecko_grabadoParams', JSON.stringify(grabadoParams));
+
+    // f. Sincronizar grabados con MySQL vía PUT (no depende del filtro del original)
+    try {
+        var grabadoServs = servicios.filter(function (s) { return /grabado/i.test(s.nombre); });
+        await Promise.all(grabadoServs.map(function (s) {
+            return fetch('/app/api.php?endpoint=servicios', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: s.id, nombre: s.nombre, categoria: s.categoria || 'Servicios de Grabado', costo: 0, unidad: s.unidad || 'min', precio: s.precio || 0 })
+            }).catch(function () { });
+        }));
+    } catch (e) {
+        console.warn('GECKO BUG-005: Error sincronizando grabados con API.', e);
+    }
+};
+
+function _ensureBotonAgregarGrabado() {
+    var panel = document.getElementById('panelParamsGrabado');
+    if (!panel || panel.querySelector('.btn-agregar-grabado')) return;
+    var btn = document.createElement('button');
+    btn.className = 'btn-agregar-grabado';
+    btn.style.cssText = 'margin-top:12px;padding:8px 16px;border-radius:8px;background:transparent;border:1px solid #3f3f46;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;';
+    btn.textContent = '+ Agregar Grabado';
+    btn.onmouseover = function () { this.style.borderColor = 'rgba(241,90,36,0.5)'; this.style.color = '#f15a24'; };
+    btn.onmouseout = function () { this.style.borderColor = '#3f3f46'; this.style.color = '#71717a'; };
+    btn.onclick = window._agregarFilaGrabadoNueva;
+    panel.appendChild(btn);
+}
+
 // ── FIN FIX BUG-004 ──────────────────────────────────────────────────────────
 // ── FIN FIX renderInsumos v2 ─────────────────────────────────────────────────
