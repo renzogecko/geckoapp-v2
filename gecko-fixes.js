@@ -3921,6 +3921,30 @@ window.addEventListener('load', function () {
 
             console.log('🦎 GECKO-FIX: Filtro de materiales persistente activo.');
         })();
+
+        // ── Persistencia de pestaña activa en Materiales (Insumos / Servicios) ──
+        (function () {
+            var TAB_KEY = 'gecko_tab_materiales';
+
+            setTimeout(function () {
+                var tabBtns = document.querySelectorAll('#tabMat-insumos, #tabMat-servicios');
+                tabBtns.forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var oc = btn.getAttribute('onclick') || '';
+                        var match = oc.match(/switchTabMateriales\('([^']+)'\)/);
+                        if (match) sessionStorage.setItem(TAB_KEY, match[1]);
+                    });
+                });
+
+                // Restaurar pestaña guardada
+                var saved = sessionStorage.getItem(TAB_KEY);
+                if (saved && typeof window.switchTabMateriales === 'function') {
+                    window.switchTabMateriales(saved);
+                }
+
+                console.log('🦎 GECKO-FIX: Persistencia de pestaña Materiales activa.');
+            }, 500);
+        })();
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
 // ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──
