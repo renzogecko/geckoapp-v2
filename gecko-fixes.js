@@ -6004,14 +6004,27 @@ document.addEventListener('geckoDB_ready', function () {
     if (!eliminados.length) return;
 
     var servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+
+    // GUARDA CRÍTICA: si localStorage está vacío en este momento,
+    // es un timing issue — no hacer nada para no corromper datos
+    if (servicios.length === 0) {
+        console.warn('🦎 GECKO-FIX BUG-004: geckoServicios vacío al disparar geckoDB_ready — abortando para evitar corrupción.');
+        return;
+    }
+
     var filtrados = servicios.filter(function (s) {
         return !eliminados.includes((s.nombre || '').toUpperCase());
     });
 
+    // GUARDA: nunca escribir si el resultado es vacío o demasiado reducido
+    if (filtrados.length === 0) {
+        console.warn('🦎 GECKO-FIX BUG-004: filtrado resultó en lista vacía — abortando para evitar pérdida de datos.');
+        return;
+    }
+
     if (filtrados.length < servicios.length) {
         localStorage.setItem('geckoServicios', JSON.stringify(filtrados));
         window.geckoServicios = filtrados;
-        // Borrar de MySQL los re-aparecidos (por seed_laser u otra causa)
         servicios.filter(function (s) {
             return eliminados.includes((s.nombre || '').toUpperCase());
         }).forEach(function (s) {
@@ -6019,7 +6032,7 @@ document.addEventListener('geckoDB_ready', function () {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: s.id })
-            }).catch(function (e) { console.warn('GECKO-FIX BUG-004 re-delete error:', e); });
+            }).catch(function(e) { console.warn('GECKO-FIX BUG-004 re-delete error:', e); });
         });
         console.log('🦎 GECKO-FIX BUG-004: Re-aplicada eliminación de ' +
             (servicios.length - filtrados.length) + ' servicio(s) láser post-sync.');
