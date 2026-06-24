@@ -2900,6 +2900,50 @@ window.switchTabFinanzas = function (tab) {
     if (tab === 'reportes') window.renderReportesDashboard();
 };
 
+// ══════════════════════════════════════════════════════
+// FIX: Precios visibles para materiales con estrategia FIJA
+// renderInsumos ignora m.precioVenta → este patch lo corrige post-render
+// ══════════════════════════════════════════════════════
+window._geckoFixPreciosFijos = function () {
+    var tbody = document.getElementById('tablaMaterialesBody');
+    if (!tbody) return;
+
+    var materiales = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+    var fijos = materiales.filter(function (m) {
+        return m.estrategiaVenta === 'fija' &&
+            (parseFloat(m.precioVenta) > 0 || parseFloat(m.precioGremio) > 0);
+    });
+    if (fijos.length === 0) return;
+
+    var formatter = new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+
+    fijos.forEach(function (m) {
+        var id = String(m.id);
+        var btn = tbody.querySelector('button[onclick*="editarMaterial"][onclick*="' + id + '"]');
+        if (!btn) return;
+        var tr = btn.closest('tr');
+        if (!tr) return;
+        var tds = tr.querySelectorAll(':scope > td');
+        if (tds.length < 5) return;
+
+        if (parseFloat(m.precioVenta) > 0) {
+            var pVenta = tds[3].querySelector('p');
+            if (pVenta) pVenta.textContent = formatter.format(Math.round(parseFloat(m.precioVenta)));
+        }
+        if (parseFloat(m.precioGremio) > 0) {
+            var pGremio = tds[4].querySelector('p');
+            if (pGremio) pGremio.textContent = formatter.format(Math.round(parseFloat(m.precioGremio)));
+        }
+    });
+
+    console.log('🦎 GECKO-FIX: Precios fijos corregidos (' + fijos.length + ' materiales).');
+};
+
 // ── PARCHE FINAL: reemplazar renderOts de main.js después de que todo cargue ──
 window.addEventListener('load', function () {
     setTimeout(function () {
@@ -3793,6 +3837,20 @@ window.addEventListener('load', function () {
         setTimeout(() => { window.renderClientes(); }, 200);
 
         console.log('🦎 GECKO-FIXES: renderOts + renderizarMovimientos + renderClientes parcheados post-main.js.');
+
+        // Override renderInsumos para aplicar fix de precios fijos post-render
+        (function () {
+            var _origRenderInsumos = window.renderInsumos;
+            if (typeof _origRenderInsumos === 'function') {
+                window.renderInsumos = function () {
+                    _origRenderInsumos.apply(this, arguments);
+                    window._geckoFixPreciosFijos();
+                };
+            }
+            // Aplicar fix inmediato (la tabla ya puede estar dibujada)
+            window._geckoFixPreciosFijos();
+            console.log('🦎 GECKO-FIX: Override renderInsumos activo — precios fijos habilitados.');
+        })();
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
 // ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──
