@@ -3881,6 +3881,46 @@ window.addEventListener('load', function () {
             });
             console.log('🦎 GECKO-FIX: Interceptor precioVenta activo.');
         })();
+
+        // ── Persistencia de filtro activo en Materiales ──
+        (function () {
+            // 1. Guardar filtro cada vez que el usuario lo aplica
+            var _origFiltrar = window.filtrarInsumos;
+            if (typeof _origFiltrar === 'function') {
+                window.filtrarInsumos = function (cat, btn) {
+                    if (cat) sessionStorage.setItem('gecko_filtro_materiales', cat);
+                    return _origFiltrar.apply(this, arguments);
+                };
+            }
+
+            // 2. Restaurar filtro después de cada renderInsumos
+            // Se encadena sobre _geckoFixPreciosFijos que ya hookea renderInsumos.
+            // El flag _restaurando evita loops.
+            var _restaurando = false;
+            var _origFixPF = window._geckoFixPreciosFijos;
+            window._geckoFixPreciosFijos = function () {
+                if (typeof _origFixPF === 'function') _origFixPF();
+                if (_restaurando) return;
+                var filtro = sessionStorage.getItem('gecko_filtro_materiales');
+                if (!filtro || filtro === 'todos') return;
+                _restaurando = true;
+                setTimeout(function () {
+                    var btns = document.querySelectorAll('button[onclick*="filtrarInsumos"]');
+                    for (var i = 0; i < btns.length; i++) {
+                        var oc = btns[i].getAttribute('onclick') || '';
+                        if (oc.indexOf("'" + filtro + "'") !== -1 || oc.indexOf('"' + filtro + '"') !== -1) {
+                            if (typeof window.filtrarInsumos === 'function') {
+                                window.filtrarInsumos(filtro, btns[i]);
+                            }
+                            break;
+                        }
+                    }
+                    _restaurando = false;
+                }, 150);
+            };
+
+            console.log('🦎 GECKO-FIX: Filtro de materiales persistente activo.');
+        })();
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
 // ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──
