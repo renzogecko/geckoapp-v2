@@ -3945,6 +3945,40 @@ window.addEventListener('load', function () {
                 console.log('🦎 GECKO-FIX: Persistencia de pestaña Materiales activa.');
             }, 500);
         })();
+
+        // ── Fix: botones de servicios con ID string sin comillas ──
+        window._geckoFixBotonesServicios = function () {
+            var btns = document.querySelectorAll('button[onclick*="abrirModalTerminacion"]');
+            btns.forEach(function (btn) {
+                var oc = btn.getAttribute('onclick') || '';
+                // Buscar IDs sin comillas que contengan letras (no son numéricos puros)
+                var fixed = oc.replace(
+                    /abrirModalTerminacion\(([^'")\s]+)\)/,
+                    function (match, id) {
+                        if (id === '') return match;
+                        if (/^\d+$/.test(id)) return match; // numérico puro — OK
+                        return "abrirModalTerminacion('" + id + "')";
+                    }
+                );
+                if (fixed !== oc) {
+                    btn.setAttribute('onclick', fixed);
+                }
+            });
+        };
+
+        // Hookear a renderServicios para que corra después de cada render
+        (function () {
+            var _origRS = window.renderServicios;
+            if (typeof _origRS === 'function') {
+                window.renderServicios = function () {
+                    _origRS.apply(this, arguments);
+                    window._geckoFixBotonesServicios();
+                };
+            }
+            // Aplicar inmediatamente (la tabla ya puede estar dibujada)
+            window._geckoFixBotonesServicios();
+            console.log('🦎 GECKO-FIX: Fix botones servicios string-ID activo.');
+        })();
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
 // ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──
