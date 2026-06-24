@@ -3851,6 +3851,36 @@ window.addEventListener('load', function () {
             window._geckoFixPreciosFijos();
             console.log('🦎 GECKO-FIX: Override renderInsumos activo — precios fijos habilitados.');
         })();
+
+        // Interceptor: captura precioVenta del form antes de que main.js lo resetee
+        (function () {
+            var form = document.getElementById('formMaterial');
+            if (!form) return;
+            form.addEventListener('submit', function () {
+                window._geckoCapturePV = {
+                    precioVenta: parseFloat(document.getElementById('matPrecioVentaManual')?.value) || 0,
+                    estrategia: document.getElementById('matEstrategia')?.value || '',
+                    editId: this.dataset.editId || null
+                };
+            }, true);
+            form.addEventListener('submit', function () {
+                var cap = window._geckoCapturePV;
+                if (!cap || cap.estrategia !== 'fija' || cap.precioVenta <= 0) return;
+                setTimeout(function () {
+                    var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+                    var mat = cap.editId
+                        ? mats.find(function (m) { return String(m.id) === String(cap.editId); })
+                        : mats[mats.length - 1];
+                    if (mat) {
+                        mat.precioVenta = cap.precioVenta;
+                        localStorage.setItem('gecko_materiales', JSON.stringify(mats));
+                        console.log('🦎 GECKO-FIX: precioVenta guardado: ' + mat.nombre + ' $' + cap.precioVenta);
+                    }
+                    window._geckoCapturePV = null;
+                }, 150);
+            });
+            console.log('🦎 GECKO-FIX: Interceptor precioVenta activo.');
+        })();
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
 // ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──

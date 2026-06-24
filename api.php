@@ -52,8 +52,8 @@ try {
                 (id, nombre, categoria, subcategoria, stock, multiplicador, costoUSD, costoARS,
                  unidad, unidadVenta, incluyeIva, estrategiaVenta, costo, contenidoUnidad,
                  ancho, largo, espesor, precioCorteMl, nota, multGremio, precioGremio,
-                 tieneParametrosCorte, corteSpeed, cortePower)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                 precioVenta, tieneParametrosCorte, corteSpeed, cortePower)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid(), $d['nombre'] ?? '', $d['categoria'] ?? '',
                 $d['subcategoria'] ?? null, $d['stock'] ?? 0, $d['multiplicador'] ?? 2.0,
@@ -63,6 +63,7 @@ try {
                 $d['contenidoUnidad'] ?? 1, $d['ancho'] ?? null, $d['largo'] ?? null,
                 $d['espesor'] ?? null, $d['cortePrecioML'] ?? $d['precioCorteMl'] ?? null,
                 $d['nota'] ?? null, $d['multGremio'] ?? 1.5, $d['precioGremio'] ?? 0,
+                $d['precioVenta'] ?? 0,
                 $d['tieneParametrosCorte'] ? 1 : 0,
                 $d['corteSpeed'] ?? null, $d['cortePower'] ?? null
             ]);
@@ -75,8 +76,8 @@ try {
                 (id, nombre, categoria, subcategoria, stock, multiplicador, costoUSD, costoARS,
                  unidad, unidadVenta, incluyeIva, estrategiaVenta, costo, contenidoUnidad,
                  ancho, largo, espesor, precioCorteMl, nota, multGremio, precioGremio,
-                 tieneParametrosCorte, corteSpeed, cortePower)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                 precioVenta, tieneParametrosCorte, corteSpeed, cortePower)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'], $d['nombre'] ?? '', $d['categoria'] ?? '',
                 $d['subcategoria'] ?? null, $d['stock'] ?? 0, $d['multiplicador'] ?? 2.0,
@@ -86,6 +87,7 @@ try {
                 $d['contenidoUnidad'] ?? 1, $d['ancho'] ?? null, $d['largo'] ?? null,
                 $d['espesor'] ?? null, $d['cortePrecioML'] ?? $d['precioCorteMl'] ?? null,
                 $d['nota'] ?? null, $d['multGremio'] ?? 1.5, $d['precioGremio'] ?? 0,
+                $d['precioVenta'] ?? 0,
                 $d['tieneParametrosCorte'] ? 1 : 0,
                 $d['corteSpeed'] ?? null, $d['cortePower'] ?? null
             ]);

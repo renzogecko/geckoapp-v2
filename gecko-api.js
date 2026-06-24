@@ -27,7 +27,7 @@ const GECKO_ARRAY_KEYS = [
 
 // Campos que MySQL devuelve como string pero deben ser números
 const GECKO_NUMERIC_FIELDS = {
-    'gecko_materiales': ['stock','multiplicador','costoUSD','costoARS','costo','contenidoUnidad','multGremio','precioGremio','precioCorteMl','corteSpeed','cortePower'],
+    'gecko_materiales': ['stock','multiplicador','costoUSD','costoARS','costo','contenidoUnidad','multGremio','precioGremio','precioVenta','precioCorteMl','corteSpeed','cortePower'],
     'geckoServicios':   ['costo','precio'],
     'gecko_cajas':      ['saldo'],
     'gecko_movimientos':['monto'],
