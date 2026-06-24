@@ -3953,17 +3953,22 @@ window.addEventListener('load', function () {
 
         // Fix A: parchear onclick de botones con IDs string sin comillas
         window._geckoFixBotonesServicios = function () {
-            var btns = document.querySelectorAll('button[onclick*="abrirModalTerminacion"]');
-            btns.forEach(function (btn) {
-                var oc = btn.getAttribute('onclick') || '';
-                var fixed = oc.replace(
-                    /abrirModalTerminacion\(([^'")\s]+)\)/,
-                    function (match, id) {
-                        if (!id || /^\d+$/.test(id)) return match;
-                        return "abrirModalTerminacion('" + id + "')";
-                    }
-                );
-                if (fixed !== oc) btn.setAttribute('onclick', fixed);
+            var selectores = [
+                'button[onclick*="abrirModalTerminacion"]',
+                'button[onclick*="eliminarTerminacion"]'
+            ];
+            selectores.forEach(function(selector) {
+                document.querySelectorAll(selector).forEach(function (btn) {
+                    var oc = btn.getAttribute('onclick') || '';
+                    var fixed = oc.replace(
+                        /(abrirModalTerminacion|eliminarTerminacion)\(([^'")\s]+)\)/,
+                        function (match, fn, id) {
+                            if (!id || /^\d+$/.test(id)) return match;
+                            return fn + "('" + id + "')";
+                        }
+                    );
+                    if (fixed !== oc) btn.setAttribute('onclick', fixed);
+                });
             });
         };
 
