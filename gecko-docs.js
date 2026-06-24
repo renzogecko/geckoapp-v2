@@ -9,7 +9,7 @@ const GECKO_LOGO_B64 = 'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 const GECKO_BRAND = {
     mail: 'gecko@geckoestudio.ar',
     instagram: '@gecko.estudiocreativo',
-    whatsapp: '+54 221 594-5869',
+    whatsapp: '+54 221 594-5869 | +54 9 2213 04-5401',
     web: 'geckoestudio.ar'
 };
 const GECKO_PRINT_STYLES = `

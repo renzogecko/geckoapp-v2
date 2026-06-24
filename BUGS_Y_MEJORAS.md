@@ -7,6 +7,16 @@
 
 ## 🔴 CRÍTICOS — afectan cálculo de precios o pérdida de datos
 
+### [BUG-001] nombres de clientes
+- **Sección:** Clientes
+- **Descripción:** En la seccion de clientes al entrar en el boton de editar clientes, se abre el modal pero no se puede editar el nombre, esta bloqueado, el nombre deberia poder editarse y al guardar, por detras el sistema deberia reconocer todos los presupestos y oT vinculadas a ese cliente y actualizarlos con el nuevo nombre. Esto es mas que nada para que en la cuenta corriente de cada cliente no se pierdan los datos cuando cambia de nombre. por que puede ser que presupuestos queden fuera de la cuenta corriente del cliente.. Te paso un ejemplo asi se entiendom se carga un nuevo cliente, y hay un error de tipeo , se carga todo y cuando nos damos cuenta ya hay presupestos y OT creada para ese nombre erroneo, se deberia poder corregir el nombre y que el sistema reconozca todos los presupestos y OT vinculadas a ese cliente y actualizarlos con el nuevo nombre.
+- **Estado:** 🔴 Pendiente
+
+
+### [BUG-002] Presupetador - IVA
+- **Sección:** presupetador 
+- **Descripción:** En el presupuestador manual, cuando activo el toggle de IVA , se suma 21% al total, pero cuando guardo el presupusto, no se suma en el pdf. 
+- **Estado:** 🔴 Pendiente
 
 ### [BUG-003] Valor de cotizacion de dolar - en confoguraciones y en modal de materiales,
 - **Sección:** configuracion - modal Materiales
