@@ -3946,27 +3946,59 @@ window.addEventListener('load', function () {
             }, 500);
         })();
 
-        // ── Fix: botones de servicios con ID string sin comillas ──
+        // ══ Fix consolidado: edición de servicios ══
+        // Corrige dos bugs:
+        // 1. IDs string sin comillas en onclick → ReferenceError
+        // 2. modal abre vacío → data filling completo desde localStorage
+
+        // Fix A: parchear onclick de botones con IDs string sin comillas
         window._geckoFixBotonesServicios = function () {
             var btns = document.querySelectorAll('button[onclick*="abrirModalTerminacion"]');
             btns.forEach(function (btn) {
                 var oc = btn.getAttribute('onclick') || '';
-                // Buscar IDs sin comillas que contengan letras (no son numéricos puros)
                 var fixed = oc.replace(
                     /abrirModalTerminacion\(([^'")\s]+)\)/,
                     function (match, id) {
-                        if (id === '') return match;
-                        if (/^\d+$/.test(id)) return match; // numérico puro — OK
+                        if (!id || /^\d+$/.test(id)) return match;
                         return "abrirModalTerminacion('" + id + "')";
                     }
                 );
-                if (fixed !== oc) {
-                    btn.setAttribute('onclick', fixed);
-                }
+                if (fixed !== oc) btn.setAttribute('onclick', fixed);
             });
         };
 
-        // Hookear a renderServicios para que corra después de cada render
+        // Fix B: override completo de abrirModalTerminacion con data filling
+        window.abrirModalTerminacion = function (id) {
+            var form = document.getElementById('formTerminacion');
+            if (!form) return;
+            form.reset();
+            delete form.dataset.editId;
+
+            if (id !== null && id !== undefined && id !== '') {
+                var servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+                var term = servicios.find(function (t) {
+                    return String(t.id) === String(id);
+                });
+                if (term) {
+                    document.getElementById('termNom').value        = term.nombre    || '';
+                    document.getElementById('termCat').value        = term.categoria || 'mano_obra';
+                    document.getElementById('termCosto').value      = term.costo     || 0;
+                    document.getElementById('termUni').value        = term.unidad    || 'hora';
+                    document.getElementById('termPrecio').value     = term.precio    || 0;
+                    form.dataset.editId = String(id);
+                    var h3 = document.querySelector('#modalTerminacion h3');
+                    if (h3) h3.innerText = 'Editar Servicio';
+                } else {
+                    console.warn('🦎 GECKO-FIX: Servicio no encontrado, id:', id);
+                }
+            } else {
+                var h3n = document.querySelector('#modalTerminacion h3');
+                if (h3n) h3n.innerText = 'Nuevo Servicio';
+            }
+            if (typeof window.openModal === 'function') window.openModal('modalTerminacion');
+        };
+
+        // Hook a renderServicios para re-aplicar Fix A después de cada render
         (function () {
             var _origRS = window.renderServicios;
             if (typeof _origRS === 'function') {
@@ -3975,9 +4007,8 @@ window.addEventListener('load', function () {
                     window._geckoFixBotonesServicios();
                 };
             }
-            // Aplicar inmediatamente (la tabla ya puede estar dibujada)
             window._geckoFixBotonesServicios();
-            console.log('🦎 GECKO-FIX: Fix botones servicios string-ID activo.');
+            console.log('🦎 GECKO-FIX: Fix edición servicios activo (botones + data filling).');
         })();
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
@@ -4391,42 +4422,6 @@ window._geckoRenderFijo = function () {
             tbody.appendChild(tr);
         } catch (e) { console.warn('GECKO: error renderizando cliente', c.nombre, e); }
     });
-};
-
-// ── FIX Bug #5/#6: botones editar/borrar servicios — ID type mismatch ──────
-// main.js compara t.id === id con strict equality, falla cuando el ID de MySQL
-// llega como string y el onclick lo pasa como número. Sobrescribimos con String().
-window.abrirModalTerminacion = function (id = null) {
-    const form = document.getElementById('formTerminacion');
-    if (!form) return;
-    form.reset();
-    delete form.dataset.editId;
-
-    if (id !== null && id !== undefined) {
-        const term = (window.geckoServicios || []).find(t => String(t.id) === String(id));
-        if (term) {
-            const termNom = document.getElementById('termNom');
-            const termCat = document.getElementById('termCat');
-            const termCosto = document.getElementById('termCosto');
-            const termUni = document.getElementById('termUni');
-            const termPrecio = document.getElementById('termPrecio');
-            if (termNom) termNom.value = term.nombre || '';
-            if (termCat) termCat.value = term.categoria || 'mano_obra';
-            if (termCosto) termCosto.value = term.costo || 0;
-            if (termUni) termUni.value = term.unidad || '';
-            if (termPrecio) termPrecio.value = term.precio || 0;
-            form.dataset.editId = String(id);
-            const titulo = document.querySelector('#modalTerminacion h3');
-            if (titulo) titulo.innerText = 'Editar Servicio';
-        } else {
-            console.warn('🦎 GECKO-FIXES: No se encontró servicio con id:', id, 'en geckoServicios');
-        }
-    } else {
-        const titulo = document.querySelector('#modalTerminacion h3');
-        if (titulo) titulo.innerText = 'Nuevo Servicio';
-    }
-
-    if (typeof openModal === 'function') openModal('modalTerminacion');
 };
 
 
