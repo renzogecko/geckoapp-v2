@@ -5446,11 +5446,25 @@ setTimeout(function () {
     window.eliminarTerminacion = function (id) {
         window.confirmGecko('¿Estás seguro de que deseas eliminar este servicio definitivamente?', 'Eliminar servicio').then(function (confirmado) {
             if (!confirmado) return;
+            // BUG-004: capturar nombre ANTES del filter (para blacklist por nombre)
+            var _svcEliminado = (window.geckoServicios || []).find(function (s) { return String(s.id) === String(id); });
             var nuevos = (window.geckoServicios || []).filter(function (t) { return String(t.id) !== String(id); });
             window.geckoServicios = nuevos;
             localStorage.setItem('geckoServicios', JSON.stringify(nuevos));
             if (typeof renderServicios === 'function') renderServicios();
             if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
+            // BUG-004: si era servicio láser, persistir en blacklist y borrar de MySQL
+            if (_svcEliminado && /corte laser|corte cnc|grabado laser/i.test(_svcEliminado.nombre || '')) {
+                var _laserDel = JSON.parse(localStorage.getItem('geckoLaserEliminados') || '[]');
+                var _nombreUp = (_svcEliminado.nombre || '').toUpperCase();
+                if (!_laserDel.includes(_nombreUp)) { _laserDel.push(_nombreUp); }
+                localStorage.setItem('geckoLaserEliminados', JSON.stringify(_laserDel));
+                fetch('/app/api.php?endpoint=servicios', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                }).catch(function (e) { console.warn('GECKO-FIX BUG-004 DELETE error:', e); });
+            }
         });
     };
     window.eliminarMaterial = function (id) {
@@ -5980,4 +5994,36 @@ setTimeout(function () {
     };
     console.log('🦎 GECKO-FIX: renderInsumos v2 — DOM patch activo.');
 }, 2100);
+
+// ── FIX BUG-004: Re-aplicar eliminaciones láser post-sync MySQL ──────────────
+// Después de que gecko-api.js sincroniza MySQL y llama seed_laser, este listener
+// re-aplica el blacklist "geckoLaserEliminados" sobre geckoServicios en localStorage,
+// evitando que servicios eliminados por el usuario vuelvan por seed_laser o reload.
+document.addEventListener('geckoDB_ready', function () {
+    var eliminados = JSON.parse(localStorage.getItem('geckoLaserEliminados') || '[]');
+    if (!eliminados.length) return;
+
+    var servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+    var filtrados = servicios.filter(function (s) {
+        return !eliminados.includes((s.nombre || '').toUpperCase());
+    });
+
+    if (filtrados.length < servicios.length) {
+        localStorage.setItem('geckoServicios', JSON.stringify(filtrados));
+        window.geckoServicios = filtrados;
+        // Borrar de MySQL los re-aparecidos (por seed_laser u otra causa)
+        servicios.filter(function (s) {
+            return eliminados.includes((s.nombre || '').toUpperCase());
+        }).forEach(function (s) {
+            fetch('/app/api.php?endpoint=servicios', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: s.id })
+            }).catch(function (e) { console.warn('GECKO-FIX BUG-004 re-delete error:', e); });
+        });
+        console.log('🦎 GECKO-FIX BUG-004: Re-aplicada eliminación de ' +
+            (servicios.length - filtrados.length) + ' servicio(s) láser post-sync.');
+    }
+});
+// ── FIN FIX BUG-004 ──────────────────────────────────────────────────────────
 // ── FIN FIX renderInsumos v2 ─────────────────────────────────────────────────
