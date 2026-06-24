@@ -7,16 +7,6 @@
 
 ## 🔴 CRÍTICOS — afectan cálculo de precios o pérdida de datos
 
-### [BUG-001] Precio de nuevo materiales, CAtegoria productos gecko 
-- **Sección:** Materailes
-- **Descripción:** Cuando cargo un nuevo material, le pongo los precios de venta y gremio, en el modal solo se mantiene el de gremio el de publico se borra  | en la lista los dos valores permanecen en $0 
-- **Estado:** 🔴 Pendiente
-
-### [BUG-002] Modale cliente - edicion  
-- **Sección:** clientes 
-- **Descripción:** Al entrar a editar un cliente no se puede cambiar el nombre, esta bloqueado. Deberia poder modificarse 
-- **Estado:** 🔴 Pendiente
-
 
 ### [BUG-003] Valor de cotizacion de dolar - en confoguraciones y en modal de materiales,
 - **Sección:** configuracion - modal Materiales
@@ -36,18 +26,28 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Reportado:** 22/06/2026
 - **Estado:** 🟡 Pendiente
 
-### [BUG-004] Productos Gecko con precio fijo no guardan precio venta
-- **Sección:** Materiales › Nuevo Insumo (estrategia FIJA)
-- **Síntoma:** "Precio venta sugerido" se guarda en $0, solo persiste "Precio gremio".
-- **Reportado:** 22/06/2026
-- **Estado:** 🟡 Pendiente
-
 ### [BUG-007] Modal confirm() nativo en eliminar material/servicio no se reemplaza
 - **Sección:** Materiales › Servicios & Mano de Obra / Materiales
 - **Síntoma:** override de `confirm()` en gecko-fixes.js no toma efecto; main.js carga después y pisa el override.
 - **Causa probable:** orden de carga — main.js se ejecuta después de gecko-fixes.js y redefine las funciones.
 - **Fix esperado:** investigar orden de carga o mover el fix a un setTimeout en gecko-fixes.js.
 - **Reportado:** 23/06/2026
+- **Estado:** 🟡 Pendiente
+
+### [BUG-004] Servicios de corte láser se regeneran automáticamente al eliminarlos
+- **Sección:** Materiales › Servicios & Mano de Obra
+- **Síntoma:** Los servicios con ID tipo `laser_corte_*` vuelven a aparecer tras eliminarse; son regenerados en cada carga desde los parámetros de configuración láser.
+- **Causa probable:** función en main.js (o similar) que genera servicios desde parámetros láser los recrea en cada carga, sin verificar si el usuario los eliminó manualmente.
+- **Fix esperado:** identificar la función generadora e implementar lista de exclusión o flag `deletedByUser` para que no se recreen si fueron eliminados intencionalmente.
+- **Archivos a investigar:** gecko-fixes.js, main.js (función generadora desde params láser), localStorage key `geckoServicios`.
+- **Reportado:** 24/06/2026
+- **Estado:** 🟡 Pendiente
+
+### [BUG-005] Configuración Grabados Láser — carga manual de servicio
+- **Sección:** Configuración › Grabados Láser · Servicios & Mano de Obra
+- **Síntoma:** El grabado láser solo se carga automáticamente vinculado a un material; no existe forma de crearlo como servicio independiente.
+- **Fix esperado:** agregar formulario/botón en Configuración → Grabados Láser para crear un servicio de grabado con nombre, precio y unidad, guardado en `geckoServicios` como cualquier otro servicio de mano de obra.
+- **Reportado:** 24/06/2026
 - **Estado:** 🟡 Pendiente
 
 ---
@@ -132,6 +132,16 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Cómo:** relacionado con BUG-005/RES-008; fix de ID type mismatch en gecko-fixes.js resolvió también el formulario vacío.
 - **Era:** BUG-006
 
+### [RES-010] Materiales con estrategiaVenta FIJA mostraban $0 en la lista
+- **Resuelto:** 24/06/2026
+- **Cómo:** Causa raíz triple: (a) formMaterial no guardaba precioVenta, (b) MySQL no tenía columna precioVenta, (c) renderInsumos ignoraba m.precioVenta. Solución: columna precioVenta añadida a MySQL, api.php y gecko-api.js actualizados, interceptor en gecko-fixes.js captura el valor del campo matPrecioVentaManual antes del reset del formulario y lo inyecta post-save. DOM patch post-render corrige la visualización en tabla.
+- **Era:** BUG-001 / BUG-004
+
+### [RES-011] Botón editar en Servicios abría modal vacío
+- **Resuelto:** 24/06/2026
+- **Cómo:** Dos causas: (a) IDs string (ej: `laser_corte_cnc___chapa_iacma`) renderizados sin comillas en onclick → ReferenceError. (b) Comparación estricta `t.id === id` fallaba por type mismatch number vs string post-MySQL. Solución en gecko-fixes.js: `_geckoFixBotonesServicios` parchea onclicks post-render, override de `abrirModalTerminacion` usa `String(t.id) === String(id)` y lee directo de localStorage.
+- **Era:** BUG-002
+
 ---
 
 ## Sesión 23/06/2026 — Fixes aplicados
@@ -145,6 +155,19 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - Modal confirm() nativo en eliminar material y eliminar servicio — override en gecko-fixes.js no toma efecto, main.js carga después y pisa. Investigar orden de carga o mover fix a setTimeout.
 - Bug 4: Precio fijo no guarda precioVenta
 - Bug 3: Parámetros láser vaciados
+
+## Sesión 24/06/2026 — Fixes aplicados
+
+### ✅ Resueltos
+- RES-010 (ex BUG-001 / BUG-004): Materiales FIJA mostraban $0 — columna precioVenta añadida a MySQL, interceptor en gecko-fixes.js, DOM patch post-render.
+- RES-011 (ex BUG-002): Botón editar Servicios abría modal vacío — IDs sin comillas en onclick + type mismatch resueltos en gecko-fixes.js.
+- Persistencia de pestaña activa y filtro en sección Materiales.
+
+### ⚠️ Nuevos pendientes
+- BUG-003 (🟡): Parámetros láser/CNC vaciados — decidir si restaurar manualmente.
+- BUG-004 (🟡): Servicios láser se regeneran al eliminarlos — implementar flag/lista de exclusión.
+- BUG-005 (🟡): Grabados Láser sin carga manual — agregar formulario en Configuración.
+- BUG-007 (🟡): Modal confirm() nativo — investigar orden de carga gecko-fixes.js vs main.js.
 
 ---
 
@@ -174,4 +197,4 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 
 ---
 
-*Última actualización: 23 de junio 2026.*
+*Última actualización: 24 de junio 2026.*
