@@ -2,9 +2,9 @@
 document.addEventListener('DOMContentLoaded', async function geckoAuthInit() {
     try {
         const res = await fetch('api.php?endpoint=auth');
-        if (res.status === 401 || !res.ok) { window.location.href = '/'; return; }
+        if (res.status === 401 || !res.ok) { window.location.href = 'login.html'; return; }
         const data = await res.json();
-        if (!data.logueado) { window.location.href = '/'; return; }
+        if (!data.logueado) { window.location.href = 'login.html'; return; }
 
         window.GECKO_USER = { nombre: data.nombre, rol: data.rol, email: data.email };
 
@@ -28,11 +28,11 @@ document.addEventListener('DOMContentLoaded', async function geckoAuthInit() {
                 Object.keys(localStorage)
                     .filter(k => k.startsWith('gecko') || k.startsWith('GECKO') || k === 'clientes')
                     .forEach(k => localStorage.removeItem(k));
-                window.location.href = '/';
+                window.location.href = 'login.html';
             });
         }
     } catch (_) {
-        window.location.href = '/';
+        window.location.href = 'login.html';
     }
 });
 
