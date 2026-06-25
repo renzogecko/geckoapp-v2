@@ -3375,7 +3375,7 @@ window.addEventListener('load', function () {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-6">
                         <div>
                             <label class="gecko-label">Nombre / Razón Social</label>
-                            <input type="text" id="_editCliNombre" class="gecko-input-line" value="${cliente.nombre}" disabled style="opacity:0.5;cursor:not-allowed;" title="El identificador principal no se puede modificar.">
+                            <input type="text" id="_editCliNombre" class="gecko-input-line" value="${cliente.nombre}">
                         </div>
                         <div id="editContainerCuits">
                             <label class="gecko-label">CUIT / DNI</label>
@@ -3429,10 +3429,14 @@ window.addEventListener('load', function () {
 
                 const emails = Array.from(document.querySelectorAll('.edit-email-input')).map(i => i.value.trim()).filter(v => v);
 
+                var nombreAnterior = cliente.nombre;
+                var nuevoNombre = document.getElementById('_editCliNombre')?.value.trim() || nombreAnterior;
+
                 const idx = bdClientes.findIndex(c => c.nombre === nombre);
                 if (idx !== -1) {
                     bdClientes[idx] = {
                         ...bdClientes[idx],
+                        nombre: nuevoNombre,
                         cuits: cuits,
                         cuit: cuits.length > 0 ? cuits[0].numero : '',
                         telefonos: tels,
@@ -3443,6 +3447,37 @@ window.addEventListener('load', function () {
                         loc: document.getElementById('_editCliLoc').value.trim(),
                         rubro: document.getElementById('_editCliRubro').value.trim()
                     };
+
+                    // Cascade: actualizar nombre en presupuestos y OTs si cambió
+                    if (nuevoNombre && nuevoNombre !== nombreAnterior) {
+                        var presups = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+                        var actualizados = 0;
+                        presups = presups.map(function(p) {
+                            if ((p.cliente || '').trim() === nombreAnterior.trim()) {
+                                p.cliente = nuevoNombre;
+                                actualizados++;
+                            }
+                            return p;
+                        });
+                        if (actualizados > 0) {
+                            localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(presups));
+                            presups.filter(function(p) {
+                                return (p.cliente || '').trim() === nuevoNombre.trim();
+                            }).forEach(function(p) {
+                                fetch('api.php?endpoint=presupuestos', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(p)
+                                }).catch(function(e) {
+                                    console.warn('GECKO-FIX: Error sync presupuesto cascade:', e);
+                                });
+                            });
+                            console.log('GECKO-FIX: Cascade cliente — ' + actualizados +
+                                ' presupuesto(s)/OT(s) actualizados de "' +
+                                nombreAnterior + '" -> "' + nuevoNombre + '"');
+                        }
+                    }
+
                     localStorage.setItem('clientes', JSON.stringify(bdClientes));
                 }
 
@@ -4416,15 +4451,38 @@ window._geckoRenderFijo = function () {
     bdClientes.forEach(c => {
         try {
             if (termino) {
-                const matchNombre = c.nombre.toLowerCase().includes(termino);
-                const matchCuit = (c.cuit || '').toLowerCase().includes(termino);
-                const matchCuits = (c.cuits || []).some(cu =>
-                    (typeof cu === 'string' ? cu : cu.numero || '').includes(termino) ||
-                    (typeof cu === 'object' ? (cu.etiqueta || '').toLowerCase().includes(termino) : false)
-                );
-                const matchRubro = (c.rubro || '').toLowerCase().includes(termino);
-                const matchTel = (c.telefonos || []).some(t => (t.numero || '').includes(termino) || (t.etiqueta || '').toLowerCase().includes(termino));
-                if (!matchNombre && !matchCuit && !matchCuits && !matchRubro && !matchTel) return;
+                var nombreStr = (c.nombre || '').toLowerCase();
+                var cuitStr = (c.cuit || '').toLowerCase();
+                var rubroStr = (c.rubro || '').toLowerCase();
+                var locStr = (c.loc || '').toLowerCase();
+
+                // Soporte para cuits como string O como objeto {numero, etiqueta}
+                var cuitsMatch = (c.cuits || []).some(function(cu) {
+                    if (!cu) return false;
+                    var num = typeof cu === 'string' ? cu : (cu.numero || '');
+                    return num.toLowerCase().includes(termino);
+                });
+
+                // Soporte para telefonos como string O como objeto {numero, etiqueta}
+                var telsMatch = (c.telefonos || []).some(function(t) {
+                    if (!t) return false;
+                    var num = typeof t === 'string' ? t : (t.numero || '');
+                    return num.toLowerCase().includes(termino);
+                });
+
+                var emailsMatch = (c.emails || []).some(function(e) {
+                    if (!e) return false;
+                    var addr = typeof e === 'string' ? e : (e.email || e.direccion || '');
+                    return addr.toLowerCase().includes(termino);
+                });
+
+                var hayMatch = nombreStr.includes(termino) ||
+                    cuitStr.includes(termino) ||
+                    rubroStr.includes(termino) ||
+                    locStr.includes(termino) ||
+                    cuitsMatch || telsMatch || emailsMatch;
+
+                if (!hayMatch) return; // saltar este cliente
             }
 
             const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
