@@ -4451,27 +4451,32 @@ window._geckoRenderFijo = function () {
     bdClientes.forEach(c => {
         try {
             if (termino) {
-                var nombreStr = (c.nombre || '').toLowerCase();
-                var cuitStr = (c.cuit || '').toLowerCase();
-                var rubroStr = (c.rubro || '').toLowerCase();
-                var locStr = (c.loc || '').toLowerCase();
+                // Helper: parsear campo que puede ser string JSON o array
+                var parsearArray = function(val) {
+                    if (!val) return [];
+                    if (Array.isArray(val)) return val;
+                    try { var p = JSON.parse(val); return Array.isArray(p) ? p : []; }
+                    catch(e) { return []; }
+                };
 
-                // Soporte para cuits como string O como objeto {numero, etiqueta}
-                var cuitsMatch = (c.cuits || []).some(function(cu) {
-                    if (!cu) return false;
+                var nombreStr = (c.nombre || '').toLowerCase();
+                var cuitStr   = (c.cuit  || '').toLowerCase();
+                var rubroStr  = (c.rubro || '').toLowerCase();
+                var locStr    = (c.loc   || '').toLowerCase();
+
+                var cuitsArr  = parsearArray(c.cuits);
+                var telsArr   = parsearArray(c.telefonos);
+                var emailsArr = parsearArray(c.emails);
+
+                var cuitsMatch = cuitsArr.some(function(cu) {
                     var num = typeof cu === 'string' ? cu : (cu.numero || '');
                     return num.toLowerCase().includes(termino);
                 });
-
-                // Soporte para telefonos como string O como objeto {numero, etiqueta}
-                var telsMatch = (c.telefonos || []).some(function(t) {
-                    if (!t) return false;
+                var telsMatch = telsArr.some(function(t) {
                     var num = typeof t === 'string' ? t : (t.numero || '');
                     return num.toLowerCase().includes(termino);
                 });
-
-                var emailsMatch = (c.emails || []).some(function(e) {
-                    if (!e) return false;
+                var emailsMatch = emailsArr.some(function(e) {
                     var addr = typeof e === 'string' ? e : (e.email || e.direccion || '');
                     return addr.toLowerCase().includes(termino);
                 });
@@ -4482,7 +4487,7 @@ window._geckoRenderFijo = function () {
                     locStr.includes(termino) ||
                     cuitsMatch || telsMatch || emailsMatch;
 
-                if (!hayMatch) return; // saltar este cliente
+                if (!hayMatch) return;
             }
 
             const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
