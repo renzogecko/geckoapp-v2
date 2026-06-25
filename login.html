@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GECKO Sistema — Ingresar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,700;0,900;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #131314;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      background: #1e1f20;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 420px;
+      width: 100%;
+      border: 1px solid #333333;
+    }
+
+    .login-logo {
+      display: flex;
+      justify-content: center;
+    }
+
+    .login-title {
+      font-weight: 900;
+      color: #ffffff;
+      text-align: center;
+      font-size: 22px;
+      margin-top: 16px;
+    }
+
+    .login-subtitle {
+      color: #6b7280;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 6px;
+      margin-bottom: 32px;
+    }
+
+    .login-field {
+      margin-bottom: 20px;
+    }
+
+    .login-label {
+      display: block;
+      color: #6b7280;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .login-input {
+      width: 100%;
+      background: #131314;
+      border: 1px solid #333333;
+      border-radius: 12px;
+      color: #ffffff;
+      padding: 14px 16px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .login-input:focus {
+      border-color: #f15a24;
+    }
+
+    .login-input::placeholder {
+      color: #4b5563;
+    }
+
+    .login-btn {
+      width: 100%;
+      background: #f15a24;
+      color: #ffffff;
+      border: none;
+      border-radius: 14px;
+      padding: 15px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+
+    .login-btn:hover:not(:disabled) {
+      opacity: 0.88;
+    }
+
+    .login-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    #loginError {
+      display: none;
+      color: #ef4444;
+      font-size: 12px;
+      text-align: center;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+
+    <div class="login-logo">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 2L43.2 13.5V34.5L24 46L4.8 34.5V13.5L24 2Z" fill="#f15a24"/>
+        <path d="M24 14.5L33 19.75V30.25L24 35.5L15 30.25V19.75L24 14.5Z" fill="#1e1f20"/>
+      </svg>
+    </div>
+
+    <h1 class="login-title">GECKO Sistema</h1>
+    <p class="login-subtitle">Ingresá con tu cuenta</p>
+
+    <div class="login-field">
+      <label class="login-label" for="loginEmail">Email</label>
+      <input class="login-input" type="email" id="loginEmail" placeholder="tu@email.com" autocomplete="email">
+    </div>
+
+    <div class="login-field">
+      <label class="login-label" for="loginPassword">Contraseña</label>
+      <input class="login-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="login-btn" id="loginBtn">Entrar al sistema</button>
+    <div id="loginError"></div>
+
+  </div>
+
+  <script>
+    const btn = document.getElementById('loginBtn');
+    const emailInput = document.getElementById('loginEmail');
+    const passwordInput = document.getElementById('loginPassword');
+    const errorDiv = document.getElementById('loginError');
+
+    async function doLogin() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        showError('Completá todos los campos.');
+        return;
+      }
+
+      btn.textContent = 'Verificando...';
+      btn.disabled = true;
+      errorDiv.style.display = 'none';
+
+      try {
+        const response = await fetch('api.php?endpoint=auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (data.logueado === true) {
+          window.location.href = 'index.html';
+        } else {
+          showError(data.mensaje || 'Credenciales incorrectas.');
+        }
+      } catch (err) {
+        showError('Error de conexión. Intentá de nuevo.');
+      } finally {
+        btn.textContent = 'Entrar al sistema';
+        btn.disabled = false;
+      }
+    }
+
+    function showError(msg) {
+      errorDiv.textContent = msg;
+      errorDiv.style.display = 'block';
+    }
+
+    btn.addEventListener('click', doLogin);
+
+    [emailInput, passwordInput].forEach(input => {
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doLogin();
+      });
+    });
+  </script>
+</body>
+</html>
