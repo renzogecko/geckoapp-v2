@@ -286,14 +286,20 @@
 
         <!-- Perfil Usuario -->
         <div class="mt-auto pt-5 border-t border-white/20 flex items-center gap-3 px-2">
-            <div
+            <div id="gecko-perfil-iniciales"
                 class="w-[40px] h-[40px] bg-white/20 rounded-full flex items-center justify-center font-extrabold text-white text-[14px] shadow-sm shrink-0 border border-white/20 hover:bg-white/30 transition-colors cursor-pointer">
                 RP
             </div>
             <div class="flex-1 min-w-0 text-white">
-                <p class="text-[13px] font-bold truncate">Renzo Paniagua</p>
-                <p class="text-[10px] text-white/70 font-bold tracking-widest uppercase mt-0.5">Admin</p>
+                <p id="gecko-perfil-nombre" class="text-[13px] font-bold truncate">Renzo Paniagua</p>
+                <p id="gecko-perfil-rol" class="text-[10px] text-white/70 font-bold tracking-widest uppercase mt-0.5">Admin</p>
             </div>
+            <button id="gecko-logout-btn" title="Cerrar sesión"
+                class="text-white/50 hover:text-white transition-colors ml-1 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                </svg>
+            </button>
         </div>
     </aside>
 

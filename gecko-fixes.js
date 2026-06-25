@@ -1,4 +1,41 @@
 
+document.addEventListener('DOMContentLoaded', async function geckoAuthInit() {
+    try {
+        const res = await fetch('api.php?endpoint=auth');
+        if (res.status === 401 || !res.ok) { window.location.href = '/'; return; }
+        const data = await res.json();
+        if (!data.logueado) { window.location.href = '/'; return; }
+
+        window.GECKO_USER = { nombre: data.nombre, rol: data.rol, email: data.email };
+
+        if (data.rol === 'usuario') {
+            const navFin = document.getElementById('nav-finanzas');
+            if (navFin) navFin.style.display = 'none';
+        }
+
+        const iniciales = data.nombre.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+        const elInic   = document.getElementById('gecko-perfil-iniciales');
+        const elNombre = document.getElementById('gecko-perfil-nombre');
+        const elRol    = document.getElementById('gecko-perfil-rol');
+        if (elInic)   elInic.textContent   = iniciales;
+        if (elNombre) elNombre.textContent = data.nombre;
+        if (elRol)    elRol.textContent    = data.rol === 'admin' ? 'Admin' : 'Usuario';
+
+        const btnLogout = document.getElementById('gecko-logout-btn');
+        if (btnLogout) {
+            btnLogout.addEventListener('click', async () => {
+                await fetch('api.php?endpoint=auth', { method: 'DELETE' });
+                Object.keys(localStorage)
+                    .filter(k => k.startsWith('gecko') || k.startsWith('GECKO') || k === 'clientes')
+                    .forEach(k => localStorage.removeItem(k));
+                window.location.href = '/';
+            });
+        }
+    } catch (_) {
+        window.location.href = '/';
+    }
+});
+
 // ── Alias para compatibilidad con llamadas directas de main.js ──
 if (typeof renderizarFinanzas === 'undefined') {
     window.renderizarFinanzas = function () {

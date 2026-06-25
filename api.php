@@ -1,6 +1,7 @@
 <?php
+session_start();
 header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: https://geckoestudio.ar");
 header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
@@ -35,6 +36,66 @@ function presupuesto_metadata($d) {
 }
 
 try {
+    // ══════════════════════════════════════════
+    // AUTH — no requiere sesión activa
+    // ══════════════════════════════════════════
+    if ($endpoint === 'auth') {
+
+        if ($method === 'GET') {
+            if (!empty($_SESSION['gecko_user_id'])) {
+                responder(['logueado' => true, 'nombre' => $_SESSION['gecko_nombre'],
+                           'rol' => $_SESSION['gecko_rol'], 'email' => $_SESSION['gecko_email']]);
+            }
+            responder(['logueado' => false]);
+        }
+
+        if ($method === 'POST') {
+            $email    = trim($body['email'] ?? '');
+            $password = $body['password'] ?? '';
+            if (!$email || !$password) { error('Datos incompletos', 400); }
+
+            $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = ? LIMIT 1");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) { error('Credenciales inválidas', 401); }
+
+            $valido = password_verify($password, $user['password'])
+                   || $user['password'] === $password;
+
+            if (!$valido) { error('Credenciales inválidas', 401); }
+
+            if ($user['password'] === $password) {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $pdo->prepare("UPDATE usuarios SET password = ? WHERE id = ?")->execute([$hash, $user['id']]);
+            }
+
+            session_regenerate_id(true);
+            $_SESSION['gecko_user_id'] = $user['id'];
+            $_SESSION['gecko_nombre']  = $user['nombre'];
+            $_SESSION['gecko_rol']     = $user['rol'];
+            $_SESSION['gecko_email']   = $user['email'];
+
+            responder(['logueado' => true, 'nombre' => $user['nombre'],
+                       'rol' => $user['rol'], 'email' => $user['email']]);
+        }
+
+        if ($method === 'DELETE') {
+            session_destroy();
+            responder(['logueado' => false]);
+        }
+
+        error('Método no permitido', 405);
+    }
+
+    // ══════════════════════════════════════════
+    // GUARD: todos los demás endpoints requieren sesión
+    // ══════════════════════════════════════════
+    if (empty($_SESSION['gecko_user_id'])) {
+        http_response_code(401);
+        responder(['error' => 'no_auth']);
+    }
+
     // ══════════════════════════════════════════
     // MATERIALES
     // ══════════════════════════════════════════
