@@ -7,12 +7,6 @@
 
 ## 🔴 CRÍTICOS — afectan cálculo de precios o pérdida de datos
 
-### [BUG-001] nombres de clientes
-- **Sección:** Clientes
-- **Descripción:** En la seccion de clientes al entrar en el boton de editar clientes, se abre el modal pero no se puede editar el nombre, esta bloqueado, el nombre deberia poder editarse y al guardar, por detras el sistema deberia reconocer todos los presupestos y oT vinculadas a ese cliente y actualizarlos con el nuevo nombre. Esto es mas que nada para que en la cuenta corriente de cada cliente no se pierdan los datos cuando cambia de nombre. por que puede ser que presupuestos queden fuera de la cuenta corriente del cliente.. Te paso un ejemplo asi se entiendom se carga un nuevo cliente, y hay un error de tipeo , se carga todo y cuando nos damos cuenta ya hay presupestos y OT creada para ese nombre erroneo, se deberia poder corregir el nombre y que el sistema reconozca todos los presupestos y OT vinculadas a ese cliente y actualizarlos con el nuevo nombre.
-- **Estado:** 🔴 Pendiente
-
-
 ### [BUG-002] Presupetador - IVA
 - **Sección:** presupetador 
 - **Descripción:** En el presupuestador manual, cuando activo el toggle de IVA , se suma 21% al total, pero cuando guardo el presupusto, no se suma en el pdf. 
@@ -34,30 +28,6 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Causa:** REPLACE INTO pisó `tieneParametrosCorte=false` desde el JSON.
 - **Fix esperado:** decidir si restaurar manualmente o si el JSON los traía y reprocesar.
 - **Reportado:** 22/06/2026
-- **Estado:** 🟡 Pendiente
-
-### [BUG-007] Modal confirm() nativo en eliminar material/servicio no se reemplaza
-- **Sección:** Materiales › Servicios & Mano de Obra / Materiales
-- **Síntoma:** override de `confirm()` en gecko-fixes.js no toma efecto; main.js carga después y pisa el override.
-- **Causa probable:** orden de carga — main.js se ejecuta después de gecko-fixes.js y redefine las funciones.
-- **Fix esperado:** investigar orden de carga o mover el fix a un setTimeout en gecko-fixes.js.
-- **Reportado:** 23/06/2026
-- **Estado:** 🟡 Pendiente
-
-### [BUG-004] Servicios de corte láser se regeneran automáticamente al eliminarlos
-- **Sección:** Materiales › Servicios & Mano de Obra
-- **Síntoma:** Los servicios con ID tipo `laser_corte_*` vuelven a aparecer tras eliminarse; son regenerados en cada carga desde los parámetros de configuración láser.
-- **Causa probable:** función en main.js (o similar) que genera servicios desde parámetros láser los recrea en cada carga, sin verificar si el usuario los eliminó manualmente.
-- **Fix esperado:** identificar la función generadora e implementar lista de exclusión o flag `deletedByUser` para que no se recreen si fueron eliminados intencionalmente.
-- **Archivos a investigar:** gecko-fixes.js, main.js (función generadora desde params láser), localStorage key `geckoServicios`.
-- **Reportado:** 24/06/2026
-- **Estado:** 🟡 Pendiente
-
-### [BUG-005] Configuración Grabados Láser — carga manual de servicio
-- **Sección:** Configuración › Grabados Láser · Servicios & Mano de Obra
-- **Síntoma:** El grabado láser solo se carga automáticamente vinculado a un material; no existe forma de crearlo como servicio independiente.
-- **Fix esperado:** agregar formulario/botón en Configuración → Grabados Láser para crear un servicio de grabado con nombre, precio y unidad, guardado en `geckoServicios` como cualquier otro servicio de mano de obra.
-- **Reportado:** 24/06/2026
 - **Estado:** 🟡 Pendiente
 
 ---
@@ -151,6 +121,34 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Resuelto:** 24/06/2026
 - **Cómo:** Dos causas: (a) IDs string (ej: `laser_corte_cnc___chapa_iacma`) renderizados sin comillas en onclick → ReferenceError. (b) Comparación estricta `t.id === id` fallaba por type mismatch number vs string post-MySQL. Solución en gecko-fixes.js: `_geckoFixBotonesServicios` parchea onclicks post-render, override de `abrirModalTerminacion` usa `String(t.id) === String(id)` y lee directo de localStorage.
 - **Era:** BUG-002
+
+### [RES-012] Nombres de clientes bloqueados en modal de edición
+- **Resuelto:** 26/06/2026
+- **Era:** BUG-001
+
+### [RES-013] Modal confirm() nativo en eliminar material/servicio no se reemplazaba
+- **Resuelto:** 26/06/2026
+- **Era:** BUG-007
+
+### [RES-014] Servicios de corte láser se regeneraban automáticamente al eliminarlos
+- **Resuelto:** 26/06/2026
+- **Era:** BUG-004
+
+### [RES-015] Configuración Grabados Láser — carga manual de servicio
+- **Resuelto:** 26/06/2026
+- **Era:** BUG-005
+
+### [BUG-CON-001] Límite max_connections_per_hour MySQL
+- **Resuelto:** 26/06/2026
+- **Cómo:** conexiones PDO persistentes en db_config.php + debounce 2000ms en gecko-api.js + host cambiado a localhost.
+
+### [BUG-AUTH-001] api.php bloqueaba todos los endpoints con $_SESSION['usuario'] incorrecta
+- **Resuelto:** 26/06/2026
+- **Cómo:** corregido a $_SESSION['gecko_user_id'] con endpoint auth excluido del chequeo.
+
+### [BUG-DEV-001] Live Server redirigía al login en entorno local
+- **Resuelto:** 26/06/2026
+- **Cómo:** gecko-local.js creado con flag window._geckoLocalMode que bloquea redirects en gecko-fixes.js.
 
 ---
 
