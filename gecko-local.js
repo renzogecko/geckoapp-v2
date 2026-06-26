@@ -1,28 +1,54 @@
 /**
- * gecko-local.js
- * Solo para desarrollo local (Live Server).
- * NUNCA subir a Hostinger.
- * Intercepta fetch() para que los 401 de api.php no redirijan al login.
+ * gecko-local.js — Solo desarrollo local. NUNCA subir a Hostinger.
  */
 (function () {
-    const proto = location.protocol;
-    const host = location.hostname;
-    const isLocal = proto === 'file:' || host === 'localhost' || host === '127.0.0.1';
+    const isLocal = location.protocol === 'file:' ||
+                    location.hostname === 'localhost' ||
+                    location.hostname === '127.0.0.1';
     if (!isLocal) return;
 
-    // Sobrescribir fetch global para interceptar respuestas 401
-    const _fetchOriginal = window.fetch;
+    // Interceptar fetch para bloquear 401
+    const _fetch = window.fetch;
     window.fetch = async function (...args) {
-        const res = await _fetchOriginal(...args);
+        const res = await _fetch(...args);
         if (res.status === 401) {
-            // En local, devolver un 200 vacío para que la app no redirija
-            return new Response(JSON.stringify([]), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-            });
+            return new Response(
+                JSON.stringify({ success: true, logueado: true, usuario: 'Renzo', rol: 'admin' }),
+                { status: 200, headers: { 'Content-Type': 'application/json' } }
+            );
         }
         return res;
     };
 
-    console.log('%c 🦎 GECKO-LOCAL: Modo desarrollo activo — 401 interceptados ', 'background:#22c55e;color:white;font-weight:bold;padding:3px 8px;border-radius:4px;');
+    // Bloquear location.replace y location.href hacia login
+    const _replace = location.replace.bind(location);
+    location.replace = function (url) {
+        if (typeof url === 'string' && url.includes('login')) {
+            console.warn('🦎 GECKO-LOCAL: redirect a login bloqueado');
+            return;
+        }
+        return _replace(url);
+    };
+
+    // Bloquear asignación de location.href hacia login con Object.defineProperty
+    let _href = location.href;
+    try {
+        Object.defineProperty(window.location, 'href', {
+            set: function (url) {
+                if (typeof url === 'string' && url.includes('login')) {
+                    console.warn('🦎 GECKO-LOCAL: href a login bloqueado');
+                    return;
+                }
+                _replace(url);
+            },
+            get: function () { return _href; },
+            configurable: true
+        });
+    } catch(e) {}
+
+    // Simular sesión activa para que main.js no redirija
+    window.GECKO_SESSION = { usuario: 'Renzo', rol: 'admin', activa: true };
+    window.geckoUsuarioActual = { nombre: 'Renzo', rol: 'admin', email: 'renzo@gecko.com' };
+
+    console.log('%c 🦎 GECKO-LOCAL activo ', 'background:#22c55e;color:white;font-weight:bold;padding:3px 8px;border-radius:4px;');
 })();
