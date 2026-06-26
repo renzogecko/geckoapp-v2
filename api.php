@@ -1,5 +1,12 @@
 <?php
+// Detectar si el request viene de entorno local (desarrollo)
+$isLocal = (
+    isset($_SERVER['REMOTE_ADDR']) && in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']) ||
+    isset($_SERVER['HTTP_HOST']) && in_array($_SERVER['HTTP_HOST'], ['127.0.0.1:5500', 'localhost', 'localhost:5500'])
+);
+
 session_start();
+
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: https://geckoestudio.ar");
 header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
@@ -88,12 +95,13 @@ try {
         error('Método no permitido', 405);
     }
 
-    // ══════════════════════════════════════════
-    // GUARD: todos los demás endpoints requieren sesión
-    // ══════════════════════════════════════════
-    if (empty($_SESSION['gecko_user_id'])) {
-        http_response_code(401);
-        responder(['error' => 'no_auth']);
+    if (!$isLocal) {
+        // En producción: verificar sesión activa
+        if (empty($_SESSION['usuario'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autenticado']);
+            exit();
+        }
     }
 
     // ══════════════════════════════════════════
