@@ -248,14 +248,18 @@ const _localStorageProxy = {
     setItem(key, value) {
         window._localStorage_original.setItem(key, value);
         if (GECKO_KEY_MAP[key] && _inicializado) {
-            try {
-                const parsed = JSON.parse(value);
-                if (Array.isArray(parsed)) {
-                    _syncQueue = _syncQueue.then(() => _sincronizarArray(key, parsed));
-                } else if (typeof parsed === 'object' && parsed !== null) {
-                    _syncQueue = _syncQueue.then(() => _sincronizarObjeto(key, parsed));
-                }
-            } catch (e) { /* JSON inválido */ }
+            if (!window._geckoDebounceTimers) window._geckoDebounceTimers = {};
+            clearTimeout(window._geckoDebounceTimers[key]);
+            window._geckoDebounceTimers[key] = setTimeout(() => {
+                try {
+                    const parsed = JSON.parse(window._localStorage_original.getItem(key));
+                    if (Array.isArray(parsed)) {
+                        _syncQueue = _syncQueue.then(() => _sincronizarArray(key, parsed));
+                    } else if (typeof parsed === 'object' && parsed !== null) {
+                        _syncQueue = _syncQueue.then(() => _sincronizarObjeto(key, parsed));
+                    }
+                } catch (e) { /* JSON inválido */ }
+            }, 2000);
         }
     }
 };
