@@ -3,9 +3,10 @@
  */
 (function () {
     const isLocal = location.protocol === 'file:' ||
-                    location.hostname === 'localhost' ||
-                    location.hostname === '127.0.0.1';
-    if (!isLocal) return;
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1';
+    window._geckoLocalMode = true;
+    window._geckoLocalMode = true;
 
     // Interceptar fetch para bloquear 401
     const _fetch = window.fetch;
@@ -44,7 +45,7 @@
             get: function () { return _href; },
             configurable: true
         });
-    } catch(e) {}
+    } catch (e) { }
 
     // Simular sesión activa para que main.js no redirija
     window.GECKO_SESSION = { usuario: 'Renzo', rol: 'admin', activa: true };
