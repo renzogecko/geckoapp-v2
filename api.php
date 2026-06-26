@@ -1,11 +1,10 @@
 <?php
-// Detectar si el request viene de entorno local (desarrollo)
+session_start();
+
 $isLocal = (
     isset($_SERVER['REMOTE_ADDR']) && in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']) ||
     isset($_SERVER['HTTP_HOST']) && in_array($_SERVER['HTTP_HOST'], ['127.0.0.1:5500', 'localhost', 'localhost:5500'])
 );
-
-session_start();
 
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: https://geckoestudio.ar");
@@ -95,13 +94,13 @@ try {
         error('Método no permitido', 405);
     }
 
-    if (!$isLocal) {
-        // En producción: verificar sesión activa
-        if (empty($_SESSION['usuario'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autenticado']);
-            exit();
-        }
+    // ══════════════════════════════════════════
+    // VERIFICAR SESIÓN para todos los demás endpoints
+    // ══════════════════════════════════════════
+    if (!$isLocal && empty($_SESSION['gecko_user_id'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'No autenticado']);
+        exit();
     }
 
     // ══════════════════════════════════════════
@@ -274,7 +273,6 @@ try {
         if ($method === 'GET') {
             $stmt = $pdo->query("SELECT * FROM presupuestos ORDER BY id DESC");
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            // Decodificar items JSON
             foreach ($rows as &$r) {
                 $r['items'] = json_decode($r['items'] ?? '[]', true) ?: [];
                 if (!empty($r['metadata'])) {
@@ -367,6 +365,9 @@ try {
         }
     }
 
+    // ══════════════════════════════════════════
+    // GASTOS FIJOS
+    // ══════════════════════════════════════════
     elseif ($endpoint === 'gastos_fijos') {
 
         if ($method === 'GET') {
@@ -438,7 +439,7 @@ try {
     }
 
     // ══════════════════════════════════════════
-    // LASER PARAMS (speed/power/espesor por servicio)
+    // LASER PARAMS
     // ══════════════════════════════════════════
     elseif ($endpoint === 'laser_params') {
 
@@ -460,7 +461,7 @@ try {
     }
 
     // ══════════════════════════════════════════
-    // SEED SERVICIOS LASER (insertar faltantes)
+    // SEED SERVICIOS LASER
     // ══════════════════════════════════════════
     elseif ($endpoint === 'seed_laser') {
 
@@ -507,15 +508,9 @@ try {
             $stmt = $pdo->prepare("INSERT INTO historico_cierres (id, periodo, mes, anio, ingresos, gastos, balance, fecha_cierre, movimientos, gastos_fijos) VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid('cierre_'),
-                $d['periodo'] ?? '',
-                $d['mes'] ?? 0,
-                $d['anio'] ?? 0,
-                $d['ingresos'] ?? 0,
-                $d['gastos'] ?? 0,
-                $d['balance'] ?? 0,
-                $d['fecha_cierre'] ?? '',
-                $d['movimientos'] ?? 0,
-                $d['gastos_fijos'] ?? 0
+                $d['periodo'] ?? '', $d['mes'] ?? 0, $d['anio'] ?? 0,
+                $d['ingresos'] ?? 0, $d['gastos'] ?? 0, $d['balance'] ?? 0,
+                $d['fecha_cierre'] ?? '', $d['movimientos'] ?? 0, $d['gastos_fijos'] ?? 0
             ]);
             responder(["success" => true, "message" => "Cierre guardado."]);
         }
@@ -529,7 +524,7 @@ try {
     }
 
     // ══════════════════════════════════════════
-    // CONFIGURACION (GECKO_SETTINGS)
+    // CONFIGURACION
     // ══════════════════════════════════════════
     elseif ($endpoint === 'configuracion') {
 
