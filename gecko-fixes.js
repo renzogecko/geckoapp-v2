@@ -1499,6 +1499,10 @@ window._registrarSena = function (id) {
     lista[idx].sena = (lista[idx].sena || 0) + totalPago;
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
 
+    if (typeof window.listaPresupuestos !== 'undefined') {
+        window.listaPresupuestos = lista;
+    }
+
     // Registrar movimientos en finanzas
     const _ls = window._localStorage_original || localStorage;
     const movimientos = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
