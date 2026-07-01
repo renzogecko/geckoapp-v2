@@ -1496,7 +1496,9 @@ window._registrarSena = function (id) {
     const idx = lista.findIndex(x => String(x.id) === String(id));
     if (idx === -1) return;
 
+    console.log('🔍 DIAGNÓSTICO - ANTES de sumar seña:', lista[idx].sena, 'totalPago:', totalPago);
     lista[idx].sena = (lista[idx].sena || 0) + totalPago;
+    console.log('🔍 DIAGNÓSTICO - DESPUÉS de sumar seña:', lista[idx].sena);
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
 
     try {
@@ -1504,6 +1506,10 @@ window._registrarSena = function (id) {
     } catch (e) {
         window.listaPresupuestos = lista;
     }
+    console.log('🔍 DIAGNÓSTICO - listaPresupuestos actualizada, sena del 1053:',
+        (typeof listaPresupuestos !== 'undefined' ? listaPresupuestos : window.listaPresupuestos)
+        .find(p => String(p.id) === '1053')?.sena
+    );
 
     // Registrar movimientos en finanzas
     const _ls = window._localStorage_original || localStorage;
