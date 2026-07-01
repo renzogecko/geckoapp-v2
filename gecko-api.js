@@ -120,8 +120,12 @@ async function _inicializarDesdeAPI() {
             const datos = await _apiGet(endpoint, lsKey);
 
             // Si datos es null, hubo un error de conexión real (no una tabla vacía).
-            // NO tocamos el cache ni localStorage — nos quedamos con lo que ya había.
+            // NO pisamos localStorage, pero sí actualizamos el cache interno con
+            // lo que ya había en el navegador, para que las ediciones posteriores
+            // (PUT) sigan comparando correctamente y no intenten recrear todo.
             if (datos === null) {
+                const localActualError = JSON.parse(window._localStorage_original.getItem(lsKey) || (GECKO_ARRAY_KEYS.includes(lsKey) ? '[]' : '{}'));
+                _cache[lsKey] = localActualError;
                 console.warn(`🦎 GECKO-API: ${endpoint} falló por error de conexión — se mantiene el cache local sin cambios.`);
                 continue;
             }
