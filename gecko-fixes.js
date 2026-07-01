@@ -1580,6 +1580,9 @@ window._registrarSena = function (id) {
     if (typeof window.renderOts === 'function') window.renderOts();
     if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
     if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+    if (typeof window.renderClientes === 'function') {
+        window.renderClientes();
+    }
 
     // Auto-archivar si el pago vino desde el modal de archivo
     if (window._archivarDespuesDePago) {
