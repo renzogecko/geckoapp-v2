@@ -214,3 +214,77 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 ---
 
 *Última actualización: 01 de julio 2026.*
+
+---
+
+### Sesión 01/07/2026
+
+**Resueltos — Infraestructura y conexión:**
+- ✅ Límite de max_connections_per_hour en MySQL — RESUELTO: conexiones 
+  PDO persistentes en db_config.php, debounce 2000ms en gecko-api.js, 
+  host cambiado a localhost.
+- ✅ api.php bloqueaba todos los endpoints por clave de sesión 
+  incorrecta ($_SESSION['usuario'] en vez de $_SESSION['gecko_user_id']) 
+  — RESUELTO: api.php reescrito completo con la clave correcta y el 
+  endpoint auth excluido del chequeo de sesión.
+- ✅ Live Server (desarrollo local) redirigía al login constantemente — 
+  RESUELTO: gecko-local.js con flag window._geckoLocalMode que bloquea 
+  los redirects a login.html en gecko-fixes.js.
+
+**Resueltos — Servicios y Materiales:**
+- ✅ Servicios de corte láser se regeneraban solos al borrarlos (11 
+  ítems específicos como "CORTE CNC - CHAPA IACMA") — RESUELTO: se 
+  eliminó la llamada automática a api.php?endpoint=seed_laser que se 
+  ejecutaba en cada carga de la app.
+- ✅ Precio de servicios editados no se guardaba (ni en pantalla ni en 
+  MySQL) — RESUELTO: en main.js, comparación de ID usaba === estricto 
+  entre string y number, cambiado a comparación por texto.
+- ✅ Mecanismo de "protección anti-borrado" en gecko-api.js no distinguía 
+  entre tabla genuinamente vacía y error de conexión (401/500/timeout) 
+  — RESUELTO: _apiGet ahora devuelve null en error real, y ese caso ya 
+  no dispara la restauración automática de datos viejos del navegador.
+
+**Resueltos — Finanzas (críticos, con dinero real de por medio):**
+- ✅ Error 500 "Duplicate entry" al registrar señas — RESUELTO: 
+  gecko-api.js expone window._geckoUpdateCache para mantener sincronizado 
+  el caché interno cuando se guarda por fuera del flujo normal.
+- ✅ Saldo Deudor en Ficha de Cliente no se actualizaba sin recargar 
+  (F5) — RESUELTO: la variable listaPresupuestos de main.js se actualiza 
+  directamente por su nombre (no como copia en window).
+- ✅ Columna "Saldo Pendiente" en la tabla general de Clientes siempre 
+  mostraba el total bruto, nunca restaba las señas pagadas — RESUELTO: 
+  bug de tipeo en gecko-fixes.js (o.adelanto, campo que no existe) 
+  corregido a o.sena, el campo real usado en todo el resto del sistema.
+- ✅ Botón "Registrar Pago de Saldo" dentro de la Ficha de Cliente 
+  tiraba error y no funcionaba — RESUELTO: dependía de un modal viejo 
+  con IDs que ya no existen en el HTML; reescrito en gecko-fixes.js 
+  como función autónoma.
+- ✅ Orden de la lista de Movimientos en Finanzas no era realmente 
+  cronológico (a veces el último movimiento no quedaba arriba) — 
+  RESUELTO: se ordena ahora por el timestamp real guardado en el id de 
+  cada movimiento. También se corrigió registrarMovimiento para que 
+  siempre asigne un id con timestamp (antes, los pagos desde la Ficha 
+  de Cliente no tenían id y quedaban mal ordenados).
+
+**Pendientes / Mejoras identificadas hoy:**
+- ⏳ Historial de pagos parciales dentro de la Cuenta Corriente de cada 
+  cliente (hoy dice "No hay historial" aunque haya pagos registrados).
+- ⏳ Historial de movimientos por caja individual — para poder entrar 
+  a una caja puntual y auditar qué entró/salió, sin tener que confiar 
+  ciegamente en el saldo total.
+- ⏳ Código muerto identificado (bajo riesgo, no urgente): hay dos 
+  definiciones viejas de la función renderClientes (en main.js:3047 y 
+  gecko-fixes.js:3859) que apuntan a IDs de tabla que ya no existen en 
+  el HTML actual — nunca se ejecutan, pero conviene limpiarlas en algún 
+  momento para evitar confusión futura. Una de esas copias muertas tiene 
+  el mismo bug de "o.adelanto" que se corrigió arriba, pero al ser 
+  código muerto no afecta nada hoy.
+
+**Prioridad recomendada para la próxima sesión:**
+1. Blindar geckoServicios y clientes en GECKO_CATALOG_KEYS (Regla R3, 
+   sigue pendiente desde antes — cobra más importancia después de los 
+   bugs de datos de hoy).
+2. Historial de pagos parciales en Cuenta Corriente.
+3. Historial de movimientos por caja.
+4. Limpieza de código muerto (renderClientes viejas).
+5. BUG-003 (pendiente de detalle, sin especificar aún).
