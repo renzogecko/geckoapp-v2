@@ -2172,8 +2172,13 @@ window.renderizarMovimientos = function () {
         return true;
     });
 
-    // Más recientes primero
-    movs = movs.slice().reverse();
+    // Más recientes primero (orden real por timestamp del id, con
+    // fallback al orden del array si el id no tiene el formato esperado)
+    movs = movs.slice().sort((a, b) => {
+        const ta = parseInt(String(a.id).replace('mov_', '')) || 0;
+        const tb = parseInt(String(b.id).replace('mov_', '')) || 0;
+        return tb - ta;
+    });
 
     if (!movs.length) {
         tbody.innerHTML = `<tr><td colspan="5" class="py-20 text-center text-zinc-500 font-bold italic text-[13px]">Sin movimientos para este periodo.</td></tr>`;
@@ -3127,8 +3132,13 @@ window.addEventListener('load', function () {
                 return true;
             });
 
-            // Más recientes primero
-            movs = movs.slice().reverse();
+            // Más recientes primero (orden real por timestamp del id, con
+            // fallback al orden del array si el id no tiene el formato esperado)
+            movs = movs.slice().sort((a, b) => {
+                const ta = parseInt(String(a.id).replace('mov_', '')) || 0;
+                const tb = parseInt(String(b.id).replace('mov_', '')) || 0;
+                return tb - ta;
+            });
 
             if (!movs.length) {
                 tbody.innerHTML = `<tr><td colspan="5" style="padding:60px;text-align:center;color:#52525b;font-weight:700;font-style:italic;font-size:13px;">Sin movimientos registrados.</td></tr>`;
