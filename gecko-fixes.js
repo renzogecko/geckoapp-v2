@@ -3787,7 +3787,8 @@ window.addEventListener('load', function () {
             if (montoOriginal <= 0) { alert('Ingresá un monto válido.'); return; }
             if (!cajaNombre) { alert('Seleccioná una caja.'); return; }
 
-            const cliente = window.clienteActualFicha;
+            let cliente;
+            try { cliente = clienteActualFicha; } catch (e) { cliente = window.clienteActualFicha; }
             if (!cliente) { alert('No se encontró el cliente actual.'); return; }
 
             let lista;
