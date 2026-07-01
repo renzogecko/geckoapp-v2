@@ -1545,8 +1545,6 @@ window._registrarSena = function (id) {
     const cajasStr = JSON.stringify(cajas);
     _ls.setItem('gecko_movimientos', movsStr);
     _ls.setItem('gecko_cajas', cajasStr);
-    localStorage.setItem('gecko_movimientos', movsStr);
-    localStorage.setItem('gecko_cajas', cajasStr);
     window.LISTA_MOVIMIENTOS = movimientos;
     window.LISTA_CAJAS = cajas;
 
