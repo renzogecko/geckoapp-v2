@@ -2814,9 +2814,6 @@ function liquidarSaldoTotal() {
 let clienteActualFicha = null;
 
 function abrirFichaCliente(nombre) {
-    console.log('🔍 DIAGNÓSTICO - abrirFichaCliente ejecutándose, sena del 1053 en este momento:',
-        listaPresupuestos.find(p => String(p.id) === '1053')?.sena
-    );
     clienteActualFicha = nombre;
     const modal = document.getElementById('modalFichaCliente');
     document.getElementById('fichaClienteNombre').innerText = nombre;
