@@ -3780,19 +3780,53 @@ window.addEventListener('load', function () {
         // Alias para compatibilidad con el código existente que use abrirModalPagoGlobal
         window.abrirModalPagoGlobal = window.abrirModalCobro;
 
-        // confirmarCobro: delega en la función original si existe, o ejecuta lógica propia
         window.confirmarCobro = function () {
-            if (typeof window.confirmarPagoGlobalCliente === 'function') {
-                // Sincronizar valores a los IDs viejos por si la función original los lee
-                const monto = document.getElementById('cobroMonto')?.value;
-                const caja = document.getElementById('cobroCaja')?.value;
-                const mOld = document.getElementById('inputMontoPagoGlobal');
-                const cOld = document.getElementById('selectCajaPagoGlobal');
-                if (mOld) mOld.value = monto;
-                if (cOld) cOld.value = caja;
-                window.confirmarPagoGlobalCliente();
+            const montoOriginal = parseFloat(document.getElementById('cobroMonto')?.value) || 0;
+            const cajaNombre = document.getElementById('cobroCaja')?.value || '';
+
+            if (montoOriginal <= 0) { alert('Ingresá un monto válido.'); return; }
+            if (!cajaNombre) { alert('Seleccioná una caja.'); return; }
+
+            const cliente = window.clienteActualFicha;
+            if (!cliente) { alert('No se encontró el cliente actual.'); return; }
+
+            let lista;
+            try { lista = listaPresupuestos; } catch (e) { lista = window.listaPresupuestos || []; }
+
+            let montoRestante = montoOriginal;
+            const pends = lista.filter(p => p.cliente === cliente && p.status === 'OT' && (p.total - (p.sena || 0)) > 0)
+                .sort((a, b) => {
+                    const fa = (a.fecha || '').split('/').reverse().join('-');
+                    const fb = (b.fecha || '').split('/').reverse().join('-');
+                    return fa.localeCompare(fb);
+                });
+
+            if (pends.length === 0) { alert('Este cliente no tiene deudas pendientes.'); return; }
+
+            pends.forEach(p => {
+                if (montoRestante <= 0) return;
+                const saldo = p.total - (p.sena || 0);
+                const pago = Math.min(saldo, montoRestante);
+                p.sena = (p.sena || 0) + pago;
+                montoRestante -= pago;
+            });
+
+            if (typeof window.registrarMovimiento === 'function') {
+                window.registrarMovimiento(`Pago Cta. Cte. - ${cliente}`, cajaNombre, montoOriginal, 'Ingreso', 'Cobro Cliente');
             }
+
+            try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
+            localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+
             document.getElementById('modalCobro').style.display = 'none';
+
+            if (typeof window.abrirFichaCliente === 'function') window.abrirFichaCliente(cliente);
+            if (typeof window.renderOts === 'function') window.renderOts();
+            if (typeof window._geckoRenderFijo === 'function') window._geckoRenderFijo();
+
+            if (typeof window.mostrarExito === 'function') {
+                window.mostrarExito(`Se aplicaron $${montoOriginal.toLocaleString('es-AR')} a la deuda de ${cliente}.`, '¡Cobro Exitoso!');
+            }
         };
 
         // ── Sistema Unificado de Cierre de Modales (Evita el bug del ESC) ──
