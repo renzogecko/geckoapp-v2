@@ -3006,6 +3006,34 @@ window._geckoFixPreciosFijos = function () {
 window.addEventListener('load', function () {
     setTimeout(function () {
 
+        // Asegurar que registrarMovimiento SIEMPRE asigne un id con
+        // timestamp, sin importar desde qué parte del código se llame
+        window.registrarMovimiento = function (detalle, cajaNombre, monto, tipo, categoria = 'Varios') {
+            const caja = LISTA_CAJAS.find(c => c.nombre === cajaNombre);
+            if (!caja) return;
+
+            if (tipo === 'Ingreso') caja.saldo += monto;
+            else caja.saldo -= monto;
+
+            const mov = {
+                id: 'mov_' + Date.now(),
+                fecha: new Date().toLocaleDateString('es-AR'),
+                detalle: detalle,
+                caja: cajaNombre,
+                tipo: tipo,
+                monto: monto,
+                categoria: categoria
+            };
+
+            LISTA_MOVIMIENTOS.push(mov);
+            localStorage.setItem('gecko_cajas', JSON.stringify(LISTA_CAJAS));
+            localStorage.setItem('gecko_movimientos', JSON.stringify(LISTA_MOVIMIENTOS));
+
+            if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+            if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+            if (typeof window.renderizarFiltrosCajas === 'function') window.renderizarFiltrosCajas();
+        };
+
         window.renderOts = function () {
             const tbody = document.getElementById('tbodyOts');
             if (!tbody) return;
