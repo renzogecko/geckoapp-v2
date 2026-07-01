@@ -1557,6 +1557,13 @@ window._registrarSena = function (id) {
         }).catch(() => { });
     });
 
+    // Actualizar el caché interno de gecko-api.js para evitar
+    // que se vuelvan a sincronizar (y choquen) más adelante
+    if (window._geckoUpdateCache) {
+        window._geckoUpdateCache('gecko_movimientos', movimientos);
+        window._geckoUpdateCache('gecko_cajas', cajas);
+    }
+
     document.getElementById('modalSena')?.remove();
 
     if (typeof window.mostrarExito === 'function') {

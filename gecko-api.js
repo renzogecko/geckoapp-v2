@@ -36,6 +36,11 @@ const GECKO_NUMERIC_FIELDS = {
 };
 
 const _cache = {};
+
+window._geckoUpdateCache = function(lsKey, nuevoArray) {
+    _cache[lsKey] = nuevoArray;
+};
+
 let _inicializado = false;
 
 window._localStorage_original = window.localStorage;
