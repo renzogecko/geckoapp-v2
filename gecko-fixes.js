@@ -1580,7 +1580,9 @@ window._registrarSena = function (id) {
     if (typeof window.renderOts === 'function') window.renderOts();
     if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
     if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
-    if (typeof window.renderClientes === 'function') {
+    if (typeof window._geckoRenderFijo === 'function') {
+        window._geckoRenderFijo();
+    } else if (typeof window.renderClientes === 'function') {
         window.renderClientes();
     }
 
