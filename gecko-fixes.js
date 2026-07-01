@@ -4505,7 +4505,7 @@ window._geckoRenderFijo = function () {
             }
 
             const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.adelanto) || 0)), 0);
+            let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.sena) || 0)), 0);
 
             // Normalizar telefonos: puede ser string JSON legacy, array de strings, o array de {numero, etiqueta}
             let telefonosArr = [];
