@@ -150,6 +150,14 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Resuelto:** 26/06/2026
 - **Cómo:** gecko-local.js creado con flag window._geckoLocalMode que bloquea redirects en gecko-fixes.js.
 
+### [BUG-PRECIO-001] Precio de servicios editados no se guardaba (ni en pantalla ni en MySQL)
+- **Resuelto:** 01/07/2026
+- **Cómo:** en main.js, la comparación de ID usaba `===` estricto entre string y number (`t.id === parseInt(editId)`); cambiado a comparación por texto (`String(t.id) === String(editId)`).
+
+### [BUG-SEED-001] Servicios de corte láser (11 ítems específicos) se regeneraban solos al borrarlos
+- **Resuelto:** 01/07/2026
+- **Cómo:** se eliminó la llamada automática a `api.php?endpoint=seed_laser` que se ejecutaba en cada carga de la app en gecko-api.js. El endpoint sigue existiendo en api.php por si se necesita usar manualmente en el futuro.
+
 ---
 
 ## Sesión 23/06/2026 — Fixes aplicados
@@ -205,4 +213,4 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 
 ---
 
-*Última actualización: 24 de junio 2026.*
+*Última actualización: 01 de julio 2026.*
