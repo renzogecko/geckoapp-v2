@@ -3327,7 +3327,7 @@ if (formTerminacion) {
             let localServicios = JSON.parse(localStorage.getItem('geckoServicios')) || [];
 
             if (editId) {
-                const idx = localServicios.findIndex(t => t.id === parseInt(editId));
+                const idx = localServicios.findIndex(t => String(t.id) === String(editId));
                 if (idx !== -1) localServicios[idx] = nuevaTerm;
             } else {
                 localServicios.push(nuevaTerm);
