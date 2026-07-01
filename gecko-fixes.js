@@ -1499,7 +1499,9 @@ window._registrarSena = function (id) {
     lista[idx].sena = (lista[idx].sena || 0) + totalPago;
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
 
-    if (typeof window.listaPresupuestos !== 'undefined') {
+    try {
+        listaPresupuestos = lista;
+    } catch (e) {
         window.listaPresupuestos = lista;
     }
 
