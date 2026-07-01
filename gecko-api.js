@@ -91,7 +91,7 @@ async function _apiGet(endpoint, lsKey) {
         return _castearNumeros(lsKey, normalizado);
     } catch (err) {
         console.warn(`🦎 GECKO-API: Error GET /${endpoint}:`, err.message);
-        return GECKO_ARRAY_KEYS.includes(lsKey) ? [] : {};
+        return null; // null = error de conexión, NO es lo mismo que "tabla vacía"
     }
 }
 
@@ -118,6 +118,13 @@ async function _inicializarDesdeAPI() {
     for (const [lsKey, endpoint] of Object.entries(GECKO_KEY_MAP)) {
         try {
             const datos = await _apiGet(endpoint, lsKey);
+
+            // Si datos es null, hubo un error de conexión real (no una tabla vacía).
+            // NO tocamos el cache ni localStorage — nos quedamos con lo que ya había.
+            if (datos === null) {
+                console.warn(`🦎 GECKO-API: ${endpoint} falló por error de conexión — se mantiene el cache local sin cambios.`);
+                continue;
+            }
 
             // PROTECCIÓN: si la API devuelve array vacío pero había datos en localStorage,
             // no pisamos el cache local para evitar borrado masivo accidental.
