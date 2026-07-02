@@ -3044,66 +3044,6 @@ function guardarCliente() {
     actualizarSugerenciaClientes();
 }
 
-function renderClientes() {
-    const tbody = document.getElementById('tbodyClientes');
-    if (!tbody) return;
-
-    const filtroRaw = document.getElementById('filtroClienteBusqueda');
-    const filtro = filtroRaw ? filtroRaw.value.toLowerCase() : '';
-
-    let clientesFiltrados = bdClientes.filter(c =>
-        c.nombre.toLowerCase().includes(filtro) ||
-        (c.cuit && c.cuit.includes(filtro)) ||
-        (c.rubro && c.rubro.toLowerCase().includes(filtro))
-    );
-
-    tbody.innerHTML = clientesFiltrados.length === 0 ? `<tr><td colspan="4" class="py-10 text-center text-gray-400 font-medium italic">No se encontraron clientes.</td></tr>` : '';
-
-    clientesFiltrados.forEach(c => {
-        const trabajos = listaPresupuestos.filter(p => p.cliente === c.nombre && p.status === 'OT');
-        const saldoTotal = trabajos.filter(p => p.estado_ot !== 'Entregado').reduce((acc, p) => acc + (p.total - (p.sena || 0)), 0);
-
-        const waLink = c.tel ? `<a href="https://wa.me/${c.tel.replace(/\\D/g, '')}" target="_blank" class="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors" title="WhatsApp"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></a>` : '';
-        const mailLink = c.email ? `<a href="mailto:${c.email}" class="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-colors" title="Email"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></a>` : '';
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors group";
-        tr.innerHTML = `
-                    <td class="py-4 px-6">
-                        <div class="flex items-center">
-                            <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
-                            ${obtenerBadgeScoring(c.nombre)}
-                        </div>
-                        <div class="flex gap-2 text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">
-                            <span>${c.cuit || 'Sin CUIT'}</span>
-                            ${c.rubro ? `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-darkBg">${c.rubro}</span>` : ''}
-                        </div>
-                    </td>
-                    <td class="py-4 px-6 text-center hidden md:table-cell">
-                        <div class="flex items-center justify-center gap-2">
-                            ${waLink}
-                            ${mailLink}
-                        </div>
-                    </td>
-                    <td class="py-4 px-6 text-right">
-                        <span class="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider ${saldoTotal > 0 ? 'bg-red-50 dark:bg-red-900/10 text-red-500 border border-red-100 dark:border-red-900/20' : 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-500 border border-emerald-100 dark:border-emerald-900/20'}">
-                            $${saldoTotal.toLocaleString('es-AR')}
-                        </span>
-                    </td>
-                    <td class="py-4 px-6 text-right">
-                        <button onclick="abrirFichaCliente('${c.nombre.replace(/'/g, "\\\\'")}')" class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                            Ver Ficha / CC
-                        </button>
-                    </td>
-                `;
-        tbody.appendChild(tr);
-    });
-}
-
 function actualizarSugerenciaClientes() {
     const list = document.getElementById('listaSugerenciasClientes');
     if (list) {
