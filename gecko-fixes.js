@@ -1611,7 +1611,7 @@ window._renderizarFinanzasCompleto = async function () {
     const contenedor = document.getElementById('contenedor-cajas');
     if (!contenedor) return;
 
-    const btnNueva = contenedor.querySelector('button');
+    const btnNueva = contenedor.querySelector(':scope > button');
 
     // Estilos por tipo de caja
     const _CAJA_EST = {
@@ -1726,7 +1726,7 @@ window._verHistorialCaja = function (cajaId) {
             </div>`).join('');
 
     modal.innerHTML = `
-        <div class="gecko-modal-box" style="max-width:480px;width:100%;position:relative;">
+        <div class="gecko-modal-box" style="max-width:620px;width:100%;position:relative;">
             <button onclick="this.closest('.gecko-modal-overlay').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#71717a'">
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
