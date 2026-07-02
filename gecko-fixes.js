@@ -1663,17 +1663,17 @@ window._renderizarFinanzasCompleto = async function () {
             card.style.borderColor = est.border;
             card.style.boxShadow = 'none';
         };
-        card.onclick = (e) => { if (e.isTrusted) window.editarCaja(caja.id); };
+        card.onclick = (e) => { if (e.isTrusted) window._verHistorialCaja(caja.id); };
         card.style.position = 'relative';
         card.innerHTML = `
-            <button onclick="event.stopPropagation(); window._verHistorialCaja('${caja.id}')"
-                title="Ver historial de movimientos"
+            <button onclick="event.stopPropagation(); window.editarCaja('${caja.id}')"
+                title="Editar caja"
                 style="position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;z-index:2;"
                 onmouseover="this.style.background='rgba(255,255,255,0.15)'"
                 onmouseout="this.style.background='rgba(255,255,255,0.06)'">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="9"/>
-                    <polyline points="12 7 12 12 15 15"/>
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
             </button>
             <div style="width:36px;height:36px;border-radius:10px;background:${est.iconBg};display:flex;align-items:center;justify-content:center;margin-bottom:14px;flex-shrink:0;">
