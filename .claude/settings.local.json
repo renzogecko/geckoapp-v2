@@ -26,7 +26,8 @@
       "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" add gecko-api.js)",
       "Bash(git -C \"h:/Mi unidad/GeckoApp_v2\" push origin main)",
       "PowerShell(git -C \"h:\\\\Mi unidad\\\\GeckoApp_v2\" status)",
-      "PowerShell(git -C \"h:\\\\Mi unidad\\\\GeckoApp_v2\" add \"Cambios y modificaciones.md\" GECKO_CONTEXT.md)"
+      "PowerShell(git -C \"h:\\\\Mi unidad\\\\GeckoApp_v2\" add \"Cambios y modificaciones.md\" GECKO_CONTEXT.md)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

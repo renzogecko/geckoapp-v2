@@ -2815,16 +2815,10 @@ let clienteActualFicha = null;
 
 function abrirFichaCliente(nombre) {
     clienteActualFicha = nombre;
-    const modal = document.getElementById('modalFichaCliente');
-    document.getElementById('fichaClienteNombre').innerText = nombre;
 
     const trabajos = listaPresupuestos.filter(p => p.cliente === nombre && p.status === 'OT');
     const activos = trabajos.filter(p => p.estado_ot !== 'Entregado');
-    const historial = trabajos.filter(p => p.estado_ot === 'Entregado');
-
     const saldoTotal = activos.reduce((acc, p) => acc + (p.total - (p.sena || 0)), 0);
-    const totalFacturado = activos.reduce((acc, p) => acc + Math.round(p.total), 0);
-    const totalPagado = activos.reduce((acc, p) => acc + Math.round(p.sena || 0), 0);
 
     const ahora = new Date();
     const mesActual = ahora.getMonth();
@@ -2836,100 +2830,135 @@ function abrirFichaCliente(nombre) {
         return (parseInt(parts[1]) - 1) === mesActual && parseInt(parts[2]) === anioActual;
     }).reduce((acc, p) => acc + Math.round(p.total), 0);
 
-    let bgClass = "bg-gray-50 dark:bg-darkBg";
-    let borderClass = "border-gray-100 dark:border-gray-800";
-    let textClass = "text-gray-500";
+    // Header
+    document.getElementById('fichaClienteNombre').innerText = nombre;
+    document.getElementById('fichaClienteBadge').innerHTML = obtenerBadgeScoring(nombre);
+    const cli = (window.LISTA_CLIENTES || []).find(c => c.nombre === nombre);
+    document.getElementById('fichaClienteRubro').innerText = cli?.rubro || '';
 
-    if (totalMes > 500000) {
-        // Oro #FFD700
-        bgClass = "bg-[#FFD700]/10";
-        borderClass = "border-[#FFD700]/50";
-        textClass = "text-[#FFD700]";
-    } else if (totalMes >= 200000) {
-        // Plata #C0C0C0
-        bgClass = "bg-[#C0C0C0]/10";
-        borderClass = "border-[#C0C0C0]/50";
-        textClass = "text-[#C0C0C0]";
-    } else {
-        // Bronce #CD7F32
-        bgClass = "bg-[#CD7F32]/10";
-        borderClass = "border-[#CD7F32]/50";
-        textClass = "text-[#CD7F32]";
-    }
-
-    const cardMes = document.getElementById('cardFacturacionMes');
-    if (cardMes) cardMes.className = `px-5 py-3 rounded-2xl border-2 text-right transition-colors ${bgClass} ${borderClass} min-w-[120px]`;
-    const lblMes = document.getElementById('labelFacturacionMes');
-    if (lblMes) lblMes.className = `text-[9px] font-black uppercase tracking-widest mb-0.5 ${textClass}`;
-
+    // Saldo card
     const elSaldo = document.getElementById('fichaClienteSaldo');
-    const elContainer = document.getElementById('fichaClientSaldoContainer');
     elSaldo.innerText = `$${Math.round(saldoTotal).toLocaleString('es-AR')}`;
-    document.getElementById('fichaClienteFacturado').innerText = `$${Math.round(totalFacturado).toLocaleString('es-AR')}`;
-    const fcm = document.getElementById('fichaClienteFacturadoMes');
-    if (fcm) fcm.innerText = `$${totalMes.toLocaleString('es-AR')}`;
-    document.getElementById('fichaClientePagado').innerText = `$${totalPagado.toLocaleString('es-AR')}`;
+    elSaldo.className = saldoTotal > 0 ? 'text-2xl font-black text-red-400' : 'text-2xl font-black text-emerald-400';
+    document.getElementById('fichaCardSaldo').className = saldoTotal > 0
+        ? 'p-4 rounded-[14px] bg-red-500/10 border border-red-500/30'
+        : 'p-4 rounded-[14px] bg-[#1e1f20] border border-[#333333]';
 
-    const elMsg = document.getElementById('fichaMsgEstado');
-    if (saldoTotal <= 0) {
-        elContainer.className = "px-6 py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 text-right text-emerald-500";
-        elMsg.className = "p-8 rounded-[32px] border border-emerald-100 dark:border-emerald-900/10 bg-emerald-50/30 dark:bg-emerald-900/5 text-emerald-600 text-center flex flex-col items-center justify-center gap-4";
-        elMsg.innerHTML = `
-                    <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-inner">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                    <div>
-                        <p class="text-[14px] font-black uppercase tracking-widest">Cliente al día</p>
-                        <p class="text-[10px] font-bold text-gray-400 mt-1">No posee deudas pendientes en el sistema.</p>
-                    </div>
-                `;
+    // Scoring card mes — mismos umbrales que _geckoBadgeFijo
+    const setG = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
+    const nivelOro = setG.nivelOro || 250000;
+    const nivelPlata = setG.nivelPlata || 100000;
+    const cardMes = document.getElementById('fichaCardFacturado');
+    if (totalMes >= nivelOro) {
+        cardMes.className = 'p-4 rounded-[14px] bg-[#FFD700]/10 border border-[#FFD700]/50';
+    } else if (totalMes >= nivelPlata) {
+        cardMes.className = 'p-4 rounded-[14px] bg-[#C0C0C0]/10 border border-[#C0C0C0]/50';
     } else {
-        elContainer.className = "px-6 py-3 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 text-right text-red-500";
-        elMsg.className = "p-8 rounded-[32px] border border-red-100 dark:border-red-900/10 bg-red-50/30 dark:bg-red-900/5 text-red-600 text-center flex flex-col items-center justify-center gap-4";
-        elMsg.innerHTML = `
-                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-500 shadow-inner">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <div>
-                        <p class="text-[14px] font-black uppercase tracking-widest">Deuda Registrada</p>
-                        <p class="text-[10px] font-bold text-gray-400 mt-1">El cliente posee un saldo de $${saldoTotal.toLocaleString('es-AR')}</p>
-                    </div>
-                `;
+        cardMes.className = 'p-4 rounded-[14px] bg-[#CD7F32]/10 border border-[#CD7F32]/50';
+    }
+    document.getElementById('fichaClienteFacturadoMes').innerText = `$${totalMes.toLocaleString('es-AR')}`;
+    document.getElementById('fichaCountActivos').innerText = activos.length;
+
+    // Tabla Trabajos Activos
+    document.getElementById('tbodyFichaActivos').innerHTML = activos.length === 0
+        ? '<tr><td colspan="4" class="py-8 text-center text-[#71717a] text-sm italic">Sin trabajos activos</td></tr>'
+        : activos.map(p => `
+            <tr class="border-b border-[#333333] last:border-0 hover:bg-[#131314] transition-colors">
+                <td class="py-3 px-4 text-[11px] font-black">
+                    <p class="text-white leading-tight">#${p.id}</p>
+                    <p class="text-[9px] text-[#71717a] mt-0.5">${p.fecha}</p>
+                </td>
+                <td class="py-3 px-4 text-[10px] text-[#a1a1aa] max-w-[200px] truncate">
+                    ${p.items.map(it => it.textoOpciones).join(', ')}
+                </td>
+                <td class="py-3 px-4 text-right font-black text-red-400 text-[12px]">
+                    $${(p.total - (p.sena || 0)).toLocaleString('es-AR')}
+                </td>
+                <td class="py-3 px-4 text-center">
+                    ${badgeEstadoOT(p.estado_ot)}
+                </td>
+            </tr>
+        `).join('');
+
+    // Historial de Pagos desde localStorage
+    const movimientos = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+    const nombreNorm = nombre.toLowerCase();
+    const pagos = movimientos
+        .filter(m =>
+            m.tipo === 'Ingreso' &&
+            ['Cobro Cliente', 'Seña', 'Cobro Final'].includes(m.categoria) &&
+            (m.detalle || '').toLowerCase().includes(nombreNorm)
+        )
+        .sort((a, b) => {
+            const idA = (a.id || '').toString().split('_')[1] || 0;
+            const idB = (b.id || '').toString().split('_')[1] || 0;
+            return idB - idA;
+        });
+    window._fichaClientePagos = pagos;
+    if (pagos.length === 0) {
+        document.getElementById('fichaHistorialPagosWrap').innerHTML =
+            '<p class="py-8 text-center text-[#71717a] text-sm italic">Sin pagos registrados</p>';
+    } else {
+        _renderPagosCliente(pagos.slice(0, 15), pagos.length > 15);
     }
 
-    const tbodyActivos = document.getElementById('tbodyFichaActivos');
-    tbodyActivos.innerHTML = activos.map(p => `
-                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-50 dark:border-gray-800">
-                    <td class="py-4 px-6 text-[11px] font-black uppercase">
-                        <p class="dark:text-white leading-tight">#${p.id}</p>
-                        <p class="text-[9px] text-gray-400">${p.fecha}</p>
-                    </td>
-                    <td class="py-4 px-6 text-[10px] font-medium text-gray-600 dark:text-gray-400">
-                        ${p.items.map(it => it.textoOpciones).join(', ')}
-                    </td>
-                    <td class="py-4 px-6 text-right font-black text-red-500 text-[12px]">
-                        $${(p.total - (p.sena || 0)).toLocaleString('es-AR')}
-                    </td>
-                    <td class="py-4 px-6 text-center">
-                        <span class="px-2 py-1 rounded bg-gray-100 dark:bg-darkBg text-gray-500 text-[9px] font-black uppercase">${p.estado_ot}</span>
-                    </td>
-                </tr>
-            `).join('');
+    document.getElementById('modalFichaCliente').style.display = 'flex';
+}
 
-    document.getElementById('countFichaActivos').innerText = activos.length;
+function badgeEstadoOT(estado) {
+    const map = {
+        'En Proceso':    'bg-blue-500/20 text-blue-300 border border-blue-500/40',
+        'En Taller':     'bg-purple-500/20 text-purple-300 border border-purple-500/40',
+        'Impresión':     'bg-amber-500/20 text-amber-300 border border-amber-500/40',
+        'Terminaciones': 'bg-yellow-500/20 text-yellow-200 border border-yellow-500/40',
+        'Listo':         'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40',
+    };
+    const cls = map[estado] || 'bg-zinc-700/40 text-zinc-400 border border-zinc-600/40';
+    return `<span class="px-2 py-0.5 rounded-[6px] text-[9px] font-black uppercase tracking-wide ${cls}">${estado || '—'}</span>`;
+}
 
-    const tbodyHistorial = document.getElementById('tbodyFichaHistorial');
-    tbodyHistorial.innerHTML = historial.length === 0 ? '<tr><td colspan="4" class="py-8 text-center text-gray-400 italic">No hay historial</td></tr>' :
-        historial.map(p => `
-                <tr class="border-b border-gray-50 dark:border-gray-800">
-                    <td class="py-3 px-6 text-gray-400 font-bold">#${p.id}</td>
-                    <td class="py-3 px-6 text-gray-500 font-medium">${p.fecha} - ${p.items[0].textoOpciones}</td>
-                    <td class="py-3 px-6 text-right font-black text-emerald-500">$${p.total.toLocaleString('es-AR')}</td>
-                    <td class="py-3 px-6 text-center"><span class="text-[8px] font-black text-emerald-500 uppercase tracking-tighter">Completado</span></td>
-                </tr>
-            `).join('');
+function _renderPagosCliente(items, hayMas) {
+    const wrap = document.getElementById('fichaHistorialPagosWrap');
+    const filas = items.map(m => `
+        <div class="flex justify-between items-center px-4 py-3 border-b border-[#333333] last:border-0">
+            <div class="min-w-0 flex-1 mr-4">
+                <p class="text-[11px] text-white font-bold leading-tight truncate">${m.detalle}</p>
+                <p class="text-[9px] text-[#71717a] mt-0.5">${m.fecha} · ${m.caja}</p>
+            </div>
+            <p class="text-emerald-400 font-black text-sm shrink-0">+$${Number(m.monto).toLocaleString('es-AR')}</p>
+        </div>
+    `).join('');
+    const btnVerTodos = hayMas ? `
+        <button onclick="_expandirPagosCliente()"
+            class="w-full py-3 text-[10px] font-black uppercase tracking-widest text-[#f15a24] hover:bg-[#f15a24]/10 transition-colors rounded-b-[14px]">
+            Ver todos los pagos (${window._fichaClientePagos.length})
+        </button>
+    ` : '';
+    wrap.innerHTML = filas + btnVerTodos;
+}
 
-    modal.style.display = 'flex';
+function _expandirPagosCliente() {
+    _renderPagosCliente(window._fichaClientePagos, false);
+}
+
+function abrirHistorialTrabajosCliente() {
+    const historial = listaPresupuestos.filter(p =>
+        p.cliente === clienteActualFicha && p.status === 'OT' && p.estado_ot === 'Entregado'
+    );
+    document.getElementById('listaHistorialTrabajos').innerHTML = historial.length === 0
+        ? '<p class="text-[#71717a] text-center py-8 text-sm italic">Sin trabajos entregados</p>'
+        : historial.map(p => `
+            <div class="p-3 rounded-[10px] bg-[#131314] border border-[#333333]">
+                <div class="flex justify-between items-start gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-black text-white uppercase">#${p.id} — ${p.fecha}</p>
+                        <p class="text-[11px] text-[#a1a1aa] mt-0.5 truncate">${(p.items[0]?.textoOpciones) || '—'}</p>
+                    </div>
+                    <p class="text-emerald-400 font-black text-sm shrink-0">$${p.total.toLocaleString('es-AR')}</p>
+                </div>
+            </div>
+        `).join('');
+    document.getElementById('modalHistorialTrabajos').style.display = 'flex';
 }
 
 function abrirModalPagoGlobal() {
