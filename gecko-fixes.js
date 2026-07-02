@@ -3366,8 +3366,12 @@ window.addEventListener('load', function () {
 
             document.getElementById('_geckoElimCliOk').onclick = function () {
                 let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
+                const _cliEliminado = bdClientes.find(c => c.nombre === nombre);
                 bdClientes = bdClientes.filter(c => c.nombre !== nombre);
                 localStorage.setItem('clientes', JSON.stringify(bdClientes));
+                if (_cliEliminado && _cliEliminado.id && typeof window.geckoApiEliminar === 'function') {
+                    window.geckoApiEliminar('clientes', _cliEliminado.id);
+                }
                 modal.remove();
                 if (typeof window.renderClientes === 'function') window.renderClientes();
                 if (typeof window.mostrarExito === 'function') window.mostrarExito('Cliente eliminado', '¡Listo!');
@@ -5729,6 +5733,7 @@ setTimeout(function () {
             var nuevos = (window.geckoServicios || []).filter(function (t) { return String(t.id) !== String(id); });
             window.geckoServicios = nuevos;
             localStorage.setItem('geckoServicios', JSON.stringify(nuevos));
+            if (typeof window.geckoApiEliminar === 'function') window.geckoApiEliminar('geckoServicios', id);
             if (typeof renderServicios === 'function') renderServicios();
             if (typeof window.mostrarExito === 'function') window.mostrarExito('Servicio eliminado correctamente');
             // BUG-004: si era servicio láser, persistir en blacklist y borrar de MySQL

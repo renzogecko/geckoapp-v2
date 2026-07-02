@@ -204,7 +204,7 @@ async function _sincronizarArray(lsKey, nuevoArray) {
     // CATÁLOGO (materiales): la base es el seguro. NUNCA se borra por diferencia de
     // array — un navegador con copia incompleta no puede vaciar la base. El borrado
     // intencional va por window.geckoApiEliminar().
-    const GECKO_CATALOG_KEYS = ['gecko_materiales'];
+    const GECKO_CATALOG_KEYS = ['gecko_materiales', 'geckoServicios', 'clientes'];
     if (!GECKO_CATALOG_KEYS.includes(lsKey)) {
         // PROTECCIÓN ANTI-BORRADO MASIVO (solo tablas transaccionales)
         const cantidadABorrar = anterior.filter(a => !nuevoArray.find(n => String(n.id) === String(a.id))).length;
