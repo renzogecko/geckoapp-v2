@@ -70,6 +70,53 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
 
+## Sesión 01/07/2026 (continuación) — Finanzas y Clientes
+
+**Resueltos hoy:**
+- ✅ Historial de Cajas — nuevo modal accesible con un ícono en cada 
+  tarjeta de caja, muestra los últimos 100 movimientos de esa caja 
+  específica.
+- ✅ Bug: las tarjetas de cajas desaparecían al refrescar Finanzas o 
+  cerrar un modal — causado por un conflicto entre el ícono nuevo de 
+  historial y la detección del botón "+ Nueva Caja". Corregido usando 
+  un selector que busca solo hijos directos del contenedor.
+- ✅ Regla R3 completada: geckoServicios y clientes blindados en 
+  GECKO_CATALOG_KEYS (antes solo materiales lo estaba). El borrado 
+  intencional de servicios y clientes ahora usa geckoApiEliminar de 
+  forma explícita, en vez de depender de la sincronización automática.
+- ✅ Código muerto eliminado: las 2 versiones viejas de renderClientes 
+  (main.js:3047 y gecko-fixes.js:3999) que nunca se ejecutaban. La 
+  versión activa (_geckoRenderFijo) ahora se conecta inmediatamente al 
+  cargar, sin depender del guardián por 500ms.
+- ✅ Rediseño completo del modal Ficha de Cliente / Cuenta Corriente — 
+  estilo oscuro Gecko, header con badge de scoring y rubro, 3 tarjetas 
+  resumen (saldo, facturado del mes, trabajos activos), historial de 
+  pagos real (últimos 15 + ver todos, ordenado por timestamp), 
+  historial de trabajos entregados movido a un modal aparte, Total 
+  Histórico eliminado de la ficha.
+- ✅ Bug: al borrar un movimiento de pago de cliente, la caja se 
+  corregía pero el saldo deudor del cliente no volvía a subir — 
+  corregido guardando qué Orden de Trabajo recibió cada pago (y por 
+  cuánto) dentro del propio movimiento, para poder revertirlo con 
+  precisión al borrar. Los pagos anteriores a este cambio muestran un 
+  aviso al borrarlos, indicando que hay que revisar el saldo a mano en 
+  ese caso puntual.
+
+**Pendientes / Mejoras identificadas hoy:**
+- ⏳ BUG-003 sigue pendiente de resolución (cotización del dólar 
+  hardcodeada en $1420, sin definir si va a ser automática por API o 
+  manual).
+- ⏳ Sospecha de código muerto: la función confirmarPagoGlobalCliente 
+  en main.js (ligada a un modal antiguo modalPagoGlobal) podría ya no 
+  usarse, similar al caso resuelto hoy con renderClientes. Pendiente 
+  de diagnóstico con grep antes de tocar nada.
+
+**Prioridad recomendada para la próxima sesión:**
+1. BUG-003 (cotización del dólar).
+2. Diagnóstico y eventual limpieza de confirmarPagoGlobalCliente.
+
+---
+
 ### [RES-001] Mix de Ventas reportaba "Industrial 8" fantasma
 - **Resuelto:** 22/06/2026
 - **Cómo:** eliminado override binario viejo en gecko-fixes.js, render canónico por `it.tipo` con 6 rubros separados en main.js.
