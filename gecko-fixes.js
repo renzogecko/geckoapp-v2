@@ -1662,7 +1662,18 @@ window._renderizarFinanzasCompleto = async function () {
             card.style.boxShadow = 'none';
         };
         card.onclick = (e) => { if (e.isTrusted) window.editarCaja(caja.id); };
+        card.style.position = 'relative';
         card.innerHTML = `
+            <button onclick="event.stopPropagation(); window._verHistorialCaja('${caja.id}')"
+                title="Ver historial de movimientos"
+                style="position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;z-index:2;"
+                onmouseover="this.style.background='rgba(255,255,255,0.15)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/>
+                    <polyline points="12 7 12 12 15 15"/>
+                </svg>
+            </button>
             <div style="width:36px;height:36px;border-radius:10px;background:${est.iconBg};display:flex;align-items:center;justify-content:center;margin-bottom:14px;flex-shrink:0;">
                 <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="${est.iconColor}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                     <path d="${path}"/>
@@ -1679,6 +1690,56 @@ window._renderizarFinanzasCompleto = async function () {
 };
 
 window.renderizarFinanzas = window._renderizarFinanzasCompleto;
+
+window._verHistorialCaja = function (cajaId) {
+    const _ls = window._localStorage_original || localStorage;
+    const cajas = window.LISTA_CAJAS || JSON.parse(_ls.getItem('gecko_cajas') || '[]');
+    const caja = cajas.find(c => c.id === cajaId);
+    if (!caja) return;
+
+    const movs = JSON.parse(_ls.getItem('gecko_movimientos') || '[]')
+        .filter(m => m.caja === caja.nombre)
+        .sort((a, b) => {
+            const idA = (a.id || '').toString().split('_')[1] || 0;
+            const idB = (b.id || '').toString().split('_')[1] || 0;
+            return idB - idA;
+        })
+        .slice(0, 100);
+
+    document.getElementById('modalHistorialCaja')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'modalHistorialCaja';
+    modal.className = 'gecko-modal-overlay';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10002;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
+
+    const filasHTML = movs.length === 0
+        ? `<p style="color:#52525b;font-size:12px;font-style:italic;text-align:center;padding:24px 0;">No hay movimientos registrados en esta caja todavía.</p>`
+        : movs.map(m => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #27272a;">
+                <div style="min-width:0;">
+                    <p style="color:white;font-size:12px;font-weight:700;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.detalle || 'Sin descripción'}</p>
+                    <p style="color:#71717a;font-size:10px;margin:0;">${m.fecha || ''} · ${m.categoria || 'Varios'}</p>
+                </div>
+                <p style="font-size:13px;font-weight:900;margin:0;padding-left:12px;flex-shrink:0;color:${m.tipo === 'Ingreso' ? '#22c55e' : '#ef4444'};">
+                    ${m.tipo === 'Ingreso' ? '+' : '-'}$${Math.round(m.monto || 0).toLocaleString('es-AR')}
+                </p>
+            </div>`).join('');
+
+    modal.innerHTML = `
+        <div class="gecko-modal-box" style="max-width:480px;width:100%;position:relative;">
+            <button onclick="this.closest('.gecko-modal-overlay').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#71717a'">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <p class="gecko-modal-subtitle">Finanzas / Cajas</p>
+            <h2 class="gecko-modal-title">Historial — ${caja.nombre}</h2>
+            <p style="color:#71717a;font-size:11px;margin:4px 0 20px;">Últimos ${movs.length} movimientos · Saldo actual: $${Math.round(caja.saldo || 0).toLocaleString('es-AR')}</p>
+            <div style="max-height:400px;overflow-y:auto;padding-right:4px;">
+                ${filasHTML}
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+};
 
 // ── guardarNuevaCaja: disponible inmediatamente (sin esperar geckoDB_ready)
 //    para que funcione también en entorno local sin backend
