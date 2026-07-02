@@ -623,6 +623,7 @@ window.initConfiguracion = function () {
         v('cfgHoraLaser', s.minutoLaser || 0);
         v('cfgHoraCNC', s.minutoRouter || 0);
         v('cfgHora3D', s.costoHora3D || 0);
+        v('cfgFactorAreaPintura3D', s.factorAreaPintura3D || 0.00025);
         const cond = document.getElementById('cfgCondicionesVenta');
         if (cond) cond.value = s.condicionesVenta || '';
     };
@@ -671,6 +672,7 @@ window.guardarConfiguracion = function () {
         minutoLaser: g('cfgHoraLaser'),
         minutoRouter: g('cfgHoraCNC'),
         costoHora3D: g('cfgHora3D'),
+        factorAreaPintura3D: g('cfgFactorAreaPintura3D'),
         condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || ''
     };
     localStorage.setItem('GECKO_SETTINGS', JSON.stringify(GECKO_SETTINGS));
@@ -1304,6 +1306,16 @@ window.cambiarCategoriaCotizador = function (cat) {
                             <input type="number" id="preciso3dTiempo" class="gecko-input w-full" placeholder="0" oninput="window.calcularCosto3D()">
                         </div>
                     </div>
+                </div>
+
+                <div class="card-gecko space-y-2">
+                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">Acabado de pintura</p>
+                    <p style="font-size:10px;color:#71717a;margin:0 0 10px;">Área estimada automáticamente según el peso de la pieza.</p>
+                    <div id="filasPintura3D" class="space-y-2"></div>
+                    <button type="button" onclick="window.agregarFilaPintura3D()"
+                        class="w-full py-2 mt-2 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
+                        + Agregar pintura / base
+                    </button>
                 </div>
 
                 <div class="card-gecko space-y-2">

@@ -1,5 +1,43 @@
 // impresion3d.js - Módulo extraído
 
+window.agregarFilaPintura3D = function () {
+    const cont = document.getElementById('filasPintura3D');
+    if (!cont) return;
+    const rowId = 'pint3d_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const mats = (window.materiales || []).filter(m => {
+        const cat = (m.categoria || '').toLowerCase().trim();
+        return cat === 'pintura' || cat === 'base';
+    });
+    const opciones = mats.length > 0
+        ? mats.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('')
+        : '<option value="">Sin materiales de Pintura/Base cargados</option>';
+    const row = document.createElement('div');
+    row.id = rowId;
+    row.className = 'grid grid-cols-12 gap-2 items-center';
+    row.innerHTML = `
+        <div class="col-span-6">
+            <select class="input-pintura3d-mat gecko-select-pro w-full" onchange="window.calcularCosto3D()">
+                <option value="">Seleccionar material...</option>
+                ${opciones}
+            </select>
+        </div>
+        <div class="col-span-5">
+            <input type="text" class="input-pintura3d-codigo gecko-input w-full" placeholder="Código de color (manual)" oninput="window.calcularCosto3D()">
+        </div>
+        <div class="col-span-1 text-center">
+            <button type="button" onclick="window.eliminarFilaPintura3D('${rowId}')" class="text-red-400 hover:text-red-300 text-lg leading-none">×</button>
+        </div>
+    `;
+    cont.appendChild(row);
+    window.calcularCosto3D();
+};
+
+window.eliminarFilaPintura3D = function (rowId) {
+    const row = document.getElementById(rowId);
+    if (row) row.remove();
+    window.calcularCosto3D();
+};
+
 window.calcularCosto3D = function () {
     const gramos = parseFloat(document.getElementById('preciso3dPeso')?.value) || 0;
     const horas = parseFloat(document.getElementById('preciso3dTiempo')?.value) || 0;
@@ -19,16 +57,38 @@ window.calcularCosto3D = function () {
 
     const costoMaterial = gramos * precioVentaGr;
     const costoServicio = horas * costoHora3D;
-    const totalFinal = Math.round(costoMaterial + costoServicio);
+
+    // Acabado de pintura — área estimada a partir del peso
+    const factorAreaPintura = parseFloat(settings.factorAreaPintura3D) || 0.00025;
+    const areaEstimadaPintura = gramos * factorAreaPintura;
+    const filasPintura = [];
+    document.querySelectorAll('#filasPintura3D > div').forEach(function (row) {
+        const selMat = row.querySelector('.input-pintura3d-mat');
+        const inpCodigo = row.querySelector('.input-pintura3d-codigo');
+        const matId = selMat ? selMat.value : '';
+        if (!matId) return;
+        const matObj = (window.materiales || []).find(function (m) { return String(m.id) === String(matId); });
+        if (!matObj) return;
+        const precioM2 = parseFloat(matObj.precioVenta || matObj.costo || 0);
+        const codigo = inpCodigo ? inpCodigo.value.trim() : '';
+        const valorFila = Math.round(areaEstimadaPintura * precioM2);
+        filasPintura.push({ nombre: matObj.nombre, codigo: codigo, valor: valorFila });
+    });
+    const costoPinturaTotal = filasPintura.reduce(function (acc, f) { return acc + f.valor; }, 0);
+
+    const totalFinal = Math.round(costoMaterial + costoServicio + costoPinturaTotal);
 
     const fmt = (v) => '$' + Math.round(v).toLocaleString('es-AR');
     if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
 
+    const descPintura = filasPintura.length > 0
+        ? ' | Pintura: ' + filasPintura.map(function (f) { return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ')
+        : '';
     window.itemActual3D = {
         tipo: '3d',
         textoOpciones: `Impresión 3D Técnica: ${nombreMat} (${gramos}gr)`,
         costo: totalFinal,
-        otDetalle: `Peso: ${gramos}gr | Tiempo: ${horas}hs | Material: ${nombreMat}`
+        otDetalle: `Peso: ${gramos}gr | Tiempo: ${horas}hs | Material: ${nombreMat}${descPintura}`
     };
     window.itemActualCotizado = window.itemActual3D;
 
@@ -76,6 +136,16 @@ window.calcularCosto3D = function () {
             horas > 0 ? `${horas}hs × ${fmt(costoHora3D)}/hs` : `${fmt(costoHora3D)}/hs (precio de referencia)`,
             costoServicio
         );
+        if (filasPintura.length > 0) {
+            html += seccion('Acabado de pintura');
+            filasPintura.forEach(function (f) {
+                html += lineaRow(
+                    f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''),
+                    `${areaEstimadaPintura.toFixed(3)}m² (estimado) × ${fmt(0)}`.replace(fmt(0), fmt(f.valor / (areaEstimadaPintura || 1))),
+                    f.valor
+                );
+            });
+        }
         if (totalFinal > 0) {
             html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
                 <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
