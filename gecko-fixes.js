@@ -1515,7 +1515,8 @@ window._registrarSena = function (id) {
         id: 'mov_' + Date.now(),
         fecha, caja: caja1, tipo: 'Ingreso', monto: monto1,
         detalle: `${desc} OT#${id} - ${cliente}${nota ? ' · ' + nota : ''}`,
-        categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña'
+        categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
+        otsAfectadas: [{ id: id, monto: monto1 }]
     };
     movimientos.push(mov1);
 
@@ -1525,7 +1526,8 @@ window._registrarSena = function (id) {
             id: 'mov_' + (Date.now() + 1),
             fecha, caja: caja2, tipo: 'Ingreso', monto: monto2,
             detalle: `${desc} OT#${id} - ${cliente} (${forma2})${nota ? ' · ' + nota : ''}`,
-            categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña'
+            categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
+            otsAfectadas: [{ id: id, monto: monto2 }]
         };
         movimientos.push(mov2);
     }
@@ -3069,7 +3071,7 @@ window.addEventListener('load', function () {
 
         // Asegurar que registrarMovimiento SIEMPRE asigne un id con
         // timestamp, sin importar desde qué parte del código se llame
-        window.registrarMovimiento = function (detalle, cajaNombre, monto, tipo, categoria = 'Varios') {
+        window.registrarMovimiento = function (detalle, cajaNombre, monto, tipo, categoria = 'Varios', otsAfectadas = null) {
             const caja = LISTA_CAJAS.find(c => c.nombre === cajaNombre);
             if (!caja) return;
 
@@ -3085,6 +3087,9 @@ window.addEventListener('load', function () {
                 monto: monto,
                 categoria: categoria
             };
+            if (otsAfectadas && otsAfectadas.length > 0) {
+                mov.otsAfectadas = otsAfectadas;
+            }
 
             LISTA_MOVIMIENTOS.push(mov);
             localStorage.setItem('gecko_cajas', JSON.stringify(LISTA_CAJAS));
@@ -3690,6 +3695,19 @@ window.addEventListener('load', function () {
                     localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
                 }
 
+                // Devolver la deuda a la(s) OT(s) que recibieron este pago (si el
+                // movimiento tiene el detalle guardado)
+                if (mov.otsAfectadas && mov.otsAfectadas.length > 0) {
+                    const listaOts = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+                    mov.otsAfectadas.forEach(function (item) {
+                        const ot = listaOts.find(function (o) { return String(o.id) === String(item.id); });
+                        if (ot) { ot.sena = (ot.sena || 0) - item.monto; }
+                    });
+                    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaOts));
+                    try { listaPresupuestos = listaOts; } catch (e) { window.listaPresupuestos = listaOts; }
+                    if (typeof window.renderOts === 'function') window.renderOts();
+                }
+
                 // Eliminar de la base de datos principal
                 const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
                 const dbIndex = dbMovs.findIndex(m => m.id === mov.id || (m.fecha === mov.fecha && m.monto === mov.monto && m.detalle === mov.detalle));
@@ -3701,7 +3719,13 @@ window.addEventListener('load', function () {
 
                 if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
                 if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
-                if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado', '¡Listo!');
+
+                const esPagoSinDetalle = ['Cobro Cliente', 'Seña', 'Cobro Final'].includes(mov.categoria) && !(mov.otsAfectadas && mov.otsAfectadas.length > 0);
+                if (esPagoSinDetalle && typeof window.mostrarExito === 'function') {
+                    window.mostrarExito('Movimiento eliminado. Este pago es anterior a la mejora de reversión automática — revisá manualmente el saldo del cliente si corresponde.', 'Atención');
+                } else if (typeof window.mostrarExito === 'function') {
+                    window.mostrarExito('Movimiento eliminado', '¡Listo!');
+                }
             };
         };
 
@@ -3897,16 +3921,18 @@ window.addEventListener('load', function () {
 
             if (pends.length === 0) { alert('Este cliente no tiene deudas pendientes.'); return; }
 
+            const otsAfectadas = [];
             pends.forEach(p => {
                 if (montoRestante <= 0) return;
                 const saldo = p.total - (p.sena || 0);
                 const pago = Math.min(saldo, montoRestante);
                 p.sena = (p.sena || 0) + pago;
                 montoRestante -= pago;
+                otsAfectadas.push({ id: p.id, monto: pago });
             });
 
             if (typeof window.registrarMovimiento === 'function') {
-                window.registrarMovimiento(`Pago Cta. Cte. - ${cliente}`, cajaNombre, montoOriginal, 'Ingreso', 'Cobro Cliente');
+                window.registrarMovimiento(`Pago Cta. Cte. - ${cliente}`, cajaNombre, montoOriginal, 'Ingreso', 'Cobro Cliente', otsAfectadas);
             }
 
             try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
