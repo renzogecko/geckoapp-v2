@@ -38,6 +38,19 @@ window.eliminarFilaPintura3D = function (rowId) {
     window.calcularCosto3D();
 };
 
+window.togglePintura3D = function () {
+    const chk = document.getElementById('chkLlevaPintura3D');
+    const wrapper = document.getElementById('detallesPintura3D');
+    if (wrapper) wrapper.classList.toggle('hidden', !chk.checked);
+    if (chk.checked) {
+        const cont = document.getElementById('filasPintura3D');
+        if (cont && cont.children.length === 0) {
+            window.agregarFilaPintura3D();
+        }
+    }
+    window.calcularCosto3D();
+};
+
 window.calcularCosto3D = function () {
     const gramos = parseFloat(document.getElementById('preciso3dPeso')?.value) || 0;
     const horas = parseFloat(document.getElementById('preciso3dTiempo')?.value) || 0;
@@ -62,18 +75,21 @@ window.calcularCosto3D = function () {
     const factorAreaPintura = parseFloat(settings.factorAreaPintura3D) || 0.00025;
     const areaEstimadaPintura = gramos * factorAreaPintura;
     const filasPintura = [];
-    document.querySelectorAll('#filasPintura3D > div').forEach(function (row) {
-        const selMat = row.querySelector('.input-pintura3d-mat');
-        const inpCodigo = row.querySelector('.input-pintura3d-codigo');
-        const matId = selMat ? selMat.value : '';
-        if (!matId) return;
-        const matObj = (window.materiales || []).find(function (m) { return String(m.id) === String(matId); });
-        if (!matObj) return;
-        const precioM2 = parseFloat(matObj.precioVenta || matObj.costo || 0);
-        const codigo = inpCodigo ? inpCodigo.value.trim() : '';
-        const valorFila = Math.round(areaEstimadaPintura * precioM2);
-        filasPintura.push({ nombre: matObj.nombre, codigo: codigo, valor: valorFila });
-    });
+    const pintura3DActiva = document.getElementById('chkLlevaPintura3D')?.checked;
+    if (pintura3DActiva) {
+        document.querySelectorAll('#filasPintura3D > div').forEach(function (row) {
+            const selMat = row.querySelector('.input-pintura3d-mat');
+            const inpCodigo = row.querySelector('.input-pintura3d-codigo');
+            const matId = selMat ? selMat.value : '';
+            if (!matId) return;
+            const matObj = (window.materiales || []).find(function (m) { return String(m.id) === String(matId); });
+            if (!matObj) return;
+            const precioM2 = parseFloat(matObj.precioVenta || matObj.costo || 0);
+            const codigo = inpCodigo ? inpCodigo.value.trim() : '';
+            const valorFila = Math.round(areaEstimadaPintura * precioM2);
+            filasPintura.push({ nombre: matObj.nombre, codigo: codigo, valor: valorFila });
+        });
+    }
     const costoPinturaTotal = filasPintura.reduce(function (acc, f) { return acc + f.valor; }, 0);
 
     const totalFinal = Math.round(costoMaterial + costoServicio + costoPinturaTotal);

@@ -1309,21 +1309,44 @@ window.cambiarCategoriaCotizador = function (cat) {
                 </div>
 
                 <div class="card-gecko space-y-2">
-                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">Acabado de pintura</p>
-                    <p style="font-size:10px;color:#71717a;margin:0 0 10px;">Área estimada automáticamente según el peso de la pieza.</p>
-                    <div id="filasPintura3D" class="space-y-2"></div>
-                    <button type="button" onclick="window.agregarFilaPintura3D()"
-                        class="w-full py-2 mt-2 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
-                        + Agregar pintura / base
-                    </button>
-                </div>
-
-                <div class="card-gecko space-y-2">
                     <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">03. Material (Filamento)</p>
                     <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label class="block text-[11px] text-zinc-400 mb-1">Tipo de Filamento</label>
                             <select id="preciso3dMaterial" class="gecko-select w-full" onchange="window.calcularCosto3D()"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-gecko space-y-2">
+                    <div class="seccion-switch-gecko">
+                        <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-2">04. Acabado de pintura</p>
+
+                        <div class="switch-row" onclick="document.getElementById('chkLlevaPintura3D').click()">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 bg-orange-950/30 rounded-xl flex items-center justify-center border border-orange-900/30">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gecko" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-black text-white uppercase tracking-wider">PINTURA</p>
+                                    <p class="text-[9px] font-bold text-zinc-500 uppercase">Área estimada según el peso</p>
+                                </div>
+                            </div>
+
+                            <label class="switch-gecko" onclick="event.stopPropagation()">
+                                <input type="checkbox" id="chkLlevaPintura3D" onchange="window.togglePintura3D()">
+                                <span class="slider-gecko"></span>
+                            </label>
+                        </div>
+
+                        <div id="detallesPintura3D" class="hidden mt-6 space-y-3 pt-4 border-t border-zinc-800/50">
+                            <div id="filasPintura3D" class="space-y-2"></div>
+                            <button type="button" onclick="window.agregarFilaPintura3D()"
+                                class="w-full py-2 mt-2 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
+                                + Agregar pintura / base
+                            </button>
                         </div>
                     </div>
                 </div>
