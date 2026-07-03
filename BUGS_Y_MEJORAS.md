@@ -70,6 +70,57 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
 
+## Sesión 03/07/2026 — Cotizadores (Pintura, Corte y Montado)
+
+**Resueltos hoy:**
+- ✅ Nueva tarjeta "Acabado de pintura" (con toggle apagado por defecto y 
+  multicarga) agregada a 3 cotizadores: Impresión 3D, Chapa/Acrílico y 
+  Letras 3D. El área a pintar se estima automáticamente según el peso 
+  (Impresión 3D y Letras 3D) o según Fleje+Frente (Chapa/Acrílico), con 
+  factores configurables en Configuración → Costos Operativos.
+- ✅ Nueva tarjeta "Frente" en Letras 3D — permite elegir un material 
+  rígido aparte (con corte láser opcional) o marcar "Frente 3D integrado" 
+  (que sí suma peso extra estimado a la impresión, con un factor 
+  configurable propio).
+- ✅ Nuevo interruptor "¿Lleva servicio de corte láser?" en el Frente de 
+  Chapa/Acrílico y Letras 3D (apagado por defecto) — antes el corte se 
+  sumaba siempre automáticamente, ahora es opcional para los casos donde 
+  el material va sin cortar (ej: fondos para retroiluminar).
+- ✅ Bug crítico: el corte del Frente en Chapa/Acrílico y Letras 3D no 
+  encontraba el precio porque buscaba solo en una lista vieja de 
+  Servicios (vacía) — corregido para que revise primero el precio propio 
+  del material (precioCorteMl), igual que ya hacía bien Polifán.
+- ✅ Bug crítico: "Montado en Rígidos" (Gráfica → Impresión y Gráfica → 
+  Corte) calculaba el corte con un precio inventado y fijo ($2.500/ml) 
+  sin importar el material — corregido para usar el precio real de corte 
+  de cada material. Si el material no tiene ese dato cargado, ahora 
+  muestra "FALTA PARÁMETRO" en la línea del Auditor en vez de un número 
+  inventado (Regla R4).
+- ✅ Bug: la línea "Montado sup." en el Auditor de Gráfica → Impresión 
+  mostraba $0 aunque el Total del ítem sí sumaba el monto correcto — el 
+  Total nunca estuvo mal, era solo la línea visual que buscaba el precio 
+  en el campo equivocado (precioVenta en vez de precio/precioVenta).
+- ✅ Base de datos: 16 materiales con precio de corte láser cargado 
+  tenían el interruptor tieneParametrosCorte apagado por una 
+  re-importación SQL vieja (bug ya documentado) — corregido con un 
+  UPDATE directo en MySQL, sin pérdida de datos (el precio nunca se 
+  había borrado, solo estaba oculto).
+
+**Pendientes / Mejoras identificadas hoy:**
+- ⏳ Sospecha de bug dormido: el corte del Fleje en Chapa/Acrílico usa un 
+  método de búsqueda distinto y más antiguo (window.getGeckoItem con 
+  nombre armado a mano) que probablemente tiene el mismo problema que 
+  tenía el Frente — no confirmado todavía, pendiente de revisar.
+- ⏳ BUG-003 (cotización del dólar hardcodeada) sigue pendiente.
+- ⏳ Sospecha de código muerto: confirmarPagoGlobalCliente en main.js 
+  (modal antiguo), pendiente de diagnóstico.
+
+**Prioridad recomendada para la próxima sesión:**
+1. Confirmar y resolver el corte del Fleje en Chapa/Acrílico.
+2. BUG-003 (cotización del dólar).
+
+---
+
 ## Sesión 01/07/2026 (continuación) — Finanzas y Clientes
 
 **Resueltos hoy:**
