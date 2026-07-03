@@ -716,6 +716,7 @@ window.calcularLetras3D = function () {
     let costoFrenteMaterial = 0;
     let costoFrenteCorte = 0;
     let nombreFrenteMat = '';
+    let nombreServCorteFrente3D = '';
     if (frenteEsMaterial) {
         const matFrenteObj = (window.materiales || []).find(m => String(m.id) === String(valFrenteMat));
         if (matFrenteObj) {
@@ -725,11 +726,19 @@ window.calcularLetras3D = function () {
             const servicios3D = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
             const normalizar3D = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
             const qNorm3D = normalizar3D("CORTE LASER " + nombreFrenteMat);
-            const servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === qNorm3D)
-                || servicios3D.find(s => normalizar3D(s.nombre) === normalizar3D("CORTE LASER - METAL"));
+            // B\u00fasqueda robusta (misma l\u00f3gica que ya funciona en Chapa/Acr\u00edlico):
+            // 1. Match exacto  2. Match parcial  3. Fallback gen\u00e9rico METAL
+            let servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === qNorm3D);
+            if (!servCorteFrente3D) {
+                servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre).startsWith("CORTELASER") && qNorm3D.includes(normalizar3D(s.nombre)));
+            }
+            if (!servCorteFrente3D) {
+                servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === normalizar3D("CORTE LASER - METAL"));
+            }
             if (servCorteFrente3D) {
                 const perimetroMl3D = perimetro / 100;
                 costoFrenteCorte = perimetroMl3D * (servCorteFrente3D.precio || servCorteFrente3D.precioVenta || 0);
+                nombreServCorteFrente3D = servCorteFrente3D.nombre;
             }
         }
     }
@@ -843,7 +852,10 @@ window.calcularLetras3D = function () {
             if (hayFrente) {
                 html += seccion('Frente');
                 if (frenteEsMaterial) {
-                    html += lineaRow(nombreFrenteMat, `${areaFrenteM2.toFixed(4)}m²`, costoFrenteMaterial + costoFrenteCorte);
+                    html += lineaRow(nombreFrenteMat, `${areaFrenteM2.toFixed(4)}m²`, costoFrenteMaterial);
+                    if (costoFrenteCorte > 0) {
+                        html += lineaRow(`Corte láser - ${nombreServCorteFrente3D}`, `${(perimetro / 100).toFixed(2)}ml`, costoFrenteCorte);
+                    }
                 } else if (frenteEsIntegrado) {
                     html += lineaRow('Frente 3D integrado', `+${Math.round(pesoExtraFrenteIntegrado)}gr sumados al peso`, 0);
                 }
