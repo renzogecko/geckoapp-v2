@@ -665,8 +665,14 @@ window.GeckoGrafica = {
                 if (totalRigidos > 0) {
                     const selectorPlacas = document.getElementById('graficaImpresionPlacas');
                     const textoPlaca = selectorPlacas?.options[selectorPlacas.selectedIndex]?.text || 'Placa';
+                    const matPlacaAudit = window.getGeckoItem(textoPlaca);
+                    const sinPrecioCorteAudit = !(matPlacaAudit && matPlacaAudit.precioCorteMl && parseFloat(matPlacaAudit.precioCorteMl) > 0);
                     html += seccion('Montado en rígido');
-                    html += lineaRow(textoPlaca, 'Material + corte por fila', totalRigidos);
+                    if (sinPrecioCorteAudit) {
+                        html += lineaRow(textoPlaca, `⚠️ FALTA PARÁMETRO: precioCorteMl — el corte de "${textoPlaca}" no se está sumando`, totalRigidos);
+                    } else {
+                        html += lineaRow(textoPlaca, 'Material + corte por fila', totalRigidos);
+                    }
                 }
 
                 // TOTAL

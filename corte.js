@@ -451,8 +451,13 @@ window.GeckoCorte = {
                 if (totalRigidos > 0) {
                     const placaId = document.getElementById('cortePlacas')?.value;
                     const placaMat = window.getGeckoItem(placaId);
+                    const sinPrecioCorteAuditRigido = !(placaMat && placaMat.precioCorteMl && parseFloat(placaMat.precioCorteMl) > 0);
                     html += seccion('Montado en rígido');
-                    html += lineaRow(placaMat ? placaMat.nombre : 'Placa', 'Material + corte por fila', totalRigidos);
+                    if (sinPrecioCorteAuditRigido) {
+                        html += lineaRow(placaMat ? placaMat.nombre : 'Placa', `⚠️ FALTA PARÁMETRO: precioCorteMl — el corte de "${placaMat ? placaMat.nombre : 'Placa'}" no se está sumando`, totalRigidos);
+                    } else {
+                        html += lineaRow(placaMat.nombre, 'Material + corte por fila', totalRigidos);
+                    }
                 }
 
                 // TOTAL
