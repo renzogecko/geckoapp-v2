@@ -329,6 +329,11 @@ window.GeckoCorte = {
                     : (placaMat.precioVenta || placaMat.costoARS * (placaMat.multiplicador || 2));
                 this.safeSetText('auditorPlacaCorte', `GDM: ${placaMat.nombre} | Precio: $${Math.round(precioPlaca)}/m2`);
 
+                const precioCorteRealPlaca = (placaMat.precioCorteMl && parseFloat(placaMat.precioCorteMl) > 0)
+                    ? parseFloat(placaMat.precioCorteMl) : 0;
+                if (precioCorteRealPlaca === 0) {
+                    this.safeSetText('auditorPlacaCorte', `⚠️ FALTA PARÁMETRO: precioCorteMl en "${placaMat.nombre}" — el corte no se está sumando`);
+                }
                 const filas = document.querySelectorAll('#contenedor-filas-corte-rigidos .gecko-input-row');
                 filas.forEach(f => {
                     const ins = f.querySelectorAll('input');
@@ -336,7 +341,7 @@ window.GeckoCorte = {
                     const l = parseFloat(ins[1]?.value) || 0;
                     const c = parseFloat(ins[2]?.value) || 1;
                     const ml = parseFloat(ins[3]?.value) || 0;
-                    totalRigidos += (a * l * c / 10000) * precioPlaca + (ml * 2500);
+                    totalRigidos += (a * l * c / 10000) * precioPlaca + (ml * precioCorteRealPlaca);
                 });
             } else {
                 this.safeSetText('auditorPlacaCorte', '');

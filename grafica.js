@@ -460,6 +460,11 @@ window.GeckoGrafica = {
             if (precioMaterial > 0) {
                 const containerRigidos = document.getElementById('contenedor-filas-rigidos');
                 if (containerRigidos) {
+                    const precioCorteRealRigido = (matPlaca && matPlaca.precioCorteMl && parseFloat(matPlaca.precioCorteMl) > 0)
+                        ? parseFloat(matPlaca.precioCorteMl) : 0;
+                    if (precioCorteRealRigido === 0) {
+                        this.safeSetText('auditorPlacaRigida', `⚠️ FALTA PARÁMETRO: precioCorteMl en "${matPlaca?.nombre || 'material'}" — el corte no se está sumando`);
+                    }
                     const filas = containerRigidos.querySelectorAll('.fila-rigido');
                     filas.forEach(fila => {
                         const inputs = fila.querySelectorAll('input');
@@ -470,7 +475,7 @@ window.GeckoGrafica = {
                             const corteML = parseFloat(inputs[3]?.value) || 0;
 
                             const costoMaterial = (ancho * alto * cant / 10000) * precioMaterial;
-                            const costoCorte = corteML * 2500;
+                            const costoCorte = corteML * precioCorteRealRigido;
 
                             totalRigidos += (costoMaterial + costoCorte);
                         }
