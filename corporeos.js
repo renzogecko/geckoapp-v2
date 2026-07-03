@@ -412,6 +412,13 @@ window.setCorpModo = function (modo) {
                         <select id="3dFrenteMat" class="gecko-select w-full" onchange="window.onCambio3DFrenteMat()"></select>
                     </div>
                 </div>
+                <div class="flex items-center justify-between mt-4">
+                    <p class="text-[11px] font-bold text-zinc-300 uppercase">¿Lleva servicio de corte láser?</p>
+                    <label class="switch-gecko">
+                        <input type="checkbox" id="chkCorteFrenteLetras3D" onchange="window.calcularLetras3D()">
+                        <span class="slider-gecko"></span>
+                    </label>
+                </div>
                 <div class="flex items-center justify-between mt-4 pt-4 border-t border-zinc-800/50">
                     <p class="text-[11px] font-bold text-zinc-300 uppercase">¿Frente 3D integrado (impreso junto)?</p>
                     <label class="switch-gecko">
@@ -723,22 +730,24 @@ window.calcularLetras3D = function () {
             nombreFrenteMat = matFrenteObj.nombre;
             const precioM2Frente = parseFloat(matFrenteObj.precioVenta || matFrenteObj.costo || 0);
             costoFrenteMaterial = areaFrenteM2 * precioM2Frente;
-            const servicios3D = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
-            const normalizar3D = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
-            const qNorm3D = normalizar3D("CORTE LASER " + nombreFrenteMat);
-            // B\u00fasqueda robusta (misma l\u00f3gica que ya funciona en Chapa/Acr\u00edlico):
-            // 1. Match exacto  2. Match parcial  3. Fallback gen\u00e9rico METAL
-            let servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === qNorm3D);
-            if (!servCorteFrente3D) {
-                servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre).startsWith("CORTELASER") && qNorm3D.includes(normalizar3D(s.nombre)));
-            }
-            if (!servCorteFrente3D) {
-                servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === normalizar3D("CORTE LASER - METAL"));
-            }
-            if (servCorteFrente3D) {
-                const perimetroMl3D = perimetro / 100;
-                costoFrenteCorte = perimetroMl3D * (servCorteFrente3D.precio || servCorteFrente3D.precioVenta || 0);
-                nombreServCorteFrente3D = servCorteFrente3D.nombre;
+            if (document.getElementById('chkCorteFrenteLetras3D')?.checked) {
+                const servicios3D = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+                const normalizar3D = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
+                const qNorm3D = normalizar3D("CORTE LASER " + nombreFrenteMat);
+                // B\u00fasqueda robusta (misma l\u00f3gica que ya funciona en Chapa/Acr\u00edlico):
+                // 1. Match exacto  2. Match parcial  3. Fallback gen\u00e9rico METAL
+                let servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === qNorm3D);
+                if (!servCorteFrente3D) {
+                    servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre).startsWith("CORTELASER") && qNorm3D.includes(normalizar3D(s.nombre)));
+                }
+                if (!servCorteFrente3D) {
+                    servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === normalizar3D("CORTE LASER - METAL"));
+                }
+                if (servCorteFrente3D) {
+                    const perimetroMl3D = perimetro / 100;
+                    costoFrenteCorte = perimetroMl3D * (servCorteFrente3D.precio || servCorteFrente3D.precioVenta || 0);
+                    nombreServCorteFrente3D = servCorteFrente3D.nombre;
+                }
             }
         }
     }
@@ -1513,6 +1522,20 @@ window.calcularChapaAcrilico = function () {
     const selFrente = document.getElementById('chapaFrenteMat');
     const valFrente = selFrente?.value;
     const itFrente = (valFrente && valFrente !== 'SELECCIONAR') ? window.getGeckoItem(selFrente.options[selFrente.selectedIndex].text) : null;
+
+    // Insertar el interruptor "lleva corte" una sola vez, justo después del select de Frente
+    if (selFrente && !document.getElementById('chkCorteFrenteChapa')) {
+        selFrente.insertAdjacentHTML('afterend', `
+            <div class="flex items-center justify-between mt-3">
+                <p class="text-[10px] font-bold text-zinc-400 uppercase">¿Lleva servicio de corte láser?</p>
+                <label class="switch-gecko">
+                    <input type="checkbox" id="chkCorteFrenteChapa" onchange="window.calcularChapaAcrilico()">
+                    <span class="slider-gecko"></span>
+                </label>
+            </div>`);
+    }
+    const llevaCorteFrenteChapa = document.getElementById('chkCorteFrenteChapa')?.checked;
+
     if (itFrente) {
         // Calcular precio por m² del material basado en el área de placa registrada en GDM
         const anchoPlacaM = ((itFrente.ancho || itFrente.anchoPlaca || 0)) / 100;
@@ -1523,12 +1546,14 @@ window.calcularChapaAcrilico = function () {
         const subtotalFrente = areaM2 * precioM2Frente;
         costoPlacas += subtotalFrente;
         auditPlacas.push({ nombre: `Frente: ${itFrente.nombre}`, detalle: `${parseFloat(areaM2.toFixed(2))}m² × $${precioM2Frente.toLocaleString('es-AR')}/m²`, valor: subtotalFrente });
-        const servCorteFrente = getServicioCorte(itFrente.nombre);
-        if (servCorteFrente) {
-            const precioCorteFrente = window.getCorpPrecio(servCorteFrente);
-            const subtotalCorteFrente = perimetroMl * precioCorteFrente;
-            costoCortePlacas += subtotalCorteFrente;
-            auditPlacas.push({ nombre: `Corte ${servCorteFrente.nombre}`, detalle: `${parseFloat(perimetroMl.toFixed(2))}ml × $${Math.round(precioCorteFrente).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFrente });
+        if (llevaCorteFrenteChapa) {
+            const servCorteFrente = getServicioCorte(itFrente.nombre);
+            if (servCorteFrente) {
+                const precioCorteFrente = window.getCorpPrecio(servCorteFrente);
+                const subtotalCorteFrente = perimetroMl * precioCorteFrente;
+                costoCortePlacas += subtotalCorteFrente;
+                auditPlacas.push({ nombre: `Corte ${servCorteFrente.nombre}`, detalle: `${parseFloat(perimetroMl.toFixed(2))}ml × $${Math.round(precioCorteFrente).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFrente });
+            }
         }
     }
 
