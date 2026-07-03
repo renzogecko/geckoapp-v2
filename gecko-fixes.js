@@ -4226,6 +4226,31 @@ window.addEventListener('load', function () {
                 window.renderTablaParametrosGrabado();
             };
         })();
+
+        const _origCambiarCategoriaCotizadorInst = window.cambiarCategoriaCotizador;
+        window.cambiarCategoriaCotizador = function (cat) {
+            if (cat === 'instalacion') {
+                document.querySelectorAll('.btn-cat').forEach(function (btn) {
+                    btn.classList.remove('bg-zinc-900', 'border-gecko/30', 'btn-cat-active');
+                });
+                localStorage.setItem('gecko_activeCategory', cat);
+                const titleEl = document.getElementById('configuradorTitle');
+                if (titleEl) {
+                    titleEl.innerText = 'Cotizador de Instalación';
+                    titleEl.className = "text-2xl font-black uppercase italic dark:text-zinc-100 tracking-wider";
+                }
+                document.querySelectorAll('[id^="side-"], [id^="sub-"]').forEach(function (el) {
+                    el.classList.remove('nav-active');
+                });
+                const subLink = document.getElementById('side-instalacion');
+                if (subLink) subLink.classList.add('nav-active');
+                if (typeof window.renderInstalacion === 'function') window.renderInstalacion();
+                return;
+            }
+            if (typeof _origCambiarCategoriaCotizadorInst === 'function') {
+                _origCambiarCategoriaCotizadorInst(cat);
+            }
+        };
     }, 1500); // 1500ms — espera que main.js (defer) termine todo
 });
 // ── filtrarMovimientos: lee los inputs de fecha/categoría y re-renderiza ──

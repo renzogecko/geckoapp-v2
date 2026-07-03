@@ -215,6 +215,10 @@
                         class="ml-4 px-4 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-[14px] font-bold">Bastidores
                         y Estructuras</a>
 
+                    <a href="#" id="side-instalacion"
+                        onclick="switchMenu('cotizadores'); window.cambiarCategoriaCotizador('instalacion')"
+                        class="ml-4 px-4 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-[14px] font-bold">Instalación</a>
+
                     <!-- Textil Expansion -->
                     <details class="group/sub ml-4">
                         <summary
@@ -1634,6 +1638,13 @@
                                 <div class="grupo-input-gecko no-prefijo">
                                     <input type="number" id="cfgFactorPesoFrente3D" class="input-limpio-gecko"
                                         placeholder="400" step="1" style="padding-left:20px !important;">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="gecko-label">Precio por Km (viajes fuera de La Plata)</label>
+                                <div class="grupo-input-gecko no-prefijo">
+                                    <input type="number" id="cfgPrecioKm" class="input-limpio-gecko"
+                                        placeholder="0" step="10" style="padding-left:20px !important;">
                                 </div>
                             </div>
                         </div>
@@ -3380,6 +3391,7 @@
     <script src="bastidores.js"></script>
     <script src="textil.js"></script>
     <script src="impresion3d.js"></script>
+    <script src="instalaciones.js"></script>
     <script src="gecko-fixes.js"></script>
     <script src="gecko-local.js"></script>
     <script src="gecko-docs.js"></script>

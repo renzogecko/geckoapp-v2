@@ -625,6 +625,7 @@ window.initConfiguracion = function () {
         v('cfgHora3D', s.costoHora3D || 0);
         v('cfgFactorAreaPintura3D', s.factorAreaPintura3D || 0.00025);
         v('cfgFactorPesoFrente3D', s.factorPesoFrente3D || 400);
+        v('cfgPrecioKm', s.precioKm || 0);
         const cond = document.getElementById('cfgCondicionesVenta');
         if (cond) cond.value = s.condicionesVenta || '';
     };
@@ -675,6 +676,7 @@ window.guardarConfiguracion = function () {
         costoHora3D: g('cfgHora3D'),
         factorAreaPintura3D: g('cfgFactorAreaPintura3D'),
         factorPesoFrente3D: g('cfgFactorPesoFrente3D'),
+        precioKm: g('cfgPrecioKm'),
         condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || ''
     };
     localStorage.setItem('GECKO_SETTINGS', JSON.stringify(GECKO_SETTINGS));
