@@ -404,8 +404,26 @@ window.setCorpModo = function (modo) {
             </div>
 
             <div class="card-gecko space-y-2 animate-in fade-in slide-in-from-top-3">
+                <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">04. Frente</p>
+                <p style="font-size:10px;color:#71717a;margin:0 0 8px;">Elegí una de las dos opciones (no se pueden combinar).</p>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-[11px] text-zinc-400 mb-1">Material de Frente (acrílico/rígido)</label>
+                        <select id="3dFrenteMat" class="gecko-select w-full" onchange="window.onCambio3DFrenteMat()"></select>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-zinc-800/50">
+                    <p class="text-[11px] font-bold text-zinc-300 uppercase">¿Frente 3D integrado (impreso junto)?</p>
+                    <label class="switch-gecko">
+                        <input type="checkbox" id="chk3DFrenteIntegrado" onchange="window.onCambio3DFrenteIntegrado()">
+                        <span class="slider-gecko"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card-gecko space-y-2 animate-in fade-in slide-in-from-top-3">
                 <div class="flex justify-between text-[11px] text-zinc-400 uppercase tracking-widest font-bold">
-                    <span>04. Resumen Estimado</span>
+                    <span>05. Resumen Estimado</span>
                 </div>
                 <div class="flex justify-between text-[11px] text-zinc-400 uppercase tracking-widest font-bold">
                     <span>Peso Est. (gr)</span>
@@ -414,6 +432,36 @@ window.setCorpModo = function (modo) {
                 <div class="flex justify-between text-[11px] text-zinc-400 uppercase tracking-widest font-bold">
                     <span>Tiempo Est. (hs)</span>
                     <span id="res3dTiempo" class="text-white">0 hs</span>
+                </div>
+            </div>
+
+            <div class="card-gecko space-y-2">
+                <div class="seccion-switch-gecko">
+                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-2">06. Acabado de pintura</p>
+                    <div class="switch-row" onclick="document.getElementById('chkLlevaPinturaLetras3D').click()">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-orange-950/30 rounded-xl flex items-center justify-center border border-orange-900/30">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gecko" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-[11px] font-black text-white uppercase tracking-wider">PINTURA</p>
+                                <p class="text-[9px] font-bold text-zinc-500 uppercase">Área: Cuerpo (est.) + Frente</p>
+                            </div>
+                        </div>
+                        <label class="switch-gecko" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="chkLlevaPinturaLetras3D" onchange="window.togglePinturaLetras3D()">
+                            <span class="slider-gecko"></span>
+                        </label>
+                    </div>
+                    <div id="detallesPinturaLetras3D" class="hidden mt-6 space-y-3 pt-4 border-t border-zinc-800/50">
+                        <div id="filasPinturaLetras3D" class="space-y-2"></div>
+                        <button type="button" onclick="window.agregarFilaPinturaLetras3D()"
+                            class="w-full py-2 mt-2 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
+                            + Agregar pintura / base
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -428,6 +476,14 @@ window.setCorpModo = function (modo) {
             selMat.innerHTML = mats.length > 0
                 ? mats.map(m => `<option value="${m.id || m.nombre}">${m.nombre}</option>`).join('')
                 : '<option value="">Sin materiales 3D cargados</option>';
+        }
+
+        const selFrente3D = document.getElementById('3dFrenteMat');
+        if (selFrente3D) {
+            const matsFrente = (window.materiales || []).filter(m => (m.categoria || '').toLowerCase().trim() === 'rigido');
+            let htmlFrente = '<option value="SIN_FRENTE">SIN FRENTE</option>';
+            htmlFrente += matsFrente.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+            selFrente3D.innerHTML = htmlFrente;
         }
         window.calcularLetras3D();
 
@@ -574,14 +630,115 @@ window.actualizarStockCuerpo = function () {
     if (typeof calcularCorporeos === 'function') calcularCorporeos();
 }
 
+window.onCambio3DFrenteMat = function () {
+    const sel = document.getElementById('3dFrenteMat');
+    const chk = document.getElementById('chk3DFrenteIntegrado');
+    if (sel && sel.value !== 'SIN_FRENTE' && chk) chk.checked = false;
+    window.calcularLetras3D();
+};
+
+window.onCambio3DFrenteIntegrado = function () {
+    const chk = document.getElementById('chk3DFrenteIntegrado');
+    const sel = document.getElementById('3dFrenteMat');
+    if (chk && chk.checked && sel) sel.value = 'SIN_FRENTE';
+    window.calcularLetras3D();
+};
+
+window.agregarFilaPinturaLetras3D = function () {
+    const cont = document.getElementById('filasPinturaLetras3D');
+    if (!cont) return;
+    const rowId = 'pintL3D_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const mats = (window.materiales || []).filter(m => {
+        const cat = (m.categoria || '').toLowerCase().trim();
+        return cat === 'pintura' || cat === 'base';
+    });
+    const opciones = mats.length > 0
+        ? mats.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('')
+        : '<option value="">Sin materiales de Pintura/Base cargados</option>';
+    const row = document.createElement('div');
+    row.id = rowId;
+    row.className = 'grid grid-cols-12 gap-2 items-center';
+    row.innerHTML = `
+        <div class="col-span-6">
+            <select class="input-pintura-mat gecko-select-pro w-full" onchange="window.calcularLetras3D()">
+                <option value="">Seleccionar material...</option>
+                ${opciones}
+            </select>
+        </div>
+        <div class="col-span-5">
+            <input type="text" class="input-pintura-codigo gecko-input w-full" placeholder="Código de color (manual)" oninput="window.calcularLetras3D()">
+        </div>
+        <div class="col-span-1 text-center">
+            <button type="button" onclick="window.eliminarFilaPinturaLetras3D('${rowId}')" class="text-red-400 hover:text-red-300 text-lg leading-none">×</button>
+        </div>
+    `;
+    cont.appendChild(row);
+    window.calcularLetras3D();
+};
+
+window.eliminarFilaPinturaLetras3D = function (rowId) {
+    const row = document.getElementById(rowId);
+    if (row) row.remove();
+    window.calcularLetras3D();
+};
+
+window.togglePinturaLetras3D = function () {
+    const chk = document.getElementById('chkLlevaPinturaLetras3D');
+    const wrapper = document.getElementById('detallesPinturaLetras3D');
+    if (wrapper) wrapper.classList.toggle('hidden', !chk.checked);
+    if (chk.checked) {
+        const cont = document.getElementById('filasPinturaLetras3D');
+        if (cont && cont.children.length === 0) {
+            window.agregarFilaPinturaLetras3D();
+        }
+    }
+    window.calcularLetras3D();
+};
+
 window.calcularLetras3D = function () {
     const ancho = parseFloat(document.getElementById('3dAncho')?.value) || 0;
     const alto = parseFloat(document.getElementById('3dAlto')?.value) || 0;
     const perimetro = parseFloat(document.getElementById('3dPerimetro')?.value) || 0;
     const profundidad = parseFloat(document.getElementById('3dProfundidad')?.value) || 0;
 
-    // Cálculo de volumen estimado
-    const gramos = perimetro * profundidad * 0.15;
+    // Cálculo de volumen estimado (cuerpo/costados, sin cambios)
+    const gramosCuerpo = perimetro * profundidad * 0.15;
+    const areaFrenteM2 = (ancho * alto) / 10000;
+    const settings3D = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
+
+    // Frente: material aparte O integrado a la impresión (excluyentes)
+    const selFrenteMat = document.getElementById('3dFrenteMat');
+    const valFrenteMat = selFrenteMat?.value;
+    const frenteEsMaterial = valFrenteMat && valFrenteMat !== 'SIN_FRENTE';
+    const frenteEsIntegrado = document.getElementById('chk3DFrenteIntegrado')?.checked;
+    const hayFrente = frenteEsMaterial || frenteEsIntegrado;
+
+    let costoFrenteMaterial = 0;
+    let costoFrenteCorte = 0;
+    let nombreFrenteMat = '';
+    if (frenteEsMaterial) {
+        const matFrenteObj = (window.materiales || []).find(m => String(m.id) === String(valFrenteMat));
+        if (matFrenteObj) {
+            nombreFrenteMat = matFrenteObj.nombre;
+            const precioM2Frente = parseFloat(matFrenteObj.precioVenta || matFrenteObj.costo || 0);
+            costoFrenteMaterial = areaFrenteM2 * precioM2Frente;
+            const servicios3D = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+            const normalizar3D = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
+            const qNorm3D = normalizar3D("CORTE LASER " + nombreFrenteMat);
+            const servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === qNorm3D)
+                || servicios3D.find(s => normalizar3D(s.nombre) === normalizar3D("CORTE LASER - METAL"));
+            if (servCorteFrente3D) {
+                const perimetroMl3D = perimetro / 100;
+                costoFrenteCorte = perimetroMl3D * (servCorteFrente3D.precio || servCorteFrente3D.precioVenta || 0);
+            }
+        }
+    }
+
+    // Peso extra si el Frente es 3D integrado
+    const factorPesoFrente3D = parseFloat(settings3D.factorPesoFrente3D) || 400;
+    const pesoExtraFrenteIntegrado = frenteEsIntegrado ? (areaFrenteM2 * factorPesoFrente3D) : 0;
+
+    const gramos = gramosCuerpo + pesoExtraFrenteIntegrado;
     const horas = gramos / 15;
 
     // Actualizar displays de peso y tiempo
@@ -612,7 +769,30 @@ window.calcularLetras3D = function () {
     // Cálculos de costo
     const costoMaterial = Math.round(gramos * precioPorGramo);
     const costoServicio = Math.round(horas * costoHora3D);
-    const totalFinal = costoMaterial + costoServicio;
+
+    // Pintura — área = cuerpo estimado por peso (sin el extra de frente) + área del Frente si hay
+    const pinturaL3DActiva = document.getElementById('chkLlevaPinturaLetras3D')?.checked;
+    const factorAreaPintura3D = parseFloat(settings3D.factorAreaPintura3D) || 0.00025;
+    const areaEstimadaCuerpo = gramosCuerpo * factorAreaPintura3D;
+    const areaPinturaLetras3D = areaEstimadaCuerpo + (hayFrente ? areaFrenteM2 : 0);
+    const filasPinturaL3D = [];
+    if (pinturaL3DActiva) {
+        document.querySelectorAll('#filasPinturaLetras3D > div').forEach(function (row) {
+            const selMatP = row.querySelector('.input-pintura-mat');
+            const inpCodigo = row.querySelector('.input-pintura-codigo');
+            const matId = selMatP ? selMatP.value : '';
+            if (!matId) return;
+            const matObjP = (window.materiales || []).find(function (m) { return String(m.id) === String(matId); });
+            if (!matObjP) return;
+            const precioM2P = parseFloat(matObjP.precioVenta || matObjP.costo || 0);
+            const codigo = inpCodigo ? inpCodigo.value.trim() : '';
+            const valorFilaP = Math.round(areaPinturaLetras3D * precioM2P);
+            filasPinturaL3D.push({ nombre: matObjP.nombre, codigo: codigo, valor: valorFilaP });
+        });
+    }
+    const costoPinturaL3DTotal = filasPinturaL3D.reduce(function (acc, f) { return acc + f.valor; }, 0);
+
+    const totalFinal = costoMaterial + costoServicio + Math.round(costoFrenteMaterial + costoFrenteCorte) + costoPinturaL3DTotal;
 
     const fmt = v => '$' + Math.round(v).toLocaleString('es-AR');
 
@@ -660,6 +840,20 @@ window.calcularLetras3D = function () {
             html += seccion('Servicio de Impresión');
             html += lineaRow('Hora máquina', `${horas.toFixed(1)}hs × $${Math.round(costoHora3D).toLocaleString('es-AR')}/hs`, costoServicio);
 
+            if (hayFrente) {
+                html += seccion('Frente');
+                if (frenteEsMaterial) {
+                    html += lineaRow(nombreFrenteMat, `${areaFrenteM2.toFixed(4)}m²`, costoFrenteMaterial + costoFrenteCorte);
+                } else if (frenteEsIntegrado) {
+                    html += lineaRow('Frente 3D integrado', `+${Math.round(pesoExtraFrenteIntegrado)}gr sumados al peso`, 0);
+                }
+            }
+
+            if (filasPinturaL3D.length > 0) {
+                html += seccion('Acabado de pintura');
+                filasPinturaL3D.forEach(f => html += lineaRow(f.nombre + (f.codigo ? ` (${f.codigo})` : ''), `${areaPinturaLetras3D.toFixed(4)}m²`, f.valor));
+            }
+
             html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
                 <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
                 <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
@@ -695,12 +889,16 @@ window.calcularLetras3D = function () {
     }
 
     // Guardar para el carrito
+    const descFrenteL3D = frenteEsMaterial ? ` | Frente: ${nombreFrenteMat}` : (frenteEsIntegrado ? ' | Frente: 3D integrado' : '');
+    const descPinturaL3D = filasPinturaL3D.length > 0
+        ? ' | Pintura: ' + filasPinturaL3D.map(function (f) { return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ')
+        : '';
     window.itemActualPolifan = {
         tipo: 'corporeos',
         nombre: `LETRAS 3D – ${nombreMat}`,
         textoOpciones: `Letras 3D (Est.): ${ancho}x${alto}cm | ${nombreMat}`,
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}${descFrenteL3D}${descPinturaL3D}`
     };
 };
 
