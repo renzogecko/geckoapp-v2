@@ -631,7 +631,7 @@ window.GeckoGrafica = {
                 if (this.isTermActive('checkMontado')) {
                     const val = parseFloat(document.getElementById('valMontado')?.value) || 1;
                     const serv = window.getGeckoItem('MONTADO') || window.getGeckoItem('SERVICIO DE MONTADO');
-                    const precio = serv ? serv.precioVenta : 1800;
+                    const precio = serv ? (serv.precio || serv.precioVenta || 1800) : 1800;
                     termActivas.push({ label: 'Montado sup.', detalle: `${val}m² × ${fmtVal(precio)}/m²`, valor: val * precio });
                 }
                 if (this.isTermActive('checkTransfer')) {
