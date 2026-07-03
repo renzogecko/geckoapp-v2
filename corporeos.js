@@ -1168,6 +1168,45 @@ window.calcularChapaAcrilico = function () {
     const profundidad = parseFloat(document.getElementById('chapaProfundidad')?.value) || 0;
     const cantidad = Math.max(1, parseInt(document.getElementById('chapaCantidad')?.value) || 1);
 
+    // Crear la tarjeta de pintura SIEMPRE primero, para que quede antes
+    // del auditor y visible desde el arranque (con el toggle apagado)
+    let tarjetaPinturaChapa = document.getElementById('tarjetaPinturaChapa');
+    if (!tarjetaPinturaChapa) {
+        tarjetaPinturaChapa = document.createElement('div');
+        tarjetaPinturaChapa.id = 'tarjetaPinturaChapa';
+        tarjetaPinturaChapa.className = 'card-gecko space-y-2';
+        tarjetaPinturaChapa.innerHTML = `
+            <div class="seccion-switch-gecko">
+                <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-2">06. Acabado de pintura</p>
+                <div class="switch-row" onclick="document.getElementById('chkLlevaPinturaChapa').click()">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-orange-950/30 rounded-xl flex items-center justify-center border border-orange-900/30">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gecko" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-black text-white uppercase tracking-wider">PINTURA</p>
+                            <p class="text-[9px] font-bold text-zinc-500 uppercase">Área: Fleje + Frente</p>
+                        </div>
+                    </div>
+                    <label class="switch-gecko" onclick="event.stopPropagation()">
+                        <input type="checkbox" id="chkLlevaPinturaChapa" onchange="window.togglePinturaChapa()">
+                        <span class="slider-gecko"></span>
+                    </label>
+                </div>
+                <div id="detallesPinturaChapa" class="hidden mt-6 space-y-3 pt-4 border-t border-zinc-800/50">
+                    <div id="filasPinturaChapa" class="space-y-2"></div>
+                    <button type="button" onclick="window.agregarFilaPinturaChapa()"
+                        class="w-full py-2 mt-2 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
+                        + Agregar pintura / base
+                    </button>
+                </div>
+            </div>`;
+        const panelParaPintura = document.getElementById('panelConfigurador');
+        if (panelParaPintura) panelParaPintura.appendChild(tarjetaPinturaChapa);
+    }
+
     const areaM2 = (ancho * alto) / 10000;
     const perimetroMl = perimetro / 100;
 
@@ -1443,43 +1482,6 @@ window.calcularChapaAcrilico = function () {
     if (panelConf) {
         const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
         const hayDatos = auditEstructura.length > 0 || auditPlacas.length > 0;
-
-        let tarjetaPinturaChapa = document.getElementById('tarjetaPinturaChapa');
-        if (!tarjetaPinturaChapa) {
-            tarjetaPinturaChapa = document.createElement('div');
-            tarjetaPinturaChapa.id = 'tarjetaPinturaChapa';
-            tarjetaPinturaChapa.className = 'card-gecko space-y-2';
-            tarjetaPinturaChapa.innerHTML = `
-                <div class="seccion-switch-gecko">
-                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-2">06. Acabado de pintura</p>
-                    <div class="switch-row" onclick="document.getElementById('chkLlevaPinturaChapa').click()">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-orange-950/30 rounded-xl flex items-center justify-center border border-orange-900/30">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gecko" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-[11px] font-black text-white uppercase tracking-wider">PINTURA</p>
-                                <p class="text-[9px] font-bold text-zinc-500 uppercase">Área: Fleje + Frente</p>
-                            </div>
-                        </div>
-                        <label class="switch-gecko" onclick="event.stopPropagation()">
-                            <input type="checkbox" id="chkLlevaPinturaChapa" onchange="window.togglePinturaChapa()">
-                            <span class="slider-gecko"></span>
-                        </label>
-                    </div>
-                    <div id="detallesPinturaChapa" class="hidden mt-6 space-y-3 pt-4 border-t border-zinc-800/50">
-                        <div id="filasPinturaChapa" class="space-y-2"></div>
-                        <button type="button" onclick="window.agregarFilaPinturaChapa()"
-                            class="w-full py-2 mt-2 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
-                            + Agregar pintura / base
-                        </button>
-                    </div>
-                </div>`;
-            const panelParaPintura = document.getElementById('panelConfigurador');
-            if (panelParaPintura) panelParaPintura.appendChild(tarjetaPinturaChapa);
-        }
 
         let auditorWrap = document.getElementById('geckoAuditorChapa');
         if (!auditorWrap) {
