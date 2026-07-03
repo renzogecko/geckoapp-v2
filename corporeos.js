@@ -731,22 +731,28 @@ window.calcularLetras3D = function () {
             const precioM2Frente = parseFloat(matFrenteObj.precioVenta || matFrenteObj.costo || 0);
             costoFrenteMaterial = areaFrenteM2 * precioM2Frente;
             if (document.getElementById('chkCorteFrenteLetras3D')?.checked) {
-                const servicios3D = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
-                const normalizar3D = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
-                const qNorm3D = normalizar3D("CORTE LASER " + nombreFrenteMat);
-                // B\u00fasqueda robusta (misma l\u00f3gica que ya funciona en Chapa/Acr\u00edlico):
-                // 1. Match exacto  2. Match parcial  3. Fallback gen\u00e9rico METAL
-                let servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === qNorm3D);
-                if (!servCorteFrente3D) {
-                    servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre).startsWith("CORTELASER") && qNorm3D.includes(normalizar3D(s.nombre)));
-                }
-                if (!servCorteFrente3D) {
-                    servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === normalizar3D("CORTE LASER - METAL"));
-                }
-                if (servCorteFrente3D) {
-                    const perimetroMl3D = perimetro / 100;
-                    costoFrenteCorte = perimetroMl3D * (servCorteFrente3D.precio || servCorteFrente3D.precioVenta || 0);
-                    nombreServCorteFrente3D = servCorteFrente3D.nombre;
+                const perimetroMl3D = perimetro / 100;
+                if (matFrenteObj.precioCorteMl && parseFloat(matFrenteObj.precioCorteMl) > 0) {
+                    // Prioridad: precio de corte propio del material (precioCorteMl)
+                    costoFrenteCorte = perimetroMl3D * parseFloat(matFrenteObj.precioCorteMl);
+                    nombreServCorteFrente3D = `Corte L\u00e1ser - ${nombreFrenteMat}`;
+                } else {
+                    const servicios3D = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+                    const normalizar3D = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
+                    const qNorm3D = normalizar3D("CORTE LASER " + nombreFrenteMat);
+                    // B\u00fasqueda robusta (misma l\u00f3gica que ya funciona en Chapa/Acr\u00edlico):
+                    // 1. Match exacto  2. Match parcial  3. Fallback gen\u00e9rico METAL
+                    let servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === qNorm3D);
+                    if (!servCorteFrente3D) {
+                        servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre).startsWith("CORTELASER") && qNorm3D.includes(normalizar3D(s.nombre)));
+                    }
+                    if (!servCorteFrente3D) {
+                        servCorteFrente3D = servicios3D.find(s => normalizar3D(s.nombre) === normalizar3D("CORTE LASER - METAL"));
+                    }
+                    if (servCorteFrente3D) {
+                        costoFrenteCorte = perimetroMl3D * (servCorteFrente3D.precio || servCorteFrente3D.precioVenta || 0);
+                        nombreServCorteFrente3D = servCorteFrente3D.nombre;
+                    }
                 }
             }
         }
@@ -1433,14 +1439,17 @@ window.calcularChapaAcrilico = function () {
     const normalizar = (txt) => String(txt || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
 
     // Helper: buscar servicio de corte l\u00e1ser SOLO en geckoServicios (evita matchear contra materiales)
-    const getServicioCorte = (nombreMaterial) => {
+    const getServicioCorte = (materialObj) => {
+        const nombreMaterial = (materialObj && materialObj.nombre) ? materialObj.nombre : materialObj;
+        // 1. Prioridad: precio de corte propio del material (precioCorteMl)
+        if (materialObj && materialObj.precioCorteMl && parseFloat(materialObj.precioCorteMl) > 0) {
+            return { nombre: `Corte L\u00e1ser - ${nombreMaterial}`, precioVenta: parseFloat(materialObj.precioCorteMl), _directo: true };
+        }
+        // 2. Fallback: buscar servicio en la lista vieja de Servicios (compatibilidad hist\u00f3rica)
         const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
         const qNorm = normalizar("CORTE LASER " + nombreMaterial);
-        // 1. Match exacto
         let serv = servicios.find(s => normalizar(s.nombre) === qNorm);
-        // 2. Match parcial: el nombre del servicio normalizado est\u00e1 contenido en la query
         if (!serv) serv = servicios.find(s => normalizar(s.nombre).startsWith("CORTELASER") && qNorm.includes(normalizar(s.nombre)));
-        // 3. Fallback gen\u00e9rico METAL
         if (!serv) serv = servicios.find(s => normalizar(s.nombre) === normalizar("CORTE LASER - METAL"));
         return serv || null;
     };
@@ -1547,9 +1556,9 @@ window.calcularChapaAcrilico = function () {
         costoPlacas += subtotalFrente;
         auditPlacas.push({ nombre: `Frente: ${itFrente.nombre}`, detalle: `${parseFloat(areaM2.toFixed(2))}m² × $${precioM2Frente.toLocaleString('es-AR')}/m²`, valor: subtotalFrente });
         if (llevaCorteFrenteChapa) {
-            const servCorteFrente = getServicioCorte(itFrente.nombre);
+            const servCorteFrente = getServicioCorte(itFrente);
             if (servCorteFrente) {
-                const precioCorteFrente = window.getCorpPrecio(servCorteFrente);
+                const precioCorteFrente = servCorteFrente.precioVenta || servCorteFrente.precio || 0;
                 const subtotalCorteFrente = perimetroMl * precioCorteFrente;
                 costoCortePlacas += subtotalCorteFrente;
                 auditPlacas.push({ nombre: `Corte ${servCorteFrente.nombre}`, detalle: `${parseFloat(perimetroMl.toFixed(2))}ml × $${Math.round(precioCorteFrente).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFrente });
