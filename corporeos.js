@@ -1109,6 +1109,57 @@ window.initChapaAcrilicoSelects = function () {
     }
 };
 
+window.agregarFilaPinturaChapa = function () {
+    const cont = document.getElementById('filasPinturaChapa');
+    if (!cont) return;
+    const rowId = 'pintChapa_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const mats = (window.materiales || []).filter(m => {
+        const cat = (m.categoria || '').toLowerCase().trim();
+        return cat === 'pintura' || cat === 'base';
+    });
+    const opciones = mats.length > 0
+        ? mats.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('')
+        : '<option value="">Sin materiales de Pintura/Base cargados</option>';
+    const row = document.createElement('div');
+    row.id = rowId;
+    row.className = 'grid grid-cols-12 gap-2 items-center';
+    row.innerHTML = `
+        <div class="col-span-6">
+            <select class="input-pintura-mat gecko-select-pro w-full" onchange="window.calcularChapaAcrilico()">
+                <option value="">Seleccionar material...</option>
+                ${opciones}
+            </select>
+        </div>
+        <div class="col-span-5">
+            <input type="text" class="input-pintura-codigo gecko-input w-full" placeholder="Código de color (manual)" oninput="window.calcularChapaAcrilico()">
+        </div>
+        <div class="col-span-1 text-center">
+            <button type="button" onclick="window.eliminarFilaPinturaChapa('${rowId}')" class="text-red-400 hover:text-red-300 text-lg leading-none">×</button>
+        </div>
+    `;
+    cont.appendChild(row);
+    window.calcularChapaAcrilico();
+};
+
+window.eliminarFilaPinturaChapa = function (rowId) {
+    const row = document.getElementById(rowId);
+    if (row) row.remove();
+    window.calcularChapaAcrilico();
+};
+
+window.togglePinturaChapa = function () {
+    const chk = document.getElementById('chkLlevaPinturaChapa');
+    const wrapper = document.getElementById('detallesPinturaChapa');
+    if (wrapper) wrapper.classList.toggle('hidden', !chk.checked);
+    if (chk.checked) {
+        const cont = document.getElementById('filasPinturaChapa');
+        if (cont && cont.children.length === 0) {
+            window.agregarFilaPinturaChapa();
+        }
+    }
+    window.calcularChapaAcrilico();
+};
+
 window.calcularChapaAcrilico = function () {
     // 1. Captura y Normalización de Variables
     const ancho = parseFloat(document.getElementById('chapaAncho')?.value) || 0;
@@ -1355,9 +1406,30 @@ window.calcularChapaAcrilico = function () {
     }
 
     // 6. Totales y Auditoría
+    const pinturaChapaActiva = document.getElementById('chkLlevaPinturaChapa')?.checked;
+    const areaFlejeParaPintura = (typeof areaFlejeM2 !== 'undefined') ? areaFlejeM2 : (perimetro * profundidad / 10000);
+    const areaFrenteParaPintura = itFrente ? areaM2 : 0;
+    const areaPinturaChapa = areaFlejeParaPintura + areaFrenteParaPintura;
+    const filasPinturaChapaCalc = [];
+    if (pinturaChapaActiva) {
+        document.querySelectorAll('#filasPinturaChapa > div').forEach(function (row) {
+            const selMat = row.querySelector('.input-pintura-mat');
+            const inpCodigo = row.querySelector('.input-pintura-codigo');
+            const matId = selMat ? selMat.value : '';
+            if (!matId) return;
+            const matObj = (window.materiales || []).find(function (m) { return String(m.id) === String(matId); });
+            if (!matObj) return;
+            const precioM2Pintura = parseFloat(matObj.precioVenta || matObj.costo || 0);
+            const codigo = inpCodigo ? inpCodigo.value.trim() : '';
+            const valorFilaPintura = Math.round(areaPinturaChapa * precioM2Pintura);
+            filasPinturaChapaCalc.push({ nombre: matObj.nombre, codigo: codigo, valor: valorFilaPintura });
+        });
+    }
+    const costoPinturaChapaTotal = filasPinturaChapaCalc.reduce(function (acc, f) { return acc + f.valor; }, 0);
+
     const estructuraTotal = costoFleje + costoPlacas;
     const corteTotal = costoCorteFleje + costoCortePlacas;
-    const totalUnitario = estructuraTotal + corteTotal + costoViniloTotal + costoIlumTotal + costoFuente;
+    const totalUnitario = estructuraTotal + corteTotal + costoViniloTotal + costoIlumTotal + costoFuente + costoPinturaChapaTotal;
     const totalFinal = Math.round(totalUnitario * cantidad);
 
     const fmt = (v) => '$' + Math.round(v).toLocaleString('es-AR');
@@ -1371,6 +1443,43 @@ window.calcularChapaAcrilico = function () {
     if (panelConf) {
         const fmtVal = n => '$' + Math.round(n).toLocaleString('es-AR');
         const hayDatos = auditEstructura.length > 0 || auditPlacas.length > 0;
+
+        let tarjetaPinturaChapa = document.getElementById('tarjetaPinturaChapa');
+        if (!tarjetaPinturaChapa) {
+            tarjetaPinturaChapa = document.createElement('div');
+            tarjetaPinturaChapa.id = 'tarjetaPinturaChapa';
+            tarjetaPinturaChapa.className = 'card-gecko space-y-2';
+            tarjetaPinturaChapa.innerHTML = `
+                <div class="seccion-switch-gecko">
+                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-2">06. Acabado de pintura</p>
+                    <div class="switch-row" onclick="document.getElementById('chkLlevaPinturaChapa').click()">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-orange-950/30 rounded-xl flex items-center justify-center border border-orange-900/30">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gecko" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-[11px] font-black text-white uppercase tracking-wider">PINTURA</p>
+                                <p class="text-[9px] font-bold text-zinc-500 uppercase">Área: Fleje + Frente</p>
+                            </div>
+                        </div>
+                        <label class="switch-gecko" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="chkLlevaPinturaChapa" onchange="window.togglePinturaChapa()">
+                            <span class="slider-gecko"></span>
+                        </label>
+                    </div>
+                    <div id="detallesPinturaChapa" class="hidden mt-6 space-y-3 pt-4 border-t border-zinc-800/50">
+                        <div id="filasPinturaChapa" class="space-y-2"></div>
+                        <button type="button" onclick="window.agregarFilaPinturaChapa()"
+                            class="w-full py-2 mt-2 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
+                            + Agregar pintura / base
+                        </button>
+                    </div>
+                </div>`;
+            const panelParaPintura = document.getElementById('panelConfigurador');
+            if (panelParaPintura) panelParaPintura.appendChild(tarjetaPinturaChapa);
+        }
 
         let auditorWrap = document.getElementById('geckoAuditorChapa');
         if (!auditorWrap) {
@@ -1417,6 +1526,11 @@ window.calcularChapaAcrilico = function () {
                 if (costoFuente > 0) html += lineaRow('Fuente', fuenteRecomendada, costoFuente);
             }
 
+            if (filasPinturaChapaCalc.length > 0) {
+                html += seccion('Acabado de pintura');
+                filasPinturaChapaCalc.forEach(f => html += lineaRow(f.nombre + (f.codigo ? ` (${f.codigo})` : ''), `${areaPinturaChapa.toFixed(4)}m²`, f.valor));
+            }
+
             html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
                 <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
                 <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
@@ -1457,7 +1571,7 @@ window.calcularChapaAcrilico = function () {
         tipo: 'corporeos',
         nombre: `CHAPA/ACRILICO - ${document.getElementById('chapaNombre')?.value || 'S/N'}`,
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | Ilum: ${descIlum} (${fuenteRecomendada})`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | Ilum: ${descIlum} (${fuenteRecomendada})${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}`
     };
 };
 
