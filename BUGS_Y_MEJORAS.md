@@ -70,6 +70,35 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
 
+## Sesión 03/07/2026 (continuación) — Nuevo cotizador de Instalación
+
+**Resueltos hoy:**
+- ✅ Nuevo cotizador "Instalación" (archivo instalaciones.js) — sección
+  propia en el menú lateral, independiente de los 7 cotizadores
+  existentes. Calcula:
+  - Mano de obra: cantidad de empleados × horas de trabajo × valor
+    "Hora Hombre" (tomado de Configuración → Costos Operativos, campo
+    ya existente).
+  - Gastos extra: sistema de multicarga (varias filas con descripción
+    y monto), igual que la tarjeta de Pintura.
+  - Instalación fuera de La Plata (interruptor apagado por defecto):
+    kilómetros de un tramo (se duplican automáticamente para ida y
+    vuelta) × nuevo campo configurable "Precio por Km", más viáticos
+    y peajes cargados a mano.
+  - Sigue la Regla R4: si "Hora Hombre" está en $0, muestra aviso
+    "FALTA PARÁMETRO" en el Auditor en vez de calcular en silencio.
+  - Se integra al presupuesto con el mismo mecanismo probado que ya
+    usa Chapa/Acrílico (agregarItemAlPresupuesto), sin tocar ningún
+    cotizador existente.
+- ✅ Nuevo campo "Precio por Km" agregado en Configuración → Costos
+  Operativos.
+
+**Prioridad recomendada para la próxima sesión:**
+1. Confirmar y resolver el corte del Fleje en Chapa/Acrílico (sospecha
+   de bug dormido, anotada en la sesión anterior).
+2. BUG-003 (cotización del dólar hardcodeada).
+3. Sospecha de código muerto: confirmarPagoGlobalCliente en main.js.
+
 ## Sesión 03/07/2026 — Cotizadores (Pintura, Corte y Montado)
 
 **Resueltos hoy:**
