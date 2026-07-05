@@ -131,6 +131,7 @@ window.generarDocPresupuesto = async function (p) {
     const validez = p.validez || '10 días';
     const entrega = p.entrega || p.fechaEntrega || p.fecha_entrega || 'A convenir';
     const nota = p.nota || '';
+    const condicionesCliente = p.condiciones || '';
     const imagenes = p.imagenes || [];
 
     const total = items.reduce((acc, it) => acc + (parseFloat(it.costo) || 0), 0);
@@ -211,8 +212,9 @@ window.generarDocPresupuesto = async function (p) {
         </div>
     </div>
     <div class="doc-condiciones">
-        <div class="cond-item"><label>Condiciones de pago</label><p>Adelanto del 60% del valor.<br>Resto, contra entrega.</p></div>
+        <div class="cond-item"><label>Condiciones de pago</label><p>Adelanto del 60% del valor. &nbsp;|&nbsp; ${fmtMoney(totalFinal * 0.6)}<br>Resto, contra entrega. &nbsp;|&nbsp; ${fmtMoney(totalFinal * 0.4)}</p></div>
         <div class="cond-item"><label>Condición IVA</label><p>No incluye IVA · Monotributo.<br>Emitimos Factura C.</p></div>
+        ${condicionesCliente ? `<div class="cond-item" style="grid-column:1/-1"><label>Condiciones para el cliente</label><p>${condicionesCliente}</p></div>` : ''}
         ${nota ? `<div class="cond-item" style="grid-column:1/-1"><label>Notas adicionales</label><p>${nota}</p></div>` : ''}
     </div>
   </div>
@@ -543,6 +545,7 @@ window._imprimirDoc = async function (tipo) {
         descuento: !esOT ? parseFloat(document.getElementById('docDescuento')?.value) || 0 : 0,
         metodoPago: !esOT ? document.getElementById('docMetodoPago')?.value || '' : '',
         nota: !esOT ? document.getElementById('docNota')?.value || '' : '',
+        condiciones: !esOT ? (document.getElementById('gpmCondiciones')?.value || '') : '',
         area: esOT ? document.getElementById('docArea')?.value || '' : '',
         instrucciones: esOT ? document.getElementById('docInstrucciones')?.value || '' : '',
     };
