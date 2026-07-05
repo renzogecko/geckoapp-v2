@@ -21,7 +21,7 @@ const GECKO_PRINT_STYLES = `
     .page-content { flex: 1; }
     .page::after { content: ''; position: fixed; right: 0; top: 0; width: 150px; height: 100vh; background: repeating-linear-gradient(170deg,transparent,transparent 6px,rgba(241,90,36,0.045) 6px,rgba(241,90,36,0.045) 7px); pointer-events: none; }
     .doc-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px 36px 18px; border-bottom: 2.5px solid #F15A24; }
-    .header-logo img { height: 40px; width: auto; }
+    .header-logo img { height: 64px; width: auto; }
     .header-contacto { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 9px; color: #666; font-weight: 500; padding-top: 2px; }
     .header-tipo { text-align: right; }
     .tipo-label { font-size: 22px; font-weight: 900; color: #F15A24; letter-spacing: -0.5px; text-transform: uppercase; line-height: 1; }
@@ -197,7 +197,7 @@ window.generarDocPresupuesto = async function (p) {
         <table class="items-table">
             <thead><tr>
                 <th style="width:26px">#</th>
-                <th>Descripción del trabajo</th>
+                <th>${titulo || 'Descripción del trabajo'}</th>
                 <th class="th-r">${mostrarPrecios ? 'Precio' : ''}</th>
             </tr></thead>
             <tbody>${itemsHTML}</tbody>
