@@ -2722,6 +2722,11 @@ window.abrirModalNuevoGastoFijo = function () {
 };
 
 // ── Reportes: override ranking para usar p.categoria (Gráfica / Industrial) ──
+// FIX (05/07/2026): se envuelve en window.addEventListener('load') porque
+// gecko-fixes.js no tiene "defer" y se ejecuta ANTES que main.js (que sí
+// tiene defer). Esto hacía que main.js pisara este override al terminar
+// de cargar, y por eso los gráficos de Chart.js nunca se dibujaban.
+window.addEventListener('load', function () {
 const _renderReportesOriginal = window.renderReportesDashboard;
 window.renderReportesDashboard = function () {
     if (typeof _renderReportesOriginal === 'function') _renderReportesOriginal();
@@ -2818,6 +2823,9 @@ window.renderReportesDashboard = function () {
         liquidezBarsEl.innerHTML = barsCajas + barCobrar;
     }
 };
+// Fuerza el primer dibujado ya con el override activo
+if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
+});
 
 // ── Cierre mensual con modal Gecko ──
 window._ejecutarCierreMensualGecko = function () {
