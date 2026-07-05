@@ -1116,6 +1116,50 @@
             <!-- CONTENIDO TAB: REPORTES -->
             <div id="contentFin-reportes" class="hidden space-y-8 overflow-y-auto pr-2 custom-scrollbar mt-6">
 
+                <!-- CARD PUNTO DE EQUILIBRIO -->
+                <div id="cardPuntoEquilibrio"
+                     style="background: rgba(241,90,36,0.07); border: 1px solid rgba(241,90,36,0.35); border-radius: 24px; padding: 28px; margin-bottom: 24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <div style="width:44px;height:44px;border-radius:16px;background:rgba(241,90,36,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#F15A24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3v-6m-3 6v-2m-6 2h18M4 7h16v13a1 1 0 01-1 1H5a1 1 0 01-1-1V7z"/></svg>
+                            </div>
+                            <div>
+                                <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 3px;">Punto de Equilibrio</p>
+                                <p style="color:#a1a1aa;font-size:11px;margin:0;">Lo que necesitás facturar para cubrir costos fijos</p>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <p id="pePuntoEquilibrioMonto" style="color:white;font-size:32px;font-weight:900;margin:0;line-height:1;">$0</p>
+                            <p id="pePuntoEquilibrioOts" style="color:#a1a1aa;font-size:11px;margin:4px 0 0;">≈ 0 OTs este mes</p>
+                        </div>
+                    </div>
+                    <div style="margin-top:20px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                            <span id="peFacturadoLabel" style="color:#4ade80;font-size:12px;font-weight:700;">Facturado: $0</span>
+                            <span id="peFaltanLabel" style="color:#F15A24;font-size:12px;font-weight:700;">Faltan $0</span>
+                        </div>
+                        <div style="width:100%;height:10px;background:#27272a;border-radius:5px;overflow:hidden;position:relative;">
+                            <div id="peBarraProgreso" style="height:100%;background:#F15A24;border-radius:5px;width:0%;transition:width 0.8s ease;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:32px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);flex-wrap:wrap;">
+                        <div>
+                            <p style="color:#71717a;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Costos Fijos</p>
+                            <p id="peCostosFijos" style="color:white;font-size:16px;font-weight:900;margin:0;">$0</p>
+                        </div>
+                        <div>
+                            <p style="color:#71717a;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Margen Contribución</p>
+                            <p id="peMargenContribucion" style="color:#4ade80;font-size:16px;font-weight:900;margin:0;">0%</p>
+                        </div>
+                        <div>
+                            <p style="color:#71717a;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Avance del Mes</p>
+                            <p id="peAvanceMes" style="color:#F15A24;font-size:16px;font-weight:900;margin:0;">0%</p>
+                        </div>
+                    </div>
+                    <p id="peAvisoFaltaDato" style="display:none;color:#fbbf24;font-size:11px;font-weight:700;margin:16px 0 0;padding:10px 14px;background:rgba(251,191,36,0.1);border-radius:10px;"></p>
+                </div>
+
                 <!-- 🔹 Dashboard de Métricas Avanzadas (Grid 2x2) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Rentabilidad -->

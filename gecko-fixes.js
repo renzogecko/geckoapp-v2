@@ -2825,7 +2825,91 @@ window.renderReportesDashboard = function () {
 };
 // Fuerza el primer dibujado ya con el override activo
 if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
+
+// ── Punto de Equilibrio (MEJ-001) ──
+if (typeof window.renderPuntoEquilibrio === 'function') window.renderPuntoEquilibrio();
 });
+
+// ── Punto de Equilibrio: cálculo con datos reales, sin inventar números ──
+window.renderPuntoEquilibrio = function () {
+    const cont = document.getElementById('cardPuntoEquilibrio');
+    if (!cont) return;
+
+    const ahora = new Date();
+    const mesActual = ahora.getMonth();
+    const anioActual = ahora.getFullYear();
+
+    const movimientos = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+    const gastosFijos = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+
+    const movsMes = movimientos.filter(m => {
+        const [d, mo, y] = (m.fecha || '').split('/');
+        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+    });
+
+    const ingresos = movsMes.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + (m.monto || 0), 0);
+
+    const egresosFijosCategorias = movsMes.filter(m => m.tipo === 'Egreso' && ['Alquiler', 'Sueldos'].includes(m.categoria))
+        .reduce((a, m) => a + (m.monto || 0), 0);
+    const totalGastosFijosCargados = gastosFijos.reduce((a, g) => a + (parseFloat(g.monto) || 0), 0);
+    const costosFijos = totalGastosFijosCargados + egresosFijosCategorias;
+
+    const costosVariables = movsMes.filter(m => m.tipo === 'Egreso' && m.categoria === 'Insumos')
+        .reduce((a, m) => a + (m.monto || 0), 0);
+
+    const otsMes = lista.filter(p => {
+        if (p.status !== 'OT') return false;
+        const [d, mo, y] = (p.fecha || '').split('/');
+        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+    });
+    const ticketProm = otsMes.length > 0 ? (otsMes.reduce((a, p) => a + (p.total || 0), 0) / otsMes.length) : 0;
+
+    const elAviso = document.getElementById('peAvisoFaltaDato');
+
+    if (ingresos <= 0 || costosFijos <= 0) {
+        if (elAviso) {
+            elAviso.style.display = 'block';
+            elAviso.innerText = ingresos <= 0
+                ? 'FALTA DATO: no hay ingresos registrados este mes todavía para calcular el margen.'
+                : 'FALTA DATO: no hay Gastos Fijos cargados este mes.';
+        }
+        document.getElementById('pePuntoEquilibrioMonto').innerText = '—';
+        document.getElementById('pePuntoEquilibrioOts').innerText = 'Sin datos suficientes';
+        return;
+    }
+    if (elAviso) elAviso.style.display = 'none';
+
+    const margenContribucion = (ingresos - costosVariables) / ingresos;
+
+    if (margenContribucion <= 0) {
+        if (elAviso) {
+            elAviso.style.display = 'block';
+            elAviso.innerText = 'FALTA DATO: el margen de contribución da 0 o negativo (revisá que los Egresos con categoría "Insumos" no superen a los Ingresos).';
+        }
+        document.getElementById('pePuntoEquilibrioMonto').innerText = '—';
+        return;
+    }
+
+    const peMonto = costosFijos / margenContribucion;
+    const peOts = ticketProm > 0 ? Math.ceil(peMonto / ticketProm) : 0;
+    const avanceMes = Math.min(100, (ingresos / peMonto) * 100);
+    const faltan = Math.max(0, peMonto - ingresos);
+    const otsFaltantes = ticketProm > 0 ? Math.ceil(faltan / ticketProm) : 0;
+
+    const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+
+    document.getElementById('pePuntoEquilibrioMonto').innerText = fmt(peMonto);
+    document.getElementById('pePuntoEquilibrioOts').innerText = `≈ ${peOts} OTs este mes`;
+    document.getElementById('peFacturadoLabel').innerText = `Facturado: ${fmt(ingresos)}`;
+    document.getElementById('peFaltanLabel').innerText = avanceMes >= 100
+        ? '¡Punto de equilibrio alcanzado!'
+        : `Faltan ${fmt(faltan)} · ${otsFaltantes} OTs`;
+    document.getElementById('peBarraProgreso').style.width = avanceMes + '%';
+    document.getElementById('peCostosFijos').innerText = fmt(costosFijos);
+    document.getElementById('peMargenContribucion').innerText = (margenContribucion * 100).toFixed(0) + '%';
+    document.getElementById('peAvanceMes').innerText = avanceMes.toFixed(0) + '%';
+};
 
 // ── Cierre mensual con modal Gecko ──
 window._ejecutarCierreMensualGecko = function () {
