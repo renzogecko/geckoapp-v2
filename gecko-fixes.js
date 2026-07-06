@@ -1147,20 +1147,46 @@ window.toggleHistorialOts = function () {
 };
 
 window._revertirOTaPresupuesto = function (id) {
-    const confirmar = confirm(
-        '¿Revertir esta OT a Presupuesto?\n\n' +
-        'La OT #' + id + ' va a volver a la lista de Presupuestos para que ' +
-        'puedas editar sus ítems y precios desde ahí. Dejará de aparecer ' +
-        'en la lista de OTs hasta que la vuelvas a convertir.'
-    );
-    if (!confirmar) return;
+    document.getElementById('_geckoConfirmRevertirOT')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoConfirmRevertirOT';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:420px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:rgba(241,90,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#F15A24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                </svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Revertir a Presupuesto</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">
+                La OT <strong style="color:white;">#${id}</strong> va a volver a la
+                lista de Presupuestos para que puedas editar sus ítems y precios.
+                Dejará de aparecer en la lista de OTs hasta que la vuelvas a convertir.
+            </p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('_geckoConfirmRevertirOT').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;"
+                    onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'"
+                    onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
+                <button onclick="window._confirmarRevertirOT('${id}')"
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;"
+                    onmouseover="this.style.background='#d94e1a'"
+                    onmouseout="this.style.background='#F15A24'">Revertir</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+};
 
+window._confirmarRevertirOT = function (id) {
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const idx = lista.findIndex(x => String(x.id) === String(id));
     if (idx === -1) return;
 
     lista[idx].status = 'Cotizado';
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    document.getElementById('_geckoConfirmRevertirOT')?.remove();
 
     if (typeof window.renderOts === 'function') window.renderOts();
     if (typeof window.renderPresupuestos === 'function') window.renderPresupuestos();
@@ -1197,7 +1223,7 @@ window.editarOT = function (id) {
     modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;overflow-y:auto;';
 
     modal.innerHTML = `
-        <div class="gecko-modal-box max-w-2xl w-full mx-auto my-auto relative">
+        <div class="gecko-modal-box max-w-2xl w-full mx-auto my-auto relative" style="max-width:960px;">
             <button onclick="document.getElementById('modalEditarOT').remove()" style="position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:12px;background:#18181b;border:1px solid #27272a;color:#71717a;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ef4444';this.style.transform='rotate(90deg)'" onmouseout="this.style.color='#71717a';this.style.transform='rotate(0deg)'">
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
