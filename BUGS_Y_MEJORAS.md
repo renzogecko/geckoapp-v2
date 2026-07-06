@@ -57,6 +57,41 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Descripción:** en esta seccion los precios van de manera manual, pero quiero que en paralelo se calcule un valor en dolares para saber cuando esta al cambio. Pero tambien me gustaria que a la hora de actualizar los precios, podamos hacerlo desde ese valor de dolar. (funcionamiento similar al del campo de los multiplicadores cuando esta el toggle actiado en el modo FIJA (precio de mercado) donde ese campo se calcula automatico con el margen de ganancia real, pero en este casi seria, cuanto equivaldria en dolares
 - **Estado:** 🔵 Pendiente
 
+### [MEJ-007] Dashboard principal con datos reales + rediseño de tableros
+- **Sección:** Dashboard (vista principal al entrar al sistema)
+- **Descripción:** hoy las tarjetas del Dashboard tienen datos hardcodeados (de ejemplo, no reales). Hay que conectarlas a datos reales de la app. También rediseñar los tableros de Gráfica e Industrial para que muestren los trabajos actuales en proceso, de forma que el usuario al entrar tenga un primer vistazo de lo que hay que hacer.
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-008] Sección de Agenda / TO-DO — REQUIERE DEFINICIÓN PREVIA
+- **Sección:** Nueva sección (a definir)
+- **Descripción:** agenda personal estilo TO-DO. Evaluar si conviene integrarla vía una API externa existente, o construir una sección propia dentro de la app. Antes de escribir cualquier prompt de código, charlar el alcance y diseño con Renzo.
+- **Estado:** 🔵 Pendiente — a definir
+
+### [MEJ-009] Cotizador de Stickers con nesting automático
+- **Sección:** Cotizadores (nuevo)
+- **Descripción:** nuevo cotizador donde se carga el tamaño del sticker individual, cantidad y tipo. El sistema calcula automáticamente: cantidad de metros necesarios, cómo se acomodan los stickers en el pliego (nesting), y el precio final al cliente. Pensado para cotizar rápido.
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-010] Chatbot asistente dentro de la app — REQUIERE DEFINICIÓN PREVIA
+- **Sección:** Nueva funcionalidad (a definir)
+- **Descripción:** asistente conversacional dentro de GeckoApp para ayudar a encontrar información de forma más eficiente. Alcance, tecnología y diseño a definir en una sesión propia antes de escribir código.
+- **Estado:** 🔵 Pendiente — a definir
+
+### [MEJ-011] Cotizador de ACM
+- **Sección:** Cotizadores (nuevo)
+- **Descripción:** nuevo cotizador para trabajos en ACM (aluminium composite panel).
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-012] Hoja membretada de precios de impresión para el gremio
+- **Sección:** Documentos / gecko-docs.js
+- **Descripción:** botón que genere un documento imprimible con todos los servicios de impresión y sus precios actualizados, para enviar al gremio.
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-013] Cotizador de Productos Gecko
+- **Sección:** Cotizadores (nuevo)
+- **Descripción:** cotizador simple con un select que trae los "Productos Gecko" de la lista de Materiales, permitiendo multicarga (varios productos en un mismo presupuesto).
+- **Estado:** 🔵 Pendiente
+
 ---
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
