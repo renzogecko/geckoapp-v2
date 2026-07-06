@@ -1251,7 +1251,7 @@ window.editarOT = function (id) {
 
                 <div>
                     <label class="gecko-label">Fecha de entrega</label>
-                    <input type="text" id="otEditEntrega" class="gecko-input-line" placeholder="Ej: 30/06/2026" value="${(ot.fecha_entrega || '').replace(/"/g, '&quot;')}">
+                    <input type="date" id="otEditEntrega" class="gecko-input-line" style="color-scheme:dark;" value="${window._geckoFechaDDMMYYYYaISO(ot.fecha_entrega || '')}">
                 </div>
 
                 <div>
@@ -1363,7 +1363,7 @@ window._guardarEdicionOT = function (id) {
 
     lista[idx].cliente = document.getElementById('otEditCliente')?.value?.trim() || lista[idx].cliente;
     lista[idx].area = document.getElementById('otEditArea')?.value?.trim() || '';
-    lista[idx].fecha_entrega = document.getElementById('otEditEntrega')?.value?.trim() || '';
+    lista[idx].fecha_entrega = window._geckoFechaISOaDDMMYYYY(document.getElementById('otEditEntrega')?.value || '') || lista[idx].fecha_entrega || '';
     lista[idx].instrucciones = document.getElementById('otEditInstrucciones')?.value?.trim() || '';
     lista[idx].imagenes = window._otEditImagenes || lista[idx].imagenes || [];
 
@@ -6987,6 +6987,23 @@ function _ensureBotonAgregarGrabado() {
     btn.onclick = window._agregarFilaGrabadoNueva;
     panel.appendChild(btn);
 }
+
+window._geckoFechaDDMMYYYYaISO = function (fechaTexto) {
+    if (!fechaTexto) return '';
+    const partes = fechaTexto.trim().split('/');
+    if (partes.length !== 3) return '';
+    const [d, m, y] = partes;
+    if (!d || !m || !y) return '';
+    return `${y.padStart(4, '0')}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+};
+
+window._geckoFechaISOaDDMMYYYY = function (fechaISO) {
+    if (!fechaISO) return '';
+    const partes = fechaISO.split('-');
+    if (partes.length !== 3) return '';
+    const [y, m, d] = partes;
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+};
 
 // ── FIN FIX BUG-004 ──────────────────────────────────────────────────────────
 // ── FIN FIX renderInsumos v2 ─────────────────────────────────────────────────
