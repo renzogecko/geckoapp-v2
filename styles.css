@@ -2969,3 +2969,14 @@ select.gecko-select-modal option {
     background: #18181b !important;
     color: white !important;
 }
+
+/* ── Ocultar Eficiencia Segmentada: main.js les pisa el estilo y las ──
+   muestra con colores de fondo claro, ilegibles en el dashboard oscuro.
+   Se fuerza el ocultamiento con !important para que sobreviva sin
+   importar qué className le ponga main.js. No se toca main.js. ── */
+#metricEficienciaGrafica,
+#badgeEficienciaGrafica,
+#metricEficienciaIndustrial,
+#badgeEficienciaIndustrial {
+    display: none !important;
+}

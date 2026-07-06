@@ -2915,7 +2915,7 @@ window.renderTicketPorRubro = function () {
 // formateador: función que recibe el número y devuelve el texto a mostrar
 window._geckoAnimarNumero = function (elemento, valorFinal, formateador) {
     if (!elemento || isNaN(valorFinal)) return;
-    const duracion = 800; // milisegundos
+    const duracion = 1600; // milisegundos
     const inicio = performance.now();
     function paso(ahora) {
         const progreso = Math.min(1, (ahora - inicio) / duracion);
