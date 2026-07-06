@@ -2782,6 +2782,7 @@ window.renderReportesDashboard = function () {
     // ── Gráficos Chart.js: Ingresos por Categoría (área) + Mix de Ventas (donut) ──
     if (typeof window.renderChartIngresos === 'function') window.renderChartIngresos(lista, ahora);
     if (typeof window.renderChartMix === 'function') window.renderChartMix();
+    if (typeof window.renderChartCrecimiento === 'function') window.renderChartCrecimiento(lista, ahora);
 
     // ── Barras de Liquidez por caja ──
     const liquidezBarsEl = document.getElementById('liquidezBarsContainer');
@@ -5945,6 +5946,57 @@ window.renderChartMix = function () {
             responsive: true, maintainAspectRatio: false, cutout: '72%',
             animation: { animateRotate: true, duration: 1300 },
             plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' trabajos' } } }
+        }
+    });
+};
+
+window.renderChartCrecimiento = function (lista, ahora) {
+    const canvas = document.getElementById('canvasCrecimientoVentas');
+    if (!canvas || typeof Chart === 'undefined') return;
+    lista = lista || JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    ahora = ahora || new Date();
+    const MESES_NOM = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const meses6 = [];
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+        meses6.push({ m: d.getMonth(), y: d.getFullYear(), label: MESES_NOM[d.getMonth()] });
+    }
+    const totales = meses6.map(mes => {
+        return lista.filter(p => {
+            if (p.status !== 'OT') return false;
+            const pts = (p.fecha || '').split('/');
+            if (pts.length < 3) return false;
+            return parseInt(pts[1]) - 1 === mes.m && parseInt(pts[2]) === mes.y;
+        }).reduce((a, p) => a + (p.total || 0), 0);
+    });
+
+    const prev = Chart.getChart(canvas);
+    if (prev) prev.destroy();
+    const ctx = canvas.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 110);
+    g.addColorStop(0, '#F15A2455');
+    g.addColorStop(1, '#F15A2400');
+
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: meses6.map(m => m.label),
+            datasets: [{
+                data: totales, borderColor: '#F15A24', borderWidth: 2.5,
+                tension: 0.4, pointRadius: 0, pointHoverRadius: 4,
+                fill: true, backgroundColor: g
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, animation: { duration: 1400 },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: c => 'Ingresos: $' + c.parsed.y.toLocaleString('es-AR') } }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#71717a', font: { size: 9 } } },
+                y: { display: false }
+            }
         }
     });
 };

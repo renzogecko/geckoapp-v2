@@ -1317,21 +1317,15 @@
                             <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 gecko-card-title">Crecimiento
                                 Ventas</span>
                         </div>
-                        <div class="flex items-end justify-between">
-                            <div>
-                                <p id="metricVariacion" class="text-4xl font-black text-emerald-500 leading-none mb-2">
-                                    +0%</p>
-                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                    Vs mes anterior
-                                </p>
-                            </div>
-                            <div id="chartCrecimiento" class="flex items-end gap-1 h-12">
-                                <div class="w-3 bg-gray-200 dark:bg-gray-800 rounded-t-sm h-[40%]">
-                                </div>
-                                <div
-                                    class="w-3 bg-gecko rounded-t-sm h-[90%] animate-bounce shadow-lg shadow-orange-500/20">
-                                </div>
-                            </div>
+                        <div>
+                            <p id="metricVariacion" class="text-4xl font-black text-emerald-500 leading-none mb-2">
+                                +0%</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                Vs mes anterior
+                            </p>
+                        </div>
+                        <div id="chartCrecimientoContainer" style="position:relative;width:100%;height:110px;margin-top:16px;">
+                            <canvas id="canvasCrecimientoVentas" role="img" aria-label="Evolución de ingresos totales últimos 6 meses"></canvas>
                         </div>
                     </div>
                 </div>
