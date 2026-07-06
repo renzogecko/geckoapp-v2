@@ -505,7 +505,7 @@ window.GeckoGrafica = {
         if (this.isTermActive('checkTensado')) {
             const ml = parseFloat(document.getElementById('valTensado')?.value) || 1;
             const servTensado = window.getGeckoItem("TENSADO");
-            const precioBase = servTensado ? servTensado.precioVenta : 3500; // Fallback
+            const precioBase = servTensado ? (servTensado.precio || servTensado.precioVenta || 3500) : 3500; // Fallback
             const sub = ml * precioBase;
             serviciosCostos += sub;
             activeTerms.push('Tensado');
@@ -643,7 +643,7 @@ window.GeckoGrafica = {
                 if (this.isTermActive('checkTensado')) {
                     const ml = parseFloat(document.getElementById('valTensado')?.value) || 1;
                     const serv = window.getGeckoItem('TENSADO');
-                    const precio = serv ? serv.precioVenta : 3500;
+                    const precio = serv ? (serv.precio || serv.precioVenta || 3500) : 3500;
                     termActivas.push({ label: 'Tensado', detalle: `${ml}ml × ${fmtVal(precio)}/ml`, valor: ml * precio });
                 }
                 if (this.isTermActive('checkTroquelado')) {
