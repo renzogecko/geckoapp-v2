@@ -2828,7 +2828,66 @@ if (typeof window.renderReportesDashboard === 'function') window.renderReportesD
 
 // ── Punto de Equilibrio (MEJ-001) ──
 if (typeof window.renderPuntoEquilibrio === 'function') window.renderPuntoEquilibrio();
+// ── Ticket Promedio por Rubro (MEJ-003, aproximación por venta, no margen) ──
+if (typeof window.renderTicketPorRubro === 'function') window.renderTicketPorRubro();
 });
+
+// ── Ticket Promedio por Rubro: mapeo tipo→rubro duplicado de main.js (rubroDeItem no está expuesta en window) ──
+window.renderTicketPorRubro = function () {
+    const elNombre = document.getElementById('metricRubroTicketNombre');
+    const elValor = document.getElementById('metricRubroTicketValor');
+    if (!elNombre || !elValor) return;
+
+    function rubroDeItemLocal(it, p) {
+        const t = (it.tipo || '').toLowerCase();
+        if (t === 'grafica' || t === 'corte') return 'Gráfica';
+        if (t === 'corporeos') return 'Corpóreos';
+        if (t === 'laser_cnc') return 'Láser/CNC';
+        if (t === 'textil') return 'Textil';
+        if (t === '3d' || t === 'impresion3d') return 'Impresión 3D';
+        if (t === 'bastidores') return 'Industrial';
+        if (t === 'manual') return (p && p.categoria === 'Industrial') ? 'Industrial' : 'Gráfica';
+        return 'Otros';
+    }
+
+    const ahora = new Date();
+    const mesActual = ahora.getMonth();
+    const anioActual = ahora.getFullYear();
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+
+    const otsMes = lista.filter(p => {
+        if (p.status !== 'OT') return false;
+        const [d, mo, y] = (p.fecha || '').split('/');
+        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+    });
+
+    const sumas = {}, conteos = {};
+    otsMes.forEach(p => (p.items || []).forEach(it => {
+        const rubro = rubroDeItemLocal(it, p);
+        if (rubro === 'Otros') return;
+        sumas[rubro] = (sumas[rubro] || 0) + (parseFloat(it.costo) || 0);
+        conteos[rubro] = (conteos[rubro] || 0) + 1;
+    }));
+
+    const rubros = Object.keys(sumas);
+    if (rubros.length === 0) {
+        elNombre.innerText = 'Sin datos este mes';
+        elValor.innerText = '';
+        return;
+    }
+
+    let mejorRubro = null, mejorPromedio = -1;
+    rubros.forEach(r => {
+        const promedio = sumas[r] / conteos[r];
+        if (promedio > mejorPromedio) {
+            mejorPromedio = promedio;
+            mejorRubro = r;
+        }
+    });
+
+    elNombre.innerText = mejorRubro;
+    elValor.innerText = '$' + Math.round(mejorPromedio).toLocaleString('es-AR');
+};
 
 // ── Punto de Equilibrio: cálculo con datos reales, sin inventar números ──
 window.renderPuntoEquilibrio = function () {
