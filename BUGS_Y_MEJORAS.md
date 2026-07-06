@@ -30,26 +30,17 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Reportado:** 22/06/2026
 - **Estado:** 🟡 Pendiente
 
+### [BUG-007] Items de cotizadores etiquetados como 'grafica' por defecto
+- **Sección:** main.js — función agregarItemAlPresupuesto
+- **Síntoma:** Mix de Ventas en Reportes muestra solo "Gráfica" aunque haya ventas de otros rubros.
+- **Causa:** la línea "if (!item.tipo) item.tipo = 'grafica';" en agregarItemAlPresupuesto (main.js) le pone Gráfica por defecto a cualquier ítem sin etiqueta, en vez de marcarlo como desconocido. Viola la Regla R4 (nunca inventar un dato).
+- **Fix esperado:** auditar los 6 archivos de cotizadores (corte.js, corporeos.js, laser.js, bastidores.js, textil.js, impresion3d.js) para confirmar que cada uno setea correctamente item.tipo antes de llamar a agregarItemAlPresupuesto. Cambiar el fallback de 'grafica' a algo neutro como 'desconocido', y que Reportes lo muestre como "Otros" en vez de inventar Gráfica.
+- **Reportado:** 05/07/2026
+- **Estado:** 🟡 Pendiente
+
 ---
 
 ## 🔵 MEJORAS — rediseño visual de Reportes (no son bugs, son features pendientes)
-
-### [MEJ-001] Punto de Equilibrio (card hero en Reportes)
-- **Sección:** Finanzas › Reportes
-- **Descripción:** nueva card arriba de todo. Muestra PE en $, PE en OTs, barra de progreso facturado vs PE, footer con costos fijos / margen contribución / % avance del mes.
-- **Cálculo:** PE en $ = costos fijos / margen contribución. PE en OTs = PE en $ / ticket promedio.
-- **Diseño:** fondo `rgba(241,90,36,0.07)`, borde `rgba(241,90,36,0.35)`.
-- **Estado:** 🔵 Pendiente
-
-### [MEJ-002] Count-up animado en métricas
-- **Sección:** Finanzas › Reportes
-- **Descripción:** Ticket Promedio, Tasa de Cierre, Dinero Estancado y Rubro+Rentable animan el número de 0 al valor real con easing al cargar la sección.
-- **Estado:** 🔵 Pendiente
-
-### [MEJ-003] Card "Rubro más rentable"
-- **Sección:** Finanzas › Reportes
-- **Descripción:** card chiquita con el rubro de mayor margen real (no volumen). Cálculo: (ingresos rubro − costos insumos rubro) / ingresos rubro.
-- **Estado:** 🔵 Pendiente
 
 ### [MEJ-004] Blindar tablas `servicios` y `clientes`
 - **Sección:** gecko-api.js
@@ -69,6 +60,26 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 ---
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
+
+## Sesión 05/07/2026 — Finanzas › Reportes: rediseño visual (parte 2 completa)
+
+**Resueltos hoy:**
+- ✅ [MEJ-001] Punto de Equilibrio → card hero agregada en gecko-fixes.js
+  (`window.renderPuntoEquilibrio`) e index.html, con cálculo real de
+  costos fijos, margen de contribución y avance del mes.
+- ✅ [MEJ-002] Count-up animado → función `window._geckoAnimarNumero` en
+  gecko-fixes.js, aplicada a Dinero Estancado, Tasa de Cierre, Ticket
+  Promedio, Ticket Prom. por Rubro y Punto de Equilibrio. Duración
+  final: 1600ms.
+- ✅ [MEJ-003] Card "Rubro más rentable" → RESUELTA, pero RENOMBRADA a
+  "Ticket Promedio por Rubro". No se pudo calcular margen real por
+  rubro (insumos compartidos entre rubros, ej. acrílico usado en
+  Gráfica/Industrial/Corpóreos/Láser). Se implementó como aproximación
+  honesta: promedio de venta por ítem, no rentabilidad real. Función
+  `window.renderTicketPorRubro` en gecko-fixes.js.
+
+**Bug nuevo detectado hoy:** ver [BUG-007] en sección 🟡 IMPORTANTES
+(items de cotizadores etiquetados como 'grafica' por defecto).
 
 ## Sesión 03/07/2026 (continuación) — Nuevo cotizador de Instalación
 

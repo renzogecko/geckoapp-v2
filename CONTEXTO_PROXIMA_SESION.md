@@ -42,7 +42,7 @@
 
 ## PARTE 2 — Rediseño visual aprobado de Reportes (Finanzas)
 
-> **Estado:** prompt 1 (limpieza de Mix de Ventas por `it.tipo`) y prompt 2 (Chart.js + donut + área) ya aplicados en producción y andando. Falta lo restante.
+> **Estado: 100% COMPLETA (05/07/2026).** Los 3 prompts ya están aplicados en producción: prompt 1 (limpieza de Mix de Ventas por `it.tipo`), prompt 2 (Chart.js + donut + área), y prompt 3 (Punto de Equilibrio, Ticket Promedio por Rubro, count-up animado y ajustes visuales de espaciado/sombras/títulos). Ver detalle de lo resuelto en BUGS_Y_MEJORAS.md, sesión 05/07/2026. Bug nuevo detectado durante esta parte: BUG-007 (items de cotizadores etiquetados 'grafica' por defecto), pendiente para próxima sesión.
 
 ### Decisiones de diseño ya cerradas (no volver a discutir)
 
