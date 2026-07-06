@@ -2830,6 +2830,25 @@ if (typeof window.renderReportesDashboard === 'function') window.renderReportesD
 if (typeof window.renderPuntoEquilibrio === 'function') window.renderPuntoEquilibrio();
 // ── Ticket Promedio por Rubro (MEJ-003, aproximación por venta, no margen) ──
 if (typeof window.renderTicketPorRubro === 'function') window.renderTicketPorRubro();
+
+// ── Count-up (MEJ-002): anima los números ya calculados por main.js ──
+setTimeout(function () {
+    const elEstancado = document.getElementById('metricEstancado');
+    if (elEstancado) {
+        const val = parseFloat(elEstancado.innerText.replace(/[^0-9.-]/g, '')) || 0;
+        window._geckoAnimarNumero(elEstancado, val, v => '$' + Math.round(v).toLocaleString('es-AR'));
+    }
+    const elTasa = document.getElementById('metricTasaCierre');
+    if (elTasa) {
+        const val = parseFloat(elTasa.innerText.replace('%', '')) || 0;
+        window._geckoAnimarNumero(elTasa, val, v => v.toFixed(1) + '%');
+    }
+    const elTicket = document.getElementById('metricTicketProm');
+    if (elTicket) {
+        const val = parseFloat(elTicket.innerText.replace(/[^0-9.-]/g, '')) || 0;
+        window._geckoAnimarNumero(elTicket, val, v => '$' + Math.round(v).toLocaleString('es-AR'));
+    }
+}, 50);
 });
 
 // ── Ticket Promedio por Rubro: mapeo tipo→rubro duplicado de main.js (rubroDeItem no está expuesta en window) ──
@@ -2887,6 +2906,27 @@ window.renderTicketPorRubro = function () {
 
     elNombre.innerText = mejorRubro;
     elValor.innerText = '$' + Math.round(mejorPromedio).toLocaleString('es-AR');
+    window._geckoAnimarNumero(elValor, mejorPromedio, v => '$' + Math.round(v).toLocaleString('es-AR'));
+};
+
+// ── Utilidad reutilizable: anima un número de 0 al valor final ──
+// elemento: el <p> o <span> donde se muestra el número
+// valorFinal: el número real (sin formato) al que tiene que llegar
+// formateador: función que recibe el número y devuelve el texto a mostrar
+window._geckoAnimarNumero = function (elemento, valorFinal, formateador) {
+    if (!elemento || isNaN(valorFinal)) return;
+    const duracion = 800; // milisegundos
+    const inicio = performance.now();
+    function paso(ahora) {
+        const progreso = Math.min(1, (ahora - inicio) / duracion);
+        // easing suave (desacelera al final)
+        const progresoSuave = 1 - Math.pow(1 - progreso, 3);
+        const valorActual = valorFinal * progresoSuave;
+        elemento.innerText = formateador(valorActual);
+        if (progreso < 1) requestAnimationFrame(paso);
+        else elemento.innerText = formateador(valorFinal);
+    }
+    requestAnimationFrame(paso);
 };
 
 // ── Punto de Equilibrio: cálculo con datos reales, sin inventar números ──
@@ -2958,7 +2998,7 @@ window.renderPuntoEquilibrio = function () {
 
     const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
 
-    document.getElementById('pePuntoEquilibrioMonto').innerText = fmt(peMonto);
+    window._geckoAnimarNumero(document.getElementById('pePuntoEquilibrioMonto'), peMonto, v => fmt(v));
     document.getElementById('pePuntoEquilibrioOts').innerText = `≈ ${peOts} OTs este mes`;
     document.getElementById('peFacturadoLabel').innerText = `Facturado: ${fmt(ingresos)}`;
     document.getElementById('peFaltanLabel').innerText = avanceMes >= 100
