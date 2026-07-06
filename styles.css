@@ -2980,3 +2980,9 @@ select.gecko-select-modal option {
 #badgeEficienciaIndustrial {
     display: none !important;
 }
+
+/* ── Jerarquía visual: títulos de card en Reportes más grandes ── */
+.gecko-card-title {
+    font-size: 14px !important;
+    letter-spacing: 0.05em !important;
+}
