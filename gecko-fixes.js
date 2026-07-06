@@ -2830,6 +2830,8 @@ if (typeof window.renderReportesDashboard === 'function') window.renderReportesD
 if (typeof window.renderPuntoEquilibrio === 'function') window.renderPuntoEquilibrio();
 // ── Ticket Promedio por Rubro (MEJ-003, aproximación por venta, no margen) ──
 if (typeof window.renderTicketPorRubro === 'function') window.renderTicketPorRubro();
+// ── Mini resumen de Egresos por Categoría (dentro de Rentabilidad y Flujo) ──
+if (typeof window.renderMiniDesgloseGastos === 'function') window.renderMiniDesgloseGastos();
 
 // ── Count-up (MEJ-002): anima los números ya calculados por main.js ──
 setTimeout(function () {
@@ -2850,6 +2852,51 @@ setTimeout(function () {
     }
 }, 50);
 });
+
+window.renderMiniDesgloseGastos = function () {
+    const cont = document.getElementById('repoMiniDesgloseGastos');
+    if (!cont) return;
+
+    const ahora = new Date();
+    const mesActual = ahora.getMonth();
+    const anioActual = ahora.getFullYear();
+    const movimientos = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+
+    const movsMes = movimientos.filter(m => {
+        const [d, mo, y] = (m.fecha || '').split('/');
+        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+    });
+
+    const egresosMes = movsMes.filter(m => m.tipo === 'Egreso');
+    if (egresosMes.length === 0) {
+        cont.innerHTML = '<p style="color:#71717a;font-size:11px;font-style:italic;">Sin egresos registrados este mes.</p>';
+        return;
+    }
+
+    const gastosPorCategoria = {};
+    egresosMes.forEach(m => {
+        const cat = m.categoria || 'Varios';
+        gastosPorCategoria[cat] = (gastosPorCategoria[cat] || 0) + (m.monto || 0);
+    });
+
+    const totalEgresos = Object.values(gastosPorCategoria).reduce((a, v) => a + v, 0);
+    const categoriasOrdenadas = Object.entries(gastosPorCategoria).sort((a, b) => b[1] - a[1]);
+
+    cont.innerHTML = categoriasOrdenadas.map(([cat, monto]) => {
+        const porc = totalEgresos > 0 ? ((monto / totalEgresos) * 100).toFixed(0) : 0;
+        return `
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;">
+                    <span style="color:#a1a1aa;text-transform:uppercase;letter-spacing:0.5px;">${cat}</span>
+                    <span style="color:#e4e4e7;">$${Math.round(monto).toLocaleString('es-AR')}</span>
+                </div>
+                <div style="width:100%;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;">
+                    <div style="width:${porc}%;height:100%;background:#ef4444;border-radius:3px;"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
 
 // ── Ticket Promedio por Rubro: mapeo tipo→rubro duplicado de main.js (rubroDeItem no está expuesta en window) ──
 window.renderTicketPorRubro = function () {
