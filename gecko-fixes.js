@@ -1249,9 +1249,26 @@ window.editarOT = function (id) {
                     <input type="text" id="otEditArea" class="gecko-input-line" placeholder="Ej: Taller Gráfica · Juan" value="${(ot.area || '').replace(/"/g, '&quot;')}">
                 </div>
 
-                <div>
-                    <label class="gecko-label">Fecha de entrega</label>
-                    <input type="date" id="otEditEntrega" class="gecko-input-line" style="color-scheme:dark;cursor:pointer;" value="${window._geckoFechaDDMMYYYYaISO(ot.fecha_entrega || '')}" onclick="this.showPicker && this.showPicker()">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <label class="gecko-label">Fecha de ingreso</label>
+                        <input type="date" id="otEditFechaIngreso" class="gecko-input-line" style="color-scheme:dark;cursor:pointer;" value="${window._geckoFechaDDMMYYYYaISO(ot.fecha_ingreso || '')}" onclick="this.showPicker && this.showPicker()">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Fecha de entrega</label>
+                        <input type="date" id="otEditEntrega" class="gecko-input-line" style="color-scheme:dark;cursor:pointer;" value="${window._geckoFechaDDMMYYYYaISO(ot.fecha_entrega || '')}" onclick="this.showPicker && this.showPicker()">
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <label class="gecko-label">Teléfono / WhatsApp</label>
+                        <input type="text" id="otEditTelefono" class="gecko-input-line" placeholder="Ej: 11 2345-6789" value="${(ot.telefono || '').replace(/"/g, '&quot;')}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Atendido por</label>
+                        <input type="text" id="otEditAtendidoPor" class="gecko-input-line" placeholder="Ej: María" value="${(ot.atendido_por || '').replace(/"/g, '&quot;')}">
+                    </div>
                 </div>
 
                 <div>
@@ -1364,6 +1381,9 @@ window._guardarEdicionOT = function (id) {
     lista[idx].cliente = document.getElementById('otEditCliente')?.value?.trim() || lista[idx].cliente;
     lista[idx].area = document.getElementById('otEditArea')?.value?.trim() || '';
     lista[idx].fecha_entrega = window._geckoFechaISOaDDMMYYYY(document.getElementById('otEditEntrega')?.value || '') || lista[idx].fecha_entrega || '';
+    lista[idx].fecha_ingreso = window._geckoFechaISOaDDMMYYYY(document.getElementById('otEditFechaIngreso')?.value || '') || lista[idx].fecha_ingreso || '';
+    lista[idx].telefono = document.getElementById('otEditTelefono')?.value?.trim() || '';
+    lista[idx].atendido_por = document.getElementById('otEditAtendidoPor')?.value?.trim() || '';
     lista[idx].instrucciones = document.getElementById('otEditInstrucciones')?.value?.trim() || '';
     lista[idx].imagenes = window._otEditImagenes || lista[idx].imagenes || [];
 
