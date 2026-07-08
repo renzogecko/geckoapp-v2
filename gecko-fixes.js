@@ -1251,7 +1251,7 @@ window.editarOT = function (id) {
 
                 <div>
                     <label class="gecko-label">Fecha de entrega</label>
-                    <input type="date" id="otEditEntrega" class="gecko-input-line" style="color-scheme:dark;" value="${window._geckoFechaDDMMYYYYaISO(ot.fecha_entrega || '')}">
+                    <input type="date" id="otEditEntrega" class="gecko-input-line" style="color-scheme:dark;cursor:pointer;" value="${window._geckoFechaDDMMYYYYaISO(ot.fecha_entrega || '')}" onclick="this.showPicker && this.showPicker()">
                 </div>
 
                 <div>
