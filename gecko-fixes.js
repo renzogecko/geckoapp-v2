@@ -1267,6 +1267,32 @@ window.editarOT = function (id) {
                     <label class="gecko-label">Descripción de corte</label>
                     <input type="text" id="otItemDescCorte${i}" class="gecko-input-line" value="${esc(ficha.descripcionCorte)}">
                 </div>
+                ${it.tipo === 'corporeos' ? `
+                <div style="background:#1e1f20;border:1px solid #333333;border-radius:12px;padding:14px;margin-top:14px;">
+                    <p class="gecko-label" style="margin-bottom:10px;">Iluminación</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <label class="gecko-label" style="font-size:9px;">Estilo</label>
+                            <input type="text" id="otItemIlumEstilo${i}" class="gecko-input-line" placeholder="Ej: Módulos LED" value="${esc(ficha.iluminacion?.estilo)}">
+                        </div>
+                        <div>
+                            <label class="gecko-label" style="font-size:9px;">Tipo</label>
+                            <input type="text" id="otItemIlumTipo${i}" class="gecko-input-line" placeholder="Ej: Blanco neutro" value="${esc(ficha.iluminacion?.tipo)}">
+                        </div>
+                        <div>
+                            <label class="gecko-label" style="font-size:9px;">Cantidad</label>
+                            <input type="text" id="otItemIlumCantidad${i}" class="gecko-input-line" value="${esc(ficha.iluminacion?.cantidad)}">
+                        </div>
+                        <div>
+                            <label class="gecko-label" style="font-size:9px;">Fuente</label>
+                            <input type="text" id="otItemIlumFuente${i}" class="gecko-input-line" value="${esc(ficha.iluminacion?.fuente)}">
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label class="gecko-label" style="font-size:9px;">Salida del cable</label>
+                            <input type="text" id="otItemIlumCable${i}" class="gecko-input-line" placeholder="Ej: Por detrás" value="${esc(ficha.iluminacion?.salidaCable)}">
+                        </div>
+                    </div>
+                </div>` : ''}
                 <div style="margin-top:14px;">
                     <label class="gecko-label">Observaciones del ítem</label>
                     <textarea id="otItemObs${i}" style="width:100%;color:rgb(161,161,170);font-size:13px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:60px;background:rgba(24,24,27,0.5);border:1px solid rgb(51,51,51);border-radius:12px;padding:10px 14px;">${ficha.observaciones || ''}</textarea>
@@ -1469,7 +1495,14 @@ window._guardarEdicionOT = function (id) {
             llevaEstructura: document.getElementById('otItemEstructura' + i)?.checked || false,
             vinilo: document.getElementById('otItemVinilo' + i)?.checked || false,
             descripcionCorte: document.getElementById('otItemDescCorte' + i)?.value?.trim() || '',
-            observaciones: document.getElementById('otItemObs' + i)?.value?.trim() || ''
+            observaciones: document.getElementById('otItemObs' + i)?.value?.trim() || '',
+            iluminacion: it.tipo === 'corporeos' ? {
+                estilo: document.getElementById('otItemIlumEstilo' + i)?.value?.trim() || '',
+                tipo: document.getElementById('otItemIlumTipo' + i)?.value?.trim() || '',
+                cantidad: document.getElementById('otItemIlumCantidad' + i)?.value?.trim() || '',
+                fuente: document.getElementById('otItemIlumFuente' + i)?.value?.trim() || '',
+                salidaCable: document.getElementById('otItemIlumCable' + i)?.value?.trim() || ''
+            } : (it.otFicha?.iluminacion || undefined)
         };
         return it;
     });
