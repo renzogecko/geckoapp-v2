@@ -2986,3 +2986,16 @@ select.gecko-select-modal option {
     font-size: 14px !important;
     letter-spacing: 0.05em !important;
 }
+
+/* ── Fix: devolver el ícono de calendario solo a Fecha de entrega (OT) ──
+   La regla global "input::-webkit-calendar-picker-indicator { display:
+   none }" apaga el ícono de TODOS los inputs de fecha. Esta regla, al ser
+   más específica, lo reactiva únicamente para este campo puntual, sin
+   tocar la regla global. ── */
+#otEditEntrega::-webkit-calendar-picker-indicator {
+    display: block !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+    filter: invert(1);
+    padding: 4px;
+}
