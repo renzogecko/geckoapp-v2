@@ -1207,13 +1207,73 @@ window.editarOT = function (id) {
 
     document.getElementById('modalEditarOT')?.remove();
 
-    const itemsHTML = (ot.items || []).map((it, i) => `
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a1a;">
-            <span style="color:#3f3f46;font-size:9px;font-weight:900;font-family:monospace;min-width:20px;">${String(i + 1).padStart(2, '0')}</span>
-            <span style="color:#71717a;font-size:12px;font-weight:600;flex:1;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
-            <span style="color:#F15A24;font-size:12px;font-weight:900;">$${Math.round(it.costo || 0).toLocaleString('es-AR')}</span>
-        </div>
-    `).join('');
+    const itemsHTML = (ot.items || []).map((it, i) => {
+        const ficha = it.otFicha || {};
+        const esc = (v) => (v || '').toString().replace(/"/g, '&quot;');
+        return `
+        <div style="border:1px solid #1f1f1f;border-radius:12px;margin-bottom:10px;overflow:hidden;">
+            <div onclick="window._otToggleItemFicha(${i})" style="display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;background:#0f0f0f;">
+                <span style="color:#3f3f46;font-size:9px;font-weight:900;font-family:monospace;min-width:20px;">${String(i + 1).padStart(2, '0')}</span>
+                <span style="color:#a1a1aa;font-size:12px;font-weight:600;flex:1;">${it.nombre || it.textoOpciones || 'Ítem'}</span>
+                <span style="color:#F15A24;font-size:12px;font-weight:900;">$${Math.round(it.costo || 0).toLocaleString('es-AR')}</span>
+                <svg id="otItemChevron${i}" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#52525b" stroke-width="2" style="transition:transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+            <div id="otItemFicha${i}" style="display:none;padding:16px 14px;background:#131314;border-top:1px solid #1f1f1f;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label class="gecko-label">Área / operario</label>
+                        <input type="text" id="otItemArea${i}" class="gecko-input-line" value="${esc(ficha.area)}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Material</label>
+                        <input type="text" id="otItemMaterial${i}" class="gecko-input-line" value="${esc(ficha.material)}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Medidas</label>
+                        <input type="text" id="otItemMedidas${i}" class="gecko-input-line" value="${esc(ficha.medidas)}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Espesor (mm)</label>
+                        <input type="text" id="otItemEspesor${i}" class="gecko-input-line" value="${esc(ficha.espesor)}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Color / acabado</label>
+                        <input type="text" id="otItemColor${i}" class="gecko-input-line" value="${esc(ficha.color)}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Sección</label>
+                        <input type="text" id="otItemSeccion${i}" class="gecko-input-line" value="${esc(ficha.seccion)}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Cantidad</label>
+                        <input type="text" id="otItemCantidad${i}" class="gecko-input-line" value="${esc(ficha.cantidad)}">
+                    </div>
+                    <div>
+                        <label class="gecko-label">Ubicación de archivo</label>
+                        <input type="text" id="otItemUbicacion${i}" class="gecko-input-line" value="${esc(ficha.ubicacionArchivo)}">
+                    </div>
+                </div>
+                <div style="display:flex;gap:24px;margin-top:14px;">
+                    <label style="display:flex;align-items:center;gap:8px;color:#a1a1aa;font-size:12px;">
+                        <input type="checkbox" id="otItemEstructura${i}" ${ficha.llevaEstructura ? 'checked' : ''} style="accent-color:#F15A24;">
+                        Lleva estructura
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;color:#a1a1aa;font-size:12px;">
+                        <input type="checkbox" id="otItemVinilo${i}" ${ficha.vinilo ? 'checked' : ''} style="accent-color:#F15A24;">
+                        Vinilo
+                    </label>
+                </div>
+                <div style="margin-top:14px;">
+                    <label class="gecko-label">Descripción de corte</label>
+                    <input type="text" id="otItemDescCorte${i}" class="gecko-input-line" value="${esc(ficha.descripcionCorte)}">
+                </div>
+                <div style="margin-top:14px;">
+                    <label class="gecko-label">Observaciones del ítem</label>
+                    <textarea id="otItemObs${i}" style="width:100%;color:rgb(161,161,170);font-size:13px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:60px;background:rgba(24,24,27,0.5);border:1px solid rgb(51,51,51);border-radius:12px;padding:10px 14px;">${ficha.observaciones || ''}</textarea>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
 
     window._otEditImagenes = Array.isArray(ot.imagenes) ? [...ot.imagenes] : [];
 
@@ -1232,7 +1292,7 @@ window.editarOT = function (id) {
             <h2 class="gecko-modal-title">EDITAR ORDEN DE TRABAJO</h2>
 
             <div class="mt-6">
-                <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 6px 0;">Ítems del trabajo — solo lectura</p>
+                <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 6px 0;">Ítems del trabajo — click para editar detalle</p>
                 <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:12px;padding:4px 14px;">
                     ${itemsHTML || '<p style="color:#3f3f46;font-size:11px;padding:8px 0;margin:0;">Sin ítems registrados.</p>'}
                 </div>
@@ -1329,6 +1389,15 @@ window.editarOT = function (id) {
     }
 };
 
+window._otToggleItemFicha = function (idx) {
+    const ficha = document.getElementById('otItemFicha' + idx);
+    const chevron = document.getElementById('otItemChevron' + idx);
+    if (!ficha) return;
+    const abierto = ficha.style.display === 'block';
+    ficha.style.display = abierto ? 'none' : 'block';
+    if (chevron) chevron.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
+};
+
 window._otEditAgregarUnaImagen = function (file) {
     const preview = document.getElementById('otEditImagenesPreview');
     if (!preview) return;
@@ -1386,6 +1455,24 @@ window._guardarEdicionOT = function (id) {
     lista[idx].atendido_por = document.getElementById('otEditAtendidoPor')?.value?.trim() || '';
     lista[idx].instrucciones = document.getElementById('otEditInstrucciones')?.value?.trim() || '';
     lista[idx].imagenes = window._otEditImagenes || lista[idx].imagenes || [];
+
+    lista[idx].items = (lista[idx].items || []).map((it, i) => {
+        it.otFicha = {
+            area: document.getElementById('otItemArea' + i)?.value?.trim() || '',
+            material: document.getElementById('otItemMaterial' + i)?.value?.trim() || '',
+            medidas: document.getElementById('otItemMedidas' + i)?.value?.trim() || '',
+            espesor: document.getElementById('otItemEspesor' + i)?.value?.trim() || '',
+            color: document.getElementById('otItemColor' + i)?.value?.trim() || '',
+            seccion: document.getElementById('otItemSeccion' + i)?.value?.trim() || '',
+            cantidad: document.getElementById('otItemCantidad' + i)?.value?.trim() || '',
+            ubicacionArchivo: document.getElementById('otItemUbicacion' + i)?.value?.trim() || '',
+            llevaEstructura: document.getElementById('otItemEstructura' + i)?.checked || false,
+            vinilo: document.getElementById('otItemVinilo' + i)?.checked || false,
+            descripcionCorte: document.getElementById('otItemDescCorte' + i)?.value?.trim() || '',
+            observaciones: document.getElementById('otItemObs' + i)?.value?.trim() || ''
+        };
+        return it;
+    });
 
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
     document.getElementById('modalEditarOT')?.remove();
