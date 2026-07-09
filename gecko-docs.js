@@ -253,11 +253,36 @@ window.generarDocOT = async function (p) {
         </div>
     `).join('') : '<div class="spec-row"><span class="spec-label">Sin ítems</span><span class="spec-value" style="color:#aaa">—</span></div>';
 
-    const PLANOS_POR_HOJA = 2;
-    const paginasPlanos = [];
-    for (let i = 0; i < imagenes.length; i += PLANOS_POR_HOJA) {
-        paginasPlanos.push(imagenes.slice(i, i + PLANOS_POR_HOJA));
+    const grupos = [];
+    items.forEach((it, i) => {
+        const imgsItem = (it.otFicha && Array.isArray(it.otFicha.imagenes)) ? it.otFicha.imagenes : [];
+        if (imgsItem.length > 0) {
+            grupos.push({
+                titulo: `Ítem ${String(i + 1).padStart(2, '0')} — ${it.nombre || it.textoOpciones || 'Trabajo'}`,
+                imagenes: imgsItem
+            });
+        }
+    });
+    if (imagenes.length > 0) {
+        grupos.push({ titulo: 'Planos generales de la orden', imagenes: imagenes });
     }
+
+    const PLANOS_POR_HOJA = 2;
+    const todasLasPaginas = [];
+    grupos.forEach(grupo => {
+        const paginasDeEsteGrupo = [];
+        for (let i = 0; i < grupo.imagenes.length; i += PLANOS_POR_HOJA) {
+            paginasDeEsteGrupo.push(grupo.imagenes.slice(i, i + PLANOS_POR_HOJA));
+        }
+        paginasDeEsteGrupo.forEach((grupoImgs, idxPagina) => {
+            todasLasPaginas.push({
+                titulo: grupo.titulo,
+                imagenes: grupoImgs,
+                subIndice: idxPagina + 1,
+                subTotal: paginasDeEsteGrupo.length
+            });
+        });
+    });
 
     const firmaHTML = `
     <div class="firma-area">
@@ -265,15 +290,16 @@ window.generarDocOT = async function (p) {
         <div class="firma-box">Aprobado por / Responsable</div>
     </div>`;
 
-    const planosPaginasHTML = paginasPlanos.map((grupo, idx) => {
-        const esUltima = idx === paginasPlanos.length - 1;
+    const planosPaginasHTML = todasLasPaginas.map((pagina, idx) => {
+        const esUltima = idx === todasLasPaginas.length - 1;
+        const sufijo = pagina.subTotal > 1 ? ` — Hoja ${pagina.subIndice} de ${pagina.subTotal}` : '';
         return `
     <div class="page" style="page-break-before: always;">
       <div class="page-content">
         <div class="doc-referencias">
-            <div class="sec-titulo">Planos / Referencias técnicas${paginasPlanos.length > 1 ? ` — Hoja ${idx + 1} de ${paginasPlanos.length}` : ''}</div>
+            <div class="sec-titulo">${pagina.titulo}${sufijo}</div>
             <div class="referencias-grid-grande">
-                ${grupo.map(src => `<img src="${src}" alt="Plano">`).join('')}
+                ${pagina.imagenes.map(src => `<img src="${src}" alt="Plano">`).join('')}
             </div>
         </div>
         ${esUltima ? firmaHTML : ''}
@@ -322,7 +348,7 @@ window.generarDocOT = async function (p) {
         <label>⚠ Instrucciones especiales para producción</label>
         <p>${instrucciones}</p>
     </div>` : ''}
-    ${paginasPlanos.length === 0 ? firmaHTML : ''}
+    ${todasLasPaginas.length === 0 ? firmaHTML : ''}
   </div>
   <div class="doc-footer">
     <span style="font-weight:800">OT #${numOT}</span><span class="sep">|</span>
