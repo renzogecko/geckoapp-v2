@@ -461,3 +461,50 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 3. Historial de movimientos por caja.
 4. Limpieza de código muerto (renderClientes viejas).
 5. BUG-003 (pendiente de detalle, sin especificar aún).
+
+---
+
+### [MEJ-014] Rediseño completo de la Orden de Trabajo (OT) — RESUELTO 09/07/2026
+
+**Modal de Editar OT (gecko-fixes.js):**
+- Restyle completo con sistema de clases estándar Gecko (gecko-modal-*, 
+  gecko-label, gecko-input-line), reemplazando el estilo improvisado 
+  anterior. Modal ensanchado a 960px.
+- Campos nuevos a nivel de toda la orden: Fecha de ingreso, Teléfono/
+  WhatsApp, Atendido por — con el mismo patrón de calendario nativo 
+  (showPicker + conversión DD/MM/YYYY ↔ ISO) ya usado en Fecha de entrega.
+- Sección de Planos/Referencias generales de la OT: agregar por archivo o 
+  pegar con Ctrl+V.
+- Botón "Revertir a Presupuesto" (con confirmación modal estilo Gecko, no 
+  el confirm() nativo): permite reabrir una OT en el Presupuestador Manual 
+  para editar ítems/precios de forma segura, en vez de editarlos 
+  directamente en la OT (evita romper stock/finanzas ya comprometidos).
+- Ítems del trabajo: pasaron de "solo lectura" a fichas desplegables y 
+  editables por ítem, con campos: Área/operario asignado, Material, 
+  Medidas, Espesor, Color/acabado, Lleva estructura, Sección, Cantidad, 
+  Vinilo, Descripción de corte, Ubicación de archivo, Observaciones 
+  (guardados en la propiedad nueva "otFicha" de cada ítem, sin tocar 
+  nombre/costo/otDetalle original).
+- Sección de Iluminación condicional dentro de la ficha de cada ítem: 
+  aparece solo si el ítem es de rubro Corpóreos (it.tipo === 'corporeos').
+- Plano específico por ítem, independiente de los planos generales de la 
+  OT, con el mismo mecanismo de archivo/paste (detecta automáticamente a 
+  qué ítem pegar según cuál esté con la ficha abierta).
+
+**Documento impreso de OT (gecko-docs.js):**
+- Especificaciones de cada ítem: tabla dinámica tipo grilla (etiqueta + 
+  dato), mostrando solo los campos que tengan valor cargado — sin filas ni 
+  secciones vacías. Ítems sin ficha nueva cargada (OTs viejas) siguen 
+  usando el formato de renglones anterior, sin romperse.
+- Planos: agrupados por ítem (con título "Ítem 0X — nombre del trabajo") y 
+  al final los planos generales de la orden, todo en un flujo continuo sin 
+  páginas forzadas (se eliminó el "page-break-before" que generaba 
+  espacios en blanco).
+- Firma separada del contenido con margen propio.
+- Pantalla de selección al imprimir ("Elegir qué imprimir"): filtro rápido 
+  por área (agrupa ítems según su área asignada) + checkboxes individuales, 
+  permitiendo imprimir/reimprimir solo una parte de la OT (ej: solo lo que 
+  corresponde al taller de Estructuras, sin mostrarle al operario datos de 
+  otras áreas que no le competen).
+
+**Estado:** ✅ Completo y probado en producción.
