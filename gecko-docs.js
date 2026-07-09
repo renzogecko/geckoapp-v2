@@ -246,12 +246,69 @@ window.generarDocOT = async function (p) {
         return detalle.split('|').map(seg => seg.trim()).filter(Boolean).join('<br>');
     };
 
-    const specsHTML = items.length > 0 ? items.map((it, i) => `
-        <div class="spec-row">
-            <span class="spec-label">Ítem ${String(i + 1).padStart(2, '0')}</span>
-            <span class="spec-value"><strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>${formatOtDetalle(it.otDetalle)}</span>
-        </div>
-    `).join('') : '<div class="spec-row"><span class="spec-label">Sin ítems</span><span class="spec-value" style="color:#aaa">—</span></div>';
+    const renderFichaItem = (it, i) => {
+        const f = it.otFicha;
+        const tieneFicha = f && typeof f === 'object' &&
+            Object.keys(f).some(k => k !== 'imagenes' && k !== 'iluminacion' && f[k]);
+
+        if (!tieneFicha) {
+            return `
+            <div class="spec-row">
+                <span class="spec-label">Ítem ${String(i + 1).padStart(2, '0')}</span>
+                <span class="spec-value"><strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>${formatOtDetalle(it.otDetalle)}</span>
+            </div>`;
+        }
+
+        const filas = [];
+        if (f.area) filas.push(['Área / operario', f.area]);
+        if (f.material) filas.push(['Material', f.material]);
+        if (f.medidas) filas.push(['Medidas', f.medidas]);
+        if (f.espesor) filas.push(['Espesor (mm)', f.espesor]);
+        if (f.color) filas.push(['Color / acabado', f.color]);
+        if (f.llevaEstructura) filas.push(['Lleva estructura', 'Sí']);
+        if (f.seccion) filas.push(['Sección', f.seccion]);
+        if (f.cantidad) filas.push(['Cantidad', f.cantidad]);
+        if (f.vinilo) filas.push(['Vinilo', 'Sí']);
+        if (f.descripcionCorte) filas.push(['Descripción de corte', f.descripcionCorte]);
+        if (f.ubicacionArchivo) filas.push(['Ubicación de archivo', f.ubicacionArchivo]);
+        if (f.observaciones) filas.push(['Observaciones', f.observaciones]);
+
+        const filasIlum = [];
+        if (f.iluminacion) {
+            if (f.iluminacion.estilo) filasIlum.push(['Estilo de iluminación', f.iluminacion.estilo]);
+            if (f.iluminacion.tipo) filasIlum.push(['Tipo de iluminación', f.iluminacion.tipo]);
+            if (f.iluminacion.cantidad) filasIlum.push(['Cantidad', f.iluminacion.cantidad]);
+            if (f.iluminacion.fuente) filasIlum.push(['Fuente', f.iluminacion.fuente]);
+            if (f.iluminacion.salidaCable) filasIlum.push(['Salida del cable', f.iluminacion.salidaCable]);
+        }
+
+        if (filas.length === 0 && filasIlum.length === 0) {
+            return `
+            <div class="spec-row">
+                <span class="spec-label">Ítem ${String(i + 1).padStart(2, '0')}</span>
+                <span class="spec-value"><strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>${formatOtDetalle(it.otDetalle)}</span>
+            </div>`;
+        }
+
+        return `
+        <div class="ficha-item-tabla">
+            <div class="ficha-item-header">Ítem ${String(i + 1).padStart(2, '0')} — ${it.nombre || it.textoOpciones || 'Trabajo'}</div>
+            ${filas.length > 0 ? `
+            <table class="tabla-datos">
+                <tr><td colspan="2" class="tabla-titulo-seccion">DATOS DEL TRABAJO</td></tr>
+                ${filas.map(([label, val]) => `<tr><td class="tabla-label">${label}</td><td class="tabla-valor">${val}</td></tr>`).join('')}
+            </table>` : ''}
+            ${filasIlum.length > 0 ? `
+            <table class="tabla-datos" style="margin-top:0;">
+                <tr><td colspan="2" class="tabla-titulo-seccion">ILUMINACIÓN</td></tr>
+                ${filasIlum.map(([label, val]) => `<tr><td class="tabla-label">${label}</td><td class="tabla-valor">${val}</td></tr>`).join('')}
+            </table>` : ''}
+        </div>`;
+    };
+
+    const specsHTML = items.length > 0
+        ? items.map((it, i) => renderFichaItem(it, i)).join('')
+        : '<div class="spec-row"><span class="spec-label">Sin ítems</span><span class="spec-value" style="color:#aaa">—</span></div>';
 
     const grupos = [];
     items.forEach((it, i) => {
@@ -279,7 +336,7 @@ window.generarDocOT = async function (p) {
     </div>` : '';
 
     const firmaHTML = `
-    <div class="firma-area">
+    <div class="firma-area" style="margin-top:50px;">
         <div class="firma-box">Recibido por / Operario</div>
         <div class="firma-box">Aprobado por / Responsable</div>
     </div>`;
@@ -290,6 +347,12 @@ window.generarDocOT = async function (p) {
 <style>${GECKO_PRINT_STYLES}
 .referencias-grid-compacta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
 .referencias-grid-compacta img { width: 100%; max-height: 220px; object-fit: contain; border-radius: 6px; border: 1px solid #eee; background: #fafafa; }
+.ficha-item-tabla { margin-bottom: 18px; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; page-break-inside: avoid; }
+.ficha-item-header { background: #1A1A1A; color: #fff; font-size: 12px; font-weight: 700; padding: 8px 12px; }
+.tabla-datos { width: 100%; border-collapse: collapse; }
+.tabla-titulo-seccion { background: #F15A24; color: #fff; font-size: 11px; font-weight: 700; text-align: center; padding: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.tabla-label { width: 40%; background: #f5f5f5; font-size: 11px; font-weight: 700; padding: 6px 10px; border: 1px solid #ddd; }
+.tabla-valor { font-size: 11px; padding: 6px 10px; border: 1px solid #ddd; }
 </style></head>
 <body>
 <div class="page">
