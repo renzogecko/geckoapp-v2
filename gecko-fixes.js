@@ -5754,6 +5754,7 @@ window._gpmAgregarItem = function (datos = null) {
 
     const div = document.createElement('div');
     div.className = 'gpm-item';
+    if (datos?.tipo) div.dataset.tipoOrigen = datos.tipo;
     div.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #333333;border-radius:0;margin-bottom:0;overflow:hidden;';
     div.innerHTML = `
       <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px 130px 100px 36px;align-items:stretch;">
@@ -5914,7 +5915,7 @@ window._gpmGuardar = function (status) {
         const precio = parseFloat(String(item.querySelector('.gpm-price')?.value || '').replace(/[^0-9.]/g, '')) || 0;
         if (titulo && precio > 0) {
             items.push({
-                tipo: 'manual',
+                tipo: item.dataset.tipoOrigen || '',
                 nombre: titulo,
                 textoOpciones: titulo,
                 descripcion: desc || '',
@@ -5946,6 +5947,9 @@ window._gpmGuardar = function (status) {
     if (ivaOn) total *= 1.21;
 
     const categoria = document.getElementById('gpmCategoria')?.value || 'Gráfica';
+    // Ítems sin tipo de origen (genuinamente manuales): usar el mismo mapeo que _guardarManual
+    const catATipo = { 'Gráfica': 'grafica', 'Industrial': 'bastidores', 'Corpóreos': 'corporeos', 'Láser/CNC': 'laser_cnc', 'Textil': 'textil' };
+    items.forEach(it => { if (!it.tipo) it.tipo = catATipo[categoria] || 'manual'; });
     const titulo = _tituloPresupuesto;
     const notasInternas = document.getElementById('gpmNotasInternas')?.value?.trim() || '';
     const condiciones = document.getElementById('gpmCondiciones')?.value?.trim() || '';
@@ -5978,7 +5982,7 @@ window._gpmGuardar = function (status) {
 
     // Marcar timestamp único para identificar el doc recién guardado
     const _tsGuardado = Date.now();
-    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado };
+    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado, origenFormulario: 'gpm' };
 
     window.procesarGuardado(status);
 
@@ -6062,7 +6066,7 @@ window.editarPresupuesto = function (id) {
     const _todos = lista.filter(x => String(x.id) === String(id));
     const p = _todos[_todos.length - 1];
     if (!p) return;
-    const esManual = p.items && p.items.length > 0 && p.items.every(it => it.tipo === 'manual');
+    const esManual = p.origenFormulario === 'gpm' || (p.items && p.items.length > 0 && p.items.every(it => it.tipo === 'manual'));
     if (esManual) {
         if (typeof window.switchMenu === 'function') window.switchMenu('presupuestoManual');
         window.abrirPresupuestadorManual(id);
@@ -6367,7 +6371,7 @@ window.editarPresupuesto = function (id) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const p = lista.find(x => String(x.id) === String(id));
     if (p) {
-        const esManual = p.items && p.items.length > 0 && p.items.every(it => it.tipo === 'manual');
+        const esManual = p.origenFormulario === 'gpm' || (p.items && p.items.length > 0 && p.items.every(it => it.tipo === 'manual'));
         if (esManual) {
             localStorage.setItem('gecko_gpm_editing_id', String(id));
         }
