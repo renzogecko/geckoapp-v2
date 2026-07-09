@@ -399,16 +399,12 @@ window.generarDocOT = async function (p) {
 // ══════════════════════════════════════════════════════════════
 // VER DOCUMENTO GUARDADO (desde la lista de pedidos)
 // ══════════════════════════════════════════════════════════════
-window.verDocumento = async function (id) {
-    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const todos = lista.filter(x => String(x.id) === String(id));
-    const p = todos[todos.length - 1];
-    if (!p) { alert('No se encontró el documento.'); return; }
-
+window._otMostrarPreview = async function (p) {
+    const id = p.id;
     const esOT = p.status === 'OT';
     const html = esOT
-        ? await window.generarDocOT({ ...p, entrega: p.fecha_entrega || 'A confirmar', imagenes: p.imagenes || [] })
-        : await window.generarDocPresupuesto({ ...p, mostrarPrecios: p.mostrarPrecios !== false, imagenes: p.imagenes || [] });
+        ? await window.generarDocOT(p)
+        : await window.generarDocPresupuesto(p);
 
     const htmlPreview = html.replace(
         '<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>',
@@ -462,6 +458,90 @@ window.verDocumento = async function (id) {
         printWin.document.write(html);
         printWin.document.close();
     };
+};
+
+window.verDocumento = async function (id) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const todos = lista.filter(x => String(x.id) === String(id));
+    const p = todos[todos.length - 1];
+    if (!p) { alert('No se encontró el documento.'); return; }
+
+    const esOT = p.status === 'OT';
+    if (esOT) {
+        window._otMostrarSelectorImpresion(id);
+        return;
+    }
+
+    await window._otMostrarPreview({ ...p, mostrarPrecios: p.mostrarPrecios !== false, imagenes: p.imagenes || [] });
+};
+
+// ══════════════════════════════════════════════════════════════
+// SELECTOR DE ÍTEMS A IMPRIMIR (solo OT)
+// ══════════════════════════════════════════════════════════════
+window._otMostrarSelectorImpresion = function (id) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const ot = lista.find(x => String(x.id) === String(id));
+    if (!ot) return;
+
+    document.getElementById('modalSelectorImpresionOT')?.remove();
+
+    const items = ot.items || [];
+    const areaDeItem = (it) => (it.otFicha && it.otFicha.area) ? it.otFicha.area : (ot.area || 'Sin área asignada');
+    const areasUnicas = [...new Set(items.map(areaDeItem))];
+
+    window._otSeleccionImpresion = items.map(() => true);
+
+    const modal = document.createElement('div');
+    modal.id = 'modalSelectorImpresionOT';
+    modal.className = 'gecko-modal-overlay';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10500;background:rgba(10,12,20,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;';
+
+    const filtrosHTML = `<button onclick="window._otFiltrarSeleccion('__todo__')" class="gecko-btn-primary" style="padding:6px 12px;font-size:11px;">Todo</button>` +
+        areasUnicas.map(area => `<button onclick="window._otFiltrarSeleccion('${area.replace(/'/g, "\\'")}')" class="gecko-btn-cancel" style="padding:6px 12px;font-size:11px;">${area}</button>`).join('');
+
+    const itemsHTML = items.map((it, i) => `
+        <label style="display:flex;align-items:center;gap:10px;background:#1e1f20;border:1px solid #333333;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;">
+            <input type="checkbox" id="otSelImp${i}" checked data-area="${areaDeItem(it).replace(/"/g, '&quot;')}" style="accent-color:#F15A24;">
+            <div style="flex:1;">
+                <p style="color:#fff;font-size:12px;margin:0;">${it.nombre || it.textoOpciones || 'Ítem'}</p>
+                <p style="color:#5f5e5a;font-size:10px;margin:0;">${areaDeItem(it)}</p>
+            </div>
+        </label>`).join('');
+
+    modal.innerHTML = `
+        <div class="gecko-modal-box" style="max-width:460px;">
+            <p class="gecko-modal-subtitle">OT #${String(id).padStart(4, '0')} · ${(ot.cliente || '').toUpperCase()}</p>
+            <h2 class="gecko-modal-title" style="font-size:18px;">ELEGIR QUÉ IMPRIMIR</h2>
+            <p class="gecko-label" style="margin-top:20px;">Filtro rápido por área</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 20px;">${filtrosHTML}</div>
+            <p class="gecko-label">Ítems de esta orden</p>
+            <div style="margin-top:10px;">${itemsHTML || '<p style="color:#52525b;font-size:12px;">Sin ítems.</p>'}</div>
+            <div class="gecko-modal-footer">
+                <button class="gecko-btn-cancel" onclick="document.getElementById('modalSelectorImpresionOT').remove()">Cancelar</button>
+                <button class="gecko-btn-primary" onclick="window._otGenerarConSeleccion('${id}')">Generar documento</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+};
+
+window._otFiltrarSeleccion = function (area) {
+    document.querySelectorAll('#modalSelectorImpresionOT input[type=checkbox]').forEach(chk => {
+        chk.checked = (area === '__todo__') || (chk.dataset.area === area);
+    });
+};
+
+window._otGenerarConSeleccion = async function (id) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const ot = lista.find(x => String(x.id) === String(id));
+    if (!ot) return;
+
+    const checks = document.querySelectorAll('#modalSelectorImpresionOT input[type=checkbox]');
+    const itemsFiltrados = (ot.items || []).filter((it, i) => checks[i]?.checked);
+
+    document.getElementById('modalSelectorImpresionOT')?.remove();
+
+    await window._otMostrarPreview({ ...ot, items: itemsFiltrados, entrega: ot.fecha_entrega || 'A confirmar', imagenes: ot.imagenes || [] });
 };
 
 // ══════════════════════════════════════════════════════════════
