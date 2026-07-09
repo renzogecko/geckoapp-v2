@@ -5908,12 +5908,14 @@ window._gpmGuardar = function (status) {
     }
 
     const items = [];
+    let _tieneItemDeCotizadorReal = false;
     document.querySelectorAll('#gpm-items-list .gpm-item').forEach(item => {
         const titulo = item.querySelector('.gpm-item-title')?.value?.trim();
         const desc = item.querySelector('.gpm-item-desc')?.value?.trim();
         const qty = parseFloat(item.querySelector('.gpm-qty')?.value) || 1;
         const precio = parseFloat(String(item.querySelector('.gpm-price')?.value || '').replace(/[^0-9.]/g, '')) || 0;
         if (titulo && precio > 0) {
+            if (item.dataset.tipoOrigen) _tieneItemDeCotizadorReal = true;
             items.push({
                 tipo: item.dataset.tipoOrigen || '',
                 nombre: titulo,
@@ -5982,7 +5984,8 @@ window._gpmGuardar = function (status) {
 
     // Marcar timestamp único para identificar el doc recién guardado
     const _tsGuardado = Date.now();
-    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado, origenFormulario: 'gpm' };
+    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado };
+    if (!_tieneItemDeCotizadorReal) window._gpmMetadataPendiente.origenFormulario = 'gpm';
 
     window.procesarGuardado(status);
 
