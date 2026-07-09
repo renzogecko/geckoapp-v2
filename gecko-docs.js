@@ -496,8 +496,12 @@ window._otMostrarSelectorImpresion = function (id) {
     modal.className = 'gecko-modal-overlay';
     modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10500;background:rgba(10,12,20,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;';
 
-    const filtrosHTML = `<button onclick="window._otFiltrarSeleccion('__todo__')" data-filtro-valor="__todo__" class="otBtnFiltro gecko-btn-primary" style="padding:6px 12px;font-size:11px;">Todo</button>` +
-        areasUnicas.map(area => `<button onclick="window._otFiltrarSeleccion('${area.replace(/'/g, "\\'")}')" data-filtro-valor="${area.replace(/"/g, '&quot;')}" class="otBtnFiltro gecko-btn-cancel" style="padding:6px 12px;font-size:11px;">${area}</button>`).join('');
+    const estiloFiltroActivo = 'background:#F15A24;border:1px solid #F15A24;color:#fff;';
+    const estiloFiltroInactivo = 'background:transparent;border:1px solid #333333;color:#a1a1aa;';
+    const estiloFiltroBase = 'padding:7px 14px;font-size:11px;font-weight:700;border-radius:10px;cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;';
+
+    const filtrosHTML = `<button onclick="window._otFiltrarSeleccion('__todo__')" data-filtro-valor="__todo__" class="otBtnFiltro" style="${estiloFiltroBase}${estiloFiltroActivo}">Todo</button>` +
+        areasUnicas.map(area => `<button onclick="window._otFiltrarSeleccion('${area.replace(/'/g, "\\'")}')" data-filtro-valor="${area.replace(/"/g, '&quot;')}" class="otBtnFiltro" style="${estiloFiltroBase}${estiloFiltroInactivo}">${area}</button>`).join('');
 
     const itemsHTML = items.map((it, i) => `
         <label style="display:flex;align-items:center;gap:10px;background:#1e1f20;border:1px solid #333333;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;">
@@ -529,10 +533,11 @@ window._otFiltrarSeleccion = function (area) {
     document.querySelectorAll('#modalSelectorImpresionOT input[type=checkbox]').forEach(chk => {
         chk.checked = (area === '__todo__') || (chk.dataset.area === area);
     });
+    const estiloFiltroActivo = 'padding:7px 14px;font-size:11px;font-weight:700;border-radius:10px;cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;background:#F15A24;border:1px solid #F15A24;color:#fff;';
+    const estiloFiltroInactivo = 'padding:7px 14px;font-size:11px;font-weight:700;border-radius:10px;cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;background:transparent;border:1px solid #333333;color:#a1a1aa;';
     document.querySelectorAll('#modalSelectorImpresionOT .otBtnFiltro').forEach(btn => {
         const esActivo = btn.dataset.filtroValor === area;
-        btn.classList.toggle('gecko-btn-primary', esActivo);
-        btn.classList.toggle('gecko-btn-cancel', !esActivo);
+        btn.setAttribute('style', esActivo ? estiloFiltroActivo : estiloFiltroInactivo);
     });
 };
 
