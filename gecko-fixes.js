@@ -1200,6 +1200,44 @@ window._confirmarRevertirOT = function (id) {
 // EDITAR OT — modal
 // ══════════════════════════════════════════════════════
 
+window._otParsearDetalleAFicha = function (detalle) {
+    const resultado = {};
+    const observacionesExtra = [];
+    if (!detalle) return resultado;
+
+    const segmentos = detalle.split('|').map(s => s.trim()).filter(Boolean);
+    segmentos.forEach(seg => {
+        const match = seg.match(/^([^:]+):\s*(.+)$/);
+        if (!match) { observacionesExtra.push(seg); return; }
+        const etiqueta = match[1].trim().toLowerCase();
+        const valor = match[2].trim();
+
+        if (etiqueta.includes('medida')) {
+            resultado.medidas = valor;
+        } else if (etiqueta.includes('material')) {
+            resultado.material = valor;
+        } else if (etiqueta === 'cant' || etiqueta.includes('cantidad')) {
+            resultado.cantidad = valor;
+        } else if (etiqueta.includes('ilum')) {
+            const matchIlum = valor.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+            resultado.iluminacion = resultado.iluminacion || {};
+            if (matchIlum) {
+                resultado.iluminacion.estilo = matchIlum[1].trim();
+                resultado.iluminacion.fuente = matchIlum[2].trim();
+            } else {
+                resultado.iluminacion.estilo = valor;
+            }
+        } else {
+            observacionesExtra.push(`${match[1].trim()}: ${valor}`);
+        }
+    });
+
+    if (observacionesExtra.length > 0) {
+        resultado.observaciones = observacionesExtra.join(' · ');
+    }
+    return resultado;
+};
+
 window.editarOT = function (id) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const ot = lista.find(x => String(x.id) === String(id));
@@ -1208,7 +1246,7 @@ window.editarOT = function (id) {
     document.getElementById('modalEditarOT')?.remove();
 
     const itemsHTML = (ot.items || []).map((it, i) => {
-        const ficha = it.otFicha || {};
+        const ficha = it.otFicha || window._otParsearDetalleAFicha(it.otDetalle) || {};
         const esc = (v) => (v || '').toString().replace(/"/g, '&quot;');
         return `
         <div style="border:1px solid #1f1f1f;border-radius:12px;margin-bottom:10px;overflow:hidden;">
