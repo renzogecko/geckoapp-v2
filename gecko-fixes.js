@@ -1293,6 +1293,15 @@ window.editarOT = function (id) {
                         </div>
                     </div>
                 </div>` : ''}
+                <div style="margin-top:14px;" onclick="window._otActiveItemIndex = ${i}">
+                    <label class="gecko-label">Plano de este ítem</label>
+                    <div id="otItemImagenesPreview${i}" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;"></div>
+                    <label for="otItemImagenesInput${i}" style="display:flex;align-items:center;gap:8px;background:#131314;border:1px dashed #333333;border-radius:12px;padding:9px 14px;cursor:pointer;color:#64748b;font-size:11px;font-weight:600;">
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                        <span>Agregar imagen o pegar con Ctrl+V (clickeá acá primero)</span>
+                    </label>
+                    <input type="file" id="otItemImagenesInput${i}" accept="image/*" multiple style="display:none;" onchange="window._otItemAgregarImagenes(${i}, this)">
+                </div>
                 <div style="margin-top:14px;">
                     <label class="gecko-label">Observaciones del ítem</label>
                     <textarea id="otItemObs${i}" style="width:100%;color:rgb(161,161,170);font-size:13px;font-weight:500;outline:none;box-sizing:border-box;resize:none;font-family:inherit;min-height:60px;background:rgba(24,24,27,0.5);border:1px solid rgb(51,51,51);border-radius:12px;padding:10px 14px;">${ficha.observaciones || ''}</textarea>
@@ -1302,6 +1311,11 @@ window.editarOT = function (id) {
     }).join('');
 
     window._otEditImagenes = Array.isArray(ot.imagenes) ? [...ot.imagenes] : [];
+    window._otItemImagenes = {};
+    (ot.items || []).forEach((it, i) => {
+        window._otItemImagenes[i] = Array.isArray(it.otFicha?.imagenes) ? [...it.otFicha.imagenes] : [];
+    });
+    window._otActiveItemIndex = null;
 
     const modal = document.createElement('div');
     modal.id = 'modalEditarOT';
@@ -1413,6 +1427,13 @@ window.editarOT = function (id) {
             preview.appendChild(wrap);
         });
     }
+
+    Object.keys(window._otItemImagenes).forEach(idx => {
+        const previewItem = document.getElementById('otItemImagenesPreview' + idx);
+        if (previewItem && window._otItemImagenes[idx].length > 0) {
+            window._otItemImagenes[idx].forEach(b64 => window._otItemRenderMiniatura(idx, b64));
+        }
+    });
 };
 
 window._otToggleItemFicha = function (idx) {
@@ -1457,12 +1478,64 @@ window._otEditAgregarImagenes = function (input) {
     input.value = '';
 };
 
-document.addEventListener('paste', function (e) {
-    const preview = document.getElementById('otEditImagenesPreview');
+window._otItemRenderMiniatura = function (idx, b64) {
+    const preview = document.getElementById('otItemImagenesPreview' + idx);
     if (!preview) return;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;';
+    const img = document.createElement('img');
+    img.src = b64;
+    img.style.cssText = 'height:56px;width:auto;border-radius:8px;border:1px solid #333333;object-fit:cover;';
+    const del = document.createElement('button');
+    del.innerHTML = '✕';
+    del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:16px;height:16px;border-radius:50%;cursor:pointer;font-size:8px;padding:0;';
+    del.onclick = (e) => {
+        e.stopPropagation();
+        const arr = window._otItemImagenes[idx] || [];
+        const i2 = arr.indexOf(b64);
+        if (i2 > -1) arr.splice(i2, 1);
+        wrap.remove();
+    };
+    wrap.appendChild(img);
+    wrap.appendChild(del);
+    preview.appendChild(wrap);
+};
+
+window._otItemAgregarUnaImagen = function (idx, file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const b64 = e.target.result;
+        window._otItemImagenes[idx] = window._otItemImagenes[idx] || [];
+        window._otItemImagenes[idx].push(b64);
+        window._otItemRenderMiniatura(idx, b64);
+    };
+    reader.readAsDataURL(file);
+};
+
+window._otItemAgregarImagenes = function (idx, input) {
+    Array.from(input.files).forEach(file => window._otItemAgregarUnaImagen(idx, file));
+    input.value = '';
+    window._otActiveItemIndex = idx;
+};
+
+document.addEventListener('paste', function (e) {
     const items = Array.from(e.clipboardData?.items || []);
     const imageItem = items.find(item => item.type.startsWith('image/'));
     if (!imageItem) return;
+
+    const idxActivo = window._otActiveItemIndex;
+    const fichaAbierta = idxActivo !== null && idxActivo !== undefined &&
+        document.getElementById('otItemFicha' + idxActivo)?.style.display === 'block';
+
+    if (fichaAbierta) {
+        e.preventDefault();
+        const blob = imageItem.getAsFile();
+        if (blob) window._otItemAgregarUnaImagen(idxActivo, blob);
+        return;
+    }
+
+    const preview = document.getElementById('otEditImagenesPreview');
+    if (!preview) return;
     e.preventDefault();
     const blob = imageItem.getAsFile();
     if (blob) window._otEditAgregarUnaImagen(blob);
@@ -1502,7 +1575,8 @@ window._guardarEdicionOT = function (id) {
                 cantidad: document.getElementById('otItemIlumCantidad' + i)?.value?.trim() || '',
                 fuente: document.getElementById('otItemIlumFuente' + i)?.value?.trim() || '',
                 salidaCable: document.getElementById('otItemIlumCable' + i)?.value?.trim() || ''
-            } : (it.otFicha?.iluminacion || undefined)
+            } : (it.otFicha?.iluminacion || undefined),
+            imagenes: window._otItemImagenes[i] || it.otFicha?.imagenes || []
         };
         return it;
     });
