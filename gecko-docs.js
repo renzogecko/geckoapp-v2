@@ -267,22 +267,16 @@ window.generarDocOT = async function (p) {
         grupos.push({ titulo: 'Planos generales de la orden', imagenes: imagenes });
     }
 
-    const PLANOS_POR_HOJA = 2;
-    const todasLasPaginas = [];
-    grupos.forEach(grupo => {
-        const paginasDeEsteGrupo = [];
-        for (let i = 0; i < grupo.imagenes.length; i += PLANOS_POR_HOJA) {
-            paginasDeEsteGrupo.push(grupo.imagenes.slice(i, i + PLANOS_POR_HOJA));
-        }
-        paginasDeEsteGrupo.forEach((grupoImgs, idxPagina) => {
-            todasLasPaginas.push({
-                titulo: grupo.titulo,
-                imagenes: grupoImgs,
-                subIndice: idxPagina + 1,
-                subTotal: paginasDeEsteGrupo.length
-            });
-        });
-    });
+    const planosHTML = grupos.length > 0 ? `
+    <div class="doc-referencias" style="margin-top:20px;">
+        <div class="sec-titulo">Planos adjuntos</div>
+        ${grupos.map(grupo => `
+            <p style="font-size:11px;font-weight:700;color:#666;margin:14px 0 8px;">${grupo.titulo}</p>
+            <div class="referencias-grid-compacta">
+                ${grupo.imagenes.map(src => `<img src="${src}" alt="Plano">`).join('')}
+            </div>
+        `).join('')}
+    </div>` : '';
 
     const firmaHTML = `
     <div class="firma-area">
@@ -290,34 +284,12 @@ window.generarDocOT = async function (p) {
         <div class="firma-box">Aprobado por / Responsable</div>
     </div>`;
 
-    const planosPaginasHTML = todasLasPaginas.map((pagina, idx) => {
-        const esUltima = idx === todasLasPaginas.length - 1;
-        const sufijo = pagina.subTotal > 1 ? ` — Hoja ${pagina.subIndice} de ${pagina.subTotal}` : '';
-        return `
-    <div class="page" style="page-break-before: always;">
-      <div class="page-content">
-        <div class="doc-referencias">
-            <div class="sec-titulo">${pagina.titulo}${sufijo}</div>
-            <div class="referencias-grid-grande">
-                ${pagina.imagenes.map(src => `<img src="${src}" alt="Plano">`).join('')}
-            </div>
-        </div>
-        ${esUltima ? firmaHTML : ''}
-      </div>
-      <div class="doc-footer">
-        <span style="font-weight:800">OT #${numOT}</span><span class="sep">|</span>
-        <span>${fecha}</span><span class="sep">|</span>
-        <span>GECKO · USO INTERNO</span>
-      </div>
-    </div>`;
-    }).join('');
-
     return `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><title>OT #${numOT}</title>
 <style>${GECKO_PRINT_STYLES}
-.referencias-grid-grande { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 10px; }
-.referencias-grid-grande img { width: 100%; max-height: 340px; object-fit: contain; border-radius: 6px; border: 1px solid #eee; background: #fafafa; }
+.referencias-grid-compacta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+.referencias-grid-compacta img { width: 100%; max-height: 220px; object-fit: contain; border-radius: 6px; border: 1px solid #eee; background: #fafafa; }
 </style></head>
 <body>
 <div class="page">
@@ -348,7 +320,8 @@ window.generarDocOT = async function (p) {
         <label>⚠ Instrucciones especiales para producción</label>
         <p>${instrucciones}</p>
     </div>` : ''}
-    ${todasLasPaginas.length === 0 ? firmaHTML : ''}
+    ${planosHTML}
+    ${firmaHTML}
   </div>
   <div class="doc-footer">
     <span style="font-weight:800">OT #${numOT}</span><span class="sep">|</span>
@@ -356,7 +329,6 @@ window.generarDocOT = async function (p) {
     <span>GECKO · USO INTERNO</span>
   </div>
 </div>
-${planosPaginasHTML}
 <script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>
 </body></html>`;
 };
