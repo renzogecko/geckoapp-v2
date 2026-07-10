@@ -1381,13 +1381,6 @@ window.editarOT = function (id) {
             <p class="gecko-modal-subtitle">OT #${String(id).padStart(4, '0')} · ${(ot.cliente || '').toUpperCase()}</p>
             <h2 class="gecko-modal-title">EDITAR ORDEN DE TRABAJO</h2>
 
-            <div class="mt-6">
-                <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 6px 0;">Ítems del trabajo — click para editar detalle</p>
-                <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:12px;padding:4px 14px;">
-                    ${itemsHTML || '<p style="color:#3f3f46;font-size:11px;padding:8px 0;margin:0;">Sin ítems registrados.</p>'}
-                </div>
-            </div>
-
             <div class="space-y-5 mt-6">
                 <div>
                     <label class="gecko-label">Cliente</label>
@@ -1418,6 +1411,13 @@ window.editarOT = function (id) {
                     <div>
                         <label class="gecko-label">Atendido por</label>
                         <input type="text" id="otEditAtendidoPor" class="gecko-input-line" placeholder="Ej: María" value="${(ot.atendido_por || '').replace(/"/g, '&quot;')}">
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <p style="color:#3f3f46;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 6px 0;">Ítems del trabajo — click para editar detalle</p>
+                    <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:12px;padding:4px 14px;">
+                        ${itemsHTML || '<p style="color:#3f3f46;font-size:11px;padding:8px 0;margin:0;">Sin ítems registrados.</p>'}
                     </div>
                 </div>
 
