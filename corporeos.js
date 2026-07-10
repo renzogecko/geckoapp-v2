@@ -330,10 +330,16 @@ window.setCorpModo = function (modo) {
                         <select id="chapaModeloLed" class="gecko-select w-full" onchange="window.calcularChapaAcrilico()">
                             <option value="">Elegí un módulo o tira...</option>
                         </select>
-                        <div id="visorConsumo" class="p-3 bg-zinc-900 rounded-xl border border-zinc-800">
-                            <p class="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">Consumo Estimado</p>
-                            <p id="txtConsumo" class="text-white font-bold text-sm">0W</p>
-                            <p id="txtFuente" class="text-gecko font-black text-[10px] mt-1 uppercase">Esperando datos...</p>
+                        <div id="visorConsumo" style="background:#141414;border:1px solid #262626;border-radius:14px;padding:16px 18px;">
+                            <p style="color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 12px;">Consumo estimado</p>
+                            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+                                <span style="color:#F15A24;font-size:14px;line-height:1.4;">●</span>
+                                <span id="txtConsumo" style="color:#e4e4e7;font-size:13px;font-weight:600;line-height:1.4;">0W</span>
+                            </div>
+                            <div style="display:flex;align-items:flex-start;gap:10px;">
+                                <span style="color:#F15A24;font-size:14px;line-height:1.4;">●</span>
+                                <span id="txtFuente" style="color:#e4e4e7;font-size:13px;font-weight:600;line-height:1.4;">Esperando datos...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1697,25 +1703,47 @@ window.calcularChapaAcrilico = function () {
                 })
                 .map(m => {
                     const matchW = m.nombre.match(/(\d+)W/i);
-                    return { item: m, watts: matchW ? parseInt(matchW[1]) : 0 };
+                    return { item: m, watts: matchW ? parseInt(matchW[1]) : 0, stock: parseInt(m.stock) || 0 };
                 })
-                .filter(f => f.watts >= wattsNecesarios)
+                .filter(f => f.watts > 0);
+
+            let solucionFuente = null;
+
+            // 1. Buscar UNA sola fuente que alcance, con stock disponible
+            const candidatasUnicas = todasFuentes
+                .filter(f => f.watts >= wattsNecesarios && f.stock >= 1)
                 .sort((a, b) => a.watts - b.watts);
+            if (candidatasUnicas.length > 0) {
+                solucionFuente = { cantidad: 1, fuente: candidatasUnicas[0] };
+            } else {
+                // 2. Probar combinar 2, 3 o 4 unidades del mismo modelo
+                const disponiblesOrdenadas = todasFuentes.slice().sort((a, b) => b.watts - a.watts);
+                for (let n = 2; n <= 4 && !solucionFuente; n++) {
+                    for (const f of disponiblesOrdenadas) {
+                        if (f.stock >= n && (f.watts * n) >= wattsNecesarios) {
+                            solucionFuente = { cantidad: n, fuente: f };
+                            break;
+                        }
+                    }
+                }
+            }
 
             const txtFuente = document.getElementById('txtFuente');
-            if (todasFuentes.length > 0) {
-                const fuenteElegida = todasFuentes[0];
-                fuenteRecomendada = fuenteElegida.item.nombre;
-                const itFuenteData = window.getGeckoItem(fuenteRecomendada);
-                if (itFuenteData) costoFuente = itFuenteData.precioVenta;
+            if (solucionFuente) {
+                const nombreFuente = solucionFuente.fuente.item.nombre;
+                fuenteRecomendada = solucionFuente.cantidad > 1
+                    ? `${solucionFuente.cantidad} x ${nombreFuente}`
+                    : nombreFuente;
+                const itFuenteData = solucionFuente.fuente.item;
+                costoFuente = (itFuenteData.precioVenta || itFuenteData.costoARS || itFuenteData.costo || 0) * solucionFuente.cantidad;
                 if (txtFuente) {
-                    txtFuente.style.color = '';
+                    txtFuente.style.color = '#e4e4e7';
                     txtFuente.innerText = `Fuente recomendada: ${fuenteRecomendada} (necesita ${wattsNecesarios.toFixed(1)}W)`;
                 }
             } else {
                 if (txtFuente) {
                     txtFuente.style.color = '#ef4444';
-                    txtFuente.innerText = `Atención: necesita ${wattsNecesarios.toFixed(1)}W – Verificar fuente disponible`;
+                    txtFuente.innerText = `Atención: necesita ${wattsNecesarios.toFixed(1)}W – no hay combinación de fuentes en stock que alcance`;
                 }
             }
         }
