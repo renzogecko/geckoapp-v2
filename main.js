@@ -3655,6 +3655,7 @@ function editarMaterial(id) {
     if (material.largo) document.getElementById('matLargo') && (document.getElementById('matLargo').value = material.largo);
     if (material.espesor) document.getElementById('matEspesor') && (document.getElementById('matEspesor').value = material.espesor);
     if (material.watts) document.getElementById('matWatts') && (document.getElementById('matWatts').value = material.watts);
+    if (material.densidad) document.getElementById('matDensidad') && (document.getElementById('matDensidad').value = material.densidad);
     if (material.nota) document.getElementById('matNota') && (document.getElementById('matNota').value = material.nota);
 
     // Recalcular (puede pisar precioGremio si está vacío — lo restauramos después)
@@ -3766,7 +3767,8 @@ const CATEGORY_CONFIG = {
     electrico: {
         campos: [
             { id: 'matNota', label: 'Especificaciones', type: 'text', placeholder: 'Detalles...' },
-            { id: 'matWatts', label: 'Watts (consumo)', type: 'number', placeholder: 'Ej: 0.72' }
+            { id: 'matWatts', label: 'Watts (consumo)', type: 'number', placeholder: 'Ej: 0.72' },
+            { id: 'matDensidad', label: 'Densidad (módulos/m²) — solo Módulos', type: 'number', placeholder: 'Ej: 112' }
         ],
         unidadRecomendada: 'unidad'
     },
@@ -4010,6 +4012,7 @@ if (formMaterial) {
                 espesor: document.getElementById('matEspesor') ? document.getElementById('matEspesor').value : null,
                 peso: document.getElementById('matPeso') ? document.getElementById('matPeso').value : null,
                 watts: parseFloat(document.getElementById('matWatts')?.value) || null,
+                densidad: parseFloat(document.getElementById('matDensidad')?.value) || null,
                 nota: document.getElementById('matNota') ? document.getElementById('matNota').value : null,
                 precioGremio: parseFloat(document.getElementById('matPrecioGremio').value) || 0,
                 multGremio: parseFloat(document.getElementById('matMultGremio').value) || 1.5,

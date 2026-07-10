@@ -1273,7 +1273,7 @@ window._geckoObtenerOpcionesIluminacion = function () {
     }).map(m => {
         const nombre = (m.nombre || '').toLowerCase();
         const tipo = nombre.includes('tira') ? 'tira' : 'modulo';
-        return { id: m.id, nombre: m.nombre, tipo, watts: parseFloat(m.watts) || null, item: m };
+        return { id: m.id, nombre: m.nombre, tipo, watts: parseFloat(m.watts) || null, densidad: parseFloat(m.densidad) || null, item: m };
     });
 };
 
@@ -1663,13 +1663,17 @@ window.calcularChapaAcrilico = function () {
             descIlum = avisoFaltaWatts;
             const txtConsumo = document.getElementById('txtConsumo');
             if (txtConsumo) txtConsumo.innerText = avisoFaltaWatts;
+        } else if (elegido.tipo === 'modulo' && !elegido.densidad) {
+            avisoFaltaWatts = `FALTA PARÁMETRO: "${elegido.nombre}" no tiene Densidad (módulos/m²) cargada en Materiales.`;
+            descIlum = avisoFaltaWatts;
+            const txtConsumo = document.getElementById('txtConsumo');
+            if (txtConsumo) txtConsumo.innerText = avisoFaltaWatts;
         } else {
             let consumoTotal = 0;
             let cantU = 0;
 
             if (elegido.tipo === 'modulo') {
-                // Estándar industria: 112 módulos por m²
-                cantU = Math.ceil(areaM2 * 112);
+                cantU = Math.ceil(areaM2 * elegido.densidad);
                 consumoTotal = cantU * elegido.watts;
                 descIlum = `${cantU} × ${elegido.nombre}`;
             } else {

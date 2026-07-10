@@ -120,8 +120,8 @@ try {
                 (id, nombre, categoria, subcategoria, stock, multiplicador, costoUSD, costoARS,
                  unidad, unidadVenta, incluyeIva, estrategiaVenta, costo, contenidoUnidad,
                  ancho, largo, espesor, precioCorteMl, nota, multGremio, precioGremio,
-                 precioVenta, tieneParametrosCorte, corteSpeed, cortePower, watts)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                 precioVenta, tieneParametrosCorte, corteSpeed, cortePower, watts, densidad)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid(), $d['nombre'] ?? '', $d['categoria'] ?? '',
                 $d['subcategoria'] ?? null, $d['stock'] ?? 0, $d['multiplicador'] ?? 2.0,
@@ -134,7 +134,8 @@ try {
                 $d['precioVenta'] ?? 0,
                 $d['tieneParametrosCorte'] ? 1 : 0,
                 $d['corteSpeed'] ?? null, $d['cortePower'] ?? null,
-                $d['watts'] ?? null
+                $d['watts'] ?? null,
+                $d['densidad'] ?? null
             ]);
             responder(["success" => true, "message" => "Material creado."]);
         }
@@ -145,8 +146,8 @@ try {
                 (id, nombre, categoria, subcategoria, stock, multiplicador, costoUSD, costoARS,
                  unidad, unidadVenta, incluyeIva, estrategiaVenta, costo, contenidoUnidad,
                  ancho, largo, espesor, precioCorteMl, nota, multGremio, precioGremio,
-                 precioVenta, tieneParametrosCorte, corteSpeed, cortePower, watts)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                 precioVenta, tieneParametrosCorte, corteSpeed, cortePower, watts, densidad)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'], $d['nombre'] ?? '', $d['categoria'] ?? '',
                 $d['subcategoria'] ?? null, $d['stock'] ?? 0, $d['multiplicador'] ?? 2.0,
@@ -159,7 +160,8 @@ try {
                 $d['precioVenta'] ?? 0,
                 $d['tieneParametrosCorte'] ? 1 : 0,
                 $d['corteSpeed'] ?? null, $d['cortePower'] ?? null,
-                $d['watts'] ?? null
+                $d['watts'] ?? null,
+                $d['densidad'] ?? null
             ]);
             responder(["success" => true, "message" => "Material actualizado."]);
         }
