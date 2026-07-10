@@ -3769,7 +3769,7 @@ const CATEGORY_CONFIG = {
         campos: [
             { id: 'matWatts', label: 'Watts (consumo)', type: 'number', placeholder: 'Ej: 0.72' },
             { id: 'matLumenes', label: 'Lúmenes (ficha del fabricante)', type: 'number', placeholder: 'Ej: 70' },
-            { id: 'matDensidad', label: 'Densidad (módulos/m²) — solo Módulos', type: 'number', placeholder: 'Ej: 112' },
+            { id: 'matDensidad', label: 'Densidad (mód./m²)', type: 'number', placeholder: 'Ej: 112' },
             { id: 'matNota', label: 'Especificaciones', type: 'text', placeholder: 'Detalles...', fullWidth: true }
         ],
         unidadRecomendada: 'unidad'
