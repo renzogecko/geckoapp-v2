@@ -1218,9 +1218,19 @@ window._otParsearDetalleAFicha = function (detalle) {
             resultado.material = valor;
         } else if (etiqueta.includes('acabado') || etiqueta.includes('pintura') || etiqueta.includes('color')) {
             resultado.color = valor;
+        } else if (etiqueta === 'ilum modelo') {
+            resultado.iluminacion = resultado.iluminacion || {};
+            resultado.iluminacion.estilo = valor;
+        } else if (etiqueta === 'ilum cantidad') {
+            resultado.iluminacion = resultado.iluminacion || {};
+            resultado.iluminacion.tipo = valor;
+        } else if (etiqueta === 'ilum fuente') {
+            resultado.iluminacion = resultado.iluminacion || {};
+            resultado.iluminacion.fuente = valor;
         } else if (etiqueta === 'cant' || etiqueta.includes('cantidad')) {
             resultado.cantidad = valor;
         } else if (etiqueta.includes('ilum')) {
+            // Compatibilidad con ítems viejos guardados antes de este cambio
             const matchIlum = valor.match(/^(.+)\s*\(([^)]+)\)\s*$/);
             resultado.iluminacion = resultado.iluminacion || {};
             if (matchIlum) {

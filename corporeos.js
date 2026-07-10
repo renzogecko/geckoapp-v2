@@ -908,7 +908,7 @@ window.calcularLetras3D = function () {
         nombre: `LETRAS 3D – ${nombreMat}`,
         textoOpciones: `Letras 3D (Est.): ${ancho}x${alto}cm | ${nombreMat}`,
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}${descFrenteL3D}${descPinturaL3D} | ${resultadoIlum.avisoFaltaWatts ? resultadoIlum.avisoFaltaWatts : `Ilum: ${resultadoIlum.descIlum} (${resultadoIlum.fuenteRecomendada})`}`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}${descFrenteL3D}${descPinturaL3D} | ${resultadoIlum.avisoFaltaWatts ? resultadoIlum.avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${resultadoIlum.fuenteRecomendada}`}`
     };
 };
 
@@ -1326,6 +1326,8 @@ window._geckoHtmlCardIluminacion = function () {
 window._geckoCalcularIluminacion = function (areaM2, perimetroMl) {
     let costoIlumTotal = 0;
     let descIlum = "0 unidades";
+    let modeloNombre = "";
+    let cantidadTexto = "";
     let fuenteRecomendada = "N/A";
     let costoFuente = 0;
     let avisoFaltaWatts = '';
@@ -1357,11 +1359,15 @@ window._geckoCalcularIluminacion = function (areaM2, perimetroMl) {
                 cantU = Math.ceil(areaM2 * elegido.densidad);
                 consumoTotal = cantU * elegido.watts;
                 descIlum = `${cantU} × ${elegido.nombre}`;
+                modeloNombre = elegido.nombre;
+                cantidadTexto = `${cantU} módulos`;
             } else {
                 const mts = perimetroMl * 1.1;
                 cantU = mts;
                 consumoTotal = mts * elegido.watts;
                 descIlum = `${mts.toFixed(2)}m de ${elegido.nombre}`;
+                modeloNombre = elegido.nombre;
+                cantidadTexto = `${mts.toFixed(2)}m`;
             }
 
             costoIlumTotal = cantU * window.getCorpPrecio(elegido.item);
@@ -1424,7 +1430,7 @@ window._geckoCalcularIluminacion = function (areaM2, perimetroMl) {
         }
     }
 
-    return { costoIlumTotal, descIlum, fuenteRecomendada, costoFuente, avisoFaltaWatts };
+    return { costoIlumTotal, descIlum, modeloNombre, cantidadTexto, fuenteRecomendada, costoFuente, avisoFaltaWatts };
 };
 
 window.initChapaAcrilicoSelects = function () {
@@ -1916,7 +1922,7 @@ window.calcularChapaAcrilico = function () {
         tipo: 'corporeos',
         nombre: `CHAPA/ACRILICO - ${document.getElementById('chapaNombre')?.value || 'S/N'}`,
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | ${avisoFaltaWatts ? avisoFaltaWatts : `Ilum: ${descIlum} (${fuenteRecomendada})`}${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | ${avisoFaltaWatts ? avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${fuenteRecomendada}`}${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}`
     };
 };
 
