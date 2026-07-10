@@ -1223,7 +1223,7 @@ window._otParsearDetalleAFicha = function (detalle) {
             resultado.iluminacion.estilo = valor;
         } else if (etiqueta === 'ilum cantidad') {
             resultado.iluminacion = resultado.iluminacion || {};
-            resultado.iluminacion.tipo = valor;
+            resultado.iluminacion.cantidad = valor;
         } else if (etiqueta === 'ilum fuente') {
             resultado.iluminacion = resultado.iluminacion || {};
             resultado.iluminacion.fuente = valor;
