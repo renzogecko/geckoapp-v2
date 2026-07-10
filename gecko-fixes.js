@@ -6461,7 +6461,7 @@ window.poblarMaterialesGraficaCascada = function () {
 var _GECKO_MAT_FIELDS = [
     'matNombre', 'matCat', 'matSubCat', 'matUnidad', 'matUnidadVenta',
     'matCostoUSD', 'matCostoReal', 'matContenido', 'matAncho', 'matLargo',
-    'matEspesor', 'matPeso', 'matStock', 'matNota', 'matMultiplicador',
+    'matEspesor', 'matPeso', 'matWatts', 'matStock', 'matNota', 'matMultiplicador',
     'matPrecioVentaManual', 'matPrecioGremio', 'matMultGremio', 'matCortePrecioML',
     'matCorteSpeed', 'matCortePower'
 ];
