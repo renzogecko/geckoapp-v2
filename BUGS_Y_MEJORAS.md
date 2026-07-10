@@ -92,6 +92,22 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Descripción:** cotizador simple con un select que trae los "Productos Gecko" de la lista de Materiales, permitiendo multicarga (varios productos en un mismo presupuesto).
 - **Estado:** 🔵 Pendiente
 
+### [MEJ-017] Rediseño del cotizador de Iluminación (Corpóreos y afines)
+- **Descripción:** Hoy el cotizador de Corpóreos (Chapa/Acrílico) solo
+  permite elegir 1 tipo de módulo LED y 1 tipo de tira LED, aunque en
+  Materiales hay varias alternativas cargadas (módulos de 2/3/4 chips,
+  varias tiras). Hay que traer todas las opciones disponibles en un
+  select, y que el cálculo de cantidad necesaria y fuente recomendada se
+  recalcule según la opción elegida.
+- Debe aplicarse a TODOS los cotizadores que tengan tarjeta de
+  Iluminación.
+- El cotizador de "Letras 3D (Estimado)" no tiene tarjeta de Iluminación
+  actualmente — agregar una idéntica a la de Chapa/Acrílico, con estos
+  mismos cambios ya incluidos.
+- Relacionado con MEJ-016 (el campo "Fuente" de la ficha de OT no se
+  separa bien porque el cálculo de origen arma un texto combinado).
+- **Estado:** 🔵 Pendiente — sesión propia.
+
 ---
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
@@ -508,3 +524,33 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
   otras áreas que no le competen).
 
 **Estado:** ✅ Completo y probado en producción.
+
+---
+
+### [MEJ-015] Fix bug de etiquetas (tipo) en el Presupuestador Manual — RESUELTO 09/07/2026
+- Causa raíz: el puente cotizador→GPM (gecko-docs.js) descartaba el
+  campo "tipo" del ítem; el formulario del GPM (_gpmAgregarItem) no lo
+  conservaba; y _gpmGuardar (gecko-fixes.js) hardcodeaba tipo:'manual'
+  para el 100% de los ítems, sin excepción.
+- Fix: se propaga el tipo real de origen de punta a punta (puente →
+  campo oculto en el formulario → guardado), respetándolo cuando el
+  ítem viene de un cotizador real. Se agregó un flag separado
+  "origenFormulario:'gpm'" a nivel de presupuesto (no de ítem) para
+  distinguir "se armó a mano en el GPM" de "el ítem es de tal rubro" —
+  ese flag solo se setea cuando NINGÚN ítem tiene tipo de origen real.
+  Se mantiene compatibilidad con presupuestos históricos vía "||" con
+  el chequeo viejo.
+- Efecto: corrige Mix de Ventas, Ticket Promedio por Rubro, Iluminación
+  en OT, y Eficiencia Segmentada, que dependían de este dato.
+
+### [MEJ-016] Autocompletado de ficha de ítem en OT desde otDetalle — RESUELTO 09/07/2026
+- La ficha desplegable de cada ítem en Editar OT ahora se autocompleta,
+  la primera vez que se abre (sin pisar datos ya editados), parseando
+  el texto otDetalle del cotizador de origen (Medidas, Material,
+  Cantidad, Color/Acabado, Iluminación).
+- El mismo parser se usa también en la impresión, para que la grilla
+  aparezca desde la primera vez que se genera el documento, sin
+  necesitar pasar antes por Editar OT.
+- Limitación conocida: el campo "Fuente" de Iluminación no siempre se
+  separa bien del texto combinado que arma el cotizador de Corpóreos
+  hoy — pendiente de resolver junto con MEJ-017.
