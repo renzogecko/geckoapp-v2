@@ -92,22 +92,6 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Descripción:** cotizador simple con un select que trae los "Productos Gecko" de la lista de Materiales, permitiendo multicarga (varios productos en un mismo presupuesto).
 - **Estado:** 🔵 Pendiente
 
-### [MEJ-017] Rediseño del cotizador de Iluminación (Corpóreos y afines)
-- **Descripción:** Hoy el cotizador de Corpóreos (Chapa/Acrílico) solo
-  permite elegir 1 tipo de módulo LED y 1 tipo de tira LED, aunque en
-  Materiales hay varias alternativas cargadas (módulos de 2/3/4 chips,
-  varias tiras). Hay que traer todas las opciones disponibles en un
-  select, y que el cálculo de cantidad necesaria y fuente recomendada se
-  recalcule según la opción elegida.
-- Debe aplicarse a TODOS los cotizadores que tengan tarjeta de
-  Iluminación.
-- El cotizador de "Letras 3D (Estimado)" no tiene tarjeta de Iluminación
-  actualmente — agregar una idéntica a la de Chapa/Acrílico, con estos
-  mismos cambios ya incluidos.
-- Relacionado con MEJ-016 (el campo "Fuente" de la ficha de OT no se
-  separa bien porque el cálculo de origen arma un texto combinado).
-- **Estado:** 🔵 Pendiente — sesión propia.
-
 ---
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
@@ -554,3 +538,56 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - Limitación conocida: el campo "Fuente" de Iluminación no siempre se
   separa bien del texto combinado que arma el cotizador de Corpóreos
   hoy — pendiente de resolver junto con MEJ-017.
+
+---
+
+### [MEJ-017] Rediseño del cotizador de Iluminación (Corpóreos y afines) — RESUELTO 10/07/2026
+
+**Base de datos (MySQL, tabla materiales):**
+- 3 columnas nuevas: `watts` (consumo por unidad/metro), `densidad` 
+  (módulos por m², solo aplica a Módulos), `lumenes` (dato del 
+  fabricante, autocompleta Densidad con la fórmula 7840÷Lúmenes, 
+  editable después).
+
+**Formulario de Materiales (main.js):**
+- Categoría "Eléctrico" reordenada: Watts / Lúmenes / Densidad en una 
+  fila, Especificaciones ocupando el ancho completo abajo.
+
+**Cotizador Chapa/Acrílico:**
+- El select fijo de "Módulos LED / Tira LED" (1 sola opción cada uno) 
+  se reemplazó por un select único combinado que lista TODOS los 
+  módulos y tiras cargados en Materiales, cada uno con su Watts y 
+  Densidad reales.
+- Si el material elegido no tiene Watts o Densidad cargada, se muestra 
+  "FALTA PARÁMETRO" en vez de inventar un número (Regla R4).
+- Selección de fuente mejorada: si ninguna fuente sola alcanza el 
+  consumo necesario, el sistema prueba combinar 2, 3 o 4 unidades del 
+  mismo modelo (respetando el stock real disponible) antes de avisar 
+  que faltan fuentes.
+- Caja de "Consumo Estimado" rediseñada: 2 líneas, mismo tamaño de 
+  letra, con punto naranja identificador.
+
+**Cotizador Letras 3D (Estimado):**
+- Se agregó la tarjeta de Iluminación completa (antes no existía), 
+  reutilizando la misma lógica de Chapa/Acrílico vía funciones 
+  compartidas (`_geckoHtmlCardIluminacion`, `_geckoCalcularIluminacion`, 
+  `_geckoRecalcularIluminacion` como dispatcher según el cotizador 
+  activo) — evita código duplicado entre ambos cotizadores.
+- Corregida la conversión de perímetro (cm → metros lineales) para que 
+  el cálculo de tiras sea correcto en este cotizador.
+
+**Modal de Editar OT (gecko-fixes.js):**
+- La ficha de cada ítem ahora también trae Iluminación cuando 
+  corresponde, con el texto guardado en 3 campos separados por "|" 
+  (Modelo / Cantidad / Fuente) para que el autocompletado los separe 
+  bien sin ambigüedad (antes, cuando el nombre de la fuente tenía 
+  paréntesis propios, todo quedaba mezclado en un solo campo). Los 
+  ítems guardados con el formato viejo siguen funcionando igual 
+  (compatibilidad hacia atrás).
+- Reordenado el modal: ahora el bloque "Ítems del trabajo" aparece 
+  después de los datos generales de la OT (Cliente, Área, Fechas, 
+  Teléfono, Atendido por) y antes de Instrucciones especiales, para una 
+  lectura más natural (primero el contexto general, después el detalle 
+  de cada trabajo).
+
+**Estado:** ✅ Completo y probado en producción.
