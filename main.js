@@ -3656,6 +3656,7 @@ function editarMaterial(id) {
     if (material.espesor) document.getElementById('matEspesor') && (document.getElementById('matEspesor').value = material.espesor);
     if (material.watts) document.getElementById('matWatts') && (document.getElementById('matWatts').value = material.watts);
     if (material.densidad) document.getElementById('matDensidad') && (document.getElementById('matDensidad').value = material.densidad);
+    if (material.lumenes) document.getElementById('matLumenes') && (document.getElementById('matLumenes').value = material.lumenes);
     if (material.nota) document.getElementById('matNota') && (document.getElementById('matNota').value = material.nota);
 
     // Recalcular (puede pisar precioGremio si está vacío — lo restauramos después)
@@ -3766,9 +3767,10 @@ const CATEGORY_CONFIG = {
     },
     electrico: {
         campos: [
-            { id: 'matNota', label: 'Especificaciones', type: 'text', placeholder: 'Detalles...' },
             { id: 'matWatts', label: 'Watts (consumo)', type: 'number', placeholder: 'Ej: 0.72' },
-            { id: 'matDensidad', label: 'Densidad (módulos/m²) — solo Módulos', type: 'number', placeholder: 'Ej: 112' }
+            { id: 'matLumenes', label: 'Lúmenes (ficha del fabricante)', type: 'number', placeholder: 'Ej: 70' },
+            { id: 'matDensidad', label: 'Densidad (módulos/m²) — solo Módulos', type: 'number', placeholder: 'Ej: 112' },
+            { id: 'matNota', label: 'Especificaciones', type: 'text', placeholder: 'Detalles...', fullWidth: true }
         ],
         unidadRecomendada: 'unidad'
     },
@@ -3805,11 +3807,15 @@ function actualizarCamposDinamicos() {
 
     config.campos.forEach(campo => {
         const isMediaField = ['matAncho', 'matLargo', 'matPeso'].includes(campo.id);
-        const onInputHandler = isMediaField
+        let onInputHandler = isMediaField
             ? 'window.recalcularCantidadQueTrae(); window.recalcularCostoReal();'
             : 'window.recalcularCostoReal()';
+        if (campo.id === 'matLumenes') {
+            onInputHandler = 'window.recalcularDensidadPorLumenes(); ' + onInputHandler;
+        }
+        const spanClass = campo.fullWidth ? ' md:col-span-3' : '';
         html += `
-            <div class="flex flex-col">
+            <div class="flex flex-col${spanClass}">
                 <label class="${labelStyle}">${campo.label}</label>
                 <input type="${campo.type}" id="${campo.id}" placeholder="${campo.placeholder}"
                        ${campo.type === 'number' ? 'step="any"' : ''}
@@ -3820,6 +3826,17 @@ function actualizarCamposDinamicos() {
 
     contenedor.innerHTML = html;
 }
+
+// Autocompletar Densidad (módulos/m²) al cargar Lúmenes, sin bloquear edición manual posterior
+window.recalcularDensidadPorLumenes = function () {
+    const inputLumenes = document.getElementById('matLumenes');
+    const inputDensidad = document.getElementById('matDensidad');
+    if (!inputLumenes || !inputDensidad) return;
+    const lumenes = parseFloat(inputLumenes.value);
+    if (lumenes > 0) {
+        inputDensidad.value = Math.round(7840 / lumenes);
+    }
+};
 
 window.setEstrategiaVenta = function (est) {
     const btnDin = document.getElementById('btnEstratDinamica');
@@ -4013,6 +4030,7 @@ if (formMaterial) {
                 peso: document.getElementById('matPeso') ? document.getElementById('matPeso').value : null,
                 watts: parseFloat(document.getElementById('matWatts')?.value) || null,
                 densidad: parseFloat(document.getElementById('matDensidad')?.value) || null,
+                lumenes: parseFloat(document.getElementById('matLumenes')?.value) || null,
                 nota: document.getElementById('matNota') ? document.getElementById('matNota').value : null,
                 precioGremio: parseFloat(document.getElementById('matPrecioGremio').value) || 0,
                 multGremio: parseFloat(document.getElementById('matMultGremio').value) || 1.5,
