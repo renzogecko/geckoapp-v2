@@ -1216,10 +1216,12 @@ window._otParsearDetalleAFicha = function (detalle) {
             resultado.medidas = valor;
         } else if (etiqueta.includes('material')) {
             resultado.material = valor;
+        } else if (etiqueta.includes('acabado') || etiqueta.includes('pintura') || etiqueta.includes('color')) {
+            resultado.color = valor;
         } else if (etiqueta === 'cant' || etiqueta.includes('cantidad')) {
             resultado.cantidad = valor;
         } else if (etiqueta.includes('ilum')) {
-            const matchIlum = valor.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+            const matchIlum = valor.match(/^(.+)\s*\(([^)]+)\)\s*$/);
             resultado.iluminacion = resultado.iluminacion || {};
             if (matchIlum) {
                 resultado.iluminacion.estilo = matchIlum[1].trim();

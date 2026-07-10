@@ -247,7 +247,7 @@ window.generarDocOT = async function (p) {
     };
 
     const renderFichaItem = (it, i) => {
-        const f = it.otFicha;
+        const f = it.otFicha || (typeof window._otParsearDetalleAFicha === 'function' ? window._otParsearDetalleAFicha(it.otDetalle) : null);
         const tieneFicha = f && typeof f === 'object' &&
             Object.keys(f).some(k => k !== 'imagenes' && k !== 'iluminacion' && f[k]);
 
