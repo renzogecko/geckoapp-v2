@@ -327,9 +327,8 @@ window.setCorpModo = function (modo) {
                     </div>
                     
                     <div id="detallesChapaIlum" class="hidden mt-4 space-y-4">
-                        <select id="chapaTipoLed" class="gecko-select w-full" onchange="window.calcularChapaAcrilico()">
-                            <option value="modulos">Módulos LED (112 u/m2)</option>
-                            <option value="tira">Tira LED (Perímetro + 10%)</option>
+                        <select id="chapaModeloLed" class="gecko-select w-full" onchange="window.calcularChapaAcrilico()">
+                            <option value="">Elegí un módulo o tira...</option>
                         </select>
                         <div id="visorConsumo" class="p-3 bg-zinc-900 rounded-xl border border-zinc-800">
                             <p class="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">Consumo Estimado</p>
@@ -1263,6 +1262,34 @@ window.calcularCostoPolifan = function () {
     };
 }
 
+window._geckoObtenerOpcionesIluminacion = function () {
+    const materiales = window.materiales || [];
+    return materiales.filter(m => {
+        const cat = (m.categoria || '').toLowerCase();
+        const sub = (m.subcategoria || '').toUpperCase();
+        const nombre = (m.nombre || '').toLowerCase();
+        return cat === 'electrico' && sub === 'ILUMINACION' &&
+            (nombre.includes('módulo') || nombre.includes('modulo') || nombre.includes('tira'));
+    }).map(m => {
+        const nombre = (m.nombre || '').toLowerCase();
+        const tipo = nombre.includes('tira') ? 'tira' : 'modulo';
+        return { id: m.id, nombre: m.nombre, tipo, watts: parseFloat(m.watts) || null, item: m };
+    });
+};
+
+window._geckoPoblarSelectIluminacion = function () {
+    const sel = document.getElementById('chapaModeloLed');
+    if (!sel) return;
+    const opciones = window._geckoObtenerOpcionesIluminacion();
+    if (opciones.length === 0) {
+        sel.innerHTML = '<option value="">Sin módulos/tiras cargados en Materiales</option>';
+        return;
+    }
+    sel.innerHTML = '<option value="">Elegí un módulo o tira...</option>' + opciones.map(o =>
+        `<option value="${o.id}" data-tipo="${o.tipo}">${o.nombre}${o.watts ? '' : ' (FALTA WATTS)'}</option>`
+    ).join('');
+};
+
 window.initChapaAcrilicoSelects = function () {
     const materiales = window.materiales || [];
 
@@ -1332,6 +1359,9 @@ window.initChapaAcrilicoSelects = function () {
         htmlVinilo += matsVinilo.map(m => `<option value="${m.id || m.nombre}">${m.nombre}</option>`).join('');
         selVinilo.innerHTML = htmlVinilo;
     }
+
+    // 5. Iluminación (Módulos + Tiras LED combinados)
+    window._geckoPoblarSelectIluminacion();
 };
 
 window.agregarFilaPinturaChapa = function () {
@@ -1617,73 +1647,72 @@ window.calcularChapaAcrilico = function () {
     let descIlum = "0 unidades";
     let fuenteRecomendada = "N/A";
     let costoFuente = 0;
+    let avisoFaltaWatts = '';
 
     if (document.getElementById('chkChapaIlum')?.checked) {
-        const tipoLed = document.getElementById('chapaTipoLed').value;
-        let consumoTotal = 0;
-        let cantU = 0;
-        let descripcionLed = '';
-        let costoLed = 0;
+        const selModelo = document.getElementById('chapaModeloLed');
+        const opciones = window._geckoObtenerOpcionesIluminacion();
+        const elegido = opciones.find(o => String(o.id) === String(selModelo?.value));
 
-        if (tipoLed === 'modulos') {
-            // Buscar módulo LED con fallbacks
-            const itemLed = window.getGeckoItem('MÓDULO LED SMD2835 – 3 LED') ||
-                            window.getGeckoItem('MODULO LED SMD2835 3 LED') ||
-                            window.getGeckoItem('MODULO LED');
-            // Estándar industria: 112 módulos por m²
-            cantU = Math.ceil(areaM2 * 112);
-            consumoTotal = cantU * 0.72; // 0.72W por módulo
-            if (itemLed) costoLed = cantU * itemLed.precioVenta;
-            descripcionLed = `${cantU} módulos LED 3 LED SMD2835`;
-            descIlum = descripcionLed;
+        if (!elegido) {
+            descIlum = 'Elegí un módulo o tira';
             const txtConsumo = document.getElementById('txtConsumo');
-            if (txtConsumo) txtConsumo.innerText = `${cantU} módulos × 0.72W = ${consumoTotal.toFixed(1)}W totales`;
+            if (txtConsumo) txtConsumo.innerText = descIlum;
+        } else if (!elegido.watts) {
+            avisoFaltaWatts = `FALTA PARÁMETRO: "${elegido.nombre}" no tiene Watts cargado en Materiales.`;
+            descIlum = avisoFaltaWatts;
+            const txtConsumo = document.getElementById('txtConsumo');
+            if (txtConsumo) txtConsumo.innerText = avisoFaltaWatts;
         } else {
-            // Tira LED con fallbacks
-            const itemTira = window.getGeckoItem('TIRA LED SMD2835 – 120LED (FRIO)') ||
-                             window.getGeckoItem('TIRA LED SMD2835 120LED FRIO') ||
-                             window.getGeckoItem('TIRA LED');
-            const mts = perimetroMl * 1.1;
-            cantU = mts;
-            consumoTotal = mts * 14.4; // 14.4W por metro tira 120LED
-            if (itemTira) costoLed = mts * itemTira.precioVenta;
-            descripcionLed = `${mts.toFixed(2)}m tira LED SMD2835 120LED Fría`;
-            descIlum = descripcionLed;
-            const txtConsumo = document.getElementById('txtConsumo');
-            if (txtConsumo) txtConsumo.innerText = `${mts.toFixed(2)}m × 14.4W = ${consumoTotal.toFixed(1)}W totales`;
-        }
+            let consumoTotal = 0;
+            let cantU = 0;
 
-        costoIlumTotal = costoLed;
-
-        // Selección automática de fuente (factor seguridad 1.25)
-        const wattsNecesarios = consumoTotal * 1.25;
-        const todasFuentes = (window.materiales || [])
-            .filter(m => {
-                const cat = (m.categoria || '').toLowerCase();
-                const nombre = (m.nombre || '').toUpperCase();
-                return cat === 'electrico' && nombre.includes('FUENTE');
-            })
-            .map(m => {
-                const matchW = m.nombre.match(/(\d+)W/i);
-                return { item: m, watts: matchW ? parseInt(matchW[1]) : 0 };
-            })
-            .filter(f => f.watts >= wattsNecesarios)
-            .sort((a, b) => a.watts - b.watts);
-
-        const txtFuente = document.getElementById('txtFuente');
-        if (todasFuentes.length > 0) {
-            const fuenteElegida = todasFuentes[0];
-            fuenteRecomendada = fuenteElegida.item.nombre;
-            const itFuenteData = window.getGeckoItem(fuenteRecomendada);
-            if (itFuenteData) costoFuente = itFuenteData.precioVenta;
-            if (txtFuente) {
-                txtFuente.style.color = '';
-                txtFuente.innerText = `Fuente recomendada: ${fuenteRecomendada} (necesita ${wattsNecesarios.toFixed(1)}W)`;
+            if (elegido.tipo === 'modulo') {
+                // Estándar industria: 112 módulos por m²
+                cantU = Math.ceil(areaM2 * 112);
+                consumoTotal = cantU * elegido.watts;
+                descIlum = `${cantU} × ${elegido.nombre}`;
+            } else {
+                const mts = perimetroMl * 1.1;
+                cantU = mts;
+                consumoTotal = mts * elegido.watts;
+                descIlum = `${mts.toFixed(2)}m de ${elegido.nombre}`;
             }
-        } else {
-            if (txtFuente) {
-                txtFuente.style.color = '#ef4444';
-                txtFuente.innerText = `Atención: necesita ${wattsNecesarios.toFixed(1)}W – Verificar fuente disponible`;
+
+            costoIlumTotal = cantU * window.getCorpPrecio(elegido.item);
+            const txtConsumo = document.getElementById('txtConsumo');
+            if (txtConsumo) txtConsumo.innerText = `${descIlum} = ${consumoTotal.toFixed(1)}W totales`;
+
+            // Selección automática de fuente (factor seguridad 1.25)
+            const wattsNecesarios = consumoTotal * 1.25;
+            const todasFuentes = (window.materiales || [])
+                .filter(m => {
+                    const cat = (m.categoria || '').toLowerCase();
+                    const nombre = (m.nombre || '').toUpperCase();
+                    return cat === 'electrico' && nombre.includes('FUENTE');
+                })
+                .map(m => {
+                    const matchW = m.nombre.match(/(\d+)W/i);
+                    return { item: m, watts: matchW ? parseInt(matchW[1]) : 0 };
+                })
+                .filter(f => f.watts >= wattsNecesarios)
+                .sort((a, b) => a.watts - b.watts);
+
+            const txtFuente = document.getElementById('txtFuente');
+            if (todasFuentes.length > 0) {
+                const fuenteElegida = todasFuentes[0];
+                fuenteRecomendada = fuenteElegida.item.nombre;
+                const itFuenteData = window.getGeckoItem(fuenteRecomendada);
+                if (itFuenteData) costoFuente = itFuenteData.precioVenta;
+                if (txtFuente) {
+                    txtFuente.style.color = '';
+                    txtFuente.innerText = `Fuente recomendada: ${fuenteRecomendada} (necesita ${wattsNecesarios.toFixed(1)}W)`;
+                }
+            } else {
+                if (txtFuente) {
+                    txtFuente.style.color = '#ef4444';
+                    txtFuente.innerText = `Atención: necesita ${wattsNecesarios.toFixed(1)}W – Verificar fuente disponible`;
+                }
             }
         }
     }
@@ -1817,7 +1846,7 @@ window.calcularChapaAcrilico = function () {
         tipo: 'corporeos',
         nombre: `CHAPA/ACRILICO - ${document.getElementById('chapaNombre')?.value || 'S/N'}`,
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | Ilum: ${descIlum} (${fuenteRecomendada})${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | ${avisoFaltaWatts ? avisoFaltaWatts : `Ilum: ${descIlum} (${fuenteRecomendada})`}${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}`
     };
 };
 
