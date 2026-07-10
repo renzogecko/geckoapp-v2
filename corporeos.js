@@ -311,39 +311,7 @@ window.setCorpModo = function (modo) {
                 </div>
             </div>
 
-            <!-- 05. Iluminación -->
-            <div class="card-gecko animate-in fade-in slide-in-from-top-4">
-                <div class="seccion-switch-gecko">
-                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] mb-2 guia-naranja">05. Iluminación</p>
-                    <div class="switch-row" onclick="document.getElementById('chkChapaIlum').click()">
-                        <div class="flex items-center gap-3">
-                            <i class="bi bi-lightbulb text-gecko"></i>
-                            <p class="text-[11px] font-black text-white uppercase tracking-wider">SISTEMA LED</p>
-                        </div>
-                        <label class="switch-gecko" onclick="event.stopPropagation()">
-                            <input type="checkbox" id="chkChapaIlum" onchange="window.toggleChapaIlum()">
-                            <span class="slider-gecko"></span>
-                        </label>
-                    </div>
-                    
-                    <div id="detallesChapaIlum" class="hidden mt-4 space-y-4">
-                        <select id="chapaModeloLed" class="gecko-select w-full" onchange="window.calcularChapaAcrilico()">
-                            <option value="">Elegí un módulo o tira...</option>
-                        </select>
-                        <div id="visorConsumo" style="background:#141414;border:1px solid #262626;border-radius:14px;padding:16px 18px;">
-                            <p style="color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 12px;">Consumo estimado</p>
-                            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
-                                <span style="color:#F15A24;font-size:14px;line-height:1.4;">●</span>
-                                <span id="txtConsumo" style="color:#e4e4e7;font-size:13px;font-weight:600;line-height:1.4;">0W</span>
-                            </div>
-                            <div style="display:flex;align-items:flex-start;gap:10px;">
-                                <span style="color:#F15A24;font-size:14px;line-height:1.4;">●</span>
-                                <span id="txtFuente" style="color:#e4e4e7;font-size:13px;font-weight:600;line-height:1.4;">Esperando datos...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            ${window._geckoHtmlCardIluminacion()}
 
             <!-- AUDITOR VISUAL -->
             <div id="auditorChapa" class="card-gecko border-dashed border-zinc-700 bg-transparent">
@@ -367,12 +335,6 @@ window.setCorpModo = function (modo) {
         window.toggleChapaVinilo = function () {
             const chk = document.getElementById('chkChapaVinilo');
             document.getElementById('detallesChapaVinilo').classList.toggle('hidden', !chk.checked);
-            window.calcularChapaAcrilico();
-        };
-
-        window.toggleChapaIlum = function () {
-            const chk = document.getElementById('chkChapaIlum');
-            document.getElementById('detallesChapaIlum').classList.toggle('hidden', !chk.checked);
             window.calcularChapaAcrilico();
         };
 
@@ -433,9 +395,11 @@ window.setCorpModo = function (modo) {
                 </div>
             </div>
 
+            ${window._geckoHtmlCardIluminacion()}
+
             <div class="card-gecko space-y-2 animate-in fade-in slide-in-from-top-3">
                 <div class="flex justify-between text-[11px] text-zinc-400 uppercase tracking-widest font-bold">
-                    <span>05. Resumen Estimado</span>
+                    <span>06. Resumen Estimado</span>
                 </div>
                 <div class="flex justify-between text-[11px] text-zinc-400 uppercase tracking-widest font-bold">
                     <span>Peso Est. (gr)</span>
@@ -449,7 +413,7 @@ window.setCorpModo = function (modo) {
 
             <div class="card-gecko space-y-2">
                 <div class="seccion-switch-gecko">
-                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-2">06. Acabado de pintura</p>
+                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja mb-2">07. Acabado de pintura</p>
                     <div class="switch-row" onclick="document.getElementById('chkLlevaPinturaLetras3D').click()">
                         <div class="flex items-center gap-4">
                             <div class="w-10 h-10 bg-orange-950/30 rounded-xl flex items-center justify-center border border-orange-900/30">
@@ -497,6 +461,9 @@ window.setCorpModo = function (modo) {
             htmlFrente += matsFrente.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
             selFrente3D.innerHTML = htmlFrente;
         }
+
+        window._geckoPoblarSelectIluminacion();
+
         window.calcularLetras3D();
 
     } else {
@@ -821,7 +788,12 @@ window.calcularLetras3D = function () {
     }
     const costoPinturaL3DTotal = filasPinturaL3D.reduce(function (acc, f) { return acc + f.valor; }, 0);
 
-    const totalFinal = costoMaterial + costoServicio + Math.round(costoFrenteMaterial + costoFrenteCorte) + costoPinturaL3DTotal;
+    // Iluminación (compartido con Chapa/Acrílico)
+    const resultadoIlum = window._geckoCalcularIluminacion((ancho * alto) / 10000, perimetro / 100);
+    const costoIlumTotal = resultadoIlum.costoIlumTotal;
+    const costoFuenteIlum = resultadoIlum.costoFuente;
+
+    const totalFinal = costoMaterial + costoServicio + Math.round(costoFrenteMaterial + costoFrenteCorte) + costoPinturaL3DTotal + costoIlumTotal + costoFuenteIlum;
 
     const fmt = v => '$' + Math.round(v).toLocaleString('es-AR');
 
@@ -886,6 +858,12 @@ window.calcularLetras3D = function () {
                 filasPinturaL3D.forEach(f => html += lineaRow(f.nombre + (f.codigo ? ` (${f.codigo})` : ''), `${areaPinturaLetras3D.toFixed(4)}m²`, f.valor));
             }
 
+            if (costoIlumTotal > 0 || costoFuenteIlum > 0) {
+                html += seccion('Iluminación');
+                if (costoIlumTotal > 0) html += lineaRow('LEDs', resultadoIlum.descIlum, costoIlumTotal);
+                if (costoFuenteIlum > 0) html += lineaRow('Fuente', resultadoIlum.fuenteRecomendada, costoFuenteIlum);
+            }
+
             html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
                 <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
                 <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
@@ -930,7 +908,7 @@ window.calcularLetras3D = function () {
         nombre: `LETRAS 3D – ${nombreMat}`,
         textoOpciones: `Letras 3D (Est.): ${ancho}x${alto}cm | ${nombreMat}`,
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}${descFrenteL3D}${descPinturaL3D}`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}${descFrenteL3D}${descPinturaL3D} | ${resultadoIlum.avisoFaltaWatts ? resultadoIlum.avisoFaltaWatts : `Ilum: ${resultadoIlum.descIlum} (${resultadoIlum.fuenteRecomendada})`}`
     };
 };
 
@@ -1296,6 +1274,159 @@ window._geckoPoblarSelectIluminacion = function () {
     ).join('');
 };
 
+// Dispatcher: decide a qué cotizador recalcular según el modo activo (window._corpModo)
+window._geckoRecalcularIluminacion = function () {
+    if (window._corpModo === 'letras3d') window.calcularLetras3D();
+    else window.calcularChapaAcrilico();
+};
+
+window.toggleChapaIlum = function () {
+    const chk = document.getElementById('chkChapaIlum');
+    document.getElementById('detallesChapaIlum').classList.toggle('hidden', !chk.checked);
+    window._geckoRecalcularIluminacion();
+};
+
+window._geckoHtmlCardIluminacion = function () {
+    return `
+            <!-- 05. Iluminación -->
+            <div class="card-gecko animate-in fade-in slide-in-from-top-4">
+                <div class="seccion-switch-gecko">
+                    <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] mb-2 guia-naranja">05. Iluminación</p>
+                    <div class="switch-row" onclick="document.getElementById('chkChapaIlum').click()">
+                        <div class="flex items-center gap-3">
+                            <i class="bi bi-lightbulb text-gecko"></i>
+                            <p class="text-[11px] font-black text-white uppercase tracking-wider">SISTEMA LED</p>
+                        </div>
+                        <label class="switch-gecko" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="chkChapaIlum" onchange="window.toggleChapaIlum()">
+                            <span class="slider-gecko"></span>
+                        </label>
+                    </div>
+
+                    <div id="detallesChapaIlum" class="hidden mt-4 space-y-4">
+                        <select id="chapaModeloLed" class="gecko-select w-full" onchange="window._geckoRecalcularIluminacion()">
+                            <option value="">Elegí un módulo o tira...</option>
+                        </select>
+                        <div id="visorConsumo" style="background:#141414;border:1px solid #262626;border-radius:14px;padding:16px 18px;">
+                            <p style="color:#71717a;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 12px;">Consumo estimado</p>
+                            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+                                <span style="color:#F15A24;font-size:14px;line-height:1.4;">●</span>
+                                <span id="txtConsumo" style="color:#e4e4e7;font-size:13px;font-weight:600;line-height:1.4;">0W</span>
+                            </div>
+                            <div style="display:flex;align-items:flex-start;gap:10px;">
+                                <span style="color:#F15A24;font-size:14px;line-height:1.4;">●</span>
+                                <span id="txtFuente" style="color:#e4e4e7;font-size:13px;font-weight:600;line-height:1.4;">Esperando datos...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+};
+
+window._geckoCalcularIluminacion = function (areaM2, perimetroMl) {
+    let costoIlumTotal = 0;
+    let descIlum = "0 unidades";
+    let fuenteRecomendada = "N/A";
+    let costoFuente = 0;
+    let avisoFaltaWatts = '';
+
+    if (document.getElementById('chkChapaIlum')?.checked) {
+        const selModelo = document.getElementById('chapaModeloLed');
+        const opciones = window._geckoObtenerOpcionesIluminacion();
+        const elegido = opciones.find(o => String(o.id) === String(selModelo?.value));
+
+        if (!elegido) {
+            descIlum = 'Elegí un módulo o tira';
+            const txtConsumo = document.getElementById('txtConsumo');
+            if (txtConsumo) txtConsumo.innerText = descIlum;
+        } else if (!elegido.watts) {
+            avisoFaltaWatts = `FALTA PARÁMETRO: "${elegido.nombre}" no tiene Watts cargado en Materiales.`;
+            descIlum = avisoFaltaWatts;
+            const txtConsumo = document.getElementById('txtConsumo');
+            if (txtConsumo) txtConsumo.innerText = avisoFaltaWatts;
+        } else if (elegido.tipo === 'modulo' && !elegido.densidad) {
+            avisoFaltaWatts = `FALTA PARÁMETRO: "${elegido.nombre}" no tiene Densidad (módulos/m²) cargada en Materiales.`;
+            descIlum = avisoFaltaWatts;
+            const txtConsumo = document.getElementById('txtConsumo');
+            if (txtConsumo) txtConsumo.innerText = avisoFaltaWatts;
+        } else {
+            let consumoTotal = 0;
+            let cantU = 0;
+
+            if (elegido.tipo === 'modulo') {
+                cantU = Math.ceil(areaM2 * elegido.densidad);
+                consumoTotal = cantU * elegido.watts;
+                descIlum = `${cantU} × ${elegido.nombre}`;
+            } else {
+                const mts = perimetroMl * 1.1;
+                cantU = mts;
+                consumoTotal = mts * elegido.watts;
+                descIlum = `${mts.toFixed(2)}m de ${elegido.nombre}`;
+            }
+
+            costoIlumTotal = cantU * window.getCorpPrecio(elegido.item);
+            const txtConsumo = document.getElementById('txtConsumo');
+            if (txtConsumo) txtConsumo.innerText = `${descIlum} = ${consumoTotal.toFixed(1)}W totales`;
+
+            // Selección automática de fuente (factor seguridad 1.25)
+            const wattsNecesarios = consumoTotal * 1.25;
+            const todasFuentes = (window.materiales || [])
+                .filter(m => {
+                    const cat = (m.categoria || '').toLowerCase();
+                    const nombre = (m.nombre || '').toUpperCase();
+                    return cat === 'electrico' && nombre.includes('FUENTE');
+                })
+                .map(m => {
+                    const matchW = m.nombre.match(/(\d+)W/i);
+                    return { item: m, watts: matchW ? parseInt(matchW[1]) : 0, stock: parseInt(m.stock) || 0 };
+                })
+                .filter(f => f.watts > 0);
+
+            let solucionFuente = null;
+
+            // 1. Buscar UNA sola fuente que alcance, con stock disponible
+            const candidatasUnicas = todasFuentes
+                .filter(f => f.watts >= wattsNecesarios && f.stock >= 1)
+                .sort((a, b) => a.watts - b.watts);
+            if (candidatasUnicas.length > 0) {
+                solucionFuente = { cantidad: 1, fuente: candidatasUnicas[0] };
+            } else {
+                // 2. Probar combinar 2, 3 o 4 unidades del mismo modelo
+                const disponiblesOrdenadas = todasFuentes.slice().sort((a, b) => b.watts - a.watts);
+                for (let n = 2; n <= 4 && !solucionFuente; n++) {
+                    for (const f of disponiblesOrdenadas) {
+                        if (f.stock >= n && (f.watts * n) >= wattsNecesarios) {
+                            solucionFuente = { cantidad: n, fuente: f };
+                            break;
+                        }
+                    }
+                }
+            }
+
+            const txtFuente = document.getElementById('txtFuente');
+            if (solucionFuente) {
+                const nombreFuente = solucionFuente.fuente.item.nombre;
+                fuenteRecomendada = solucionFuente.cantidad > 1
+                    ? `${solucionFuente.cantidad} x ${nombreFuente}`
+                    : nombreFuente;
+                const itFuenteData = solucionFuente.fuente.item;
+                costoFuente = (itFuenteData.precioVenta || itFuenteData.costoARS || itFuenteData.costo || 0) * solucionFuente.cantidad;
+                if (txtFuente) {
+                    txtFuente.style.color = '#e4e4e7';
+                    txtFuente.innerText = `Fuente recomendada: ${fuenteRecomendada} (necesita ${wattsNecesarios.toFixed(1)}W)`;
+                }
+            } else {
+                if (txtFuente) {
+                    txtFuente.style.color = '#ef4444';
+                    txtFuente.innerText = `Atención: necesita ${wattsNecesarios.toFixed(1)}W – no hay combinación de fuentes en stock que alcance`;
+                }
+            }
+        }
+    }
+
+    return { costoIlumTotal, descIlum, fuenteRecomendada, costoFuente, avisoFaltaWatts };
+};
+
 window.initChapaAcrilicoSelects = function () {
     const materiales = window.materiales || [];
 
@@ -1649,105 +1780,12 @@ window.calcularChapaAcrilico = function () {
     }
 
     // 5. Iluminación y Fuentes
-    let costoIlumTotal = 0;
-    let descIlum = "0 unidades";
-    let fuenteRecomendada = "N/A";
-    let costoFuente = 0;
-    let avisoFaltaWatts = '';
-
-    if (document.getElementById('chkChapaIlum')?.checked) {
-        const selModelo = document.getElementById('chapaModeloLed');
-        const opciones = window._geckoObtenerOpcionesIluminacion();
-        const elegido = opciones.find(o => String(o.id) === String(selModelo?.value));
-
-        if (!elegido) {
-            descIlum = 'Elegí un módulo o tira';
-            const txtConsumo = document.getElementById('txtConsumo');
-            if (txtConsumo) txtConsumo.innerText = descIlum;
-        } else if (!elegido.watts) {
-            avisoFaltaWatts = `FALTA PARÁMETRO: "${elegido.nombre}" no tiene Watts cargado en Materiales.`;
-            descIlum = avisoFaltaWatts;
-            const txtConsumo = document.getElementById('txtConsumo');
-            if (txtConsumo) txtConsumo.innerText = avisoFaltaWatts;
-        } else if (elegido.tipo === 'modulo' && !elegido.densidad) {
-            avisoFaltaWatts = `FALTA PARÁMETRO: "${elegido.nombre}" no tiene Densidad (módulos/m²) cargada en Materiales.`;
-            descIlum = avisoFaltaWatts;
-            const txtConsumo = document.getElementById('txtConsumo');
-            if (txtConsumo) txtConsumo.innerText = avisoFaltaWatts;
-        } else {
-            let consumoTotal = 0;
-            let cantU = 0;
-
-            if (elegido.tipo === 'modulo') {
-                cantU = Math.ceil(areaM2 * elegido.densidad);
-                consumoTotal = cantU * elegido.watts;
-                descIlum = `${cantU} × ${elegido.nombre}`;
-            } else {
-                const mts = perimetroMl * 1.1;
-                cantU = mts;
-                consumoTotal = mts * elegido.watts;
-                descIlum = `${mts.toFixed(2)}m de ${elegido.nombre}`;
-            }
-
-            costoIlumTotal = cantU * window.getCorpPrecio(elegido.item);
-            const txtConsumo = document.getElementById('txtConsumo');
-            if (txtConsumo) txtConsumo.innerText = `${descIlum} = ${consumoTotal.toFixed(1)}W totales`;
-
-            // Selección automática de fuente (factor seguridad 1.25)
-            const wattsNecesarios = consumoTotal * 1.25;
-            const todasFuentes = (window.materiales || [])
-                .filter(m => {
-                    const cat = (m.categoria || '').toLowerCase();
-                    const nombre = (m.nombre || '').toUpperCase();
-                    return cat === 'electrico' && nombre.includes('FUENTE');
-                })
-                .map(m => {
-                    const matchW = m.nombre.match(/(\d+)W/i);
-                    return { item: m, watts: matchW ? parseInt(matchW[1]) : 0, stock: parseInt(m.stock) || 0 };
-                })
-                .filter(f => f.watts > 0);
-
-            let solucionFuente = null;
-
-            // 1. Buscar UNA sola fuente que alcance, con stock disponible
-            const candidatasUnicas = todasFuentes
-                .filter(f => f.watts >= wattsNecesarios && f.stock >= 1)
-                .sort((a, b) => a.watts - b.watts);
-            if (candidatasUnicas.length > 0) {
-                solucionFuente = { cantidad: 1, fuente: candidatasUnicas[0] };
-            } else {
-                // 2. Probar combinar 2, 3 o 4 unidades del mismo modelo
-                const disponiblesOrdenadas = todasFuentes.slice().sort((a, b) => b.watts - a.watts);
-                for (let n = 2; n <= 4 && !solucionFuente; n++) {
-                    for (const f of disponiblesOrdenadas) {
-                        if (f.stock >= n && (f.watts * n) >= wattsNecesarios) {
-                            solucionFuente = { cantidad: n, fuente: f };
-                            break;
-                        }
-                    }
-                }
-            }
-
-            const txtFuente = document.getElementById('txtFuente');
-            if (solucionFuente) {
-                const nombreFuente = solucionFuente.fuente.item.nombre;
-                fuenteRecomendada = solucionFuente.cantidad > 1
-                    ? `${solucionFuente.cantidad} x ${nombreFuente}`
-                    : nombreFuente;
-                const itFuenteData = solucionFuente.fuente.item;
-                costoFuente = (itFuenteData.precioVenta || itFuenteData.costoARS || itFuenteData.costo || 0) * solucionFuente.cantidad;
-                if (txtFuente) {
-                    txtFuente.style.color = '#e4e4e7';
-                    txtFuente.innerText = `Fuente recomendada: ${fuenteRecomendada} (necesita ${wattsNecesarios.toFixed(1)}W)`;
-                }
-            } else {
-                if (txtFuente) {
-                    txtFuente.style.color = '#ef4444';
-                    txtFuente.innerText = `Atención: necesita ${wattsNecesarios.toFixed(1)}W – no hay combinación de fuentes en stock que alcance`;
-                }
-            }
-        }
-    }
+    const resultadoIlum = window._geckoCalcularIluminacion(areaM2, perimetroMl);
+    const costoIlumTotal = resultadoIlum.costoIlumTotal;
+    const descIlum = resultadoIlum.descIlum;
+    const fuenteRecomendada = resultadoIlum.fuenteRecomendada;
+    const costoFuente = resultadoIlum.costoFuente;
+    const avisoFaltaWatts = resultadoIlum.avisoFaltaWatts;
 
     // 6. Totales y Auditoría
     const pinturaChapaActiva = document.getElementById('chkLlevaPinturaChapa')?.checked;
