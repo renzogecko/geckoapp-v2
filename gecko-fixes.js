@@ -5582,7 +5582,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
             <p style="color:#52525b;font-size:10px;margin-top:2px;">Desactivá para mostrar solo el total al cliente</p>
           </div>
           <label style="position:relative;width:36px;height:20px;flex-shrink:0;cursor:pointer;">
-            <input type="checkbox" id="gpmMostrarPrecios" checked
+            <input type="checkbox" id="gpmMostrarPrecios" ${datosEdicion?.mostrarPrecios === false ? '' : 'checked'}
               onchange="window._gpmSyncToggle('gpmMostrarPrecios','gpmMostrarPreciosSlider','gpmMostrarPreciosThumb')"
               style="opacity:0;width:0;height:0;position:absolute;">
             <span id="gpmMostrarPreciosSlider" style="position:absolute;inset:0;background:#F15A24;border-radius:20px;transition:background .2s;"></span>
