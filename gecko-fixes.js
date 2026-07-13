@@ -5410,7 +5410,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
     const itemsIniciales = datosEdicion?.items || [];
 
     // Opciones del select de área
-    const areas = ['Gráfica', 'Industrial'];
+    const areas = ['Gráfica', 'Industrial', 'Gráfica/Industrial'];
     const areaOpts = areas.map(a =>
         `<option value="${a}" ${areaInicial === a ? 'selected' : ''}>${a}</option>`
     ).join('');
