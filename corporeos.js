@@ -1499,7 +1499,7 @@ window._geckoFilaFrenteFondo = function (tipo) {
                         ${opciones}
                     </select>
                 </div>
-                <div class="col-span-3 flex items-center justify-between gap-1">
+                <div class="col-span-3 flex items-center justify-between gap-1 px-2 py-1.5 rounded-lg border border-zinc-800/70 bg-black/20">
                     <span class="text-[9px] font-bold text-zinc-500 uppercase leading-tight">Corte<br>láser</span>
                     <label class="switch-gecko">
                         <input type="checkbox" class="input-ff-corte" onchange="window.calcularChapaAcrilico()">
@@ -1507,7 +1507,7 @@ window._geckoFilaFrenteFondo = function (tipo) {
                     </label>
                 </div>
                 ${tipo === 'frente' ? `
-                <div class="col-span-3 flex items-center justify-between gap-1">
+                <div class="col-span-3 flex items-center justify-between gap-1 px-2 py-1.5 rounded-lg border border-zinc-800/70 bg-black/20">
                     <span class="text-[9px] font-bold text-zinc-500 uppercase leading-tight">Vinilo<br>montado</span>
                     <label class="switch-gecko">
                         <input type="checkbox" class="input-ff-vinilo" onchange="window._geckoToggleVinilloFilaFF(this)">
@@ -1768,6 +1768,12 @@ window.calcularChapaAcrilico = function () {
                 const subtotalCorteMat = perimetroMl * precioCorteMat;
                 costoCortePlacas += subtotalCorteMat;
                 auditPlacas.push({ nombre: `Corte ${servCorteMat.nombre} (${etiqueta})`, detalle: `${parseFloat(perimetroMl.toFixed(2))}ml × $${Math.round(precioCorteMat).toLocaleString('es-AR')}/ml`, valor: subtotalCorteMat });
+            } else {
+                auditPlacas.push({
+                    nombre: `⚠ FALTA SERVICIO DE CORTE`,
+                    detalle: `No se encontró precio de corte para "${itMat.nombre}" (ni en el material ni en Servicios)`,
+                    valor: 0
+                });
             }
         }
 
@@ -1888,7 +1894,13 @@ window.calcularChapaAcrilico = function () {
 
             if (auditPlacas.length > 0) {
                 html += seccion('Frente / Fondo');
-                auditPlacas.forEach(l => html += lineaRow(l.nombre, l.detalle, l.valor));
+                auditPlacas.forEach(l => {
+                    if (l.nombre.startsWith('⚠')) {
+                        html += `<p style="color:#ef4444;font-size:11px;font-weight:700;margin:6px 0 10px;">${l.nombre} — ${l.detalle}</p>`;
+                    } else {
+                        html += lineaRow(l.nombre, l.detalle, l.valor);
+                    }
+                });
             }
 
             if (auditVinilo.length > 0) {
