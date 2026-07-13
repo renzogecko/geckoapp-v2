@@ -279,39 +279,40 @@ window.setCorpModo = function (modo) {
                 </div>
             </div>
 
-            <!-- 04. Frente, Fondo y Vinilo -->
+            <!-- 04. Frente -->
             <div class="card-gecko animate-in fade-in slide-in-from-top-3">
-                <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] mb-4 guia-naranja">04. Frente, Fondo y Vinilo</p>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-[11px] text-zinc-400 mb-2">Material Frente</label>
-                        <select id="chapaFrenteMat" class="gecko-select w-full" onchange="window.calcularChapaAcrilico()"></select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] text-zinc-400 mb-2">Material Fondo</label>
-                        <select id="chapaFondoMat" class="gecko-select w-full" onchange="window.calcularChapaAcrilico()"></select>
-                    </div>
+                <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] mb-4 guia-naranja">04. Frente</p>
+                <div id="contenedorFilasFrente" class="space-y-3">
+                    ${window._geckoFilaFrenteFondo('frente')}
                 </div>
+                <button type="button" onclick="window._geckoAgregarFilaFrenteFondo('frente')"
+                    class="w-full py-2 mt-3 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
+                    + Agregar material de frente
+                </button>
+            </div>
 
-                <div class="seccion-switch-gecko border-t border-zinc-800/50 pt-4">
-                    <div class="switch-row" onclick="document.getElementById('chkChapaVinilo').click()">
-                        <div class="flex items-center gap-3">
-                            <i class="bi bi-layers text-gecko"></i>
-                            <p class="text-[11px] font-black text-white uppercase tracking-wider">¿LLEVA VINILO / MONTADO?</p>
-                        </div>
-                        <label class="switch-gecko" onclick="event.stopPropagation()">
-                            <input type="checkbox" id="chkChapaVinilo" onchange="window.toggleChapaVinilo()">
-                            <span class="slider-gecko"></span>
-                        </label>
-                    </div>
-                    <div id="detallesChapaVinilo" class="hidden mt-4">
-                        <label class="block text-[11px] text-zinc-400 mb-2">Tipo de Vinilo</label>
-                        <select id="chapaViniloMat" class="gecko-select w-full" onchange="window.calcularChapaAcrilico()"></select>
-                    </div>
+            <!-- 04B. Fondo -->
+            <div class="card-gecko animate-in fade-in slide-in-from-top-3">
+                <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] mb-4 guia-naranja">04B. Fondo</p>
+                <div id="contenedorFilasFondo" class="space-y-3">
+                    ${window._geckoFilaFrenteFondo('fondo')}
                 </div>
+                <button type="button" onclick="window._geckoAgregarFilaFrenteFondo('fondo')"
+                    class="w-full py-2 mt-3 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
+                    + Agregar material de fondo
+                </button>
             </div>
 
             ${window._geckoHtmlCardIluminacion()}
+
+            <!-- Mano de obra interna -->
+            <div class="card-gecko space-y-2 animate-in fade-in slide-in-from-top-4">
+                <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">Mano de obra interna</p>
+                <div>
+                    <label class="block text-[11px] text-zinc-400 mb-1">Días de trabajo</label>
+                    <input type="number" id="chapaDiasTrabajo" class="gecko-input w-full" placeholder="0" oninput="window.calcularChapaAcrilico()">
+                </div>
+            </div>
 
             <!-- AUDITOR VISUAL -->
             <div id="auditorChapa" class="card-gecko border-dashed border-zinc-700 bg-transparent">
@@ -331,12 +332,6 @@ window.setCorpModo = function (modo) {
 
         window.initChapaAcrilicoSelects();
         setTimeout(() => window.calcularChapaAcrilico(), 50);
-
-        window.toggleChapaVinilo = function () {
-            const chk = document.getElementById('chkChapaVinilo');
-            document.getElementById('detallesChapaVinilo').classList.toggle('hidden', !chk.checked);
-            window.calcularChapaAcrilico();
-        };
 
     } else if (modo === 'letras3d') {
         container.innerHTML = `
@@ -1461,50 +1456,90 @@ window.initChapaAcrilicoSelects = function () {
         selFleje.innerHTML = htmlFleje;
     }
 
-    // 2. Frente (Rígidos + Chapas + Polifán)
-    const selFrente = document.getElementById('chapaFrenteMat');
-    if (selFrente) {
-        const mats = materiales.filter(m => {
-            const cat = (m.categoria || '').toLowerCase();
-            return cat === 'rigido' || cat === 'chapas' || cat === 'polifan' ||
-                cat === 'chapas / placas' || cat === 'acrílicos' || cat === 'pvc';
-        });
-        let html = '<option value="SELECCIONAR">SELECCIONAR MATERIAL</option>';
-        html += mats.map(m => `<option value="${m.id || m.nombre}">${m.nombre}</option>`).join('');
-        selFrente.innerHTML = html;
-    }
-
-    // 3. Fondo (Rígidos + Chapas + Opción Sin Fondo)
-    const selFondo = document.getElementById('chapaFondoMat');
-    if (selFondo) {
-        const mats = materiales.filter(m => {
-            const cat = (m.categoria || '').toLowerCase();
-            return cat === 'rigido' || cat === 'chapas' || cat === 'polifan' ||
-                cat === 'chapas / placas' || cat === 'acrílicos';
-        });
-        let html = '<option value="SIN_FONDO">SIN FONDO / HUECO</option>';
-        html += mats.map(m => `<option value="${m.id || m.nombre}">${m.nombre}</option>`).join('');
-        selFondo.innerHTML = html;
-    }
-
-    // 4. Vinilo (Flexibles / Vinilos-Lonas — todos excepto lonas)
-    const selVinilo = document.getElementById('chapaViniloMat');
-    if (selVinilo) {
-        const matsVinilo = (window.materiales || []).filter(m => {
-            const cat = (m.categoria || '').toLowerCase().trim();
-            const nombre = (m.nombre || '').toUpperCase();
-            return (
-                cat === 'vinilos_lonas' ||
-                cat === 'flexible'
-            ) && !nombre.includes('LONA');
-        });
-        let htmlVinilo = '<option value="SELECCIONAR">SELECCIONAR VINILO</option>';
-        htmlVinilo += matsVinilo.map(m => `<option value="${m.id || m.nombre}">${m.nombre}</option>`).join('');
-        selVinilo.innerHTML = htmlVinilo;
-    }
-
-    // 5. Iluminación (Módulos + Tiras LED combinados)
+    // 2. Iluminación (Módulos + Tiras LED combinados)
     window._geckoPoblarSelectIluminacion();
+};
+
+// ── Frente / Fondo: filas dinámicas (mismo patrón que agregarFilaPinturaChapa) ──
+window._geckoOpcionesMatFrenteFondo = function (tipo) {
+    const materiales = window.materiales || [];
+    return materiales.filter(m => {
+        const cat = (m.categoria || '').toLowerCase();
+        if (cat === 'pvc' && tipo === 'fondo') return false; // Fondo excluye PVC (igual que chapaFondoMat hoy)
+        return cat === 'rigido' || cat === 'chapas' || cat === 'polifan' ||
+            cat === 'chapas / placas' || cat === 'acrílicos' || cat === 'pvc';
+    }).map(m => `<option value="${m.id || m.nombre}">${m.nombre}</option>`).join('');
+};
+
+window._geckoOpcionesMatVinilo = function () {
+    const matsVinilo = (window.materiales || []).filter(m => {
+        const cat = (m.categoria || '').toLowerCase().trim();
+        const nombre = (m.nombre || '').toUpperCase();
+        return (cat === 'vinilos_lonas' || cat === 'flexible') && !nombre.includes('LONA');
+    });
+    return matsVinilo.map(m => `<option value="${m.id || m.nombre}">${m.nombre}</option>`).join('');
+};
+
+window._geckoToggleVinilloFilaFF = function (chk) {
+    const fila = chk.closest('.fila-frente-fondo');
+    const wrap = fila?.querySelector('.wrapper-ff-vinilo-mat');
+    if (wrap) wrap.classList.toggle('hidden', !chk.checked);
+    window.calcularChapaAcrilico();
+};
+
+window._geckoFilaFrenteFondo = function (tipo) {
+    const opciones = window._geckoOpcionesMatFrenteFondo(tipo);
+    const colSelect = tipo === 'frente' ? 'col-span-5' : 'col-span-8';
+    return `
+        <div class="p-3 rounded-xl border border-zinc-800/60 bg-zinc-900/20 fila-frente-fondo animate-in fade-in" data-tipo="${tipo}">
+            <div class="grid grid-cols-12 gap-2 items-center">
+                <div class="${colSelect}">
+                    <select class="input-ff-mat gecko-select-pro w-full" onchange="window.calcularChapaAcrilico()">
+                        <option value="SELECCIONAR">Seleccionar material...</option>
+                        ${opciones}
+                    </select>
+                </div>
+                <div class="col-span-3 flex items-center justify-between gap-1">
+                    <span class="text-[9px] font-bold text-zinc-500 uppercase leading-tight">Corte<br>láser</span>
+                    <label class="switch-gecko">
+                        <input type="checkbox" class="input-ff-corte" onchange="window.calcularChapaAcrilico()">
+                        <span class="slider-gecko"></span>
+                    </label>
+                </div>
+                ${tipo === 'frente' ? `
+                <div class="col-span-3 flex items-center justify-between gap-1">
+                    <span class="text-[9px] font-bold text-zinc-500 uppercase leading-tight">Vinilo<br>montado</span>
+                    <label class="switch-gecko">
+                        <input type="checkbox" class="input-ff-vinilo" onchange="window._geckoToggleVinilloFilaFF(this)">
+                        <span class="slider-gecko"></span>
+                    </label>
+                </div>` : ''}
+                <div class="col-span-1 flex justify-center">
+                    <button type="button" onclick="this.closest('.fila-frente-fondo').remove(); window.calcularChapaAcrilico();"
+                        class="w-7 h-7 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            ${tipo === 'frente' ? `
+            <div class="wrapper-ff-vinilo-mat hidden mt-3 pt-3 border-t border-zinc-800/50">
+                <label class="block text-[10px] text-zinc-400 mb-1">Tipo de vinilo</label>
+                <select class="input-ff-vinilo-mat gecko-select-pro w-full" onchange="window.calcularChapaAcrilico()">
+                    <option value="SELECCIONAR">Seleccionar vinilo...</option>
+                    ${window._geckoOpcionesMatVinilo()}
+                </select>
+            </div>` : ''}
+        </div>`;
+};
+
+window._geckoAgregarFilaFrenteFondo = function (tipo) {
+    const contId = tipo === 'frente' ? 'contenedorFilasFrente' : 'contenedorFilasFondo';
+    const cont = document.getElementById(contId);
+    if (!cont) return;
+    cont.insertAdjacentHTML('beforeend', window._geckoFilaFrenteFondo(tipo));
+    window.calcularChapaAcrilico();
 };
 
 window.agregarFilaPinturaChapa = function () {
@@ -1695,97 +1730,70 @@ window.calcularChapaAcrilico = function () {
         }
     }
 
-    // 3. Frente y Fondo (Placas)
+    // 3. Frente y Fondo (Placas) — recorre cada fila dinámica (data-tipo="frente"/"fondo")
     let costoPlacas = 0;
     let costoCortePlacas = 0;
-    const auditPlacas = [];
-
-    // Frente
-    const selFrente = document.getElementById('chapaFrenteMat');
-    const valFrente = selFrente?.value;
-    const itFrente = (valFrente && valFrente !== 'SELECCIONAR') ? window.getGeckoItem(selFrente.options[selFrente.selectedIndex].text) : null;
-
-    // Insertar el interruptor "lleva corte" una sola vez, justo después del select de Frente
-    if (selFrente && !document.getElementById('chkCorteFrenteChapa')) {
-        selFrente.insertAdjacentHTML('afterend', `
-            <div class="flex items-center justify-between mt-3">
-                <p class="text-[10px] font-bold text-zinc-400 uppercase">¿Lleva servicio de corte láser?</p>
-                <label class="switch-gecko">
-                    <input type="checkbox" id="chkCorteFrenteChapa" onchange="window.calcularChapaAcrilico()">
-                    <span class="slider-gecko"></span>
-                </label>
-            </div>`);
-    }
-    const llevaCorteFrenteChapa = document.getElementById('chkCorteFrenteChapa')?.checked;
-
-    if (itFrente) {
-        // Calcular precio por m² del material basado en el área de placa registrada en GDM
-        const anchoPlacaM = ((itFrente.ancho || itFrente.anchoPlaca || 0)) / 100;
-        const altoPlacaM = ((itFrente.alto || itFrente.altoPlaca || 0)) / 100;
-        const areaPlacaGDM = anchoPlacaM > 0 && altoPlacaM > 0 ? anchoPlacaM * altoPlacaM : null;
-        const precioPlaca = window.getCorpPrecio(itFrente);
-        const precioM2Frente = Math.round(areaPlacaGDM ? (precioPlaca / areaPlacaGDM) : precioPlaca);
-        const subtotalFrente = areaM2 * precioM2Frente;
-        costoPlacas += subtotalFrente;
-        auditPlacas.push({ nombre: `Frente: ${itFrente.nombre}`, detalle: `${parseFloat(areaM2.toFixed(2))}m² × $${precioM2Frente.toLocaleString('es-AR')}/m²`, valor: subtotalFrente });
-        if (llevaCorteFrenteChapa) {
-            const servCorteFrente = getServicioCorte(itFrente);
-            if (servCorteFrente) {
-                const precioCorteFrente = servCorteFrente.precioVenta || servCorteFrente.precio || 0;
-                const subtotalCorteFrente = perimetroMl * precioCorteFrente;
-                costoCortePlacas += subtotalCorteFrente;
-                auditPlacas.push({ nombre: `Corte ${servCorteFrente.nombre}`, detalle: `${parseFloat(perimetroMl.toFixed(2))}ml × $${Math.round(precioCorteFrente).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFrente });
-            }
-        }
-    }
-
-    const selFondo = document.getElementById('chapaFondoMat');
-    if (selFondo?.value !== 'SIN_FONDO') {
-        const itFondo = window.getGeckoItem(selFondo?.options[selFondo.selectedIndex]?.text);
-        if (itFondo) {
-            // Calcular precio por m² basado en área de placa GDM
-            const anchoPlacaM = ((itFondo.ancho || itFondo.anchoPlaca || 0)) / 100;
-            const altoPlacaM = ((itFondo.alto || itFondo.altoPlaca || 0)) / 100;
-            const areaPlacaGDM = anchoPlacaM > 0 && altoPlacaM > 0 ? anchoPlacaM * altoPlacaM : null;
-            const precioPlaca = window.getCorpPrecio(itFondo);
-            const precioM2Fondo = Math.round(areaPlacaGDM ? (precioPlaca / areaPlacaGDM) : precioPlaca);
-            const subtotalFondo = areaM2 * precioM2Fondo;
-            costoPlacas += subtotalFondo;
-            auditPlacas.push({ nombre: `Fondo: ${itFondo.nombre}`, detalle: `${areaM2.toFixed(4)}m² × $${precioM2Fondo.toLocaleString('es-AR')}/m²`, valor: subtotalFondo });
-            const servCorteFondo = getServicioCorte(itFondo.nombre);
-            if (servCorteFondo) {
-                const precioCorteFondo = window.getCorpPrecio(servCorteFondo);
-                const subtotalCorteFondo = perimetroMl * precioCorteFondo;
-                costoCortePlacas += subtotalCorteFondo;
-                auditPlacas.push({ nombre: `Corte ${servCorteFondo.nombre}`, detalle: `${perimetroMl.toFixed(2)}ml × $${Math.round(precioCorteFondo).toLocaleString('es-AR')}/ml`, valor: subtotalCorteFondo });
-            }
-        }
-    }
-
-    // 4. Vinilo / Montado
     let costoViniloTotal = 0;
+    const auditPlacas = [];
     const auditVinilo = [];
-    if (document.getElementById('chkChapaVinilo')?.checked) {
-        const selVinilo = document.getElementById('chapaViniloMat');
-        const valVinilo = selVinilo?.value;
-        const itVinilo = (valVinilo && valVinilo !== 'SELECCIONAR') ? window.getGeckoItem(selVinilo.options[selVinilo.selectedIndex].text) : null;
-        const itMontado = window.getGeckoItem("MONTADO");
+    let hayFrenteConMaterial = false;
 
-        if (itVinilo) {
-            const pVinilo = Math.round(window.getCorpPrecio(itVinilo));
-            const subtotalVinilo = areaM2 * pVinilo;
-            costoViniloTotal += subtotalVinilo;
-            auditVinilo.push({ nombre: itVinilo.nombre, detalle: `${areaM2.toFixed(4)}m² × $${pVinilo.toLocaleString('es-AR')}/m²`, valor: subtotalVinilo });
-        }
-        if (itMontado) {
-            const pMontado = Math.round(window.getCorpPrecio(itMontado));
-            const subtotalMontado = areaM2 * pMontado;
-            costoViniloTotal += subtotalMontado;
-            auditVinilo.push({ nombre: 'Servicio de Montado', detalle: `${areaM2.toFixed(4)}m² × $${pMontado.toLocaleString('es-AR')}/m²`, valor: subtotalMontado });
-        }
-    }
+    document.querySelectorAll('.fila-frente-fondo').forEach((fila) => {
+        const tipoFila = fila.dataset.tipo;
+        const etiqueta = tipoFila === 'frente' ? 'Frente' : 'Fondo';
+        const selMat = fila.querySelector('.input-ff-mat');
+        const valMat = selMat?.value;
+        if (!valMat || valMat === 'SELECCIONAR') return;
+        const itMat = window.getGeckoItem(selMat.options[selMat.selectedIndex].text);
+        if (!itMat) return;
 
-    // 5. Iluminación y Fuentes
+        if (tipoFila === 'frente') hayFrenteConMaterial = true;
+
+        // Precio por m² del material basado en el área de placa registrada en GDM (mismo cálculo que hoy)
+        const anchoPlacaM = ((itMat.ancho || itMat.anchoPlaca || 0)) / 100;
+        const altoPlacaM = ((itMat.alto || itMat.altoPlaca || 0)) / 100;
+        const areaPlacaGDM = anchoPlacaM > 0 && altoPlacaM > 0 ? anchoPlacaM * altoPlacaM : null;
+        const precioPlaca = window.getCorpPrecio(itMat);
+        const precioM2Mat = Math.round(areaPlacaGDM ? (precioPlaca / areaPlacaGDM) : precioPlaca);
+        const subtotalMat = areaM2 * precioM2Mat;
+        costoPlacas += subtotalMat;
+        auditPlacas.push({ nombre: `${etiqueta}: ${itMat.nombre}`, detalle: `${parseFloat(areaM2.toFixed(2))}m² × $${precioM2Mat.toLocaleString('es-AR')}/m²`, valor: subtotalMat });
+
+        // Servicio de corte (corte inteligente), solo si el toggle de la fila está activo
+        const llevaCorteFila = fila.querySelector('.input-ff-corte')?.checked;
+        if (llevaCorteFila) {
+            const servCorteMat = getServicioCorte(itMat);
+            if (servCorteMat) {
+                const precioCorteMat = servCorteMat.precioVenta || servCorteMat.precio || 0;
+                const subtotalCorteMat = perimetroMl * precioCorteMat;
+                costoCortePlacas += subtotalCorteMat;
+                auditPlacas.push({ nombre: `Corte ${servCorteMat.nombre} (${etiqueta})`, detalle: `${parseFloat(perimetroMl.toFixed(2))}ml × $${Math.round(precioCorteMat).toLocaleString('es-AR')}/ml`, valor: subtotalCorteMat });
+            }
+        }
+
+        // Vinilo / Montado — solo filas de Frente con el toggle activo
+        if (tipoFila === 'frente' && fila.querySelector('.input-ff-vinilo')?.checked) {
+            const selVinilo = fila.querySelector('.input-ff-vinilo-mat');
+            const valVinilo = selVinilo?.value;
+            const itVinilo = (valVinilo && valVinilo !== 'SELECCIONAR') ? window.getGeckoItem(selVinilo.options[selVinilo.selectedIndex].text) : null;
+            const itMontado = window.getGeckoItem("MONTADO");
+
+            if (itVinilo) {
+                const pVinilo = Math.round(window.getCorpPrecio(itVinilo));
+                const subtotalVinilo = areaM2 * pVinilo;
+                costoViniloTotal += subtotalVinilo;
+                auditVinilo.push({ nombre: `${itVinilo.nombre} (${itMat.nombre})`, detalle: `${areaM2.toFixed(4)}m² × $${pVinilo.toLocaleString('es-AR')}/m²`, valor: subtotalVinilo });
+            }
+            if (itMontado) {
+                const pMontado = Math.round(window.getCorpPrecio(itMontado));
+                const subtotalMontado = areaM2 * pMontado;
+                costoViniloTotal += subtotalMontado;
+                auditVinilo.push({ nombre: `Servicio de Montado (${itMat.nombre})`, detalle: `${areaM2.toFixed(4)}m² × $${pMontado.toLocaleString('es-AR')}/m²`, valor: subtotalMontado });
+            }
+        }
+    });
+
+    // 4. Iluminación y Fuentes
     const resultadoIlum = window._geckoCalcularIluminacion(areaM2, perimetroMl);
     const costoIlumTotal = resultadoIlum.costoIlumTotal;
     const descIlum = resultadoIlum.descIlum;
@@ -1793,10 +1801,27 @@ window.calcularChapaAcrilico = function () {
     const costoFuente = resultadoIlum.costoFuente;
     const avisoFaltaWatts = resultadoIlum.avisoFaltaWatts;
 
+    // 5. Mano de obra interna (servicio "Mano de obra taller", buscado por nombre — nunca inventar precio)
+    const diasTrabajo = parseFloat(document.getElementById('chapaDiasTrabajo')?.value) || 0;
+    let costoManoObraInterna = 0;
+    let servManoObra = null;
+    let precioDiaManoObra = 0;
+    let avisoFaltaManoObra = '';
+    if (diasTrabajo > 0) {
+        const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+        servManoObra = servicios.find(s => (s.nombre || '').toLowerCase().includes('mano de obra taller'));
+        precioDiaManoObra = servManoObra ? (servManoObra.precio || servManoObra.precioVenta || 0) : 0;
+        if (!servManoObra) {
+            avisoFaltaManoObra = 'FALTA PARÁMETRO: servicio "Mano de obra taller" no encontrado en Servicios.';
+            console.warn(avisoFaltaManoObra);
+        }
+        costoManoObraInterna = diasTrabajo * precioDiaManoObra;
+    }
+
     // 6. Totales y Auditoría
     const pinturaChapaActiva = document.getElementById('chkLlevaPinturaChapa')?.checked;
     const areaFlejeParaPintura = (typeof areaFlejeM2 !== 'undefined') ? areaFlejeM2 : (perimetro * profundidad / 10000);
-    const areaFrenteParaPintura = itFrente ? areaM2 : 0;
+    const areaFrenteParaPintura = hayFrenteConMaterial ? areaM2 : 0;
     const areaPinturaChapa = areaFlejeParaPintura + areaFrenteParaPintura;
     const filasPinturaChapaCalc = [];
     if (pinturaChapaActiva) {
@@ -1817,7 +1842,7 @@ window.calcularChapaAcrilico = function () {
 
     const estructuraTotal = costoFleje + costoPlacas;
     const corteTotal = costoCorteFleje + costoCortePlacas;
-    const totalUnitario = estructuraTotal + corteTotal + costoViniloTotal + costoIlumTotal + costoFuente + costoPinturaChapaTotal;
+    const totalUnitario = estructuraTotal + corteTotal + costoViniloTotal + costoIlumTotal + costoFuente + costoPinturaChapaTotal + costoManoObraInterna;
     const totalFinal = Math.round(totalUnitario * cantidad);
 
     const fmt = (v) => '$' + Math.round(v).toLocaleString('es-AR');
@@ -1882,6 +1907,15 @@ window.calcularChapaAcrilico = function () {
                 filasPinturaChapaCalc.forEach(f => html += lineaRow(f.nombre + (f.codigo ? ` (${f.codigo})` : ''), `${areaPinturaChapa.toFixed(4)}m²`, f.valor));
             }
 
+            if (diasTrabajo > 0) {
+                html += seccion('Mano de obra interna');
+                if (servManoObra) {
+                    html += lineaRow('Mano de obra taller', `${diasTrabajo} día(s) × $${Math.round(precioDiaManoObra).toLocaleString('es-AR')}/día`, costoManoObraInterna);
+                } else {
+                    html += `<p style="color:#ef4444;font-size:11px;font-weight:700;margin:6px 0 10px;">${avisoFaltaManoObra}</p>`;
+                }
+            }
+
             html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:6px;border-top:1px solid #27272a;">
                 <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a1a1aa;">Total del ítem</span>
                 <span style="font-size:20px;font-weight:900;color:#F15A24;font-family:monospace;">${fmtVal(totalFinal)}</span>
@@ -1922,7 +1956,7 @@ window.calcularChapaAcrilico = function () {
         tipo: 'corporeos',
         nombre: `CHAPA/ACRILICO - ${document.getElementById('chapaNombre')?.value || 'S/N'}`,
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | ${avisoFaltaWatts ? avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${fuenteRecomendada}`}${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | ${avisoFaltaWatts ? avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${fuenteRecomendada}`}${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}${diasTrabajo > 0 ? ` | Mano de obra: ${diasTrabajo} días` : ''}`
     };
 };
 
