@@ -127,6 +127,8 @@ window.generarDocPresupuesto = async function (p) {
     const fecha = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const mostrarPrecios = p.mostrarPrecios !== false;
     const descuento = parseFloat(p.descuento) || 0;
+    const tipoDescuento = p.tipoDescuento || 'pct';
+    const conIva = p.conIva === true;
     const metodoPago = p.metodoPago || '';
     const validez = p.validez || '10 días';
     const entrega = p.entrega || p.fechaEntrega || p.fecha_entrega || 'A convenir';
@@ -135,8 +137,10 @@ window.generarDocPresupuesto = async function (p) {
     const imagenes = p.imagenes || [];
 
     const total = items.reduce((acc, it) => acc + (parseFloat(it.costo) || 0), 0);
-    const descMonto = total * (descuento / 100);
-    const totalFinal = total - descMonto;
+    const descMonto = tipoDescuento === 'pct' ? total * (descuento / 100) : descuento;
+    const afterDesc = total - descMonto;
+    const ivaMonto = conIva ? afterDesc * 0.21 : 0;
+    const totalFinal = afterDesc + ivaMonto;
 
     const titulo = p.titulo || '';
 
@@ -207,13 +211,14 @@ window.generarDocPresupuesto = async function (p) {
     <div class="doc-totales">
         <div class="totales-box">
             ${mostrarPrecios ? `<div class="totales-row"><span class="lbl">Subtotal</span><span class="val">${fmtMoney(total)}</span></div>` : ''}
-            ${descuento > 0 ? `<div class="totales-row"><span class="lbl">Dto. ${descuento}% ${metodoPago ? `(${metodoPago})` : ''}</span><span class="val" style="color:#e53e3e">- ${fmtMoney(descMonto)}</span></div>` : ''}
+            ${descuento > 0 ? `<div class="totales-row"><span class="lbl">Dto. ${tipoDescuento === 'pct' ? descuento + '%' : fmtMoney(descuento)} ${metodoPago ? `(${metodoPago})` : ''}</span><span class="val" style="color:#e53e3e">- ${fmtMoney(descMonto)}</span></div>` : ''}
+            ${mostrarPrecios && conIva ? `<div class="totales-row"><span class="lbl">IVA 21%</span><span class="val">${fmtMoney(ivaMonto)}</span></div>` : ''}
             <div class="totales-row final"><span class="lbl">TOTAL FINAL</span><span class="val">${fmtMoney(totalFinal)}</span></div>
         </div>
     </div>
     <div class="doc-condiciones">
         <div class="cond-item"><label>Condiciones de pago</label><p>Adelanto del 60% del valor. &nbsp;|&nbsp; ${fmtMoney(totalFinal * 0.6)}<br>Resto, contra entrega. &nbsp;|&nbsp; ${fmtMoney(totalFinal * 0.4)}</p></div>
-        <div class="cond-item"><label>Condición IVA</label><p>No incluye IVA · Monotributo.<br>Emitimos Factura C.</p></div>
+        <div class="cond-item"><label>Condición IVA</label><p>${conIva ? 'IVA 21% incluido.' : 'No incluye IVA · Monotributo.<br>Emitimos Factura C.'}</p></div>
         ${condicionesCliente ? `<div class="cond-item" style="grid-column:1/-1"><label>Condiciones para el cliente</label><p>${condicionesCliente}</p></div>` : ''}
         ${nota ? `<div class="cond-item" style="grid-column:1/-1"><label>Notas adicionales</label><p>${nota}</p></div>` : ''}
     </div>

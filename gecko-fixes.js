@@ -5641,6 +5641,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
 
     // Inicializar toggles con JS (sin CSS externo)
     window._gpmInitToggles();
+    window._gpmSyncToggle('gpmMostrarPrecios', 'gpmMostrarPreciosSlider', 'gpmMostrarPreciosThumb');
 
     // Cargar ítems
     if (itemsIniciales.length > 0) {
