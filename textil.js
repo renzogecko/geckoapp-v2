@@ -242,6 +242,7 @@ window.añadirTextilAlPresupuesto = function () {
         id: Date.now(),
         tipo: 'textil',
         nombre: nombreTrabajo.toUpperCase(),
+        identificacion: document.getElementById('textilNombre')?.value?.trim() || '',
         textoOpciones: `${materialActivo} (${largo}cm)`,
         costo: total,
         otDetalle: window.itemActualCotizado?.otDetalle || `${largo}cm lineal | ${bajadas} bajadas | ${cantPrendas} prendas`,

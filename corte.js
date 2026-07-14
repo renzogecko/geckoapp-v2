@@ -500,6 +500,7 @@ window.GeckoCorte = {
             id: Date.now(),
             tipo: 'grafica',
             nombre: `CORTE - ${this.state.matName}${gremioSuffix} - ${nombreTrabajo}`,
+            identificacion: document.getElementById('corteNombre')?.value?.trim() || '',
             costo: this.state.totalFinal,
             detalle: this.state.detalle,
             modoCalculo: 'Bobina/Nesting'

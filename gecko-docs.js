@@ -579,7 +579,7 @@ window.abrirModalDoc = function (tipo) {
 
     // PRESUPUESTO: redirigir al Presupuestador Manual con ítems precargados
     window._gpmItemsDesdeCotzador = items.map(it => ({
-        titulo: it.nombre || it.textoOpciones || 'Ítem',
+        titulo: it.identificacion || it.nombre || it.textoOpciones || 'Ítem',
         descripcion: it.otDetalle && it.otDetalle !== it.nombre ? it.otDetalle : (it.detalle || ''),
         cantidad: it.cantidad || 1,
         precio: it.precioUnitario || (it.costo / (it.cantidad || 1)) || it.costo || 0,

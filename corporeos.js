@@ -901,6 +901,7 @@ window.calcularLetras3D = function () {
     window.itemActualPolifan = {
         tipo: 'corporeos',
         nombre: `LETRAS 3D – ${nombreMat}`,
+        identificacion: document.getElementById('letras3dNombre')?.value?.trim() || '',
         textoOpciones: `Letras 3D (Est.): ${ancho}x${alto}cm | ${nombreMat}`,
         costo: totalFinal,
         otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}${descFrenteL3D}${descPinturaL3D} | ${resultadoIlum.avisoFaltaWatts ? resultadoIlum.avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${resultadoIlum.fuenteRecomendada}`}`
@@ -919,6 +920,7 @@ window.addLetras3DAlPresupuesto = function () {
         id: Date.now(),
         tipo: 'corporeos',
         nombre: window.itemActualPolifan.nombre || 'Letras 3D',
+        identificacion: window.itemActualPolifan.identificacion || '',
         textoOpciones: window.itemActualPolifan.textoOpciones || 'Letras 3D (Estimado)',
         costo: window.itemActualPolifan.costo,
         otDetalle: window.itemActualPolifan.otDetalle || 'Sin detalle técnico',
@@ -1236,6 +1238,7 @@ window.calcularCostoPolifan = function () {
     window.itemActualPolifan = {
         tipo: 'corporeos',
         nombre: `POLIFÁN - ${espesorText} - ${document.getElementById('polifanNombre')?.value || 'S/N'}`,
+        identificacion: document.getElementById('polifanNombre')?.value?.trim() || '',
         costo: totalFinal,
         otDetalle: `Polifán ${espesorText} | Medida: ${ancho}x${alto}cm | Cant: ${cantidad} | Corte: ${perimetroMl}ml${descFrente}${llevaPintura ? ' | Pintura: ' + (document.getElementById('pinturaColores')?.value || 'S/E') : ''}`
     };
@@ -1967,6 +1970,7 @@ window.calcularChapaAcrilico = function () {
     window.itemActualPolifan = {
         tipo: 'corporeos',
         nombre: `CHAPA/ACRILICO - ${document.getElementById('chapaNombre')?.value || 'S/N'}`,
+        identificacion: document.getElementById('chapaNombre')?.value?.trim() || '',
         costo: totalFinal,
         otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | ${avisoFaltaWatts ? avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${fuenteRecomendada}`}${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}${diasTrabajo > 0 ? ` | Mano de obra: ${diasTrabajo} días` : ''}`
     };
@@ -1984,6 +1988,7 @@ window.addChapaAlPresupuesto = function () {
         id: Date.now(),
         tipo: 'corporeos',
         nombre: window.itemActualPolifan.nombre || 'Chapa / Acrílico',
+        identificacion: window.itemActualPolifan.identificacion || '',
         textoOpciones: window.itemActualPolifan.nombre || 'Chapa / Acrílico',
         costo: window.itemActualPolifan.costo,
         otDetalle: window.itemActualPolifan.otDetalle || 'Sin detalle técnico',
@@ -2012,6 +2017,7 @@ window.addPolifanAlPresupuesto = function () {
         id: Date.now(),
         tipo: window.itemActualPolifan.tipo || 'corporeos',
         nombre: window.itemActualPolifan.nombre || 'Trabajo Corpóreo',
+        identificacion: window.itemActualPolifan.identificacion || '',
         textoOpciones: window.itemActualPolifan.textoOpciones || window.itemActualPolifan.nombre,
         costo: window.itemActualPolifan.costo,
         otDetalle: window.itemActualPolifan.otDetalle || 'Sin detalle técnico',

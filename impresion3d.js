@@ -103,6 +103,7 @@ window.calcularCosto3D = function () {
     window.itemActual3D = {
         tipo: '3d',
         textoOpciones: `Impresión 3D Técnica: ${nombreMat} (${gramos}gr)`,
+        identificacion: document.getElementById('3dNombre')?.value?.trim() || '',
         costo: totalFinal,
         otDetalle: `Peso: ${gramos}gr | Tiempo: ${horas}hs | Material: ${nombreMat}${descPintura}`
     };

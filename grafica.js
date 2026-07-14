@@ -769,6 +769,7 @@ window.GeckoGrafica = {
             id: Date.now(),
             tipo: 'grafica',
             nombre: nombreIdentificacion,
+            identificacion: document.getElementById('graficaNombre')?.value?.trim() || '',
             textoOpciones: resumenOpciones,
             costo: total,
             otDetalle: window.itemActualCotizado?.detalle || 'Sin detalle técnico',

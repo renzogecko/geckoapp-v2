@@ -317,6 +317,7 @@ window.calcularCostoCorte = function () {
     window.itemActualCotizado = {
         tipo: 'laser_cnc',
         textoOpciones: nombre,
+        identificacion: nombre,
         costo: totalFinal,
         otDetalle: auditLineas.map(l => l.texto).join(' | ')
     };
