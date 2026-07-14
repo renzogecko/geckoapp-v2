@@ -5401,6 +5401,13 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
             </div>
           </div>
 
+          <div id="gpmDescMotivoWrap" style="display:none;padding:0 0 8px;">
+            <label style="display:block;font-size:11px;color:#52525b;font-weight:700;margin-bottom:4px;">Motivo del descuento</label>
+            <input type="text" id="gpmDescMotivo" class="gecko-input-line"
+              placeholder="Ej: Descuento por pago en efectivo"
+              value="${datosEdicion?.motivoDescuento ? datosEdicion.motivoDescuento.replace(/"/g, '&quot;') : ''}">
+          </div>
+
           <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
             <span style="color:#71717a;font-weight:700;">Subtotal</span>
             <span id="gpmSubtotal" style="color:#a1a1aa;font-weight:700;">$0</span>
@@ -5518,6 +5525,7 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
             document.getElementById('gpmDescTipo').value = datosEdicion.tipoDescuento || 'pct';
             document.getElementById('gpmDescPanel').style.display = 'flex';
             document.getElementById('gpmRowDesc').style.display = 'flex';
+            document.getElementById('gpmDescMotivoWrap').style.display = 'block';
         }
     } else if (window._gpmItemsDesdeCotzador && window._gpmItemsDesdeCotzador.length > 0) {
         // Vienen ítems precargados desde los cotizadores
@@ -5746,6 +5754,7 @@ window._gpmCalc = function () {
     const descOn = document.getElementById('gpmTogDesc')?.checked;
     if (document.getElementById('gpmDescPanel')) document.getElementById('gpmDescPanel').style.display = descOn ? 'flex' : 'none';
     if (document.getElementById('gpmRowDesc')) document.getElementById('gpmRowDesc').style.display = descOn ? 'flex' : 'none';
+    if (document.getElementById('gpmDescMotivoWrap')) document.getElementById('gpmDescMotivoWrap').style.display = descOn ? 'block' : 'none';
     let descAmt = 0;
     if (descOn) {
         const dv = pn(document.getElementById('gpmDescVal')?.value);
@@ -5842,7 +5851,7 @@ window._gpmGuardar = function (status) {
     let total = items.reduce((acc, it) => acc + it.costo, 0);
 
     const descOn = document.getElementById('gpmTogDesc')?.checked;
-    let descuento = 0, descuentoValor = 0, tipoDescuento = 'pct';
+    let descuento = 0, descuentoValor = 0, tipoDescuento = 'pct', motivoDescuento = '';
     if (descOn) {
         const dv = pn(document.getElementById('gpmDescVal')?.value);
         tipoDescuento = document.getElementById('gpmDescTipo')?.value || 'pct';
@@ -5851,6 +5860,7 @@ window._gpmGuardar = function (status) {
         // descuentoValor = el monto real descontado en pesos — se usa solo para el cálculo del total
         descuentoValor = tipoDescuento === 'pct' ? total * (dv / 100) : dv;
         total -= descuentoValor;
+        motivoDescuento = document.getElementById('gpmDescMotivo')?.value?.trim() || '';
     }
     const ivaOn = document.getElementById('gpmTogIva')?.checked;
     if (ivaOn) total *= 1.21;
@@ -5891,7 +5901,7 @@ window._gpmGuardar = function (status) {
 
     // Marcar timestamp único para identificar el doc recién guardado
     const _tsGuardado = Date.now();
-    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado };
+    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, motivoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado };
     if (!_tieneItemDeCotizadorReal) window._gpmMetadataPendiente.origenFormulario = 'gpm';
 
     window.procesarGuardado(status);

@@ -211,7 +211,11 @@ window.generarDocPresupuesto = async function (p) {
     <div class="doc-totales">
         <div class="totales-box">
             ${mostrarPrecios ? `<div class="totales-row"><span class="lbl">Subtotal</span><span class="val">${fmtMoney(total)}</span></div>` : ''}
-            ${descuento > 0 ? `<div class="totales-row"><span class="lbl">Dto. ${tipoDescuento === 'pct' ? descuento + '%' : fmtMoney(descuento)} ${metodoPago ? `(${metodoPago})` : ''}</span><span class="val" style="color:#e53e3e">- ${fmtMoney(descMonto)}</span></div>` : ''}
+            ${descuento > 0 ? `
+            <div>
+                <div class="totales-row"><span class="lbl">Dto. ${tipoDescuento === 'pct' ? descuento + '%' : fmtMoney(descuento)} ${metodoPago ? `(${metodoPago})` : ''}</span><span class="val" style="color:#e53e3e">- ${fmtMoney(descMonto)}</span></div>
+                ${p.motivoDescuento ? `<p style="font-size:10px;color:#888;margin:0 0 4px;text-align:left;">${p.motivoDescuento}</p>` : ''}
+            </div>` : ''}
             ${mostrarPrecios && conIva ? `<div class="totales-row"><span class="lbl">IVA 21%</span><span class="val">${fmtMoney(ivaMonto)}</span></div>` : ''}
             <div class="totales-row final"><span class="lbl">TOTAL FINAL</span><span class="val">${fmtMoney(totalFinal)}</span></div>
         </div>
