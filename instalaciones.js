@@ -205,13 +205,16 @@ window.calcularInstalacion = function () {
         </button>`;
     }
 
+    const descExtras = filasExtra.length > 0
+        ? ` | Extras: ${filasExtra.map(f => `${f.desc} (${fmtVal(f.monto)})`).join(', ')}`
+        : '';
     const descTraslado = fueraActivo ? ` | Traslado: ${kmTotales}km, combustible ${fmtVal(costoCombustible)}, peajes ${fmtVal(peajes)}, viáticos ${fmtVal(viaticos)}` : '';
     window.itemActualInstalacion = {
         tipo: 'instalacion',
         nombre: nombre,
         textoOpciones: `Instalación: ${empleados} pers. × ${horas}hs${fueraActivo ? ' + traslado' : ''}`,
         costo: totalFinal,
-        otDetalle: `Instalación con ${empleados} persona(s), ${horas}hs${descTraslado}`
+        otDetalle: `Instalación con ${empleados} persona(s), ${horas}hs${descExtras}${descTraslado}`
     };
 };
 

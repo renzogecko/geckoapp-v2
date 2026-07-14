@@ -103,6 +103,7 @@ window.calcularCostoTextil = function () {
 
         // --- ASIGNACIÓN AL CARRITO GLOBAL (CRÍTICO) ---
         // Realizamos la asignación inmediatamente tras el cálculo para sincronizar la UI
+        const nombreServicioTextil = modoActivo === 'dtf' ? 'DTF Textil' : 'Termovinilo';
         window.itemActualCotizado = {
             id: Date.now(),
             tipo: 'textil',
@@ -110,7 +111,7 @@ window.calcularCostoTextil = function () {
             costo: totalFinal,
             textoOpciones: `${modoActivo.toUpperCase()} (${largo}cm)`,
             detalle: `${largo}cm lineal | ${bajadas} estampas`,
-            otDetalle: `Material: ${largo}cm | Estampas: ${bajadas} | Prendas: ${cantPrendas}`
+            otDetalle: `Servicio: ${nombreServicioTextil} | Largo: ${largo}cm | Estampas: ${bajadas} | Prendas: ${cantPrendas}`
         };
 
         // 4. Auditor unificado — solo si Textil es la categoría activa

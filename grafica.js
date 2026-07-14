@@ -772,7 +772,7 @@ window.GeckoGrafica = {
             identificacion: document.getElementById('graficaNombre')?.value?.trim() || '',
             textoOpciones: resumenOpciones,
             costo: total,
-            otDetalle: window.itemActualCotizado?.detalle || 'Sin detalle técnico',
+            otDetalle: `Material: ${matNombre} | ${window.itemActualCotizado?.detalle || ''}`.trim().replace(/\|\s*$/, ''),
             material: matNombre
         };
 
