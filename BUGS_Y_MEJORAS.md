@@ -92,6 +92,16 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Descripción:** cotizador simple con un select que trae los "Productos Gecko" de la lista de Materiales, permitiendo multicarga (varios productos en un mismo presupuesto).
 - **Estado:** 🔵 Pendiente
 
+### [MEJ-020] Autosave completo de borrador en Presupuestador Manual (nuevo, sin guardar)
+- **Sección:** Presupuestador Manual (GPM)
+- **Descripción:** reemplazar el mecanismo roto de "gecko_gpm_titulo_draft" (que solo se activa después de un primer guardado exitoso) por un borrador completo que guarde TODOS los campos relevantes (cliente, título, categoría, notas, condiciones, toggles, ítems) mientras se escribe, sin depender de que el usuario guarde primero. Restaurar automáticamente al reabrir "nuevo" si hay un borrador pendiente, con opción de descartarlo.
+- **Estado:** 🔵 Pendiente — sesión propia (mayor superficie de cambio).
+
+### [MEJ-021] Poder re-editar un ítem ya agregado al carrito (cotizador y GPM)
+- **Sección:** Cotizadores y Presupuestador Manual
+- **Descripción:** hoy, si te equivocás en un dato de un ítem ya agregado (al carrito de un cotizador, o ya cargado en el Presupuestador Manual), la única opción es borrarlo y cargarlo de nuevo desde cero. Se pidió: poder clickear un ítem en cualquiera de las 2 listas y volver al formulario con los datos precargados para corregir solo lo necesario, en vez de recrearlo entero. Requiere diseño previo: cada cotizador tiene campos distintos, así que "recargar" un ítem viejo en el formulario no es trivial — no es un bug chico, es una funcionalidad nueva a diseñar con calma.
+- **Estado:** 🔵 Pendiente — sesión propia, con diseño previo antes de código.
+
 ---
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
@@ -591,3 +601,46 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
   de cada trabajo).
 
 **Estado:** ✅ Completo y probado en producción.
+
+---
+
+### [MEJ-018] Persistencia de estado y fixes en el Presupuestador Manual — RESUELTO 14/07/2026
+- Fix: toggle "Mostrar precios individuales" ahora se restaura 
+  correctamente al editar un presupuesto (antes quedaba siempre 
+  activado, tanto en el dato interno como en el dibujo visual del 
+  interruptor).
+- Fix: el IVA (21%) ahora se refleja en el documento impreso — antes se 
+  calculaba bien en pantalla pero no llegaba al print. De paso se 
+  corrigió que el descuento en monto fijo ($) se calculaba mal en el 
+  print (se trataba siempre como porcentaje).
+- Fix: al editar un presupuesto creado desde un cotizador y volver a 
+  pasar por "Continuar a Presupuesto", ahora actualiza el presupuesto 
+  original en vez de crear uno duplicado (se propaga correctamente el 
+  ID en edición).
+- Nueva categoría "Gráfica/Industrial" agregada al selector de categoría 
+  del GPM (para presupuestos que mezclan ambos rubros).
+- Nuevo campo "Motivo del descuento": texto libre que se guarda con el 
+  presupuesto y se imprime debajo del monto de descuento en el 
+  documento, para que el cliente entienda por qué se le aplicó.
+- Eliminado el botón "Generar OT" del GPM — de ahora en más toda OT nace 
+  obligatoriamente de convertir un Presupuesto ya guardado. Se limpió 
+  también código muerto relacionado (modal viejo "Cotizador Manual" y el 
+  camino sin uso de "Configurar OT").
+- **Pendiente (Etapa 2, no implementada):** autosave completo del 
+  borrador mientras se compone un presupuesto NUEVO sin guardar (hoy, 
+  si se recarga la página a mitad de carga, se pierde todo excepto lo 
+  que ya esté guardado). Documentado para sesión futura — ver [MEJ-020].
+
+### [MEJ-019] Títulos y descripciones enriquecidas al pasar de cotizador a Presupuesto — RESUELTO 14/07/2026
+- Los 7 cotizadores (Gráfica, Corpóreos ×4 modos, Láser, Textil, 
+  Bastidores, Impresión 3D) ahora guardan un campo "identificacion" 
+  (texto puro del input de "01. IDENTIFICACIÓN", sin el prefijo de 
+  rubro) que se usa como Título en el Presupuestador Manual. El campo 
+  "nombre" (con prefijo) sigue igual para OT/prints.
+- Corregido: Gráfica no incluía el nombre del material en el detalle del 
+  ítem — ahora sí aparece.
+- Corregido: Textil mostraba el largo en centímetros bajo la etiqueta 
+  "Material" (confuso) — ahora dice el servicio real (DTF Textil / 
+  Termovinilo).
+- Revisado y corregido el detalle de Instalación (extras que no se 
+  reflejaban, según lo encontrado en la investigación puntual).
