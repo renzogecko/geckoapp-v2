@@ -644,3 +644,63 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
   Termovinilo).
 - Revisado y corregido el detalle de Instalación (extras que no se 
   reflejaban, según lo encontrado en la investigación puntual).
+
+---
+
+### Sesión 15/07/2026
+
+**Resueltos:**
+- ✅ Presupuestador Manual — la categoría (Gráfica/Industrial) no se 
+  guardaba bien al generar el presupuesto: el campo puente 
+  "categoriaPedido" ya no existía en el HTML y el valor se perdía, 
+  cayendo siempre en "Gráfica" por defecto. RESUELTO: la categoría 
+  ahora viaja directo desde el select del Presupuestador Manual sin 
+  depender de ese campo puente.
+- ✅ BUG-004 — la etiqueta de categoría en la lista de Pedidos (Presupuestos 
+  y OTs) siempre mostraba "GRÁFICA" sin importar la categoría real 
+  guardada. RESUELTO: misma causa que el punto anterior.
+- ✅ Columna "Resumen de Ítems" renombrada a "Descripción Trabajo" en la 
+  lista de Presupuestos.
+- ✅ Nueva categoría combinada "Gráfica/Industrial": no era reconocida 
+  por la función que arma la etiqueta de la lista (_detectarCategoria 
+  solo aceptaba "Gráfica" o "Industrial" a secas) y caía en "Gráfica" 
+  por defecto. RESUELTO: se agregó el valor exacto "Gráfica/Industrial" 
+  al reconocimiento, con una etiqueta de color propio (ocre/amarillo 
+  apagado, ajustado a pedido de Renzo tras una primera versión con 
+  degradado que no se leía bien).
+- ✅ [MEJ-020] Autosave del Presupuestador Manual: guarda un borrador 
+  cada 5 segundos mientras se arma un presupuesto NUEVO (no aplica a 
+  edición de existentes, que ya sobrevive a un F5 por diseño). Al 
+  reabrir la sección, si hay un borrador pendiente, aparece un modal 
+  "Borrador encontrado" con botones Recuperar / Empezar de cero / 
+  cerrar (✕). El borrador se limpia solo al guardar con éxito. Ajustes 
+  de pulido incluidos: el modal se cierra en un solo click (antes 
+  necesitaba dos por duplicación), tiene botón de cerrar, y ya no 
+  reaparece después de guardar un presupuesto con éxito.
+- ✅ [MEJ-021 · Etapa 1] "La lotería" al editar un presupuesto — antes, 
+  editar abría en el Presupuestador Manual solo si TODOS los ítems eran 
+  de tipo "manual"; si venía aunque sea uno de un cotizador (Gráfica, 
+  Corpóreos, etc.), abría en la pantalla vieja de cotizadores. RESUELTO: 
+  Editar ahora SIEMPRE abre en el Presupuestador Manual, sin excepción. 
+  Efecto colateral esperado (no es bug): al actualizar un presupuesto 
+  mixto por acá, sus ítems pasan a guardarse como tipo "manual", lo que 
+  solo afecta el detalle fino del gráfico Mix de Ventas en Reportes (se 
+  cuenta por categoría Gráfica/Industrial en vez de por cotizador 
+  específico). No afecta cálculo de precios ni totales.
+- ✅ Número de presupuesto (#XXXX) ahora visible en el Presupuestador 
+  Manual al editar un presupuesto existente, alineado a la derecha en 
+  la fila de "Fecha de entrega".
+- ✅ Print de Presupuesto (PDF/vista previa): se agregó columna 
+  "Unidades" mostrando la cantidad de cada ítem, y se corrigió el ancho 
+  de la caja de Subtotal/Descuento/Total Final para que el texto y los 
+  montos tengan más espacio entre sí (manteniendo alineación a la 
+  derecha, igual que la columna Precio).
+
+**Pendiente para sesión dedicada:**
+- ⏳ [MEJ-021 · Etapa 2] Botón "Editar" por ítem dentro del 
+  Presupuestador Manual, que lleve de vuelta al cotizador original 
+  (Gráfica, Corpóreos, Textil, etc.) con los datos precargados para 
+  modificarlos, y un mecanismo para volver al Presupuestador Manual con 
+  los cambios aplicados sin duplicar el ítem ni perder el resto del 
+  presupuesto. Requiere diseño propio por cotizador (cada uno tiene 
+  campos distintos).
