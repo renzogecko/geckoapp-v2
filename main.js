@@ -2016,16 +2016,23 @@ window.agregarItemAlCarritoUI = async function () {
                 // Reset suave: limpiar item pero NO re-renderizar el panel (evita duplicados)
                 window.itemActualCotizado = null;
                 window.itemActual3D = null;
-                // Resetear campos del formulario 3D sin re-renderizar el panel
-                const campo3dNombre = document.getElementById('3dNombre');
-                const campo3dPeso = document.getElementById('preciso3dPeso');
-                const campo3dTiempo = document.getElementById('preciso3dTiempo');
-                if (campo3dNombre) campo3dNombre.value = '';
-                if (campo3dPeso) campo3dPeso.value = '';
-                if (campo3dTiempo) campo3dTiempo.value = '';
-                // Recalcular para que el auditor muestre estado vacío (sin duplicar nada)
-                if (typeof window.calcularCosto3D === 'function') {
-                    setTimeout(() => window.calcularCosto3D(), 50);
+                if (currentCat === '3d') {
+                    // Resetear campos del formulario 3D sin re-renderizar el panel
+                    const campo3dNombre = document.getElementById('3dNombre');
+                    const campo3dPeso = document.getElementById('preciso3dPeso');
+                    const campo3dTiempo = document.getElementById('preciso3dTiempo');
+                    if (campo3dNombre) campo3dNombre.value = '';
+                    if (campo3dPeso) campo3dPeso.value = '';
+                    if (campo3dTiempo) campo3dTiempo.value = '';
+                    // Recalcular para que el auditor de Impresión 3D muestre estado vacío
+                    if (typeof window.calcularCosto3D === 'function') {
+                        setTimeout(() => window.calcularCosto3D(), 50);
+                    }
+                } else if (currentCat === 'laser_cnc') {
+                    // Recalcular el auditor de Láser/CNC (NO el de Impresión 3D)
+                    if (typeof window.calcularCostoCorte === 'function') {
+                        setTimeout(() => window.calcularCostoCorte(), 50);
+                    }
                 }
                 btn.innerHTML = originalText;
                 return; // Salir antes del re-render de cambiarCategoriaCotizador
