@@ -1214,6 +1214,16 @@ window.abrirPestaña = function (cat) {
 window.cambiarCategoriaCotizador = function (cat) {
     console.log('🔍 DIAGNOSTICO: cambiarCategoriaCotizador llamado con cat =', cat, new Date().toISOString());
     console.trace();
+
+    // Limpieza: remover auditores y botones "Añadir a Cotización" que hayan
+    // quedado de un cotizador visitado anteriormente (evita que se acumulen
+    // cajitas de auditor de otros cotizadores al cambiar de categoría)
+    const panelLimpieza = document.getElementById('panelConfigurador');
+    if (panelLimpieza) {
+        panelLimpieza.querySelectorAll('[id^="geckoAuditor"]').forEach(el => el.remove());
+        panelLimpieza.querySelectorAll('[id^="btn"][id$="Anadir"]').forEach(el => el.remove());
+    }
+
     actualizarListas();
     const panel = document.getElementById('panelConfigurador');
     if (!panel) return;
