@@ -5246,7 +5246,7 @@ window.guardarCliente = function () {
 // Estilo 100% consistente con el sistema Gecko
 // ══════════════════════════════════════════════════════════════════════
 
-window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
+window._gpmAbrirManualReal = function (presupuestoEditId = null) {
     const container = document.getElementById('presupuestoManualContainer');
     if (!container) return;
 
@@ -5797,6 +5797,7 @@ window._gpmCerrar = function () {
 window._gpmGuardar = function (status) {
     // Fix B: Limpiar título guardado al confirmar guardado exitoso
     localStorage.removeItem('gecko_gpm_titulo_draft');
+    localStorage.removeItem('gecko_gpm_draft_nuevo');
     const cliente = document.getElementById('gpmCliente')?.value?.trim();
     if (!cliente) { alert('Ingresá el nombre del cliente.'); document.getElementById('gpmCliente')?.focus(); return; }
 
@@ -5984,6 +5985,116 @@ window.abrirCotizadorManual = function () {
     if (typeof window.switchMenu === 'function') window.switchMenu('presupuestoManual');
     window.abrirPresupuestadorManual(null);
 };
+
+// ══════════════════════════════════════════════════════════════════════
+// AUTOSAVE + BORRADOR — Presupuestador Manual (MEJ-020)
+// ══════════════════════════════════════════════════════════════════════
+
+// Wrapper: si se abre en blanco y hay un borrador, preguntar antes de renderizar
+window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
+    if (!presupuestoEditId) {
+        const draftRaw = localStorage.getItem('gecko_gpm_draft_nuevo');
+        if (draftRaw) {
+            window._gpmMostrarModalBorrador(draftRaw);
+            return;
+        }
+    }
+    window._gpmAbrirManualReal(presupuestoEditId);
+};
+
+window._gpmMostrarModalBorrador = function (draftRaw) {
+    const modal = document.createElement('div');
+    modal.className = 'gecko-modal-overlay';
+    modal.id = 'modalGpmBorrador';
+    modal.innerHTML = `
+      <div class="gecko-modal-box" style="max-width:420px;">
+        <div class="gecko-modal-header">
+          <h3>Borrador encontrado</h3>
+        </div>
+        <div class="gecko-modal-body">
+          <p style="color:#a1a1aa;font-size:13px;line-height:1.5;">
+            Encontramos un presupuesto sin terminar. ¿Querés recuperarlo o empezar de cero?
+          </p>
+        </div>
+        <div class="gecko-modal-footer">
+          <button class="gecko-btn-cancel" onclick="window._gpmDescartarBorrador()">Empezar de cero</button>
+          <button class="gecko-btn-primary" onclick="window._gpmRecuperarBorrador()">Recuperar borrador</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+};
+
+window._gpmDescartarBorrador = function () {
+    localStorage.removeItem('gecko_gpm_draft_nuevo');
+    document.getElementById('modalGpmBorrador')?.remove();
+    window._gpmAbrirManualReal(null);
+};
+
+window._gpmRecuperarBorrador = function () {
+    const draftRaw = localStorage.getItem('gecko_gpm_draft_nuevo');
+    document.getElementById('modalGpmBorrador')?.remove();
+    window._gpmAbrirManualReal(null);
+    if (!draftRaw) return;
+    try {
+        const draft = JSON.parse(draftRaw);
+        setTimeout(() => {
+            const setVal = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+            setVal('gpmCliente', draft.cliente);
+            setVal('gpmTitulo', draft.titulo);
+            setVal('gpmCategoria', draft.categoria);
+            setVal('gpmNotasInternas', draft.notasInternas);
+            setVal('gpmCondiciones', draft.condiciones);
+            setVal('gpmEntrega', draft.fechaEntrega);
+            (draft.items || []).forEach(it => window._gpmAgregarItem(it));
+            if (draft.conIva) {
+                document.getElementById('gpmTogIva').checked = true;
+                window._gpmSyncToggle('gpmTogIva', 'gpmTogIvaSlider', 'gpmTogIvaThumb');
+            }
+            if (draft.descOn) {
+                document.getElementById('gpmTogDesc').checked = true;
+                window._gpmSyncToggle('gpmTogDesc', 'gpmTogDescSlider', 'gpmTogDescThumb');
+                setVal('gpmDescVal', draft.descVal);
+                setVal('gpmDescTipo', draft.descTipo);
+                document.getElementById('gpmDescPanel').style.display = 'flex';
+                document.getElementById('gpmRowDesc').style.display = 'flex';
+            }
+            window._gpmCalc();
+        }, 100);
+    } catch (e) { console.error('Error al recuperar borrador:', e); }
+};
+
+window._gpmGuardarBorradorAuto = function () {
+    if (window._editandoPresupuestoId) return;
+    if (!document.getElementById('gpmCliente')) return;
+    const cliente = document.getElementById('gpmCliente')?.value?.trim() || '';
+    const titulo = document.getElementById('gpmTitulo')?.value?.trim() || '';
+    const items = [];
+    document.querySelectorAll('#gpm-items-list .gpm-item').forEach(item => {
+        const it_titulo = item.querySelector('.gpm-item-title')?.value?.trim();
+        const it_desc = item.querySelector('.gpm-item-desc')?.value?.trim();
+        const it_cant = item.querySelector('.gpm-qty')?.value;
+        const it_precio = item.querySelector('.gpm-price')?.value;
+        if (it_titulo || it_precio) items.push({ titulo: it_titulo, descripcion: it_desc, cantidad: it_cant, precio: it_precio });
+    });
+    if (!cliente && !titulo && items.length === 0) return;
+    const draft = {
+        cliente, titulo,
+        categoria: document.getElementById('gpmCategoria')?.value || 'Gráfica',
+        notasInternas: document.getElementById('gpmNotasInternas')?.value || '',
+        condiciones: document.getElementById('gpmCondiciones')?.value || '',
+        fechaEntrega: document.getElementById('gpmEntrega')?.value || '',
+        conIva: document.getElementById('gpmTogIva')?.checked || false,
+        descOn: document.getElementById('gpmTogDesc')?.checked || false,
+        descVal: document.getElementById('gpmDescVal')?.value || '',
+        descTipo: document.getElementById('gpmDescTipo')?.value || 'pct',
+        items
+    };
+    localStorage.setItem('gecko_gpm_draft_nuevo', JSON.stringify(draft));
+};
+
+setInterval(function () {
+    if (typeof window._gpmGuardarBorradorAuto === 'function') window._gpmGuardarBorradorAuto();
+}, 5000);
 
 // ── editarPresupuesto: detectar si es manual y abrir la sección correcta ──
 const _editarPresupuestoOrigGPM = window.editarPresupuesto;
