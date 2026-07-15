@@ -5247,6 +5247,7 @@ window.guardarCliente = function () {
 // ══════════════════════════════════════════════════════════════════════
 
 window._gpmAbrirManualReal = function (presupuestoEditId = null) {
+    window._gpmYaGuardado = false;
     const container = document.getElementById('presupuestoManualContainer');
     if (!container) return;
 
@@ -5911,6 +5912,7 @@ window._gpmGuardar = function (status) {
     window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, motivoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado };
     if (!_tieneItemDeCotizadorReal) window._gpmMetadataPendiente.origenFormulario = 'gpm';
 
+    window._gpmYaGuardado = true;
     window.procesarGuardado(status);
 
     setTimeout(() => {
@@ -6003,11 +6005,13 @@ window.abrirPresupuestadorManual = function (presupuestoEditId = null) {
 };
 
 window._gpmMostrarModalBorrador = function (draftRaw) {
+    document.querySelectorAll('#modalGpmBorrador').forEach(m => m.remove());
     const modal = document.createElement('div');
     modal.className = 'gecko-modal-overlay';
     modal.id = 'modalGpmBorrador';
     modal.innerHTML = `
-      <div class="gecko-modal-box" style="max-width:420px;">
+      <div class="gecko-modal-box" style="max-width:420px;position:relative;">
+        <button onclick="window._gpmCerrarModalBorrador()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:#71717a;font-size:18px;cursor:pointer;line-height:1;">✕</button>
         <div class="gecko-modal-header">
           <h3>Borrador encontrado</h3>
         </div>
@@ -6024,15 +6028,20 @@ window._gpmMostrarModalBorrador = function (draftRaw) {
     document.body.appendChild(modal);
 };
 
+window._gpmCerrarModalBorrador = function () {
+    document.querySelectorAll('#modalGpmBorrador').forEach(m => m.remove());
+    window._gpmAbrirManualReal(null);
+};
+
 window._gpmDescartarBorrador = function () {
     localStorage.removeItem('gecko_gpm_draft_nuevo');
-    document.getElementById('modalGpmBorrador')?.remove();
+    document.querySelectorAll('#modalGpmBorrador').forEach(m => m.remove());
     window._gpmAbrirManualReal(null);
 };
 
 window._gpmRecuperarBorrador = function () {
     const draftRaw = localStorage.getItem('gecko_gpm_draft_nuevo');
-    document.getElementById('modalGpmBorrador')?.remove();
+    document.querySelectorAll('#modalGpmBorrador').forEach(m => m.remove());
     window._gpmAbrirManualReal(null);
     if (!draftRaw) return;
     try {
@@ -6065,6 +6074,7 @@ window._gpmRecuperarBorrador = function () {
 
 window._gpmGuardarBorradorAuto = function () {
     if (window._editandoPresupuestoId) return;
+    if (window._gpmYaGuardado) return;
     if (!document.getElementById('gpmCliente')) return;
     const cliente = document.getElementById('gpmCliente')?.value?.trim() || '';
     const titulo = document.getElementById('gpmTitulo')?.value?.trim() || '';
