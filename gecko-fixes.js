@@ -69,7 +69,11 @@ window.procesarGuardado = function (status) {
     const cliente = document.getElementById('clienteNombre')?.value?.trim() || 'Cliente Genérico';
     const total = parseFloat(document.getElementById('precioTotal')?.value) ||
         parseFloat(document.getElementById('labelTotalPresupuesto')?.innerText?.replace(/[$.\\s]/g, '').replace(',', '.')) || 0;
-    const categoria = document.getElementById('categoriaPedido')?.value || 'Gráfica';
+    let categoria = document.getElementById('categoriaPedido')?.value || 'Gráfica';
+    if (window._gpmCategoriaActual) {
+        categoria = window._gpmCategoriaActual;
+        window._gpmCategoriaActual = null;
+    }
 
     if (!window.presupuesto || window.presupuesto.length === 0) {
         alert('Agregá al menos un ítem antes de guardar.');
@@ -5866,6 +5870,7 @@ window._gpmGuardar = function (status) {
     if (ivaOn) total *= 1.21;
 
     const categoria = document.getElementById('gpmCategoria')?.value || 'Gráfica';
+    window._gpmCategoriaActual = categoria;
     // Ítems sin tipo de origen (genuinamente manuales): usar el mismo mapeo que _guardarManual
     const catATipo = { 'Gráfica': 'grafica', 'Industrial': 'bastidores', 'Corpóreos': 'corporeos', 'Láser/CNC': 'laser_cnc', 'Textil': 'textil' };
     items.forEach(it => { if (!it.tipo) it.tipo = catATipo[categoria] || 'manual'; });
