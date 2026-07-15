@@ -313,7 +313,7 @@ const ESTADO_COLORS = {
 // ── Detectar categoría (Gráfica / Industrial) ──
 window._detectarCategoria = function (doc) {
     // Explicit field wins
-    if (doc.categoria === 'Gráfica' || doc.categoria === 'Industrial') return doc.categoria;
+    if (doc.categoria === 'Gráfica' || doc.categoria === 'Industrial' || doc.categoria === 'Gráfica/Industrial') return doc.categoria;
 
     var area = (doc.area || '');
     if (/gr[aá]fica/i.test(area)) return 'Gráfica';
@@ -337,7 +337,8 @@ window._tagCategoria = function (doc) {
     if (!cat) return '';
     var C = {
         'Gráfica': 'background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;',
-        'Industrial': 'background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);color:#c084fc;'
+        'Industrial': 'background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);color:#c084fc;',
+        'Gráfica/Industrial': 'background:linear-gradient(90deg, rgba(59,130,246,0.18) 50%, rgba(168,85,247,0.18) 50%);border:1px solid rgba(147,107,247,0.35);color:#a78bfa;'
     };
     var s = C[cat] || C['Gráfica'];
     return '<span style="display:inline-block;padding:1px 7px;' + s + 'border-radius:4px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">' + cat + '</span>';
