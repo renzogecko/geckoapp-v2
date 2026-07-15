@@ -1599,6 +1599,19 @@ window.abrirModalSena = function (id) {
                             ${window._htmlDropdownPago('sena1Forma', formasPago, 'Efectivo')}
                         </div>
                     </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#a1a1aa;font-size:11px;font-weight:700;">
+                            <input type="checkbox" id="sena1DescChk" onchange="window._toggleDescuentoPago(1)" style="width:16px;height:16px;accent-color:#F15A24;cursor:pointer;">
+                            Aplicar descuento a este pago
+                        </label>
+                        <div id="sena1DescWrap" style="display:none;margin-top:10px;display:grid;grid-template-columns:90px 1fr;gap:10px;">
+                            <select id="sena1DescTipo" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 10px;color:white;font-size:12px;font-weight:700;">
+                                <option value="pct">%</option>
+                                <option value="fijo">$ fijo</option>
+                            </select>
+                            <input type="number" id="sena1DescValor" placeholder="0" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 14px;color:white;font-size:14px;font-weight:600;outline:none;">
+                        </div>
+                    </div>
                     <div>
                         <label style="${labelStyle}">Ingresa a caja</label>
                         ${cajasList.length > 0 ? `
@@ -1628,6 +1641,19 @@ window.abrirModalSena = function (id) {
                         <div>
                             <label style="${labelStyle}">Forma de pago</label>
                             ${window._htmlDropdownPago('sena2Forma', formasPago, 'Efectivo')}
+                        </div>
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#a1a1aa;font-size:11px;font-weight:700;">
+                            <input type="checkbox" id="sena2DescChk" onchange="window._toggleDescuentoPago(2)" style="width:16px;height:16px;accent-color:#F15A24;cursor:pointer;">
+                            Aplicar descuento a este pago
+                        </label>
+                        <div id="sena2DescWrap" style="display:none;margin-top:10px;display:grid;grid-template-columns:90px 1fr;gap:10px;">
+                            <select id="sena2DescTipo" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 10px;color:white;font-size:12px;font-weight:700;">
+                                <option value="pct">%</option>
+                                <option value="fijo">$ fijo</option>
+                            </select>
+                            <input type="number" id="sena2DescValor" placeholder="0" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 14px;color:white;font-size:14px;font-weight:600;outline:none;">
                         </div>
                     </div>
                     <div>
@@ -1701,6 +1727,17 @@ window._toggleSegundoPago = function () {
         : '− Quitar segundo pago';
 };
 
+window._toggleDescuentoPago = function (n) {
+    const wrap = document.getElementById(`sena${n}DescWrap`);
+    const chk = document.getElementById(`sena${n}DescChk`);
+    if (!wrap || !chk) return;
+    wrap.style.display = chk.checked ? 'grid' : 'none';
+    if (!chk.checked) {
+        const valor = document.getElementById(`sena${n}DescValor`);
+        if (valor) valor.value = '';
+    }
+};
+
 window._calcularResto = function (id) {
     // Podría autocompletar el 2do pago, por ahora vacío
 };
@@ -1716,6 +1753,29 @@ window._registrarSena = function (id) {
     const tipo = window._tipoPagoActual || 'seña';
 
     if (monto1 <= 0) { alert('Ingresá un monto válido.'); return; }
+
+    // ── Descuento por pago (MEJ: pagos combinados con descuento en efectivo) ──
+    // El monto nominal (monto1/monto2) es lo que se descuenta de la deuda del
+    // presupuesto. El monto real es lo que efectivamente entra a la caja.
+    const desc1Chk = document.getElementById('sena1DescChk')?.checked || false;
+    const desc1Tipo = document.getElementById('sena1DescTipo')?.value || 'pct';
+    const desc1Valor = parseFloat(document.getElementById('sena1DescValor')?.value) || 0;
+    let descMonto1 = 0;
+    let montoReal1 = monto1;
+    if (desc1Chk && desc1Valor > 0 && monto1 > 0) {
+        descMonto1 = desc1Tipo === 'pct' ? (monto1 * desc1Valor / 100) : Math.min(desc1Valor, monto1);
+        montoReal1 = monto1 - descMonto1;
+    }
+
+    const desc2Chk = document.getElementById('sena2DescChk')?.checked || false;
+    const desc2Tipo = document.getElementById('sena2DescTipo')?.value || 'pct';
+    const desc2Valor = parseFloat(document.getElementById('sena2DescValor')?.value) || 0;
+    let descMonto2 = 0;
+    let montoReal2 = monto2;
+    if (desc2Chk && desc2Valor > 0 && monto2 > 0) {
+        descMonto2 = desc2Tipo === 'pct' ? (monto2 * desc2Valor / 100) : Math.min(desc2Valor, monto2);
+        montoReal2 = monto2 - descMonto2;
+    }
 
     const totalPago = monto1 + monto2;
     const fecha = new Date().toLocaleDateString('es-AR');
@@ -1742,23 +1802,41 @@ window._registrarSena = function (id) {
 
     const mov1 = {
         id: 'mov_' + Date.now(),
-        fecha, caja: caja1, tipo: 'Ingreso', monto: monto1,
-        detalle: `${desc} OT#${id} - ${cliente}${nota ? ' · ' + nota : ''}`,
+        fecha, caja: caja1, tipo: 'Ingreso', monto: montoReal1,
+        detalle: `${desc} OT#${id} - ${cliente}${descMonto1 > 0 ? ` (Nominal $${Math.round(monto1).toLocaleString('es-AR')}, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
         categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
         otsAfectadas: [{ id: id, monto: monto1 }]
     };
     movimientos.push(mov1);
 
+    if (descMonto1 > 0) {
+        movimientos.push({
+            id: 'mov_' + (Date.now() + 10),
+            fecha, caja: caja1, tipo: 'Descuento', monto: descMonto1,
+            detalle: `Descuento otorgado - OT#${id} - ${cliente}${nota ? ' · ' + nota : ''}`,
+            categoria: 'Descuento Otorgado'
+        });
+    }
+
     let mov2 = null;
     if (monto2 > 0) {
         mov2 = {
             id: 'mov_' + (Date.now() + 1),
-            fecha, caja: caja2, tipo: 'Ingreso', monto: monto2,
-            detalle: `${desc} OT#${id} - ${cliente} (${forma2})${nota ? ' · ' + nota : ''}`,
+            fecha, caja: caja2, tipo: 'Ingreso', monto: montoReal2,
+            detalle: `${desc} OT#${id} - ${cliente} (${forma2})${descMonto2 > 0 ? ` (Nominal $${Math.round(monto2).toLocaleString('es-AR')}, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
             categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
             otsAfectadas: [{ id: id, monto: monto2 }]
         };
         movimientos.push(mov2);
+    }
+
+    if (descMonto2 > 0) {
+        movimientos.push({
+            id: 'mov_' + (Date.now() + 11),
+            fecha, caja: caja2, tipo: 'Descuento', monto: descMonto2,
+            detalle: `Descuento otorgado - OT#${id} - ${cliente} (${forma2})${nota ? ' · ' + nota : ''}`,
+            categoria: 'Descuento Otorgado'
+        });
     }
 
     // Actualizar saldo de cajas
@@ -1774,8 +1852,8 @@ window._registrarSena = function (id) {
             }).catch(() => { });
         }
     };
-    if (caja1) actualizarCaja(caja1, monto1);
-    if (caja2 && monto2 > 0) actualizarCaja(caja2, monto2);
+    if (caja1) actualizarCaja(caja1, montoReal1);
+    if (caja2 && montoReal2 > 0) actualizarCaja(caja2, montoReal2);
 
     // Guardar todo
     const movsStr = JSON.stringify(movimientos);
