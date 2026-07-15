@@ -704,3 +704,24 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
   los cambios aplicados sin duplicar el ítem ni perder el resto del 
   presupuesto. Requiere diseño propio por cotizador (cada uno tiene 
   campos distintos).
+
+---
+
+### Sesión 15/07/2026 (tarde)
+
+**Resueltos:**
+- ✅ Auditores de cálculo duplicados en la Terminal de Cotización: al 
+  cambiar de un cotizador a otro (ej: de Corpóreos a Láser/CNC), los 
+  auditores de cotizadores visitados anteriormente quedaban pegados en 
+  el panel en vez de desaparecer, apareciendo apilados debajo del 
+  auditor correcto. RESUELTO: se agregó una limpieza automática de 
+  auditores huérfanos al cambiar de categoría (cambiarCategoriaCotizador 
+  en main.js).
+- ✅ Causa raíz más específica del mismo síntoma: al presionar "+ Añadir 
+  a Cotización" estando en Láser/CNC, el código ejecutaba por error la 
+  función de recálculo de Impresión 3D (calcularCosto3D) en vez de la de 
+  Láser/CNC (calcularCostoCorte), lo que generaba y mostraba el auditor 
+  de Impresión 3D ("Sin filamento cargado") debajo del de Láser/CNC. 
+  RESUELTO: agregarItemAlCarritoUI (main.js) ahora llama a la función de 
+  recálculo correcta según la categoría activa. No afecta el 
+  funcionamiento de Impresión 3D, que ya llamaba a la función correcta.
