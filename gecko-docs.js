@@ -211,7 +211,7 @@ window.generarDocPresupuesto = async function (p) {
     </div>
     ${refsHTML}
     <div class="doc-totales">
-        <div class="totales-box" style="margin-right:120px;">
+        <div class="totales-box" style="width:340px;">
             ${mostrarPrecios ? `<div class="totales-row"><span class="lbl">Subtotal</span><span class="val">${fmtMoney(total)}</span></div>` : ''}
             ${descuento > 0 ? `
             <div>
