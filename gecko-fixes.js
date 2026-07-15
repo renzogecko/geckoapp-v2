@@ -6113,13 +6113,9 @@ window.editarPresupuesto = function (id) {
     const _todos = lista.filter(x => String(x.id) === String(id));
     const p = _todos[_todos.length - 1];
     if (!p) return;
-    const esManual = p.origenFormulario === 'gpm' || (p.items && p.items.length > 0 && p.items.every(it => it.tipo === 'manual'));
-    if (esManual) {
-        if (typeof window.switchMenu === 'function') window.switchMenu('presupuestoManual');
-        window.abrirPresupuestadorManual(id);
-    } else {
-        if (typeof _editarPresupuestoOrigGPM === 'function') _editarPresupuestoOrigGPM(id);
-    }
+    // Editar SIEMPRE abre en el Presupuestador Manual, sin importar el origen de los ítems
+    if (typeof window.switchMenu === 'function') window.switchMenu('presupuestoManual');
+    window.abrirPresupuestadorManual(id);
 };
 
 console.log('🦎 GECKO: Presupuestador Manual (sección nativa) v2.0 cargado.');
@@ -6418,10 +6414,8 @@ window.editarPresupuesto = function (id) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const p = lista.find(x => String(x.id) === String(id));
     if (p) {
-        const esManual = p.origenFormulario === 'gpm' || (p.items && p.items.length > 0 && p.items.every(it => it.tipo === 'manual'));
-        if (esManual) {
-            localStorage.setItem('gecko_gpm_editing_id', String(id));
-        }
+        // Editar SIEMPRE abre en el Presupuestador Manual, sin importar el origen de los ítems
+        localStorage.setItem('gecko_gpm_editing_id', String(id));
     }
     if (typeof _origEditarPresupuestoReload === 'function') _origEditarPresupuestoReload(id);
 };
