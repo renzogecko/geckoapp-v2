@@ -151,11 +151,12 @@ window.generarDocPresupuesto = async function (p) {
                 <strong>${it.nombre || it.textoOpciones || 'Ítem'}</strong>
                 ${it.otDetalle ? `<small>${it.otDetalle}</small>` : ''}
             </td>
+            <td class="td-precio" style="text-align:center;">${it.cantidad || 1}</td>
             <td class="td-precio">
                 ${mostrarPrecios && it.costo ? fmtMoney(it.costo) : (mostrarPrecios ? '<span style="color:#ccc">—</span>' : '')}
             </td>
         </tr>
-    `).join('') : `<tr><td colspan="3" style="padding:20px 6px;color:#aaa;text-align:center;font-style:italic;">Sin ítems cargados</td></tr>`;
+    `).join('') : `<tr><td colspan="4" style="padding:20px 6px;color:#aaa;text-align:center;font-style:italic;">Sin ítems cargados</td></tr>`;
 
     const refsHTML = imagenes.length > 0 ? `
         <div class="doc-referencias">
@@ -202,6 +203,7 @@ window.generarDocPresupuesto = async function (p) {
             <thead><tr>
                 <th style="width:26px">#</th>
                 <th>${titulo || 'Descripción del trabajo'}</th>
+                <th class="th-r" style="width:70px">Unidades</th>
                 <th class="th-r">${mostrarPrecios ? 'Precio' : ''}</th>
             </tr></thead>
             <tbody>${itemsHTML}</tbody>
@@ -209,7 +211,7 @@ window.generarDocPresupuesto = async function (p) {
     </div>
     ${refsHTML}
     <div class="doc-totales">
-        <div class="totales-box">
+        <div class="totales-box" style="margin-right:120px;">
             ${mostrarPrecios ? `<div class="totales-row"><span class="lbl">Subtotal</span><span class="val">${fmtMoney(total)}</span></div>` : ''}
             ${descuento > 0 ? `
             <div>
