@@ -5346,13 +5346,18 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
             </select>
           </div>
         </div>
-        <div style="margin-top:14px;">
-          <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Fecha de entrega</label>
-          <input id="gpmEntrega" type="date"
-            value="${datosEdicion?.fechaEntrega || ''}"
-            style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:#71717a;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;color-scheme:dark;"
-            onfocus="this.style.borderColor='#F15A24'"
-            onblur="this.style.borderColor='#333333'" />
+        <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end;">
+          <div>
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Fecha de entrega</label>
+            <input id="gpmEntrega" type="date"
+              value="${datosEdicion?.fechaEntrega || ''}"
+              style="width:100%;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:#71717a;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;color-scheme:dark;"
+              onfocus="this.style.borderColor='#F15A24'"
+              onblur="this.style.borderColor='#333333'" />
+          </div>
+          <div style="text-align:right;">
+            ${presupuestoEditId ? `<span style="display:inline-block;width:100%;box-sizing:border-box;background:#131314;border:1px solid #333333;border-radius:12px;padding:12px 16px;color:#71717a;font-size:14px;font-weight:900;text-align:right;">Presupuesto #${presupuestoEditId}</span>` : ''}
+          </div>
         </div>
       </div>
 
