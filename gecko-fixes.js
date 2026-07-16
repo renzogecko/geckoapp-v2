@@ -1765,29 +1765,38 @@ window._registrarSena = function (id) {
     if (monto1 <= 0) { alert('Ingresá un monto válido.'); return; }
 
     // ── Descuento por pago (MEJ: pagos combinados con descuento en efectivo) ──
-    // El monto nominal (monto1/monto2) es lo que se descuenta de la deuda del
-    // presupuesto. El monto real es lo que efectivamente entra a la caja.
+    // El monto1/monto2 es la plata REAL que el cliente entrega. Si hay
+    // descuento activado, se calcula hacia arriba cuánta deuda del
+    // presupuesto (nominal) cubre ese pago real.
     const desc1Chk = document.getElementById('sena1DescChk')?.checked || false;
     const desc1Tipo = document.getElementById('sena1DescTipo')?.value || 'pct';
     const desc1Valor = parseFloat(document.getElementById('sena1DescValor')?.value) || 0;
     let descMonto1 = 0;
-    let montoReal1 = monto1;
+    let montoNominal1 = monto1;
     if (desc1Chk && desc1Valor > 0 && monto1 > 0) {
-        descMonto1 = desc1Tipo === 'pct' ? (monto1 * desc1Valor / 100) : Math.min(desc1Valor, monto1);
-        montoReal1 = monto1 - descMonto1;
+        if (desc1Tipo === 'pct' && desc1Valor < 100) {
+            montoNominal1 = monto1 / (1 - desc1Valor / 100);
+        } else if (desc1Tipo === 'fijo') {
+            montoNominal1 = monto1 + desc1Valor;
+        }
+        descMonto1 = montoNominal1 - monto1;
     }
 
     const desc2Chk = document.getElementById('sena2DescChk')?.checked || false;
     const desc2Tipo = document.getElementById('sena2DescTipo')?.value || 'pct';
     const desc2Valor = parseFloat(document.getElementById('sena2DescValor')?.value) || 0;
     let descMonto2 = 0;
-    let montoReal2 = monto2;
+    let montoNominal2 = monto2;
     if (desc2Chk && desc2Valor > 0 && monto2 > 0) {
-        descMonto2 = desc2Tipo === 'pct' ? (monto2 * desc2Valor / 100) : Math.min(desc2Valor, monto2);
-        montoReal2 = monto2 - descMonto2;
+        if (desc2Tipo === 'pct' && desc2Valor < 100) {
+            montoNominal2 = monto2 / (1 - desc2Valor / 100);
+        } else if (desc2Tipo === 'fijo') {
+            montoNominal2 = monto2 + desc2Valor;
+        }
+        descMonto2 = montoNominal2 - monto2;
     }
 
-    const totalPago = monto1 + monto2;
+    const totalPago = montoNominal1 + montoNominal2;
     const fecha = new Date().toLocaleDateString('es-AR');
 
     // Actualizar OT
@@ -1812,10 +1821,10 @@ window._registrarSena = function (id) {
 
     const mov1 = {
         id: 'mov_' + Date.now(),
-        fecha, caja: caja1, tipo: 'Ingreso', monto: montoReal1,
-        detalle: `${desc} OT#${id} - ${cliente}${descMonto1 > 0 ? ` (Nominal $${Math.round(monto1).toLocaleString('es-AR')}, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
+        fecha, caja: caja1, tipo: 'Ingreso', monto: monto1,
+        detalle: `${desc} OT#${id} - ${cliente}${descMonto1 > 0 ? ` (Cubre $${Math.round(montoNominal1).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
         categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
-        otsAfectadas: [{ id: id, monto: monto1 }]
+        otsAfectadas: [{ id: id, monto: montoNominal1 }]
     };
     movimientos.push(mov1);
 
@@ -1832,10 +1841,10 @@ window._registrarSena = function (id) {
     if (monto2 > 0) {
         mov2 = {
             id: 'mov_' + (Date.now() + 1),
-            fecha, caja: caja2, tipo: 'Ingreso', monto: montoReal2,
-            detalle: `${desc} OT#${id} - ${cliente} (${forma2})${descMonto2 > 0 ? ` (Nominal $${Math.round(monto2).toLocaleString('es-AR')}, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
+            fecha, caja: caja2, tipo: 'Ingreso', monto: monto2,
+            detalle: `${desc} OT#${id} - ${cliente} (${forma2})${descMonto2 > 0 ? ` (Cubre $${Math.round(montoNominal2).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
             categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
-            otsAfectadas: [{ id: id, monto: monto2 }]
+            otsAfectadas: [{ id: id, monto: montoNominal2 }]
         };
         movimientos.push(mov2);
     }
@@ -1862,8 +1871,8 @@ window._registrarSena = function (id) {
             }).catch(() => { });
         }
     };
-    if (caja1) actualizarCaja(caja1, montoReal1);
-    if (caja2 && montoReal2 > 0) actualizarCaja(caja2, montoReal2);
+    if (caja1) actualizarCaja(caja1, monto1);
+    if (caja2 && monto2 > 0) actualizarCaja(caja2, monto2);
 
     // Guardar todo
     const movsStr = JSON.stringify(movimientos);
