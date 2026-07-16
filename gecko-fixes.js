@@ -752,6 +752,16 @@ window._confirmarConversionOT = async function (id) {
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const p = lista.find(x => String(x.id) === String(id));
     if (!p) return;
+
+    // El total registrado en la OT siempre es el Subtotal (suma de los
+    // ítems, sin descuentos globales del presupuesto) — el descuento del
+    // presupuesto es solo informativo para el cliente en el PDF. El IVA,
+    // al ser un impuesto real (no un descuento), sí se mantiene.
+    const subtotalItems = (p.items || []).reduce((a, it) => a + (parseFloat(it.costo) || 0), 0);
+    if (subtotalItems > 0) {
+        p.total = p.conIva ? subtotalItems * 1.21 : subtotalItems;
+    }
+
     p.status = 'OT';
     p.estado_ot = 'En Proceso';
     // Preservar fecha de entrega del presupuesto original si existe
