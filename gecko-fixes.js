@@ -2000,6 +2000,56 @@ window._renderizarFinanzasCompleto = async function () {
 
 window.renderizarFinanzas = window._renderizarFinanzasCompleto;
 
+window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
+    const _ls = window._localStorage_original || localStorage;
+    const movs = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+    const mov = movs.find(m => String(m.id) === String(movId));
+    if (!mov) return;
+
+    document.getElementById('_geckoConfirmElimMovHist')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_geckoConfirmElimMovHist';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10003;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Eliminar movimiento</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se eliminará <strong style="color:white;">${mov.detalle}</strong> y se revertirá el saldo en la caja.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('_geckoConfirmElimMovHist').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button id="_geckoElimMovHistOk"
+                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    document.getElementById('_geckoElimMovHistOk').onclick = function () {
+        modal.remove();
+        const cajas = JSON.parse(_ls.getItem('gecko_cajas') || '[]');
+        const cajaObj = cajas.find(c => c.nombre === mov.caja);
+        if (cajaObj) {
+            if (mov.tipo === 'Ingreso') { cajaObj.saldo -= mov.monto; } else { cajaObj.saldo += mov.monto; }
+            _ls.setItem('gecko_cajas', JSON.stringify(cajas));
+            window.LISTA_CAJAS = cajas;
+        }
+        const dbMovs = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+        const dbIndex = dbMovs.findIndex(m => String(m.id) === String(mov.id));
+        if (dbIndex !== -1) {
+            dbMovs.splice(dbIndex, 1);
+            _ls.setItem('gecko_movimientos', JSON.stringify(dbMovs));
+            window.LISTA_MOVIMIENTOS = dbMovs;
+        }
+        if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+        if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado', '¡Listo!');
+        window._verHistorialCaja(cajaId);
+    };
+};
+
 window._verHistorialCaja = function (cajaId) {
     const _ls = window._localStorage_original || localStorage;
     const cajas = window.LISTA_CAJAS || JSON.parse(_ls.getItem('gecko_cajas') || '[]');
@@ -2024,14 +2074,17 @@ window._verHistorialCaja = function (cajaId) {
     const filasHTML = movs.length === 0
         ? `<p style="color:#52525b;font-size:12px;font-style:italic;text-align:center;padding:24px 0;">No hay movimientos registrados en esta caja todavía.</p>`
         : movs.map(m => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #27272a;">
-                <div style="min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #27272a;gap:10px;">
+                <div style="min-width:0;flex:1;">
                     <p style="color:white;font-size:12px;font-weight:700;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.detalle || 'Sin descripción'}</p>
                     <p style="color:#71717a;font-size:10px;margin:0;">${m.fecha || ''} · ${m.categoria || 'Varios'}</p>
                 </div>
                 <p style="font-size:13px;font-weight:900;margin:0;padding-left:12px;flex-shrink:0;color:${m.tipo === 'Ingreso' ? '#22c55e' : '#ef4444'};">
                     ${m.tipo === 'Ingreso' ? '+' : '-'}$${Math.round(m.monto || 0).toLocaleString('es-AR')}
                 </p>
+                <button onclick="window._eliminarMovimientoDesdeHistorial('${caja.id}', '${m.id || ''}')" style="width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
             </div>`).join('');
 
     modal.innerHTML = `
