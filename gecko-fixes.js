@@ -657,7 +657,7 @@ window.renderPresupuestos = async function () {
             <td class="py-4 px-6 font-black text-zinc-400 text-[11px]">#${p.id}</td>
             <td class="py-4 px-6 text-[12px] text-zinc-400 font-bold">${p.fecha || ''}</td>
             <td class="py-4 px-6">
-                <span class="font-extrabold dark:text-white text-[14px] uppercase">${p.cliente || 'S/N'}</span>
+                <span onclick="event.stopPropagation();window.abrirFichaCliente('${(p.cliente || '').replace(/'/g, "\\'")}')" class="font-extrabold dark:text-white text-[14px] uppercase cursor-pointer hover:text-gecko transition-colors" title="Ver ficha de cliente">${p.cliente || 'S/N'}</span>
             </td>
             <td class="py-4 px-6 max-w-[220px]">
                 <div class="flex flex-col gap-1">
@@ -3801,7 +3801,7 @@ window.addEventListener('load', function () {
                 <tr draggable="true" data-drag-key="${ot.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800" style="cursor:grab;">
                     <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500">#${ot.id}</td>
                     <td class="py-4 px-6">
-                        <span class="text-[14px] font-extrabold dark:text-white uppercase">${ot.cliente || 'S/N'}</span>
+                        <span onclick="event.stopPropagation();window.abrirFichaCliente('${(ot.cliente || '').replace(/'/g, "\\'")}')" class="text-[14px] font-extrabold dark:text-white uppercase cursor-pointer hover:text-gecko transition-colors" title="Ver ficha de cliente">${ot.cliente || 'S/N'}</span>
                     </td>
                     <td class="py-4 px-6 max-w-[200px]">
                         <div class="flex flex-col">
