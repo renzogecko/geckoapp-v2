@@ -1119,9 +1119,14 @@
                 <!-- CARD PUNTO DE EQUILIBRIO -->
                 <div id="cardFlujoCajaReal" style="border-radius:24px;padding:28px;margin-bottom:24px;border:1px solid #3f3f46;background:rgba(255,255,255,0.03);">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
-                        <div>
-                            <p style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 3px;color:#a1a1aa;">Flujo de Caja Real</p>
-                            <p style="color:#71717a;font-size:11px;margin:0;">Lo que tenés en cajas menos tus costos fijos</p>
+                        <div style="display:flex;align-items:center;gap:14px;">
+                            <div id="fcrIconoWrap" style="width:44px;height:44px;border-radius:16px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg id="fcrIcono" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#a1a1aa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm1-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            </div>
+                            <div>
+                                <p id="fcrTitulo" style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 3px;color:#a1a1aa;">Flujo de Caja Real</p>
+                                <p style="color:#71717a;font-size:11px;margin:0;">Lo que tenés en cajas menos tus costos fijos</p>
+                            </div>
                         </div>
                         <div style="text-align:right;">
                             <p id="fcrMonto" style="font-size:32px;font-weight:900;margin:0;line-height:1;color:white;">$0</p>

@@ -3077,6 +3077,12 @@ window.renderReportesDashboard = function () {
         elFcrCard.style.background = colorFondo;
         elFcrCard.style.border = `1px solid ${colorBorde}`;
         elFcrMonto.style.color = colorTexto;
+        const elFcrTitulo = document.getElementById('fcrTitulo');
+        const elFcrIcono = document.getElementById('fcrIcono');
+        const elFcrIconoWrap = document.getElementById('fcrIconoWrap');
+        if (elFcrTitulo) elFcrTitulo.style.color = colorTexto;
+        if (elFcrIcono) elFcrIcono.setAttribute('stroke', colorTexto);
+        if (elFcrIconoWrap) elFcrIconoWrap.style.background = colorFondo.replace('0.07', '0.15');
         elFcrMonto.innerText = `${flujoCajaReal < 0 ? '-' : ''}$${Math.round(Math.abs(flujoCajaReal)).toLocaleString('es-AR')}`;
         if (elFcrDetalle) elFcrDetalle.innerText = `Cajas: $${Math.round(totalCajas).toLocaleString('es-AR')} — Costos Fijos: $${Math.round(costosFijosNum).toLocaleString('es-AR')}`;
     }
