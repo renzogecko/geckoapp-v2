@@ -3062,6 +3062,42 @@ window.renderReportesDashboard = function () {
     const elCobrar = document.getElementById('metricCobrar');
     if (elCobrar) elCobrar.innerText = `$${Math.round(porCobrar).toLocaleString('es-AR')}`;
 
+    // ── Flujo de Caja Real (Cajas − Costos Fijos) ──
+    const costosFijosTexto = document.getElementById('peCostosFijos')?.innerText || '$0';
+    const costosFijosNum = parseFloat(costosFijosTexto.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+    const flujoCajaReal = totalCajas - costosFijosNum;
+    const elFcrCard = document.getElementById('cardFlujoCajaReal');
+    const elFcrMonto = document.getElementById('fcrMonto');
+    const elFcrDetalle = document.getElementById('fcrDetalle');
+    if (elFcrCard && elFcrMonto) {
+        let colorFondo, colorBorde, colorTexto;
+        if (flujoCajaReal > 0) { colorFondo = 'rgba(16,185,129,0.07)'; colorBorde = 'rgba(16,185,129,0.35)'; colorTexto = '#10b981'; }
+        else if (flujoCajaReal < 0) { colorFondo = 'rgba(239,68,68,0.07)'; colorBorde = 'rgba(239,68,68,0.35)'; colorTexto = '#ef4444'; }
+        else { colorFondo = 'rgba(234,179,8,0.07)'; colorBorde = 'rgba(234,179,8,0.35)'; colorTexto = '#eab308'; }
+        elFcrCard.style.background = colorFondo;
+        elFcrCard.style.border = `1px solid ${colorBorde}`;
+        elFcrMonto.style.color = colorTexto;
+        elFcrMonto.innerText = `${flujoCajaReal < 0 ? '-' : ''}$${Math.round(Math.abs(flujoCajaReal)).toLocaleString('es-AR')}`;
+        if (elFcrDetalle) elFcrDetalle.innerText = `Cajas: $${Math.round(totalCajas).toLocaleString('es-AR')} — Costos Fijos: $${Math.round(costosFijosNum).toLocaleString('es-AR')}`;
+    }
+
+    // ── Descuentos Otorgados (mes actual) ──
+    const movsTodos = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+    const movsMesActual = movsTodos.filter(m => {
+        const pts = (m.fecha || '').split('/');
+        return pts.length >= 3 && (parseInt(pts[1]) - 1) === ahora.getMonth() && parseInt(pts[2]) === ahora.getFullYear();
+    });
+    const descuentosMes = movsMesActual.filter(m => m.tipo === 'Descuento');
+    const totalDescuentos = descuentosMes.reduce((a, m) => a + (parseFloat(m.monto) || 0), 0);
+    const ingresosMes = movsMesActual.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + (parseFloat(m.monto) || 0), 0);
+    const pctDescuentos = ingresosMes > 0 ? (totalDescuentos / ingresosMes) * 100 : 0;
+    const elDoMonto = document.getElementById('doMonto');
+    const elDoCantidad = document.getElementById('doCantidad');
+    const elDoPorcentaje = document.getElementById('doPorcentaje');
+    if (elDoMonto) elDoMonto.innerText = `$${Math.round(totalDescuentos).toLocaleString('es-AR')}`;
+    if (elDoCantidad) elDoCantidad.innerText = String(descuentosMes.length);
+    if (elDoPorcentaje) elDoPorcentaje.innerText = `${pctDescuentos.toFixed(1)}%`;
+
     // ── Historial de cierres ──
     const contenedorHistorialCierres = document.getElementById('contenedorHistorialCierres');
     if (contenedorHistorialCierres) {
