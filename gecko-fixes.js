@@ -1601,7 +1601,7 @@ window.abrirModalSena = function (id) {
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
                         <div>
                             <label style="${labelStyle}">Monto</label>
-                            <input type="number" id="sena1Monto" placeholder="$0" style="${inputStyle}" oninput="window._calcularResto('${id}')"
+                            <input type="text" inputmode="numeric" id="sena1Monto" placeholder="$ 0" style="${inputStyle}" oninput="window._formatMontoInput(this);window._calcularResto('${id}')"
                                 onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
                         </div>
                         <div>
@@ -1641,7 +1641,7 @@ window.abrirModalSena = function (id) {
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
                         <div>
                             <label style="${labelStyle}">Monto</label>
-                            <input type="number" id="sena2Monto" placeholder="$0" style="${inputStyle}"
+                            <input type="text" inputmode="numeric" id="sena2Monto" placeholder="$ 0" style="${inputStyle}" oninput="window._formatMontoInput(this)"
                                 onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
                         </div>
                         <div>
@@ -1716,7 +1716,7 @@ window._toggleTipoPago = function (tipo) {
         if (btnSaldo) { btnSaldo.style.background = '#10b981'; btnSaldo.style.border = '1px solid #10b981'; btnSaldo.style.color = 'white'; }
         if (btnSeña) { btnSeña.style.background = '#09090b'; btnSeña.style.border = '1px solid #27272a'; btnSeña.style.color = '#71717a'; }
         const m1 = document.getElementById('sena1Monto');
-        if (m1 && window._senaPendiente > 0) m1.value = window._senaPendiente;
+        if (m1 && window._senaPendiente > 0) m1.value = window._fmtMontoValor(window._senaPendiente);
         window._actualizarMontoConDescuento(1);
         // Saldo Final: se salda con un solo pago, ocultar y cerrar el segundo
         if (btnSegundoPago) btnSegundoPago.style.display = 'none';
@@ -1761,12 +1761,27 @@ window._actualizarMontoConDescuento = function (n) {
     if (!montoEl) return;
     const base = window._senaPendiente || 0;
     const chk = document.getElementById('sena1DescChk');
-    if (!chk?.checked) { montoEl.value = Math.round(base); return; }
+    if (!chk?.checked) { montoEl.value = window._fmtMontoValor(base); return; }
     const tipo = document.getElementById('sena1DescTipo')?.value || 'pct';
     const valor = parseFloat(document.getElementById('sena1DescValor')?.value) || 0;
     let montoFinal = tipo === 'pct' ? base * (1 - valor / 100) : base - valor;
     if (montoFinal < 0) montoFinal = 0;
-    montoEl.value = Math.round(montoFinal);
+    montoEl.value = window._fmtMontoValor(montoFinal);
+};
+
+window._fmtMontoValor = function (n) {
+    n = Math.round(parseFloat(n) || 0);
+    return n > 0 ? '$ ' + n.toLocaleString('es-AR') : '';
+};
+
+window._parseMontoValor = function (v) {
+    return parseFloat((v || '').toString().replace(/[^\d]/g, '')) || 0;
+};
+
+window._formatMontoInput = function (el) {
+    if (!el) return;
+    const raw = window._parseMontoValor(el.value);
+    el.value = raw > 0 ? window._fmtMontoValor(raw) : '';
 };
 
 window._calcularResto = function (id) {
@@ -1774,10 +1789,10 @@ window._calcularResto = function (id) {
 };
 
 window._registrarSena = function (id) {
-    const monto1 = parseFloat(document.getElementById('sena1Monto')?.value) || 0;
+    const monto1 = window._parseMontoValor(document.getElementById('sena1Monto')?.value);
     const forma1 = document.getElementById('sena1Forma')?.value || 'Efectivo';
     const caja1 = document.getElementById('sena1Caja')?.value || '';
-    const monto2 = parseFloat(document.getElementById('sena2Monto')?.value) || 0;
+    const monto2 = window._parseMontoValor(document.getElementById('sena2Monto')?.value);
     const forma2 = document.getElementById('sena2Forma')?.value || 'Efectivo';
     const caja2 = document.getElementById('sena2Caja')?.value || '';
     const nota = document.getElementById('senaNota')?.value || '';
