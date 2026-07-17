@@ -1707,15 +1707,26 @@ window._toggleTipoPago = function (tipo) {
     window._tipoPagoActual = tipo;
     const btnSeña = document.getElementById('tipoPagoSeña');
     const btnSaldo = document.getElementById('tipoPagoSaldo');
+    const btnSegundoPago = document.getElementById('btnToggleSegundoPago');
     if (tipo === 'seña') {
         if (btnSeña) { btnSeña.style.background = '#1A1A1A'; btnSeña.style.border = '1px solid #3f3f46'; btnSeña.style.color = '#a1a1aa'; }
         if (btnSaldo) { btnSaldo.style.background = '#09090b'; btnSaldo.style.border = '1px solid #27272a'; btnSaldo.style.color = '#71717a'; }
+        if (btnSegundoPago) btnSegundoPago.style.display = '';
     } else {
         if (btnSaldo) { btnSaldo.style.background = '#10b981'; btnSaldo.style.border = '1px solid #10b981'; btnSaldo.style.color = 'white'; }
         if (btnSeña) { btnSeña.style.background = '#09090b'; btnSeña.style.border = '1px solid #27272a'; btnSeña.style.color = '#71717a'; }
         const m1 = document.getElementById('sena1Monto');
         if (m1 && window._senaPendiente > 0) m1.value = window._senaPendiente;
         window._actualizarMontoConDescuento(1);
+        // Saldo Final: se salda con un solo pago, ocultar y cerrar el segundo
+        if (btnSegundoPago) btnSegundoPago.style.display = 'none';
+        const bloque2 = document.getElementById('bloquePago2');
+        if (bloque2 && bloque2.style.display !== 'none') {
+            bloque2.style.display = 'none';
+            const m2 = document.getElementById('sena2Monto');
+            if (m2) m2.value = '';
+            if (btnSegundoPago) btnSegundoPago.textContent = '+ Agregar segundo pago (ej: parte en transferencia + parte en efectivo)';
+        }
     }
 };
 
