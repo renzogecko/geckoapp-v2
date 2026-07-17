@@ -1784,6 +1784,28 @@ window._formatMontoInput = function (el) {
     el.value = raw > 0 ? window._fmtMontoValor(raw) : '';
 };
 
+// ══════════════════════════════════════════════════════
+// FORMATEO GENÉRICO DE MONTOS (puntos de miles, sin símbolo $)
+// Cualquier input con class="gecko-money-fmt" se formatea solo.
+// Para leer su valor real en JS, usar window._parseMiles(el.value)
+// en vez de parseFloat(el.value).
+// ══════════════════════════════════════════════════════
+window._fmtMiles = function (n) {
+    n = Math.round(parseFloat(n) || 0);
+    return n > 0 ? n.toLocaleString('es-AR') : '';
+};
+
+window._parseMiles = function (v) {
+    return parseFloat((v || '').toString().replace(/[^\d]/g, '')) || 0;
+};
+
+document.addEventListener('input', function (e) {
+    if (e.target && e.target.classList && e.target.classList.contains('gecko-money-fmt')) {
+        const raw = window._parseMiles(e.target.value);
+        e.target.value = raw > 0 ? window._fmtMiles(raw) : '';
+    }
+});
+
 window._calcularResto = function (id) {
     // Podría autocompletar el 2do pago, por ahora vacío
 };
@@ -4595,7 +4617,7 @@ window.addEventListener('load', function () {
         window.abrirModalPagoGlobal = window.abrirModalCobro;
 
         window.confirmarCobro = function () {
-            const montoOriginal = parseFloat(document.getElementById('cobroMonto')?.value) || 0;
+            const montoOriginal = window._parseMiles(document.getElementById('cobroMonto')?.value);
             const cajaNombre = document.getElementById('cobroCaja')?.value || '';
 
             if (montoOriginal <= 0) { alert('Ingresá un monto válido.'); return; }
