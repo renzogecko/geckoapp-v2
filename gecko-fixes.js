@@ -2078,8 +2078,7 @@ window._renderizarFinanzasCompleto = async function () {
 window.renderizarFinanzas = window._renderizarFinanzasCompleto;
 
 window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
-    const _ls = window._localStorage_original || localStorage;
-    const movs = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+    const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
     const mov = movs.find(m => String(m.id) === String(movId));
     if (!mov) return;
 
@@ -2106,18 +2105,18 @@ window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
 
     document.getElementById('_geckoElimMovHistOk').onclick = function () {
         modal.remove();
-        const cajas = JSON.parse(_ls.getItem('gecko_cajas') || '[]');
+        const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
         const cajaObj = cajas.find(c => c.nombre === mov.caja);
         if (cajaObj) {
             if (mov.tipo === 'Ingreso') { cajaObj.saldo -= mov.monto; } else { cajaObj.saldo += mov.monto; }
-            _ls.setItem('gecko_cajas', JSON.stringify(cajas));
+            localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
             window.LISTA_CAJAS = cajas;
         }
-        const dbMovs = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
+        const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
         const dbIndex = dbMovs.findIndex(m => String(m.id) === String(mov.id));
         if (dbIndex !== -1) {
             dbMovs.splice(dbIndex, 1);
-            _ls.setItem('gecko_movimientos', JSON.stringify(dbMovs));
+            localStorage.setItem('gecko_movimientos', JSON.stringify(dbMovs));
             window.LISTA_MOVIMIENTOS = dbMovs;
         }
         if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
