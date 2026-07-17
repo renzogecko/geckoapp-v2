@@ -1605,8 +1605,12 @@ window.abrirModalSena = function (id) {
                                 onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
                         </div>
                         <div>
-                            <label style="${labelStyle}">Forma de pago</label>
-                            ${window._htmlDropdownPago('sena1Forma', formasPago, 'Efectivo')}
+                            <label style="${labelStyle}">Ingresa a caja</label>
+                            ${cajasList.length > 0 ? `
+                            <select id="sena1Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
+                                onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
+                                ${cajasList.map(c => `<option value="${c}" ${c === cajasDefault ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>` : `<p style="color:#ef4444;font-size:11px;">No hay cajas creadas. Creá una en Finanzas.</p>`}
                         </div>
                     </div>
                     <div style="margin-bottom:12px;">
@@ -1614,21 +1618,13 @@ window.abrirModalSena = function (id) {
                             <input type="checkbox" id="sena1DescChk" onchange="window._toggleDescuentoPago(1)" style="width:16px;height:16px;accent-color:#F15A24;cursor:pointer;">
                             Aplicar descuento a este pago
                         </label>
-                        <div id="sena1DescWrap" style="display:none;margin-top:10px;display:grid;grid-template-columns:90px 1fr;gap:10px;">
-                            <select id="sena1DescTipo" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 10px;color:white;font-size:12px;font-weight:700;">
+                        <div id="sena1DescWrap" style="display:none;margin-top:10px;grid-template-columns:90px 1fr;gap:10px;">
+                            <select id="sena1DescTipo" onchange="window._actualizarMontoConDescuento(1)" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 10px;color:white;font-size:12px;font-weight:700;">
                                 <option value="pct">%</option>
                                 <option value="fijo">$ fijo</option>
                             </select>
-                            <input type="number" id="sena1DescValor" placeholder="0" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 14px;color:white;font-size:14px;font-weight:600;outline:none;">
+                            <input type="number" id="sena1DescValor" placeholder="0" oninput="window._actualizarMontoConDescuento(1)" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 14px;color:white;font-size:14px;font-weight:600;outline:none;">
                         </div>
-                    </div>
-                    <div>
-                        <label style="${labelStyle}">Ingresa a caja</label>
-                        ${cajasList.length > 0 ? `
-                        <select id="sena1Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
-                            onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
-                            ${cajasList.map(c => `<option value="${c}" ${c === cajasDefault ? 'selected' : ''}>${c}</option>`).join('')}
-                        </select>` : `<p style="color:#ef4444;font-size:11px;">No hay cajas creadas. Creá una en Finanzas.</p>`}
                     </div>
                 </div>
 
@@ -1649,8 +1645,12 @@ window.abrirModalSena = function (id) {
                                 onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
                         </div>
                         <div>
-                            <label style="${labelStyle}">Forma de pago</label>
-                            ${window._htmlDropdownPago('sena2Forma', formasPago, 'Efectivo')}
+                            <label style="${labelStyle}">Ingresa a caja</label>
+                            ${cajasList.length > 0 ? `
+                            <select id="sena2Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
+                                onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
+                                ${cajasList.map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>` : ''}
                         </div>
                     </div>
                     <div style="margin-bottom:12px;">
@@ -1658,21 +1658,13 @@ window.abrirModalSena = function (id) {
                             <input type="checkbox" id="sena2DescChk" onchange="window._toggleDescuentoPago(2)" style="width:16px;height:16px;accent-color:#F15A24;cursor:pointer;">
                             Aplicar descuento a este pago
                         </label>
-                        <div id="sena2DescWrap" style="display:none;margin-top:10px;display:grid;grid-template-columns:90px 1fr;gap:10px;">
-                            <select id="sena2DescTipo" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 10px;color:white;font-size:12px;font-weight:700;">
+                        <div id="sena2DescWrap" style="display:none;margin-top:10px;grid-template-columns:90px 1fr;gap:10px;">
+                            <select id="sena2DescTipo" onchange="window._actualizarMontoConDescuento(2)" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 10px;color:white;font-size:12px;font-weight:700;">
                                 <option value="pct">%</option>
                                 <option value="fijo">$ fijo</option>
                             </select>
-                            <input type="number" id="sena2DescValor" placeholder="0" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 14px;color:white;font-size:14px;font-weight:600;outline:none;">
+                            <input type="number" id="sena2DescValor" placeholder="0" oninput="window._actualizarMontoConDescuento(2)" style="background:#131314;border:1px solid #333333;border-radius:12px;padding:11px 14px;color:white;font-size:14px;font-weight:600;outline:none;">
                         </div>
-                    </div>
-                    <div>
-                        <label style="${labelStyle}">Ingresa a caja</label>
-                        ${cajasList.length > 0 ? `
-                        <select id="sena2Caja" style="${inputStyle} appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23ffffff%27 stroke-width=%272.5%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27m19 9-7 7-7-7%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:13px;cursor:pointer;"
-                            onfocus="this.style.borderColor='#F15A24'" onblur="this.style.borderColor='#333333'">
-                            ${cajasList.map(c => `<option value="${c}">${c}</option>`).join('')}
-                        </select>` : ''}
                     </div>
                 </div>
 
@@ -1723,6 +1715,7 @@ window._toggleTipoPago = function (tipo) {
         if (btnSeña) { btnSeña.style.background = '#09090b'; btnSeña.style.border = '1px solid #27272a'; btnSeña.style.color = '#71717a'; }
         const m1 = document.getElementById('sena1Monto');
         if (m1 && window._senaPendiente > 0) m1.value = window._senaPendiente;
+        window._actualizarMontoConDescuento(1);
     }
 };
 
@@ -1746,6 +1739,23 @@ window._toggleDescuentoPago = function (n) {
         const valor = document.getElementById(`sena${n}DescValor`);
         if (valor) valor.value = '';
     }
+    window._actualizarMontoConDescuento(n);
+};
+
+window._actualizarMontoConDescuento = function (n) {
+    // Solo se autocalcula cuando el tipo de pago activo es "Saldo Final"
+    // y es el Pago 1 (el que se autocompleta con el saldo pendiente).
+    if (window._tipoPagoActual !== 'saldo' || n !== 1) return;
+    const montoEl = document.getElementById('sena1Monto');
+    if (!montoEl) return;
+    const base = window._senaPendiente || 0;
+    const chk = document.getElementById('sena1DescChk');
+    if (!chk?.checked) { montoEl.value = Math.round(base); return; }
+    const tipo = document.getElementById('sena1DescTipo')?.value || 'pct';
+    const valor = parseFloat(document.getElementById('sena1DescValor')?.value) || 0;
+    let montoFinal = tipo === 'pct' ? base * (1 - valor / 100) : base - valor;
+    if (montoFinal < 0) montoFinal = 0;
+    montoEl.value = Math.round(montoFinal);
 };
 
 window._calcularResto = function (id) {
@@ -1842,7 +1852,7 @@ window._registrarSena = function (id) {
         mov2 = {
             id: 'mov_' + (Date.now() + 1),
             fecha, caja: caja2, tipo: 'Ingreso', monto: monto2,
-            detalle: `${desc} OT#${id} - ${cliente} (${forma2})${descMonto2 > 0 ? ` (Cubre $${Math.round(montoNominal2).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
+            detalle: `${desc} OT#${id} - ${cliente} (${caja2})${descMonto2 > 0 ? ` (Cubre $${Math.round(montoNominal2).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
             categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
             otsAfectadas: [{ id: id, monto: montoNominal2 }]
         };
