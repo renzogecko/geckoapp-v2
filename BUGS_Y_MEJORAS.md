@@ -725,3 +725,67 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
   RESUELTO: agregarItemAlCarritoUI (main.js) ahora llama a la función de 
   recálculo correcta según la categoría activa. No afecta el 
   funcionamiento de Impresión 3D, que ya llamaba a la función correcta.
+
+---
+
+### Sesión 16-17/07/2026 — Pagos combinados, descuentos y Cuenta Corriente
+
+**Resueltos:**
+- ✅ Nombre del cliente clickeable en las listas de Presupuestos y OTs, 
+  abre directo la Ficha de Cliente / Cuenta Corriente (antes había que 
+  ir manualmente a la sección Clientes).
+- ✅ Al convertir un Presupuesto a OT, el total registrado ahora es 
+  siempre el Subtotal (suma de los ítems, sin el descuento global del 
+  presupuesto), incluyendo el IVA si estaba activado. El descuento del 
+  presupuesto queda solo como dato informativo para el PDF del cliente, 
+  nunca vuelve a afectar la deuda real registrada.
+- ✅ [Sistema de pagos combinados con descuento — Etapa A] Se agregó 
+  checkbox de descuento (%/$ fijo) a cada pago del modal de Registro de 
+  Pago. Se ajustó dos veces la lógica de cálculo hasta llegar a la 
+  versión final: el campo "Monto" representa la plata REAL que el 
+  cliente entrega; si hay descuento, el sistema calcula hacia arriba 
+  (fórmula inversa: nominal = real ÷ (1−%), o real + valor fijo) cuánta 
+  deuda del presupuesto cubre ese pago. La caja recibe exactamente lo 
+  escrito; la diferencia queda registrada como movimiento tipo 
+  "Descuento" (categoría "Descuento Otorgado"), sin afectar ninguna 
+  caja. Esto garantiza que la Cuenta Corriente del cliente cierre 
+  siempre en $0, sin importar cuántos pagos con descuento se apliquen.
+- ✅ Modal de Registro de Pago reordenado: se eliminó el selector "Forma 
+  de pago" (no cumplía función real) y se puso "Ingresa a caja" en su 
+  lugar, junto al Monto.
+- ✅ En modo "Saldo Final", el campo Monto se autocompleta con el saldo 
+  pendiente, y si se activa el descuento, se recalcula en tiempo real 
+  (saldo × (1−%) o saldo − valor fijo) mientras se escribe el 
+  porcentaje/monto — sin necesidad de una tarjeta nueva.
+- ✅ Se oculta el botón "+ Agregar segundo pago" cuando el modo activo 
+  es "Saldo Final", para evitar que el autocompletado de Monto1 se 
+  cruce con un Monto2 cargado en simultáneo (fuente de un posible 
+  descuadre de cuenta corriente).
+- ✅ Formato de miles ($ con puntos) aplicado al campo Monto del modal 
+  de Registro de Pago, y mecanismo reusable genérico (clase 
+  "gecko-money-fmt" + window._fmtMiles / window._parseMiles) instalado 
+  para aplicar el mismo formato a otros campos de dinero de la app sin 
+  repetir lógica. Ya aplicado también al campo del modal "Cobro de 
+  Saldo" (Ficha de Cliente).
+- ✅ Reportes (Finanzas): nueva tarjeta "Flujo de Caja Real" (Cajas − 
+  Costos Fijos) arriba de todo, con color dinámico verde/rojo/amarillo 
+  según el resultado, ícono y título a juego. "Punto de Equilibrio" 
+  pasó a ocupar la mitad del ancho, con "Descuentos Otorgados" (monto, 
+  cantidad de pagos con descuento, % sobre ingresos) al lado.
+- ✅ Modal "Historial de Caja" (al clickear una tarjeta de caja): se 
+  agregó botón de eliminar (🗑) por movimiento, con la misma lógica de 
+  reversión de saldo que la lista general. Bug post-implementación 
+  corregido: el borrado usaba un localStorage alternativo que no 
+  sincronizaba con la base de datos (volvía a aparecer con F5) — ahora 
+  usa el localStorage normal, igual que el borrado de la lista general, 
+  y persiste correctamente.
+
+**Pendiente para sesión dedicada:**
+- ⏳ [MEJ-021 · Etapa 2] Botón "Editar" por ítem dentro del 
+  Presupuestador Manual, que lleve de vuelta al cotizador original con 
+  los datos precargados, y mecanismo para volver con los cambios 
+  aplicados sin duplicar el ítem.
+- ⏳ [MEJ-022] Reparto automático (FIFO) de un pago único registrado 
+  desde la Cuenta Corriente entre varios trabajos pendientes del mismo 
+  cliente, marcando visualmente cuáles quedan "Saldados" a medida que 
+  se completan.
