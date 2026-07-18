@@ -5373,21 +5373,21 @@ window._geckoRenderFijo = function () {
             tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
 
             tr.innerHTML = `
-            <td class="py-4 px-6" data-accion="ficha">
+            <td class="py-4 px-6 sticky left-0 z-10 bg-white dark:bg-darkCard" data-accion="ficha" style="box-shadow: 2px 0 6px rgba(0,0,0,0.08);">
                 <div class="flex items-center">
                     <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
                     ${window._geckoBadgeFijo(c.nombre)}
                 </div>
                 ${c.rubro ? `<p class="text-zinc-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">${c.rubro}</p>` : ''}
             </td>
-            <td class="py-4 px-6" data-accion="ficha"><div class="flex flex-wrap items-center gap-1">${wp}${em}</div></td>
-            <td class="py-4 px-6" data-accion="ficha"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
-            <td class="py-4 px-6 text-right" data-accion="ficha">
+            <td class="py-4 px-6 hidden lg:table-cell" data-accion="ficha"><div class="flex flex-wrap items-center gap-1">${wp}${em}</div></td>
+            <td class="py-4 px-6 hidden md:table-cell" data-accion="ficha"><span class="font-black ${saldo > 0 ? 'text-red-500' : 'text-gecko'}">$${Math.round(saldo).toLocaleString('es-AR')}</span></td>
+            <td class="py-4 px-6 text-right hidden xl:table-cell" data-accion="ficha">
                 <button class="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-darkBg text-gray-700 dark:text-gray-300 font-bold hover:bg-gecko hover:text-white transition-all text-[11px] uppercase tracking-widest inline-flex items-center gap-2" data-accion="ficha">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>Ficha / CC
                 </button>
             </td>
-            <td class="py-4 px-6 text-center">
+            <td class="py-4 px-6 text-center sticky right-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: -2px 0 6px rgba(0,0,0,0.08);">
                 <div class="flex items-center justify-center gap-2">
                     <button data-accion="editar" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
                     <button data-accion="eliminar" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
