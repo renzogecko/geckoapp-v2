@@ -654,19 +654,19 @@ window.renderPresupuestos = async function () {
         const esOTEnHistorial = mostrarHistorial && p.status === 'OT';
         return `
         <tr draggable="true" data-drag-key="${p.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" style="cursor:grab;">
-            <td class="py-4 px-6 font-black text-zinc-400 text-[11px] hidden md:table-cell">#${p.id}</td>
-            <td class="py-4 px-6 text-[12px] text-zinc-400 font-bold hidden md:table-cell">${p.fecha || ''}</td>
+            <td class="py-4 px-6 font-black text-zinc-400 text-[11px] hidden xl:table-cell">#${p.id}</td>
+            <td class="py-4 px-6 text-[12px] text-zinc-400 font-bold hidden lg:table-cell">${p.fecha || ''}</td>
             <td class="py-4 px-6 sticky left-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: 2px 0 6px rgba(0,0,0,0.08);">
                 <span onclick="event.stopPropagation();window.abrirFichaCliente('${(p.cliente || '').replace(/'/g, "\\'")}')" class="font-extrabold dark:text-white text-[14px] uppercase cursor-pointer" title="Ver ficha de cliente">${p.cliente || 'S/N'}</span>
             </td>
-            <td class="py-4 px-6 max-w-[220px]">
+            <td class="py-4 px-6 max-w-[220px] hidden md:table-cell">
                 <div class="flex flex-col gap-1">
                     ${esOTEnHistorial ? '<span style="display:inline-block;background:rgba(241,90,36,0.1);color:#F15A24;padding:4px 10px;border-radius:8px;font-size:10px;text-transform:uppercase;font-weight:900;width:fit-content;">Convertido a OT #' + p.id + '</span>' : ''}
                     ${window._tagCategoria(p)}
                     <span class="text-[11px] text-zinc-500 font-medium truncate">${resumen}</span>
                 </div>
             </td>
-            <td class="py-4 px-6 font-black text-gecko text-[14px]">$${Math.round(p.total || 0).toLocaleString('es-AR')}</td>
+            <td class="py-4 px-6 font-black text-gecko text-[14px] hidden sm:table-cell">$${Math.round(p.total || 0).toLocaleString('es-AR')}</td>
             <td class="py-4 px-6 text-right sticky right-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: -2px 0 6px rgba(0,0,0,0.08);">
                 <div class="flex justify-end gap-2">
                     <button onclick="window.verDocumento(${p.id})" title="Ver"
