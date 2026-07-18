@@ -3856,14 +3856,14 @@ window.addEventListener('load', function () {
                 ).join('');
 
                 const _botonesAccion = mostrarHistorial ? `
-    <td class="py-4 px-6 text-right">
+    <td class="py-4 px-6 text-right sticky right-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: -2px 0 6px rgba(0,0,0,0.08);">
         <div class="flex justify-end gap-2">
             <button onclick="window.verDocumento('${ot.id}')" title="Ver OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
             <button onclick="window._desarchivarOT('${ot.id}')" title="Desarchivar" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-amber-400 hover:border-amber-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></button>
             <button onclick="window.eliminarOT('${ot.id}')" title="Eliminar" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-red-400 hover:border-red-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
         </div>
     </td>` : `
-    <td class="py-4 px-6 text-right">
+    <td class="py-4 px-6 text-right sticky right-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: -2px 0 6px rgba(0,0,0,0.08);">
         <div class="flex justify-end gap-2">
             <button onclick="window.verDocumento('${ot.id}')" title="Ver OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
             <button onclick="window.editarOT('${ot.id}')" title="Editar OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
@@ -3875,18 +3875,18 @@ window.addEventListener('load', function () {
 
                 return `
                 <tr draggable="true" data-drag-key="${ot.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800" style="cursor:grab;">
-                    <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500">#${ot.id}</td>
-                    <td class="py-4 px-6">
+                    <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500 hidden xl:table-cell">#${ot.id}</td>
+                    <td class="py-4 px-6 sticky left-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: 2px 0 6px rgba(0,0,0,0.08);">
                         <span onclick="event.stopPropagation();window.abrirFichaCliente('${(ot.cliente || '').replace(/'/g, "\\'")}')" class="text-[14px] font-extrabold dark:text-white uppercase cursor-pointer" title="Ver ficha de cliente">${ot.cliente || 'S/N'}</span>
                     </td>
-                    <td class="py-4 px-6 max-w-[200px]">
+                    <td class="py-4 px-6 max-w-[200px] hidden sm:table-cell">
                         <div class="flex flex-col">
                             ${window._tagCategoria(ot)}
                             <span class="text-[11px] text-zinc-500 font-medium truncate">${ot.titulo || (ot.items || []).map(it => it.textoOpciones || it.nombre).filter(Boolean).join(' · ') || 'Sin título'}</span>
                         </div>
                     </td>
-                    <td class="py-4 px-6 text-[11px] text-zinc-400 font-bold">${ot.fecha_entrega || '—'}</td>
-                    <td class="py-4 px-6 text-center">
+                    <td class="py-4 px-6 text-[11px] text-zinc-400 font-bold hidden lg:table-cell">${ot.fecha_entrega || '—'}</td>
+                    <td class="py-4 px-6 text-center hidden md:table-cell">
                         <div id="estado-ot-${ot.id}" style="position:relative;display:inline-block;">
                             <div onclick="window._toggleEstadoDropdown('${ot.id}',event)"
                                  style="display:flex;align-items:center;gap:8px;background:${color}22;border:1.5px solid ${color}55;border-radius:20px;padding:6px 10px 6px 12px;cursor:pointer;min-width:115px;">
