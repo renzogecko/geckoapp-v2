@@ -789,3 +789,55 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
   desde la Cuenta Corriente entre varios trabajos pendientes del mismo 
   cliente, marcando visualmente cuáles quedan "Saldados" a medida que 
   se completan.
+
+---
+
+### Unificación de archivos — 17/07/2026
+
+Se revisó el archivo viejo "Cambios y modificaciones.md" (que quedó 
+desactualizado y generaba confusión al convivir con este archivo 
+oficial) y se confirmó con Renzo el estado real de cada ítem pendiente 
+que tenía. El archivo viejo se elimina del repositorio; este es el 
+único registro que queda de su contenido.
+
+**Confirmados como ya resueltos (sin fecha exacta, verificados en 
+conjunto hoy):**
+- ✅ Carga de imágenes en el presupuesto (antes fallaban 2 imágenes).
+- ✅ Cuadro de condiciones de pago para el cliente — ya se imprime en 
+  el presupuesto.
+- ✅ Lista de Servicios — edición y eliminación funcionan correctamente 
+  (relacionado con RES-008/RES-011 de sesiones anteriores).
+- ✅ Convertir Presupuesto a OT — funciona correctamente (además 
+  reforzado por los cambios de la sesión de pagos combinados).
+- ✅ Edición de nombre de cliente — funciona (RES-012, sesión 26/06).
+- ✅ Cotizador Gráfica, tarjeta "Montado" — ya muestra las unidades 
+  (mts/cm/mm) en alto y ancho.
+- ✅ Tarjeta "Ítem actual" — ya quedó fija/flotante al hacer scroll en 
+  los cotizadores.
+- ✅ Mix de Ventas en Reportes — ya muestra por categoría 
+  (Gráfica/Industrial/Corpóreos), confirmado como el comportamiento 
+  deseado.
+
+**Pendientes reales, migrados a este archivo:**
+
+### [MEJ-023] Modernizar el diseño del Dashboard
+- **Sección:** Dashboard (pantalla de inicio)
+- **Descripción:** cambiar el estilo visual actual por algo más moderno.
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-024] Nueva sección de Agenda (estilo To-Do)
+- **Sección:** Nueva sección en el menú principal
+- **Descripción:** crear una sección de agenda personal, estilo To-Do 
+  de Microsoft, para uso interno del equipo.
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-025] Diseño de marca Gecko en el PDF de Cierre de Mes
+- **Sección:** Finanzas › Reportes › Cierre de Mes
+- **Descripción:** el PDF que se genera al cerrar el mes hoy tiene un 
+  diseño genérico; darle estilo de marca Gecko (tipografía, colores, 
+  logo), igual que ya tienen los PDFs de Presupuesto y OT.
+- **Estado:** 🔵 Pendiente
+
+(Nota: "Re-editar los ítems cargados al carrito", que también estaba en 
+el archivo viejo, ya está trackeado en este archivo como 
+MEJ-021 · Etapa 2 — no se duplica.)
