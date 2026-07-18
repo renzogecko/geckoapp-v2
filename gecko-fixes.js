@@ -656,7 +656,7 @@ window.renderPresupuestos = async function () {
         <tr draggable="true" data-drag-key="${p.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" style="cursor:grab;">
             <td class="py-4 px-6 font-black text-zinc-400 text-[11px]">#${p.id}</td>
             <td class="py-4 px-6 text-[12px] text-zinc-400 font-bold">${p.fecha || ''}</td>
-            <td class="py-4 px-6">
+            <td class="py-4 px-6 sticky left-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: 2px 0 6px rgba(0,0,0,0.08);">
                 <span onclick="event.stopPropagation();window.abrirFichaCliente('${(p.cliente || '').replace(/'/g, "\\'")}')" class="font-extrabold dark:text-white text-[14px] uppercase cursor-pointer" title="Ver ficha de cliente">${p.cliente || 'S/N'}</span>
             </td>
             <td class="py-4 px-6 max-w-[220px]">
@@ -667,7 +667,7 @@ window.renderPresupuestos = async function () {
                 </div>
             </td>
             <td class="py-4 px-6 font-black text-gecko text-[14px]">$${Math.round(p.total || 0).toLocaleString('es-AR')}</td>
-            <td class="py-4 px-6 text-right">
+            <td class="py-4 px-6 text-right sticky right-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: -2px 0 6px rgba(0,0,0,0.08);">
                 <div class="flex justify-end gap-2">
                     <button onclick="window.verDocumento(${p.id})" title="Ver"
                         class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
