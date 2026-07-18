@@ -654,8 +654,8 @@ window.renderPresupuestos = async function () {
         const esOTEnHistorial = mostrarHistorial && p.status === 'OT';
         return `
         <tr draggable="true" data-drag-key="${p.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" style="cursor:grab;">
-            <td class="py-4 px-6 font-black text-zinc-400 text-[11px]">#${p.id}</td>
-            <td class="py-4 px-6 text-[12px] text-zinc-400 font-bold">${p.fecha || ''}</td>
+            <td class="py-4 px-6 font-black text-zinc-400 text-[11px] hidden md:table-cell">#${p.id}</td>
+            <td class="py-4 px-6 text-[12px] text-zinc-400 font-bold hidden md:table-cell">${p.fecha || ''}</td>
             <td class="py-4 px-6 sticky left-0 z-10 bg-white dark:bg-darkCard" style="box-shadow: 2px 0 6px rgba(0,0,0,0.08);">
                 <span onclick="event.stopPropagation();window.abrirFichaCliente('${(p.cliente || '').replace(/'/g, "\\'")}')" class="font-extrabold dark:text-white text-[14px] uppercase cursor-pointer" title="Ver ficha de cliente">${p.cliente || 'S/N'}</span>
             </td>
