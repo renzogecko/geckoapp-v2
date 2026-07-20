@@ -3972,6 +3972,7 @@ window.addEventListener('load', function () {
                             cantidad: 1,
                             precio: item.costo || 0,
                             tipo: item.tipo || '',
+                            origenCotizador: item.origenCotizador || '',
                             parametrosOriginales: item.parametrosOriginales || null
                         };
                     }
@@ -5988,6 +5989,7 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
             cantidad: it.cantidad || 1,
             precio: it.precioUnitario || it.costo || 0,
             tipo: it.tipo || '',
+            origenCotizador: it.origenCotizador || '',
             parametrosOriginales: it.parametrosOriginales || null
         }));
         if (datosEdicion?.conIva) {
@@ -6150,11 +6152,29 @@ window._gpmMostrarAvisoEdicion = function () {
     document.body.appendChild(aviso);
 };
 
+window._gpmConfigOrigenes = {
+    'grafica_impresion': {
+        categoria: 'grafica',
+        multiFila: true,
+        setup: function () { window.graficaState = window.graficaState || {}; window.graficaState.tipoTrabajo = 'impresion'; },
+        calcFinal: function () { if (typeof GRAFICA !== 'undefined' && typeof GRAFICA.calcular === 'function') GRAFICA.calcular(); }
+    },
+    'grafica_corte': {
+        categoria: 'corte',
+        multiFila: false,
+        setup: function () {},
+        calcFinal: function () {}
+    }
+};
+
 window._gpmEditarItemGrafica = function (btn) {
     const itemDiv = btn.closest('.gpm-item');
     if (!itemDiv || !itemDiv.dataset.paramsOriginales) return;
     let params;
     try { params = JSON.parse(itemDiv.dataset.paramsOriginales); } catch (e) { return; }
+
+    const origen = itemDiv.dataset.origenCotizador || 'grafica_impresion';
+    const config = window._gpmConfigOrigenes[origen] || window._gpmConfigOrigenes['grafica_impresion'];
 
     const lista = document.getElementById('gpm-items-list');
     const index = Array.from(lista.children).indexOf(itemDiv);
@@ -6180,6 +6200,7 @@ window._gpmEditarItemGrafica = function (btn) {
             cantidad: it.querySelector('.gpm-qty')?.value || 1,
             precio: it.querySelector('.gpm-price')?.value || '',
             tipo: it.dataset.tipoOrigen || '',
+            origenCotizador: it.dataset.origenCotizador || '',
             parametrosOriginales: it.dataset.paramsOriginales ? JSON.parse(it.dataset.paramsOriginales) : null
         });
     });
@@ -6188,25 +6209,28 @@ window._gpmEditarItemGrafica = function (btn) {
     window._gpmIndiceEditando = index;
     window._gpmModoEdicionItem = true;
 
+    if (typeof config.setup === 'function') config.setup();
     window.switchMenu('cotizadores');
-    if (typeof window.cambiarCategoriaCotizador === 'function') window.cambiarCategoriaCotizador('grafica');
+    if (typeof window.cambiarCategoriaCotizador === 'function') window.cambiarCategoriaCotizador(config.categoria);
 
     setTimeout(() => {
-        const cont = document.getElementById('contenedorFilasVariables');
-        if (cont && params.filasVariablesHTML) cont.innerHTML = params.filasVariablesHTML;
-        if (cont && params.filasVariablesValores) {
-            const filas = cont.querySelectorAll('.gecko-input-row');
-            filas.forEach((fila, i) => {
-                const valoresFila = params.filasVariablesValores[i];
-                if (!valoresFila) return;
-                const inputs = fila.querySelectorAll('input');
-                inputs.forEach((inp, j) => {
-                    if (valoresFila[j] !== undefined) {
-                        inp.value = valoresFila[j];
-                        inp.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
+        if (config.multiFila) {
+            const cont = document.getElementById('contenedorFilasVariables');
+            if (cont && params.filasVariablesHTML) cont.innerHTML = params.filasVariablesHTML;
+            if (cont && params.filasVariablesValores) {
+                const filas = cont.querySelectorAll('.gecko-input-row');
+                filas.forEach((fila, i) => {
+                    const valoresFila = params.filasVariablesValores[i];
+                    if (!valoresFila) return;
+                    const inputs = fila.querySelectorAll('input');
+                    inputs.forEach((inp, j) => {
+                        if (valoresFila[j] !== undefined) {
+                            inp.value = valoresFila[j];
+                            inp.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    });
                 });
-            });
+            }
         }
         Object.keys(params.campos || {}).forEach(id => {
             const el = document.getElementById(id);
@@ -6231,7 +6255,7 @@ window._gpmEditarItemGrafica = function (btn) {
                     el.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
-            if (typeof GRAFICA !== 'undefined' && typeof GRAFICA.calcular === 'function') GRAFICA.calcular();
+            if (typeof config.calcFinal === 'function') config.calcFinal();
         }, 150);
         window._gpmMostrarAvisoEdicion();
     }, 250);
@@ -6285,13 +6309,14 @@ window._gpmAgregarItem = function (datos = null) {
     const desc = datos?.descripcion || '';
     const cant = datos?.cantidad || 1;
     const precio = datos?.precio || '';
-    const _tipoItem = datos?.tipo || '';
+    const _origenItem = datos?.origenCotizador || '';
     const _tieneParamsItem = !!datos?.parametrosOriginales;
-    const _muestraEditar = _tipoItem === 'grafica' && _tieneParamsItem;
+    const _muestraEditar = !!(window._gpmConfigOrigenes && window._gpmConfigOrigenes[_origenItem]) && _tieneParamsItem;
 
     const div = document.createElement('div');
     div.className = 'gpm-item';
     if (datos?.tipo) div.dataset.tipoOrigen = datos.tipo;
+    if (datos?.origenCotizador) div.dataset.origenCotizador = datos.origenCotizador;
     if (datos?.parametrosOriginales) div.dataset.paramsOriginales = JSON.stringify(datos.parametrosOriginales);
     div.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #333333;border-radius:0;margin-bottom:0;overflow:hidden;';
     div.innerHTML = `
@@ -6468,6 +6493,7 @@ window._gpmGuardar = function (status) {
             if (item.dataset.tipoOrigen) _tieneItemDeCotizadorReal = true;
             items.push({
                 tipo: item.dataset.tipoOrigen || '',
+                origenCotizador: item.dataset.origenCotizador || '',
                 nombre: titulo,
                 textoOpciones: titulo,
                 descripcion: desc || '',

@@ -586,6 +586,7 @@ window.abrirModalDoc = function (tipo) {
         cantidad: it.cantidad || 1,
         precio: it.precioUnitario || (it.costo / (it.cantidad || 1)) || it.costo || 0,
         tipo: it.tipo || '',
+        origenCotizador: it.origenCotizador || '',
         parametrosOriginales: it.parametrosOriginales || null
     }));
     window._gpmClienteDesdeCotzador = cliente !== 'Sin especificar' ? cliente : '';

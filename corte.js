@@ -496,14 +496,29 @@ window.GeckoCorte = {
             document.getElementById('modoGremio')?.checked;
         const gremioSuffix = isGremio ? ' (Gremio)' : '';
 
+        // ── Snapshot de parámetros crudos (MEJ-021 Etapa 2) ──
+        const _geckoSnapshotCorte = (function () {
+            const snap = { campos: {} };
+            document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    snap.campos[el.id] = el.checked;
+                } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                    snap.campos[el.id] = el.value;
+                }
+            });
+            return snap;
+        })();
+
         const item = {
             id: Date.now(),
             tipo: 'grafica',
+            origenCotizador: 'grafica_corte',
             nombre: `CORTE - ${this.state.matName}${gremioSuffix} - ${nombreTrabajo}`,
             identificacion: document.getElementById('corteNombre')?.value?.trim() || '',
             costo: this.state.totalFinal,
             detalle: this.state.detalle,
-            modoCalculo: 'Bobina/Nesting'
+            modoCalculo: 'Bobina/Nesting',
+            parametrosOriginales: _geckoSnapshotCorte
         };
 
         if (window.agregarItemAlPresupuesto) {

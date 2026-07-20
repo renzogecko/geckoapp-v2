@@ -793,6 +793,7 @@ window.GeckoGrafica = {
         const item = {
             id: Date.now(),
             tipo: 'grafica',
+            origenCotizador: 'grafica_impresion',
             nombre: nombreIdentificacion,
             identificacion: document.getElementById('graficaNombre')?.value?.trim() || '',
             textoOpciones: resumenOpciones,
