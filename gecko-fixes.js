@@ -6309,8 +6309,10 @@ window._gpmAgregarItem = function (datos = null) {
     const desc = datos?.descripcion || '';
     const cant = datos?.cantidad || 1;
     const precio = datos?.precio || '';
-    const _origenItem = datos?.origenCotizador || '';
     const _tieneParamsItem = !!datos?.parametrosOriginales;
+    // Ítems viejos (previos a "origenCotizador") con tipo grafica y datos
+    // guardados: asumir que son de Impresión, para no perder el botón Editar.
+    const _origenItem = datos?.origenCotizador || (datos?.tipo === 'grafica' && _tieneParamsItem ? 'grafica_impresion' : '');
     const _muestraEditar = !!(window._gpmConfigOrigenes && window._gpmConfigOrigenes[_origenItem]) && _tieneParamsItem;
 
     const div = document.createElement('div');
