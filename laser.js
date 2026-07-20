@@ -314,12 +314,41 @@ window.calcularCostoCorte = function () {
 
     // ── Guardar para carrito ──────────────────────────────────────────────────
     const nombre = document.getElementById('corteNombre')?.value?.trim() || 'Trabajo Láser/CNC';
+
+    // ── Snapshot de parámetros crudos (MEJ-021 Etapa 2) ──
+    const _geckoSnapshotLaser = (function () {
+        const snap = {
+            modoLaserCnc: window._laserCncModo || 'laser',
+            filasLaserHTML: document.getElementById('contenedorFilasLaser')?.innerHTML || '',
+            filasLaserValores: [],
+            filasAcabadosHTML: document.getElementById('contenedorFilasAcabados')?.innerHTML || '',
+            filasAcabadosValores: [],
+            campos: {}
+        };
+        document.querySelectorAll('#contenedorFilasLaser .fila-laser').forEach(fila => {
+            snap.filasLaserValores.push(Array.from(fila.querySelectorAll('input, select')).map(inp => inp.value));
+        });
+        document.querySelectorAll('#contenedorFilasAcabados .fila-acabado').forEach(fila => {
+            snap.filasAcabadosValores.push(Array.from(fila.querySelectorAll('input, select')).map(inp => inp.value));
+        });
+        document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                snap.campos[el.id] = el.checked;
+            } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                snap.campos[el.id] = el.value;
+            }
+        });
+        return snap;
+    })();
+
     window.itemActualCotizado = {
         tipo: 'laser_cnc',
+        origenCotizador: 'laser_cnc',
         textoOpciones: nombre,
         identificacion: nombre,
         costo: totalFinal,
-        otDetalle: auditLineas.map(l => l.texto).join(' | ')
+        otDetalle: auditLineas.map(l => l.texto).join(' | '),
+        parametrosOriginales: _geckoSnapshotLaser
     };
 
     // ── Auditor + Botón: siempre al final del panel ───────────────────────────

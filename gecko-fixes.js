@@ -6170,6 +6170,13 @@ window._gpmConfigOrigenes = {
         multiFila: false,
         setup: function (params) { if (params && params.modoTextil) window._textilModo = params.modoTextil; },
         calcFinal: function () { if (typeof window.calcularCostoTextil === 'function') window.calcularCostoTextil(); }
+    },
+    'laser_cnc': {
+        categoria: 'laser_cnc',
+        multiFila: false,
+        tipoRestauracion: 'laser_cnc',
+        setup: function (params) { if (params && params.modoLaserCnc) window._laserCncModo = params.modoLaserCnc; },
+        calcFinal: function () { if (typeof window.calcularCostoCorte === 'function') window.calcularCostoCorte(); }
     }
 };
 
@@ -6233,6 +6240,39 @@ window._gpmEditarItemGrafica = function (btn) {
                         if (valoresFila[j] !== undefined) {
                             inp.value = valoresFila[j];
                             inp.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    });
+                });
+            }
+        } else if (config.tipoRestauracion === 'laser_cnc') {
+            const contL = document.getElementById('contenedorFilasLaser');
+            if (contL && params.filasLaserHTML) contL.innerHTML = params.filasLaserHTML;
+            if (contL && params.filasLaserValores) {
+                contL.querySelectorAll('.fila-laser').forEach((fila, i) => {
+                    const valoresFila = params.filasLaserValores[i];
+                    if (!valoresFila) return;
+                    const inputs = fila.querySelectorAll('input, select');
+                    inputs.forEach((inp, j) => {
+                        if (valoresFila[j] !== undefined) {
+                            inp.value = valoresFila[j];
+                            inp.dispatchEvent(new Event('input', { bubbles: true }));
+                            inp.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                });
+            }
+            const contA = document.getElementById('contenedorFilasAcabados');
+            if (contA && params.filasAcabadosHTML) contA.innerHTML = params.filasAcabadosHTML;
+            if (contA && params.filasAcabadosValores) {
+                contA.querySelectorAll('.fila-acabado').forEach((fila, i) => {
+                    const valoresFila = params.filasAcabadosValores[i];
+                    if (!valoresFila) return;
+                    const inputs = fila.querySelectorAll('input, select');
+                    inputs.forEach((inp, j) => {
+                        if (valoresFila[j] !== undefined) {
+                            inp.value = valoresFila[j];
+                            inp.dispatchEvent(new Event('input', { bubbles: true }));
+                            inp.dispatchEvent(new Event('change', { bubbles: true }));
                         }
                     });
                 });
