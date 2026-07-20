@@ -3958,6 +3958,33 @@ window.addEventListener('load', function () {
             console.log('🦎 GECKO-FIX: Sidebar responsive (auto-cierre) activo.');
         })();
 
+        // ── MEJ-021 Etapa 2: interceptar agregarItemAlPresupuesto en modo edición ──
+        (function () {
+            var _origAgregarItemAlPresupuesto = window.agregarItemAlPresupuesto;
+            window.agregarItemAlPresupuesto = function (item) {
+                if (window._gpmModoEdicionItem && window._gpmBackupEdicion) {
+                    var idx = window._gpmIndiceEditando;
+                    var b = window._gpmBackupEdicion;
+                    if (b.items[idx]) {
+                        b.items[idx] = {
+                            titulo: item.nombre || item.textoOpciones || '',
+                            descripcion: item.otDetalle || '',
+                            cantidad: 1,
+                            precio: item.costo || 0,
+                            tipo: item.tipo || '',
+                            parametrosOriginales: item.parametrosOriginales || null
+                        };
+                    }
+                    window._gpmModoEdicionItem = false;
+                    document.getElementById('_gpmAvisoEdicion')?.remove();
+                    window._gpmRestaurarBackup();
+                    return;
+                }
+                if (typeof _origAgregarItemAlPresupuesto === 'function') return _origAgregarItemAlPresupuesto.apply(this, arguments);
+            };
+            console.log('🦎 GECKO-FIX: Interceptor de edición de ítems (MEJ-021 Etapa 2) activo.');
+        })();
+
         // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
         // main.js corre DESPUÉS de gecko-fixes.js (por defer), por eso hacemos el override aquí.
         window.renderizarMovimientos = function () {
@@ -5801,9 +5828,10 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
         <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">Ítems del presupuesto</p>
 
         <!-- Cabecera columnas -->
-        <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px 130px 100px 36px;gap:0;padding:0 0 10px;margin-bottom:10px;border-bottom:1px solid #333333;">
+        <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 36px 72px 130px 100px 36px;gap:0;padding:0 0 10px;margin-bottom:10px;border-bottom:1px solid #333333;">
           <span></span>
           <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;padding-left:12px;">Trabajo / descripción</span>
+          <span></span>
           <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:center;">Cant.</span>
           <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:right;padding-right:8px;">Precio unit.</span>
           <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#3f3f46;text-align:right;">Subtotal</span>
@@ -6106,6 +6134,117 @@ document.addEventListener('paste', function (e) {
 });
 
 // ── Agregar ítem ──
+// ══════════════════════════════════════════════════════════════════════
+// MEJ-021 Etapa 2 — Re-editar ítem de Gráfica desde el Presupuestador Manual
+// ══════════════════════════════════════════════════════════════════════
+
+window._gpmMostrarAvisoEdicion = function () {
+    document.getElementById('_gpmAvisoEdicion')?.remove();
+    const aviso = document.createElement('div');
+    aviso.id = '_gpmAvisoEdicion';
+    aviso.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#F15A24;color:white;padding:14px 20px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,0.3);flex-wrap:wrap;text-align:center;';
+    aviso.innerHTML = `
+        <span>✏️ Editando ítem del presupuesto — hacé los cambios y presioná "Añadir a Cotización" para aplicarlos y volver.</span>
+        <button onclick="window._gpmCancelarEdicionItem()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 16px;border-radius:8px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+    `;
+    document.body.appendChild(aviso);
+};
+
+window._gpmEditarItemGrafica = function (btn) {
+    const itemDiv = btn.closest('.gpm-item');
+    if (!itemDiv || !itemDiv.dataset.paramsOriginales) return;
+    let params;
+    try { params = JSON.parse(itemDiv.dataset.paramsOriginales); } catch (e) { return; }
+
+    const lista = document.getElementById('gpm-items-list');
+    const index = Array.from(lista.children).indexOf(itemDiv);
+
+    const backup = {
+        cliente: document.getElementById('gpmCliente')?.value || '',
+        titulo: document.getElementById('gpmTitulo')?.value || '',
+        categoria: document.getElementById('gpmCategoria')?.value || '',
+        notasInternas: document.getElementById('gpmNotasInternas')?.value || '',
+        condiciones: document.getElementById('gpmCondiciones')?.value || '',
+        fechaEntrega: document.getElementById('gpmEntrega')?.value || '',
+        conIva: document.getElementById('gpmTogIva')?.checked || false,
+        descOn: document.getElementById('gpmTogDesc')?.checked || false,
+        descVal: document.getElementById('gpmDescVal')?.value || '',
+        descTipo: document.getElementById('gpmDescTipo')?.value || 'pct',
+        editandoPresupuestoId: window._editandoPresupuestoId || null,
+        items: []
+    };
+    document.querySelectorAll('#gpm-items-list .gpm-item').forEach(it => {
+        backup.items.push({
+            titulo: it.querySelector('.gpm-item-title')?.value || '',
+            descripcion: it.querySelector('.gpm-item-desc')?.value || '',
+            cantidad: it.querySelector('.gpm-qty')?.value || 1,
+            precio: it.querySelector('.gpm-price')?.value || '',
+            tipo: it.dataset.tipoOrigen || '',
+            parametrosOriginales: it.dataset.paramsOriginales ? JSON.parse(it.dataset.paramsOriginales) : null
+        });
+    });
+
+    window._gpmBackupEdicion = backup;
+    window._gpmIndiceEditando = index;
+    window._gpmModoEdicionItem = true;
+
+    window.switchMenu('cotizadores');
+    if (typeof window.cambiarCategoriaCotizador === 'function') window.cambiarCategoriaCotizador('grafica');
+
+    setTimeout(() => {
+        const cont = document.getElementById('contenedorFilasVariables');
+        if (cont && params.filasVariablesHTML) cont.innerHTML = params.filasVariablesHTML;
+        Object.keys(params.campos || {}).forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.type === 'checkbox' || el.type === 'radio') el.checked = params.campos[id];
+            else el.value = params.campos[id];
+        });
+        if (typeof GRAFICA !== 'undefined' && typeof GRAFICA.calcular === 'function') GRAFICA.calcular();
+        window._gpmMostrarAvisoEdicion();
+    }, 250);
+};
+
+window._gpmCancelarEdicionItem = function () {
+    document.getElementById('_gpmAvisoEdicion')?.remove();
+    window._gpmModoEdicionItem = false;
+    window._gpmRestaurarBackup();
+};
+
+window._gpmRestaurarBackup = function () {
+    const b = window._gpmBackupEdicion;
+    if (!b) return;
+    window.switchMenu('presupuestoManual');
+    window._gpmAbrirManualReal(b.editandoPresupuestoId);
+    setTimeout(() => {
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        setVal('gpmCliente', b.cliente);
+        setVal('gpmTitulo', b.titulo);
+        setVal('gpmCategoria', b.categoria);
+        setVal('gpmNotasInternas', b.notasInternas);
+        setVal('gpmCondiciones', b.condiciones);
+        setVal('gpmEntrega', b.fechaEntrega);
+        const listaItems = document.getElementById('gpm-items-list');
+        if (listaItems) listaItems.innerHTML = '';
+        b.items.forEach(it => window._gpmAgregarItem(it));
+        if (b.conIva) {
+            document.getElementById('gpmTogIva').checked = true;
+            window._gpmSyncToggle('gpmTogIva', 'gpmTogIvaSlider', 'gpmTogIvaThumb');
+        }
+        if (b.descOn) {
+            document.getElementById('gpmTogDesc').checked = true;
+            window._gpmSyncToggle('gpmTogDesc', 'gpmTogDescSlider', 'gpmTogDescThumb');
+            setVal('gpmDescVal', b.descVal);
+            setVal('gpmDescTipo', b.descTipo);
+            document.getElementById('gpmDescPanel').style.display = 'flex';
+            document.getElementById('gpmRowDesc').style.display = 'flex';
+        }
+        window._gpmCalc();
+        window._gpmBackupEdicion = null;
+        window._gpmIndiceEditando = null;
+    }, 150);
+};
+
 window._gpmAgregarItem = function (datos = null) {
     const lista = document.getElementById('gpm-items-list');
     if (!lista) return;
@@ -6114,6 +6253,9 @@ window._gpmAgregarItem = function (datos = null) {
     const desc = datos?.descripcion || '';
     const cant = datos?.cantidad || 1;
     const precio = datos?.precio || '';
+    const _tipoItem = datos?.tipo || '';
+    const _tieneParamsItem = !!datos?.parametrosOriginales;
+    const _muestraEditar = _tipoItem === 'grafica' && _tieneParamsItem;
 
     const div = document.createElement('div');
     div.className = 'gpm-item';
@@ -6121,7 +6263,7 @@ window._gpmAgregarItem = function (datos = null) {
     if (datos?.parametrosOriginales) div.dataset.paramsOriginales = JSON.stringify(datos.parametrosOriginales);
     div.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #333333;border-radius:0;margin-bottom:0;overflow:hidden;';
     div.innerHTML = `
-      <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px 130px 100px 36px;align-items:stretch;">
+      <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 36px 72px 130px 100px 36px;align-items:stretch;">
 
         <div style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#F15A24;">${String(n).padStart(2, '0')}</div>
 
@@ -6135,6 +6277,16 @@ window._gpmAgregarItem = function (datos = null) {
             placeholder="Descripción detallada (dimensiones, material, acabado...)"
             oninput="window._gpmCalc()"
             style="background:transparent !important;border:none !important;border-bottom:none !important;outline:none !important;font-size:12px !important;font-weight:400 !important;color:#71717a !important;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;" />
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:center;border-left:1px solid #333333;">
+          ${_muestraEditar ? `
+          <button onclick="window._gpmEditarItemGrafica(this)" title="Editar en el cotizador"
+            style="background:transparent;border:none;color:#71717a;cursor:pointer;padding:8px;border-radius:8px;display:flex;align-items:center;"
+            onmouseover="this.style.color='#F15A24';this.style.background='rgba(241,90,36,0.1)'"
+            onmouseout="this.style.color='#71717a';this.style.background='transparent'">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>` : ''}
         </div>
 
         <div style="display:flex;align-items:center;justify-content:center;padding:10px 8px;border-left:1px solid #333333;">
