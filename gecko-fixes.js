@@ -3927,6 +3927,37 @@ window.addEventListener('load', function () {
             window.renderOts();
         }
 
+        // ── Sidebar responsive: auto-cerrar al navegar o clickear afuera ──
+        (function () {
+            var _origSwitchMenu = window.switchMenu;
+            if (typeof _origSwitchMenu === 'function') {
+                window.switchMenu = function (view) {
+                    _origSwitchMenu.apply(this, arguments);
+                    // Auto-cerrar el sidebar en mobile/tablet al elegir una sección
+                    if (window.innerWidth < 1024) {
+                        var sidebarEl = document.getElementById('sidebar');
+                        if (sidebarEl && !sidebarEl.classList.contains('-translate-x-full')) {
+                            if (typeof window.toggleSidebar === 'function') window.toggleSidebar();
+                        }
+                    }
+                };
+            }
+
+            // Cerrar el sidebar al clickear en cualquier lugar fuera de él
+            document.addEventListener('click', function (e) {
+                if (window.innerWidth >= 1024) return;
+                var sidebarEl = document.getElementById('sidebar');
+                if (!sidebarEl || sidebarEl.classList.contains('-translate-x-full')) return;
+                var clickedInsideSidebar = sidebarEl.contains(e.target);
+                var clickedHamburger = e.target.closest('button[onclick="toggleSidebar()"]');
+                if (!clickedInsideSidebar && !clickedHamburger) {
+                    if (typeof window.toggleSidebar === 'function') window.toggleSidebar();
+                }
+            });
+
+            console.log('🦎 GECKO-FIX: Sidebar responsive (auto-cierre) activo.');
+        })();
+
         // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
         // main.js corre DESPUÉS de gecko-fixes.js (por defer), por eso hacemos el override aquí.
         window.renderizarMovimientos = function () {
