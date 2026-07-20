@@ -4529,7 +4529,7 @@ window.addEventListener('load', function () {
                         </div>
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Tipo</label>
-                            <select id="editMovTipo" class="gecko-select-modal">
+                            <select id="editMovTipo" style="width:100% !important;background-color:#1e1f20 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#f1f5f9 !important;font-size:14px !important;font-weight:600 !important;outline:none !important;cursor:pointer !important;box-sizing:border-box !important;appearance:none !important;-webkit-appearance:none !important;-moz-appearance:none !important;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E&quot;) !important;background-repeat:no-repeat !important;background-position:right 14px center !important;background-size:13px !important;">
                                 <option value="Ingreso" ${mov.tipo === 'Ingreso' ? 'selected' : ''}>Ingreso</option>
                                 <option value="Egreso" ${mov.tipo === 'Egreso' ? 'selected' : ''}>Egreso</option>
                             </select>
@@ -4539,13 +4539,13 @@ window.addEventListener('load', function () {
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Categoría</label>
-                            <select id="editMovCategoria" class="gecko-select-modal">
+                            <select id="editMovCategoria" style="width:100% !important;background-color:#1e1f20 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#f1f5f9 !important;font-size:14px !important;font-weight:600 !important;outline:none !important;cursor:pointer !important;box-sizing:border-box !important;appearance:none !important;-webkit-appearance:none !important;-moz-appearance:none !important;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E&quot;) !important;background-repeat:no-repeat !important;background-position:right 14px center !important;background-size:13px !important;">
                                 ${catOpts}
                             </select>
                         </div>
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Caja</label>
-                            <select id="editMovCaja" class="gecko-select-modal">
+                            <select id="editMovCaja" style="width:100% !important;background-color:#1e1f20 !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 16px !important;color:#f1f5f9 !important;font-size:14px !important;font-weight:600 !important;outline:none !important;cursor:pointer !important;box-sizing:border-box !important;appearance:none !important;-webkit-appearance:none !important;-moz-appearance:none !important;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E&quot;) !important;background-repeat:no-repeat !important;background-position:right 14px center !important;background-size:13px !important;">
                                 ${cajasOpts}
                             </select>
                         </div>
