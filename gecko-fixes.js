@@ -4479,7 +4479,129 @@ window.addEventListener('load', function () {
         };
 
         window.editarMovimiento = function (index) {
-            alert('La edición de movimientos estará disponible próximamente. Por ahora puedes eliminarlo y crearlo de nuevo.');
+            const movs = window._geckoMovsDisplayed || window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+            const mov = movs[index];
+            if (!mov) return;
+
+            const categoriasBloqueadas = ['Seña', 'Cobro Final', 'Descuento Otorgado'];
+            if (categoriasBloqueadas.includes(mov.categoria)) {
+                document.getElementById('_geckoAvisoEditMov')?.remove();
+                const aviso = document.createElement('div');
+                aviso.id = '_geckoAvisoEditMov';
+                aviso.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+                aviso.innerHTML = `
+                    <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+                        <div style="width:56px;height:56px;background:rgba(251,191,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                        </div>
+                        <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">No se puede editar este movimiento</h3>
+                        <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Este movimiento está vinculado a un pago de OT (${mov.categoria}). Editarlo podría desincronizar el saldo de la orden de trabajo. Si necesitás corregirlo, eliminalo y registrá el pago de nuevo desde la OT correspondiente.</p>
+                        <button onclick="document.getElementById('_geckoAvisoEditMov').remove()"
+                            style="width:100%;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Entendido</button>
+                    </div>`;
+                document.body.appendChild(aviso);
+                aviso.addEventListener('click', e => { if (e.target === aviso) aviso.remove(); });
+                return;
+            }
+
+            document.getElementById('_geckoModalEditMov')?.remove();
+            const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const cajasOpts = cajas.map(c => `<option value="${c.nombre}" ${c.nombre === mov.caja ? 'selected' : ''}>${c.nombre}</option>`).join('');
+            const categoriasList = ['Varios', 'Gastos Fijos', 'Alquiler', 'Sueldos', 'Impuestos', 'Insumos', 'Transferencia', 'Servicios'];
+            const catOptsList = categoriasList.includes(mov.categoria) ? categoriasList : [mov.categoria, ...categoriasList];
+            const catOpts = catOptsList.map(c => `<option value="${c}" ${c === mov.categoria ? 'selected' : ''}>${c}</option>`).join('');
+
+            const modal = document.createElement('div');
+            modal.id = '_geckoModalEditMov';
+            modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+            modal.innerHTML = `
+                <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:32px;">
+                    <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;">Finanzas / Movimientos</p>
+                    <h2 style="color:white;font-size:20px;font-weight:900;margin:0 0 24px 0;">Editar Movimiento</h2>
+
+                    <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Detalle</label>
+                    <input id="editMovDetalle" type="text" value="${(mov.detalle || '').replace(/"/g, '&quot;')}" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;margin-bottom:14px;box-sizing:border-box;">
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                        <div>
+                            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Monto</label>
+                            <input id="editMovMonto" type="number" value="${mov.monto || 0}" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Tipo</label>
+                            <select id="editMovTipo" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
+                                <option value="Ingreso" ${mov.tipo === 'Ingreso' ? 'selected' : ''}>Ingreso</option>
+                                <option value="Egreso" ${mov.tipo === 'Egreso' ? 'selected' : ''}>Egreso</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+                        <div>
+                            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Categoría</label>
+                            <select id="editMovCategoria" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
+                                ${catOpts}
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Caja</label>
+                            <select id="editMovCaja" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
+                                ${cajasOpts}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;">
+                        <button onclick="document.getElementById('_geckoModalEditMov').remove()"
+                            style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                        <button id="_geckoGuardarEditMov"
+                            style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Guardar Cambios</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+            document.getElementById('_geckoGuardarEditMov').onclick = function () {
+                const nuevoDetalle = document.getElementById('editMovDetalle').value.trim();
+                const nuevoMonto = parseFloat(document.getElementById('editMovMonto').value) || 0;
+                const nuevoTipo = document.getElementById('editMovTipo').value;
+                const nuevaCategoria = document.getElementById('editMovCategoria').value;
+                const nuevaCaja = document.getElementById('editMovCaja').value;
+
+                if (!nuevoDetalle || nuevoMonto <= 0 || !nuevaCaja) {
+                    alert('Completá Detalle, Monto y Caja.');
+                    return;
+                }
+
+                const cajasDb = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+
+                const cajaVieja = cajasDb.find(c => c.nombre === mov.caja);
+                if (cajaVieja) {
+                    if (mov.tipo === 'Ingreso') cajaVieja.saldo -= mov.monto;
+                    else cajaVieja.saldo += mov.monto;
+                }
+
+                const cajaNueva = cajasDb.find(c => c.nombre === nuevaCaja);
+                if (cajaNueva) {
+                    if (nuevoTipo === 'Ingreso') cajaNueva.saldo += nuevoMonto;
+                    else cajaNueva.saldo -= nuevoMonto;
+                }
+                localStorage.setItem('gecko_cajas', JSON.stringify(cajasDb));
+                window.LISTA_CAJAS = cajasDb;
+
+                const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+                const dbIndex = dbMovs.findIndex(m => m.id === mov.id);
+                if (dbIndex !== -1) {
+                    dbMovs[dbIndex] = { ...dbMovs[dbIndex], detalle: nuevoDetalle, monto: nuevoMonto, tipo: nuevoTipo, categoria: nuevaCategoria, caja: nuevaCaja };
+                    localStorage.setItem('gecko_movimientos', JSON.stringify(dbMovs));
+                    window.LISTA_MOVIMIENTOS = dbMovs;
+                }
+
+                modal.remove();
+                if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
+                if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+                if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento actualizado', '¡Listo!');
+            };
         };
 
         window.ejecutarTransferencia = function () {
