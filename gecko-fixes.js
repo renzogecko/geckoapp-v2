@@ -4744,6 +4744,21 @@ window.addEventListener('load', function () {
 
         console.log('🦎 GECKO-FIXES: renderOts + renderizarMovimientos + renderClientes parcheados post-main.js.');
 
+        // Responsive: ocultar columnas progresivamente en la tabla de Materiales
+        window._geckoResponsiveMateriales = function () {
+            var tbody = document.getElementById('tablaMaterialesBody');
+            if (!tbody) return;
+            tbody.querySelectorAll('tr').forEach(function (tr) {
+                var tds = tr.children;
+                if (tds.length < 7) return; // fila de "sin resultados" u otra distinta
+                if (tds[1]) tds[1].classList.add('hidden', '2xl:table-cell');
+                if (tds[2]) tds[2].classList.add('hidden', 'xl:table-cell');
+                if (tds[3]) tds[3].classList.add('hidden', 'sm:table-cell');
+                if (tds[4]) tds[4].classList.add('hidden', 'md:table-cell');
+                if (tds[5]) tds[5].classList.add('hidden', 'lg:table-cell');
+            });
+        };
+
         // Override renderInsumos para aplicar fix de precios fijos post-render
         (function () {
             var _origRenderInsumos = window.renderInsumos;
@@ -4751,10 +4766,12 @@ window.addEventListener('load', function () {
                 window.renderInsumos = function () {
                     _origRenderInsumos.apply(this, arguments);
                     window._geckoFixPreciosFijos();
+                    window._geckoResponsiveMateriales();
                 };
             }
             // Aplicar fix inmediato (la tabla ya puede estar dibujada)
             window._geckoFixPreciosFijos();
+            window._geckoResponsiveMateriales();
             console.log('🦎 GECKO-FIX: Override renderInsumos activo — precios fijos habilitados.');
         })();
 
@@ -4909,6 +4926,20 @@ window.addEventListener('load', function () {
             if (typeof window.openModal === 'function') window.openModal('modalTerminacion');
         };
 
+        // Responsive: ocultar columnas progresivamente en la tabla de Servicios
+        window._geckoResponsiveServicios = function () {
+            var tbody = document.getElementById('tablaTerminacionesBody');
+            if (!tbody) return;
+            tbody.querySelectorAll('tr').forEach(function (tr) {
+                var tds = tr.children;
+                if (tds.length < 6) return; // fila de "sin resultados" u otra distinta
+                if (tds[1]) tds[1].classList.add('hidden', 'xl:table-cell');
+                if (tds[2]) tds[2].classList.add('hidden', 'lg:table-cell');
+                if (tds[3]) tds[3].classList.add('hidden', 'md:table-cell');
+                if (tds[4]) tds[4].classList.add('hidden', 'sm:table-cell');
+            });
+        };
+
         // Hook a renderServicios para re-aplicar Fix A después de cada render
         (function () {
             var _origRS = window.renderServicios;
@@ -4916,9 +4947,11 @@ window.addEventListener('load', function () {
                 window.renderServicios = function () {
                     _origRS.apply(this, arguments);
                     window._geckoFixBotonesServicios();
+                    window._geckoResponsiveServicios();
                 };
             }
             window._geckoFixBotonesServicios();
+            window._geckoResponsiveServicios();
             console.log('🦎 GECKO-FIX: Fix edición servicios activo (botones + data filling).');
         })();
 
