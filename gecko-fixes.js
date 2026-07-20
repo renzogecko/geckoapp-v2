@@ -6197,10 +6197,28 @@ window._gpmEditarItemGrafica = function (btn) {
         Object.keys(params.campos || {}).forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
-            if (el.type === 'checkbox' || el.type === 'radio') el.checked = params.campos[id];
-            else el.value = params.campos[id];
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                el.checked = params.campos[id];
+            } else {
+                el.value = params.campos[id];
+            }
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new Event('input', { bubbles: true }));
         });
-        if (typeof GRAFICA !== 'undefined' && typeof GRAFICA.calcular === 'function') GRAFICA.calcular();
+        // Segunda pasada: algunos selects (como el Material, que depende de la
+        // Categoría) recién existen/tienen opciones después del change de arriba.
+        setTimeout(() => {
+            Object.keys(params.campos || {}).forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const valorGuardado = params.campos[id];
+                if (el.tagName === 'SELECT' && el.value !== String(valorGuardado)) {
+                    el.value = valorGuardado;
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            if (typeof GRAFICA !== 'undefined' && typeof GRAFICA.calcular === 'function') GRAFICA.calcular();
+        }, 150);
         window._gpmMostrarAvisoEdicion();
     }, 250);
 };
