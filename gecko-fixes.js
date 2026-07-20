@@ -5958,7 +5958,9 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
             titulo: it.nombre || it.textoOpciones || '',
             descripcion: it.descripcion || (it.otDetalle !== it.nombre ? it.otDetalle : '') || '',
             cantidad: it.cantidad || 1,
-            precio: it.precioUnitario || it.costo || 0
+            precio: it.precioUnitario || it.costo || 0,
+            tipo: it.tipo || '',
+            parametrosOriginales: it.parametrosOriginales || null
         }));
         if (datosEdicion?.conIva) {
             document.getElementById('gpmTogIva').checked = true;
@@ -6116,6 +6118,7 @@ window._gpmAgregarItem = function (datos = null) {
     const div = document.createElement('div');
     div.className = 'gpm-item';
     if (datos?.tipo) div.dataset.tipoOrigen = datos.tipo;
+    if (datos?.parametrosOriginales) div.dataset.paramsOriginales = JSON.stringify(datos.parametrosOriginales);
     div.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #333333;border-radius:0;margin-bottom:0;overflow:hidden;';
     div.innerHTML = `
       <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px 130px 100px 36px;align-items:stretch;">
@@ -6287,7 +6290,8 @@ window._gpmGuardar = function (status) {
                 otDetalle: desc || titulo,
                 costo: precio * qty,
                 cantidad: qty,
-                precioUnitario: precio
+                precioUnitario: precio,
+                parametrosOriginales: item.dataset.paramsOriginales ? JSON.parse(item.dataset.paramsOriginales) : null
             });
         }
     });
