@@ -16,7 +16,8 @@
 - **Sección:** configuracion - modal Materiales
 - **Descripción:** el valor de la configuracion deberia estar linkeado con una api para mantenerse actualizada, de manera automatica, o en su defecto un boton para actualizarlo manualmente.
 Por el lado del modal de materiales , en la seccion de costo que tiene una calculadora automatica , eso esta harcodeado en 1420 hoy , pero ese valor se bee actualizar con el valor actual del dolar ya se por api o por un boton de actualizar. Elegir la mejor opcion 
-- **Estado:** 🔴 Pendiente
+- **Estado:** ✅ Resuelto (confirmado por Renzo, sin detalle de fecha
+  exacta ni de la solución aplicada — no se documentó en su momento)
  
 ---
 
@@ -841,3 +842,60 @@ conjunto hoy):**
 (Nota: "Re-editar los ítems cargados al carrito", que también estaba en 
 el archivo viejo, ya está trackeado en este archivo como 
 MEJ-021 · Etapa 2 — no se duplica.)
+
+---
+
+### Nuevos pendientes anotados — 20/07/2026
+
+### [BUG-005] Botón de editar movimiento no funciona
+- **Sección:** Finanzas › Movimientos
+- **Descripción:** el botón de editar (✏️) en cada fila de la tabla de 
+  Movimientos existe visualmente, pero al presionarlo no pasa nada — 
+  la función no está andando.
+- **Estado:** 🔴 Pendiente
+
+### [MEJ-026] PDF de estado de Cuenta Corriente para enviar por WhatsApp
+- **Sección:** Clientes › Ficha de Cliente / Cuenta Corriente
+- **Descripción:** poder generar un PDF con el resumen del estado de 
+  cuenta de un cliente (deuda, pagos, saldo), para poder enviárselo 
+  directo por WhatsApp, similar a como ya se hace con los PDFs de 
+  Presupuesto y OT.
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-027] Indicador visual de trabajos saldados en la Cuenta Corriente
+- **Sección:** Clientes › Ficha de Cliente / Cuenta Corriente
+- **Descripción:** cuando se registran pagos independientes que van 
+  completando distintos trabajos de un mismo cliente, se necesita que 
+  quede visualmente claro cuáles ya están "Saldados" a medida que se 
+  completan. Relacionado con MEJ-022 (reparto FIFO de pagos), pero 
+  puede incluir más casos que ese. 
+  ⚠️ Requiere una charla de diseño antes de tocar código — hay 
+  decisiones a tomar sobre cómo se determina y muestra ese estado.
+- **Estado:** 🔵 Pendiente — sesión de diseño dedicada
+
+### [MEJ-028] Cotizador de Neón LED
+- **Sección:** Cotizadores › nuevo cotizador
+- **Descripción:** nuevo cotizador para trabajos de Neón LED, con estas 
+  variables:
+  - Área de la base (materiales: acrílico, MDF 6mm)
+  - Metro lineal de neón LED
+  - Uniones/tramos: calcula la cantidad de soldaduras necesarias y les 
+    aplica un valor fijo por soldadura
+  - Días de trabajo
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-029] Cotizador de Stickers con sistema de nesting
+- **Sección:** Cotizadores › nuevo cotizador
+- **Descripción:** nuevo cotizador para stickers, con un sistema de 
+  nesting (acomodar las formas de manera eficiente sobre la plancha/
+  rollo para minimizar desperdicio de material).
+- **Estado:** 🔵 Pendiente
+
+### [MEJ-030] Nueva caja de Dólares (USD) — reservas, separada de las 
+cajas generales
+- **Sección:** Finanzas › Cajas
+- **Descripción:** crear un tipo de caja en dólares (USD), pensada como 
+  reserva de ahorro, que se mantenga separada visualmente y en los 
+  cálculos de las cajas operativas generales (para no mezclar el 
+  efectivo/flujo del día a día con este ahorro).
+- **Estado:** 🔵 Pendiente
