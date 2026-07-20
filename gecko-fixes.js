@@ -4515,21 +4515,21 @@ window.addEventListener('load', function () {
             modal.id = '_geckoModalEditMov';
             modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
             modal.innerHTML = `
-                <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:440px;padding:32px;">
+                <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:520px;padding:40px;">
                     <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;">Finanzas / Movimientos</p>
-                    <h2 style="color:white;font-size:20px;font-weight:900;margin:0 0 24px 0;">Editar Movimiento</h2>
+                    <h2 style="color:white;font-size:20px;font-weight:900;margin:0 0 28px 0;">Editar Movimiento</h2>
 
                     <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Detalle</label>
                     <input id="editMovDetalle" type="text" value="${(mov.detalle || '').replace(/"/g, '&quot;')}" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;margin-bottom:14px;box-sizing:border-box;">
 
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Monto</label>
                             <input id="editMovMonto" type="number" value="${mov.monto || 0}" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
                         </div>
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Tipo</label>
-                            <select id="editMovTipo" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
+                            <select id="editMovTipo" class="gecko-select-modal">
                                 <option value="Ingreso" ${mov.tipo === 'Ingreso' ? 'selected' : ''}>Ingreso</option>
                                 <option value="Egreso" ${mov.tipo === 'Egreso' ? 'selected' : ''}>Egreso</option>
                             </select>
@@ -4539,13 +4539,13 @@ window.addEventListener('load', function () {
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Categoría</label>
-                            <select id="editMovCategoria" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
+                            <select id="editMovCategoria" class="gecko-select-modal">
                                 ${catOpts}
                             </select>
                         </div>
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Caja</label>
-                            <select id="editMovCaja" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
+                            <select id="editMovCaja" class="gecko-select-modal">
                                 ${cajasOpts}
                             </select>
                         </div>
