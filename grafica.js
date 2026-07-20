@@ -773,8 +773,13 @@ window.GeckoGrafica = {
         const _geckoSnapshotGrafica = (function () {
             const snap = {
                 filasVariablesHTML: document.getElementById('contenedorFilasVariables')?.innerHTML || '',
+                filasVariablesValores: [],
                 campos: {}
             };
+            document.querySelectorAll('#contenedorFilasVariables .gecko-input-row').forEach(fila => {
+                const valoresFila = Array.from(fila.querySelectorAll('input')).map(inp => inp.value);
+                snap.filasVariablesValores.push(valoresFila);
+            });
             document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
                 if (el.type === 'checkbox' || el.type === 'radio') {
                     snap.campos[el.id] = el.checked;

@@ -6194,6 +6194,20 @@ window._gpmEditarItemGrafica = function (btn) {
     setTimeout(() => {
         const cont = document.getElementById('contenedorFilasVariables');
         if (cont && params.filasVariablesHTML) cont.innerHTML = params.filasVariablesHTML;
+        if (cont && params.filasVariablesValores) {
+            const filas = cont.querySelectorAll('.gecko-input-row');
+            filas.forEach((fila, i) => {
+                const valoresFila = params.filasVariablesValores[i];
+                if (!valoresFila) return;
+                const inputs = fila.querySelectorAll('input');
+                inputs.forEach((inp, j) => {
+                    if (valoresFila[j] !== undefined) {
+                        inp.value = valoresFila[j];
+                        inp.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+            });
+        }
         Object.keys(params.campos || {}).forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
