@@ -3986,6 +3986,40 @@ window.addEventListener('load', function () {
             console.log('🦎 GECKO-FIX: Interceptor de edición de ítems (MEJ-021 Etapa 2) activo.');
         })();
 
+        // ── MEJ-021 Etapa 2: interceptar agregarItemAlCarritoUI (Láser/CNC y 3D,
+        // que usan un atajo distinto y no pasan por agregarItemAlPresupuesto) ──
+        (function () {
+            var _origAgregarItemAlCarritoUI = window.agregarItemAlCarritoUI;
+            window.agregarItemAlCarritoUI = async function () {
+                if (window._gpmModoEdicionItem && window._gpmBackupEdicion) {
+                    const item = window.itemActualCotizado || window.itemActual3D;
+                    if (!item || !item.costo) {
+                        alert('Completá los datos del trabajo antes de aplicar los cambios.');
+                        return;
+                    }
+                    const idx = window._gpmIndiceEditando;
+                    const b = window._gpmBackupEdicion;
+                    if (b.items[idx]) {
+                        b.items[idx] = {
+                            titulo: item.nombre || item.textoOpciones || '',
+                            descripcion: item.otDetalle || '',
+                            cantidad: 1,
+                            precio: item.costo || 0,
+                            tipo: item.tipo || '',
+                            origenCotizador: item.origenCotizador || '',
+                            parametrosOriginales: item.parametrosOriginales || null
+                        };
+                    }
+                    window._gpmModoEdicionItem = false;
+                    document.getElementById('_gpmAvisoEdicion')?.remove();
+                    window._gpmRestaurarBackup();
+                    return;
+                }
+                if (typeof _origAgregarItemAlCarritoUI === 'function') return _origAgregarItemAlCarritoUI.apply(this, arguments);
+            };
+            console.log('🦎 GECKO-FIX: Interceptor de edición de ítems en agregarItemAlCarritoUI activo.');
+        })();
+
         // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
         // main.js corre DESPUÉS de gecko-fixes.js (por defer), por eso hacemos el override aquí.
         window.renderizarMovimientos = function () {
