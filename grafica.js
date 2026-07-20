@@ -765,6 +765,26 @@ window.GeckoGrafica = {
         // Resumen para textoOpciones
         const resumenOpciones = `${matNombre}`.toUpperCase();
 
+        // ── Snapshot de parámetros crudos (MEJ-021 Etapa 2) ──
+        // Guarda una "foto" del formulario completo para poder reconstruirlo
+        // después (botón Editar desde el Presupuestador Manual). Captura el
+        // HTML exacto de las filas dinámicas de ancho/alto/cantidad, más el
+        // valor de cada campo con ID dentro del panel del cotizador.
+        const _geckoSnapshotGrafica = (function () {
+            const snap = {
+                filasVariablesHTML: document.getElementById('contenedorFilasVariables')?.innerHTML || '',
+                campos: {}
+            };
+            document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    snap.campos[el.id] = el.checked;
+                } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                    snap.campos[el.id] = el.value;
+                }
+            });
+            return snap;
+        })();
+
         const item = {
             id: Date.now(),
             tipo: 'grafica',
@@ -773,7 +793,8 @@ window.GeckoGrafica = {
             textoOpciones: resumenOpciones,
             costo: total,
             otDetalle: `Material: ${matNombre} | ${window.itemActualCotizado?.detalle || ''}`.trim().replace(/\|\s*$/, ''),
-            material: matNombre
+            material: matNombre,
+            parametrosOriginales: _geckoSnapshotGrafica
         };
 
         // 5. Envío: Llamar al carrito global
