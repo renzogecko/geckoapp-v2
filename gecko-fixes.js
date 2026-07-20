@@ -653,10 +653,10 @@ window.renderPresupuestos = async function () {
         const resumen = p.titulo || (p.items || []).map(it => it.nombre || it.textoOpciones).filter(Boolean).join(' · ') || 'Sin título';
         const esOTEnHistorial = mostrarHistorial && p.status === 'OT';
         return `
-        <tr draggable="true" data-drag-key="${p.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" style="cursor:grab;" onmouseover="this.querySelectorAll('.sticky').forEach(td=>td.style.setProperty('background-color', document.documentElement.classList.contains('dark')?'rgba(31,41,55,0.3)':'rgba(249,250,251,0.5)','important'))" onmouseout="this.querySelectorAll('.sticky').forEach(td=>td.style.removeProperty('background-color'))">
+        <tr draggable="true" data-drag-key="${p.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" style="cursor:grab;">
             <td class="py-4 px-6 font-black text-zinc-400 text-[11px] hidden xl:table-cell">#${p.id}</td>
             <td class="py-4 px-6 text-[12px] text-zinc-400 font-bold hidden lg:table-cell">${p.fecha || ''}</td>
-            <td class="py-4 px-6 sticky left-0 z-10 bg-white dark:bg-darkCard" style="border:none !important;border-radius:0 !important;">
+            <td class="py-4 px-6">
                 <span onclick="event.stopPropagation();window.abrirFichaCliente('${(p.cliente || '').replace(/'/g, "\\'")}')" class="font-extrabold dark:text-white text-[14px] uppercase cursor-pointer" title="Ver ficha de cliente">${p.cliente || 'S/N'}</span>
             </td>
             <td class="py-4 px-6 max-w-[220px] hidden md:table-cell">
@@ -667,7 +667,7 @@ window.renderPresupuestos = async function () {
                 </div>
             </td>
             <td class="py-4 px-6 font-black text-gecko text-[14px] hidden sm:table-cell">$${Math.round(p.total || 0).toLocaleString('es-AR')}</td>
-            <td class="py-4 px-6 text-right sticky right-0 z-10 bg-white dark:bg-darkCard" style="border:none !important;border-radius:0 !important;">
+            <td class="py-4 px-6 text-right">
                 <div class="flex justify-end gap-2">
                     <button onclick="window.verDocumento(${p.id})" title="Ver"
                         class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
@@ -3856,14 +3856,14 @@ window.addEventListener('load', function () {
                 ).join('');
 
                 const _botonesAccion = mostrarHistorial ? `
-    <td class="py-4 px-6 text-right sticky right-0 z-10 bg-white dark:bg-darkCard" style="border:none !important;border-radius:0 !important;">
+    <td class="py-4 px-6 text-right">
         <div class="flex justify-end gap-2">
             <button onclick="window.verDocumento('${ot.id}')" title="Ver OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
             <button onclick="window._desarchivarOT('${ot.id}')" title="Desarchivar" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-amber-400 hover:border-amber-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></button>
             <button onclick="window.eliminarOT('${ot.id}')" title="Eliminar" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-red-400 hover:border-red-500/40"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
         </div>
     </td>` : `
-    <td class="py-4 px-6 text-right sticky right-0 z-10 bg-white dark:bg-darkCard" style="border:none !important;border-radius:0 !important;">
+    <td class="py-4 px-6 text-right">
         <div class="flex justify-end gap-2">
             <button onclick="window.verDocumento('${ot.id}')" title="Ver OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
             <button onclick="window.editarOT('${ot.id}')" title="Editar OT" class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
@@ -3874,9 +3874,9 @@ window.addEventListener('load', function () {
     </td>`;
 
                 return `
-                <tr draggable="true" data-drag-key="${ot.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800" style="cursor:grab;" onmouseover="this.querySelectorAll('.sticky').forEach(td=>td.style.setProperty('background-color', document.documentElement.classList.contains('dark')?'rgba(31,41,55,0.4)':'rgba(249,250,251,0.5)','important'))" onmouseout="this.querySelectorAll('.sticky').forEach(td=>td.style.removeProperty('background-color'))">
+                <tr draggable="true" data-drag-key="${ot.id}" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors border-b border-gray-100 dark:border-gray-800" style="cursor:grab;">
                     <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500 hidden xl:table-cell">#${ot.id}</td>
-                    <td class="py-4 px-6 sticky left-0 z-10 bg-white dark:bg-darkCard" style="border:none !important;border-radius:0 !important;">
+                    <td class="py-4 px-6">
                         <span onclick="event.stopPropagation();window.abrirFichaCliente('${(ot.cliente || '').replace(/'/g, "\\'")}')" class="text-[14px] font-extrabold dark:text-white uppercase cursor-pointer" title="Ver ficha de cliente">${ot.cliente || 'S/N'}</span>
                     </td>
                     <td class="py-4 px-6 max-w-[200px] hidden sm:table-cell">
@@ -5371,15 +5371,9 @@ window._geckoRenderFijo = function () {
 
             const tr = document.createElement('tr');
             tr.className = 'border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer';
-            tr.addEventListener('mouseover', () => {
-                tr.querySelectorAll('.sticky').forEach(td => td.style.setProperty('background-color', document.documentElement.classList.contains('dark') ? 'rgba(39,39,42,0.2)' : '#f9fafb', 'important'));
-            });
-            tr.addEventListener('mouseout', () => {
-                tr.querySelectorAll('.sticky').forEach(td => td.style.removeProperty('background-color'));
-            });
 
             tr.innerHTML = `
-            <td class="py-4 px-6 sticky left-0 z-10 bg-white dark:bg-darkCard" data-accion="ficha" style="border:none !important;border-radius:0 !important;">
+            <td class="py-4 px-6" data-accion="ficha">
                 <div class="flex items-center">
                     <p class="font-extrabold dark:text-white tracking-tight text-[14px]">${c.nombre}</p>
                     ${window._geckoBadgeFijo(c.nombre)}
@@ -5393,7 +5387,7 @@ window._geckoRenderFijo = function () {
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>Ficha / CC
                 </button>
             </td>
-            <td class="py-4 px-6 text-center sticky right-0 z-10 bg-white dark:bg-darkCard" style="border:none !important;border-radius:0 !important;">
+            <td class="py-4 px-6 text-center">
                 <div class="flex items-center justify-center gap-2">
                     <button data-accion="editar" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#a1a1aa'" title="Editar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
                     <button data-accion="eliminar" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#a1a1aa;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.05)';this.style.color='#a1a1aa'" title="Eliminar"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
