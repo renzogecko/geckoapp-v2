@@ -6164,6 +6164,12 @@ window._gpmConfigOrigenes = {
         multiFila: false,
         setup: function () {},
         calcFinal: function () {}
+    },
+    'textil': {
+        categoria: 'textil',
+        multiFila: false,
+        setup: function (params) { if (params && params.modoTextil) window._textilModo = params.modoTextil; },
+        calcFinal: function () { if (typeof window.calcularCostoTextil === 'function') window.calcularCostoTextil(); }
     }
 };
 
@@ -6209,7 +6215,7 @@ window._gpmEditarItemGrafica = function (btn) {
     window._gpmIndiceEditando = index;
     window._gpmModoEdicionItem = true;
 
-    if (typeof config.setup === 'function') config.setup();
+    if (typeof config.setup === 'function') config.setup(params);
     window.switchMenu('cotizadores');
     if (typeof window.cambiarCategoriaCotizador === 'function') window.cambiarCategoriaCotizador(config.categoria);
 

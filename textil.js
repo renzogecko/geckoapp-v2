@@ -239,15 +239,30 @@ window.añadirTextilAlPresupuesto = function () {
     const bajadas = parseInt(document.getElementById('textilBajadas')?.value) || 0;
     const cantPrendas = parseInt(document.getElementById('prendaCantidad')?.value) || 1;
 
+    // ── Snapshot de parámetros crudos (MEJ-021 Etapa 2) ──
+    const _geckoSnapshotTextil = (function () {
+        const snap = { modoTextil: window._textilModo || 'dtf', campos: {} };
+        document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                snap.campos[el.id] = el.checked;
+            } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                snap.campos[el.id] = el.value;
+            }
+        });
+        return snap;
+    })();
+
     const item = {
         id: Date.now(),
         tipo: 'textil',
+        origenCotizador: 'textil',
         nombre: nombreTrabajo.toUpperCase(),
         identificacion: document.getElementById('textilNombre')?.value?.trim() || '',
         textoOpciones: `${materialActivo} (${largo}cm)`,
         costo: total,
         otDetalle: window.itemActualCotizado?.otDetalle || `${largo}cm lineal | ${bajadas} bajadas | ${cantPrendas} prendas`,
-        modoCalculo: localStorage.getItem('globalEstimationMode') || 'simple'
+        modoCalculo: localStorage.getItem('globalEstimationMode') || 'simple',
+        parametrosOriginales: _geckoSnapshotTextil
     };
 
     // 4. Enviar al presupuesto global (La vía rápida)
