@@ -899,3 +899,69 @@ cajas generales
   cálculos de las cajas operativas generales (para no mezclar el 
   efectivo/flujo del día a día con este ahorro).
 - **Estado:** 🔵 Pendiente
+
+---
+
+### Sesión 20/07/2026 — MEJ-021 Etapa 2 completada (5 de 6 cotizadores)
+
+**Resuelto: MEJ-021 · Etapa 2 — Re-editar ítems del carrito volviendo 
+al cotizador original**
+
+Se construyó el mecanismo completo de "ida y vuelta": cada ítem del 
+Presupuestador Manual que viene de un cotizador ahora puede mostrar un 
+botón ✏️ Editar que:
+1. Guarda una "foto" de todo el Presupuestador Manual (cliente, 
+   título, notas, condiciones, IVA, descuento, y todos los ítems).
+2. Te lleva al cotizador original con el formulario recargado tal cual 
+   estaba (material, medidas, cantidades, checkboxes, modo).
+3. Al presionar "Añadir a Cotización" con los cambios hechos, vuelve 
+   al Presupuestador Manual, restaura todo lo demás intacto, y 
+   reemplaza SOLO ese ítem — sin duplicar nada.
+4. Botón Cancelar en el aviso naranja para volver sin aplicar cambios.
+
+**Piezas técnicas de la arquitectura (para futura referencia):**
+- Cada ítem de cotizador ahora guarda `parametrosOriginales` (snapshot 
+  de campos, y de filas múltiples si aplica) y `origenCotizador` 
+  (etiqueta precisa, ej. "grafica_impresion", "grafica_corte" — 
+  necesaria porque varios cotizadores comparten el mismo `tipo`).
+- `window._gpmConfigOrigenes` (gecko-fixes.js) es el mapa central: por 
+  cada origen, a qué categoría volver, si tiene filas múltiples, cómo 
+  restaurar el "modo" si aplica, y qué función de cálculo final llamar.
+- Dos puntos de enganche del botón "Añadir a Cotización": 
+  `agregarItemAlPresupuesto` (Gráfica, Corte, Textil, Bastidores) y 
+  `agregarItemAlCarritoUI` (Láser/CNC, Impresión 3D) — ambos 
+  interceptados para detectar modo edición.
+
+**Cotizadores completados y probados:**
+- ✅ Vinilo Impresión (grafica.js) — con filas múltiples
+- ✅ Vinilo Corte/ML (corte.js) — formulario simple
+- ✅ Textil (textil.js) — con restauración de modo (DTF/Termo/Estampado)
+- ✅ Láser/CNC (laser.js) — con dos listas de filas (piezas + acabados) 
+  y restauración de modo (Láser/CNC Router)
+- ✅ Bastidores (bastidores.js) — con filas múltiples + revestimiento
+- ✅ Impresión 3D (impresion3d.js) — formulario simple
+
+**Pendiente — Corpóreos (único cotizador que falta), sesión dedicada:**
+- Tiene 3+ modos con HTML completamente separado (Polifán, 
+  Chapa/Acrílico, Letras 3D) — no una variación chica del mismo 
+  formulario, como en los demás.
+- Se renderiza en un contenedor distinto (`#corporeosDinamico`, no 
+  `#panelConfigurador`) — hay que confirmar si el snapshot genérico 
+  sirve igual apuntando ahí o si necesita ajuste.
+- Posible código duplicado/viejo conviviendo: `calcularCorporeos()` / 
+  `addCorporeoAlPresupuesto()` (¿viejo?) vs `calcularChapaAcrilico()` / 
+  `calcularCostoPolifan()` (¿nuevo?) — HAY QUE CONFIRMAR EN EL 
+  NAVEGADOR (F12) cuál está realmente activo antes de tocar nada, 
+  puede que el otro sea código muerto para limpiar de paso.
+- Orden sugerido: Chapa/Acrílico primero, después Polifán, Letras 3D 
+  al final (o preguntarle a Renzo si vale la pena para un modo poco 
+  usado).
+- Aplicar el mismo patrón de 4 piezas ya validado (snapshot + 
+  origenCotizador + entrada en el mapa de configuración + enganche del 
+  botón), un modo a la vez, probando cada uno.
+
+**Detalle menor sin resolver, revisar en otra sesión:**
+- Al editar un ítem y volver al cotizador (al menos visto en Láser/CNC 
+  y CNC Router), el campo Cliente del cotizador queda con un valor 
+  cargado de forma extraña. No se identificó la causa todavía — 
+  investigar antes de tocar nada.
