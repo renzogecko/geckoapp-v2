@@ -1037,22 +1037,65 @@ directo a la OT).
 
 ### [MEJ-032] Sistema de Usuarios / Login completo
 
-**Sección:** Nueva — autenticación y perfiles
-**Estado:** 🔴 Pendiente — PRIMER PASO antes de MEJ-023 (Dashboard) y 
-antes de cualquier sistema de notificaciones
+**Sección:** Login, roles y auditoría
+**Estado:** 🟢 Diseño aprobado — pendiente de construcción. PRIMER 
+PASO antes de MEJ-023 (Dashboard).
 
-**Descripción:** hoy la app usa un único usuario/contraseña compartido. 
-Se necesita un login real con:
-- 5 perfiles: Renzo, Rodri, Agus (admins, acceso completo incluyendo 
-  Finanzas), Nico y Seba (usuarios estándar, sin acceso a Finanzas — 
-  ya está anotado en las reglas de oro del proyecto, falta 
-  implementar)
-- Usuario y contraseña por persona
-- Registro de quién creó cada presupuesto/OT (auditoría)
-- Base para un futuro sistema de notificaciones entre usuarios (ej: 
-  "Nico agregó un presupuesto nuevo")
+**🔎 HALLAZGO CLAVE (sesión 21/07/2026):** la base técnica YA EXISTE y 
+funciona:
+- `login.html` con email + contraseña real.
+- `api.php?endpoint=auth`: valida contra tabla `usuarios` en MySQL, 
+  contraseñas con bcrypt (con migración automática desde texto plano 
+  si hiciera falta), sesión de servidor PHP real (`$_SESSION`), todos 
+  los demás endpoints ya exigen sesión activa.
+- Roles ya diferenciados (`admin` / `usuario`) en la tabla `usuarios`.
+- `window.GECKO_USER` disponible globalmente en toda la app 
+  ({nombre, rol, email}).
+- Botón de Logout funcional.
+- Los 5 perfiles YA ESTÁN CARGADOS en la base con su rol correcto 
+  (confirmado por Renzo).
+- **Lo único que falta:** que el equipo empiece a usarlo de verdad — 
+  hoy todos siguen entrando con una cuenta compartida en vez de la 
+  propia.
 
-**Requiere sesión de diseño dedicada antes de tocar código** — hay 
-decisiones técnicas importantes a definir (cómo se guardan las 
-contraseñas, cómo se controla el acceso a Finanzas por rol, cómo se 
-relaciona con el `localStorage` actual que no distingue usuarios).
+**A construir, en este orden:**
+
+**1. Rollout real + autogestión:**
+- Migrar de "cuenta compartida" a que cada persona use su propio login.
+- Agregar "Cambiar mi contraseña" (self-service, sin depender de 
+  phpMyAdmin).
+
+**2. Nuevo modelo de permisos para Finanzas (más preciso que "ocultar 
+todo"):**
+- **Admin** (Renzo, Rodri, Agus): acceso completo sin restricciones.
+- **Usuario** (Nico, Seba):
+  - Pestaña **Movimientos**: visible y 100% funcional (cargar pagos, 
+    cargar movimientos, revisar historial) — NO se oculta.
+  - Tarjetas de saldo de cada caja (los números grandes arriba de 
+    todo en Finanzas): el número NO se muestra — queda vacío o con 
+    ícono de candado 🔒 (nunca "tapado/blur", directamente ausente).
+  - Pestaña **Reportes**: oculta por completo — solo para admins.
+  - Pestaña **Gastos Fijos**: a definir en el momento de programar 
+    (¿va con Movimientos o se oculta con Reportes?).
+- ⚠️ Verificar al programar: el bloqueo de Finanzas hoy es solo 
+  visual (JavaScript oculta el ítem de menú) — falta confirmar/agregar 
+  que el bloqueo sea real también del lado del servidor (api.php), no 
+  solo estético.
+
+**3. Auditoría — "creado por":**
+- Agregar el usuario que creó cada Presupuesto, OT, Movimiento y 
+  Cliente (capturado automático desde `window.GECKO_USER` al guardar).
+
+**4. Feed de actividad:**
+- Registro simple tipo campanita: "Nico creó el Presupuesto #1234 — 
+  hace 5 min", visible para todo el equipo. Sin notificaciones push 
+  del navegador por ahora (más complejas, se evalúa después si hace 
+  falta).
+
+**5. Conectar con el Dashboard (MEJ-023):**
+- Tablero principal guardado por usuario.
+- Círculo con inicial + color de quién cargó cada tarjeta.
+
+**6. Pantalla de administración de usuarios (solo admins):**
+- Alta/baja de usuarios, cambiar contraseña de otros, cambiar rol — 
+  sin necesidad de entrar a phpMyAdmin.
