@@ -197,12 +197,31 @@ window.calcularCostoBastidores = function () {
         }
     }
 
+    // ── Snapshot de parámetros crudos (MEJ-021 Etapa 2) ──
+    const _contBastidoresSnap = document.querySelector('.fila-bastidor')?.parentElement;
+    const _geckoSnapshotBastidores = (function () {
+        const snap = { filasBastidorHTML: _contBastidoresSnap?.innerHTML || '', filasBastidorValores: [], campos: {} };
+        document.querySelectorAll('.fila-bastidor').forEach(fila => {
+            snap.filasBastidorValores.push(Array.from(fila.querySelectorAll('input, select')).map(inp => inp.value));
+        });
+        document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                snap.campos[el.id] = el.checked;
+            } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                snap.campos[el.id] = el.value;
+            }
+        });
+        return snap;
+    })();
+
     window.itemActualCotizado = {
         tipo: 'bastidores',
+        origenCotizador: 'bastidores',
         textoOpciones: `Estructura ${materialNombre} (${detalleItems.join(', ')})`,
         otDetalle: `${metrosLinealesTotales.toFixed(1)}ml totales | ${barras6m} barras | ${llevaRevest ? materialRevest + ' (con demasía si aplica)' : 'Sin revest.'}`,
         costo: totalRedondeado,
-        modoCalculo: modo
+        modoCalculo: modo,
+        parametrosOriginales: _geckoSnapshotBastidores
     };
 
     const fmt = v => '$' + Math.round(v).toLocaleString('es-AR');

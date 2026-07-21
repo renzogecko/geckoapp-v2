@@ -6211,6 +6211,13 @@ window._gpmConfigOrigenes = {
         tipoRestauracion: 'laser_cnc',
         setup: function (params) { if (params && params.modoLaserCnc) window._laserCncModo = params.modoLaserCnc; },
         calcFinal: function () { if (typeof window.calcularCostoCorte === 'function') window.calcularCostoCorte(); }
+    },
+    'bastidores': {
+        categoria: 'bastidores',
+        multiFila: false,
+        tipoRestauracion: 'bastidores',
+        setup: function () {},
+        calcFinal: function () { if (typeof window.calcularCostoBastidores === 'function') window.calcularCostoBastidores(); }
     }
 };
 
@@ -6274,6 +6281,23 @@ window._gpmEditarItemGrafica = function (btn) {
                         if (valoresFila[j] !== undefined) {
                             inp.value = valoresFila[j];
                             inp.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    });
+                });
+            }
+        } else if (config.tipoRestauracion === 'bastidores') {
+            const contB = document.querySelector('.fila-bastidor')?.parentElement;
+            if (contB && params.filasBastidorHTML) contB.innerHTML = params.filasBastidorHTML;
+            if (contB && params.filasBastidorValores) {
+                contB.querySelectorAll('.fila-bastidor').forEach((fila, i) => {
+                    const valoresFila = params.filasBastidorValores[i];
+                    if (!valoresFila) return;
+                    const inputs = fila.querySelectorAll('input, select');
+                    inputs.forEach((inp, j) => {
+                        if (valoresFila[j] !== undefined) {
+                            inp.value = valoresFila[j];
+                            inp.dispatchEvent(new Event('input', { bubbles: true }));
+                            inp.dispatchEvent(new Event('change', { bubbles: true }));
                         }
                     });
                 });
