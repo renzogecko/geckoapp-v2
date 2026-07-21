@@ -6224,6 +6224,24 @@ window._gpmConfigOrigenes = {
         multiFila: false,
         setup: function () {},
         calcFinal: function () { if (typeof window.calcularCosto3D === 'function') window.calcularCosto3D(); }
+    },
+    'corporeos_polifan': {
+        categoria: 'corporeos',
+        multiFila: false,
+        setup: function () { window._corpModo = 'polifan'; },
+        calcFinal: function () { if (typeof window.calcularCostoPolifan === 'function') window.calcularCostoPolifan(); }
+    },
+    'corporeos_chapa': {
+        categoria: 'corporeos',
+        multiFila: false,
+        setup: function () { window._corpModo = 'chapa-acrilico'; },
+        calcFinal: function () { if (typeof window.calcularChapaAcrilico === 'function') window.calcularChapaAcrilico(); }
+    },
+    'corporeos_letras3d': {
+        categoria: 'corporeos',
+        multiFila: false,
+        setup: function () { window._corpModo = 'letras3d'; },
+        calcFinal: function () { if (typeof window.calcularLetras3D === 'function') window.calcularLetras3D(); }
     }
 };
 
@@ -6272,6 +6290,9 @@ window._gpmEditarItemGrafica = function (btn) {
     if (typeof config.setup === 'function') config.setup(params);
     window.switchMenu('cotizadores');
     if (typeof window.cambiarCategoriaCotizador === 'function') window.cambiarCategoriaCotizador(config.categoria);
+    if (origen.indexOf('corporeos_') === 0 && typeof window.setCorpModo === 'function') {
+        window.setCorpModo(window._corpModo);
+    }
 
     setTimeout(() => {
         if (config.multiFila) {

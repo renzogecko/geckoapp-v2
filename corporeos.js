@@ -898,13 +898,27 @@ window.calcularLetras3D = function () {
     const descPinturaL3D = filasPinturaL3D.length > 0
         ? ' | Pintura: ' + filasPinturaL3D.map(function (f) { return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ')
         : '';
+    const _geckoSnapshotLetras3D = (function () {
+        const snap = { campos: {} };
+        document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                snap.campos[el.id] = el.checked;
+            } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                snap.campos[el.id] = el.value;
+            }
+        });
+        return snap;
+    })();
+
     window.itemActualPolifan = {
         tipo: 'corporeos',
+        origenCotizador: 'corporeos_letras3d',
         nombre: `LETRAS 3D – ${nombreMat}`,
         identificacion: document.getElementById('letras3dNombre')?.value?.trim() || '',
         textoOpciones: `Letras 3D (Est.): ${ancho}x${alto}cm | ${nombreMat}`,
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}${descFrenteL3D}${descPinturaL3D} | ${resultadoIlum.avisoFaltaWatts ? resultadoIlum.avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${resultadoIlum.fuenteRecomendada}`}`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Peso Est.: ${Math.round(gramos)}gr | Tiempo Est.: ${horas.toFixed(1)}hs | Material: ${nombreMat}${descFrenteL3D}${descPinturaL3D} | ${resultadoIlum.avisoFaltaWatts ? resultadoIlum.avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${resultadoIlum.fuenteRecomendada}`}`,
+        parametrosOriginales: _geckoSnapshotLetras3D
     };
 };
 
@@ -919,12 +933,14 @@ window.addLetras3DAlPresupuesto = function () {
     const item = {
         id: Date.now(),
         tipo: 'corporeos',
+        origenCotizador: window.itemActualPolifan.origenCotizador || '',
         nombre: window.itemActualPolifan.nombre || 'Letras 3D',
         identificacion: window.itemActualPolifan.identificacion || '',
         textoOpciones: window.itemActualPolifan.textoOpciones || 'Letras 3D (Estimado)',
         costo: window.itemActualPolifan.costo,
         otDetalle: window.itemActualPolifan.otDetalle || 'Sin detalle técnico',
-        modoCalculo: localStorage.getItem('globalEstimationMode') || 'simple'
+        modoCalculo: localStorage.getItem('globalEstimationMode') || 'simple',
+        parametrosOriginales: window.itemActualPolifan.parametrosOriginales || null
     };
     if (typeof window.agregarItemAlPresupuesto === 'function') {
         window.agregarItemAlPresupuesto(item);
@@ -1235,12 +1251,26 @@ window.calcularCostoPolifan = function () {
             </button>`;
     }
 
+    const _geckoSnapshotPolifan = (function () {
+        const snap = { campos: {} };
+        document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                snap.campos[el.id] = el.checked;
+            } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                snap.campos[el.id] = el.value;
+            }
+        });
+        return snap;
+    })();
+
     window.itemActualPolifan = {
         tipo: 'corporeos',
+        origenCotizador: 'corporeos_polifan',
         nombre: `POLIFÁN - ${espesorText} - ${document.getElementById('polifanNombre')?.value || 'S/N'}`,
         identificacion: document.getElementById('polifanNombre')?.value?.trim() || '',
         costo: totalFinal,
-        otDetalle: `Polifán ${espesorText} | Medida: ${ancho}x${alto}cm | Cant: ${cantidad} | Corte: ${perimetroMl}ml${descFrente}${llevaPintura ? ' | Pintura: ' + (document.getElementById('pinturaColores')?.value || 'S/E') : ''}`
+        otDetalle: `Polifán ${espesorText} | Medida: ${ancho}x${alto}cm | Cant: ${cantidad} | Corte: ${perimetroMl}ml${descFrente}${llevaPintura ? ' | Pintura: ' + (document.getElementById('pinturaColores')?.value || 'S/E') : ''}`,
+        parametrosOriginales: _geckoSnapshotPolifan
     };
 }
 
@@ -1967,12 +1997,26 @@ window.calcularChapaAcrilico = function () {
 
     if (document.getElementById('subtotalEstimado')) document.getElementById('subtotalEstimado').innerText = fmt(totalFinal);
 
+    const _geckoSnapshotChapa = (function () {
+        const snap = { campos: {} };
+        document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                snap.campos[el.id] = el.checked;
+            } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                snap.campos[el.id] = el.value;
+            }
+        });
+        return snap;
+    })();
+
     window.itemActualPolifan = {
         tipo: 'corporeos',
+        origenCotizador: 'corporeos_chapa',
         nombre: `CHAPA/ACRILICO - ${document.getElementById('chapaNombre')?.value || 'S/N'}`,
         identificacion: document.getElementById('chapaNombre')?.value?.trim() || '',
         costo: totalFinal,
-        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | ${avisoFaltaWatts ? avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${fuenteRecomendada}`}${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}${diasTrabajo > 0 ? ` | Mano de obra: ${diasTrabajo} días` : ''}`
+        otDetalle: `Medida: ${ancho}x${alto}cm | Profundidad: ${profundidad}cm | Cant: ${cantidad} | Fleje: ${nomFleje} | ${avisoFaltaWatts ? avisoFaltaWatts : `Ilum Modelo: ${resultadoIlum.modeloNombre} | Ilum Cantidad: ${resultadoIlum.cantidadTexto} | Ilum Fuente: ${fuenteRecomendada}`}${filasPinturaChapaCalc.length > 0 ? ' | Pintura: ' + filasPinturaChapaCalc.map(function(f){ return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ') : ''}${diasTrabajo > 0 ? ` | Mano de obra: ${diasTrabajo} días` : ''}`,
+        parametrosOriginales: _geckoSnapshotChapa
     };
 };
 
@@ -1987,12 +2031,14 @@ window.addChapaAlPresupuesto = function () {
     const item = {
         id: Date.now(),
         tipo: 'corporeos',
+        origenCotizador: window.itemActualPolifan.origenCotizador || '',
         nombre: window.itemActualPolifan.nombre || 'Chapa / Acrílico',
         identificacion: window.itemActualPolifan.identificacion || '',
         textoOpciones: window.itemActualPolifan.nombre || 'Chapa / Acrílico',
         costo: window.itemActualPolifan.costo,
         otDetalle: window.itemActualPolifan.otDetalle || 'Sin detalle técnico',
-        modoCalculo: localStorage.getItem('globalEstimationMode') || 'simple'
+        modoCalculo: localStorage.getItem('globalEstimationMode') || 'simple',
+        parametrosOriginales: window.itemActualPolifan.parametrosOriginales || null
     };
     if (typeof window.agregarItemAlPresupuesto === 'function') {
         window.agregarItemAlPresupuesto(item);
@@ -2016,12 +2062,14 @@ window.addPolifanAlPresupuesto = function () {
     const item = {
         id: Date.now(),
         tipo: window.itemActualPolifan.tipo || 'corporeos',
+        origenCotizador: window.itemActualPolifan.origenCotizador || '',
         nombre: window.itemActualPolifan.nombre || 'Trabajo Corpóreo',
         identificacion: window.itemActualPolifan.identificacion || '',
         textoOpciones: window.itemActualPolifan.textoOpciones || window.itemActualPolifan.nombre,
         costo: window.itemActualPolifan.costo,
         otDetalle: window.itemActualPolifan.otDetalle || 'Sin detalle técnico',
-        modoCalculo: localStorage.getItem('globalEstimationMode') || 'simple'
+        modoCalculo: localStorage.getItem('globalEstimationMode') || 'simple',
+        parametrosOriginales: window.itemActualPolifan.parametrosOriginales || null
     };
     if (typeof window.agregarItemAlPresupuesto === 'function') {
         window.agregarItemAlPresupuesto(item);
