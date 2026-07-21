@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', async function geckoAuthInit() {
             if (navFin) navFin.style.display = 'none';
             const tabReportes = document.getElementById('tabFin-reportes');
             if (tabReportes) tabReportes.style.display = 'none';
+            const tabGastos = document.getElementById('tabFin-gastos');
+            if (tabGastos) tabGastos.style.display = 'none';
         }
 
         const iniciales = data.nombre.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
