@@ -65,6 +65,86 @@ if (typeof renderizarFinanzas === 'undefined') {
 // FIX 1: procesarGuardado — Guardar presupuesto / OT
 // ══════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════
+// Cambiar mi contraseña (MEJ-032, paso 1)
+// ══════════════════════════════════════════════════════
+window._gpAbrirCambiarPassword = function () {
+    document.getElementById('_gpModalPassword')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_gpModalPassword';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:420px;padding:32px;">
+            <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;">Mi Perfil</p>
+            <h2 style="color:white;font-size:20px;font-weight:900;margin:0 0 24px 0;">Cambiar mi contraseña</h2>
+
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Contraseña actual</label>
+            <input id="_gpPassActual" type="password" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;margin-bottom:14px;box-sizing:border-box;">
+
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Nueva contraseña</label>
+            <input id="_gpPassNueva" type="password" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;margin-bottom:14px;box-sizing:border-box;">
+
+            <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Confirmar nueva contraseña</label>
+            <input id="_gpPassConfirmar" type="password" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;margin-bottom:8px;box-sizing:border-box;">
+
+            <p id="_gpPassError" style="display:none;color:#ef4444;font-size:12px;font-weight:700;margin:0 0 16px;"></p>
+
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button onclick="document.getElementById('_gpModalPassword').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button id="_gpGuardarPassword"
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Guardar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    document.getElementById('_gpGuardarPassword').onclick = async function () {
+        const actual = document.getElementById('_gpPassActual').value;
+        const nueva = document.getElementById('_gpPassNueva').value;
+        const confirmar = document.getElementById('_gpPassConfirmar').value;
+        const errEl = document.getElementById('_gpPassError');
+        errEl.style.display = 'none';
+
+        if (!actual || !nueva || !confirmar) {
+            errEl.textContent = 'Completá los 3 campos.';
+            errEl.style.display = 'block';
+            return;
+        }
+        if (nueva !== confirmar) {
+            errEl.textContent = 'La nueva contraseña no coincide con la confirmación.';
+            errEl.style.display = 'block';
+            return;
+        }
+        if (nueva.length < 4) {
+            errEl.textContent = 'La nueva contraseña es muy corta.';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        try {
+            const res = await fetch('api.php?endpoint=auth', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ actual, nueva })
+            });
+            const data = await res.json();
+            if (!res.ok || data.success !== true) {
+                errEl.textContent = data.message || 'No se pudo cambiar la contraseña.';
+                errEl.style.display = 'block';
+                return;
+            }
+            modal.remove();
+            if (typeof window.mostrarExito === 'function') {
+                window.mostrarExito('Contraseña actualizada', '¡Listo!');
+            }
+        } catch (e) {
+            errEl.textContent = 'Error de conexión. Intentá de nuevo.';
+            errEl.style.display = 'block';
+        }
+    };
+};
+
 window.procesarGuardado = function (status) {
     const cliente = document.getElementById('clienteNombre')?.value?.trim() || 'Cliente Genérico';
     const total = parseFloat(document.getElementById('precioTotal')?.value) ||

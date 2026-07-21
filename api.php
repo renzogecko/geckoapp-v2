@@ -86,6 +86,29 @@ try {
                        'rol' => $user['rol'], 'email' => $user['email']]);
         }
 
+        if ($method === 'PUT') {
+            if (empty($_SESSION['gecko_user_id'])) {
+                error('No autenticado', 401);
+            }
+            $actual = $body['actual'] ?? '';
+            $nueva = $body['nueva'] ?? '';
+            if (!$actual || !$nueva) { error('Datos incompletos', 400); }
+            if (strlen($nueva) < 4) { error('La nueva contraseña es muy corta', 400); }
+
+            $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ? LIMIT 1");
+            $stmt->execute([$_SESSION['gecko_user_id']]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$user) { error('Usuario no encontrado', 404); }
+
+            $valido = password_verify($actual, $user['password']) || $user['password'] === $actual;
+            if (!$valido) { error('La contraseña actual no es correcta', 401); }
+
+            $hash = password_hash($nueva, PASSWORD_DEFAULT);
+            $pdo->prepare("UPDATE usuarios SET password = ? WHERE id = ?")->execute([$hash, $user['id']]);
+
+            responder(['success' => true, 'message' => 'Contraseña actualizada']);
+        }
+
         if ($method === 'DELETE') {
             session_destroy();
             responder(['logueado' => false]);
