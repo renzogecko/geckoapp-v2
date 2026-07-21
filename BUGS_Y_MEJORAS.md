@@ -973,3 +973,86 @@ Corpóreos con sus 3 modos) tienen el botón Editar funcionando.
   limpieza, pero hay que confirmar con más detalle que nada más lo 
   llame antes de borrarlo (Regla de "no dejar código muerto").
 - **Estado:** 🔵 Pendiente
+
+### [MEJ-023] Dashboard — Diseño aprobado, listo para aplicar
+
+**Sección:** Dashboard (pantalla de inicio)
+**Estado:** 🟢 Diseño aprobado — pendiente de construcción (depende de 
+que exista el sistema de Usuarios/Login, ver dependencia abajo)
+
+**Resumen del cambio:** reemplazar el Dashboard actual por un tablero 
+estilo Trello, personalizable por usuario, con las OT reales del 
+sistema como tarjetas.
+
+**Tarjetas resumen (arriba de todo):**
+- En proceso (cantidad total)
+- Atrasados / vencidos
+- Próximos a entregar (por fecha de entrega cercana)
+
+**Tableros (pestañas, filtran por la categoría real de la OT):**
+- Gráfica → categoría "Gráfica" → columnas: En Proceso, Impresión, Listo
+- Industrial → categoría "Industrial" → columnas: En Proceso, En Taller, 
+  Listo
+- Compartida → categoría "Gráfica/Industrial" → columnas: En Proceso, 
+  En Taller, En Impresión, Listo
+
+**Cada usuario puede:**
+- Elegir un tablero como "principal" (se guarda como preferencia, 
+  aparece resaltado y es el que ve al entrar)
+- Ver los otros tableros igual, con un clic en la pestaña
+- Ver el tablero "Compartida" siempre, sin importar cuál sea su 
+  principal
+
+**Contenido de cada tarjeta:**
+- Título del trabajo
+- Cliente
+- Número de OT
+- Fecha de entrega (en rojo si está atrasada)
+- Círculo con la inicial de quién cargó el presupuesto/OT (color por 
+  persona)
+- Botón de acceso directo (↗) que lleva a la OT completa
+
+**Comportamiento del tablero:**
+- Cada columna tiene su propio contenedor visual (fondo levemente 
+  distinto al de las tarjetas), para que no se mezclen a simple vista
+- Las tarjetas se pueden arrastrar (drag and drop) de una columna a 
+  otra
+- Arrastrar una tarjeta CAMBIA EL ESTADO REAL de esa OT en el sistema 
+  (ej: de "En Proceso" a "Listo") — no es solo un orden visual
+
+**⚠️ DEPENDENCIA CRÍTICA — construir en este orden:**
+1. Primero: Sistema de Usuarios/Login (ver MEJ-032 abajo) — sin esto, 
+   no hay forma de saber "quién" está mirando el Dashboard para 
+   personalizarlo, ni quién cargó cada trabajo.
+2. Después: este Dashboard, conectado al login ya existente.
+3. Alternativa si se quiere adelantar: se puede construir la mecánica 
+   del tablero (columnas + tarjetas de OT reales + drag and drop que 
+   cambia estado + botón de acceso directo) ANTES del login, sin la 
+   parte de personalización por usuario ni el círculo de "quién la 
+   cargó" — Renzo decide si prefiere esta versión intermedia primero.
+
+**Boceto visual:** aprobado en sesión del 21/07/2026 (dos iteraciones, 
+la segunda con columnas en contenedores separados y botón de acceso 
+directo a la OT).
+
+### [MEJ-032] Sistema de Usuarios / Login completo
+
+**Sección:** Nueva — autenticación y perfiles
+**Estado:** 🔴 Pendiente — PRIMER PASO antes de MEJ-023 (Dashboard) y 
+antes de cualquier sistema de notificaciones
+
+**Descripción:** hoy la app usa un único usuario/contraseña compartido. 
+Se necesita un login real con:
+- 5 perfiles: Renzo, Rodri, Agus (admins, acceso completo incluyendo 
+  Finanzas), Nico y Seba (usuarios estándar, sin acceso a Finanzas — 
+  ya está anotado en las reglas de oro del proyecto, falta 
+  implementar)
+- Usuario y contraseña por persona
+- Registro de quién creó cada presupuesto/OT (auditoría)
+- Base para un futuro sistema de notificaciones entre usuarios (ej: 
+  "Nico agregó un presupuesto nuevo")
+
+**Requiere sesión de diseño dedicada antes de tocar código** — hay 
+decisiones técnicas importantes a definir (cómo se guardan las 
+contraseñas, cómo se controla el acceso a Finanzas por rol, cómo se 
+relaciona con el `localStorage` actual que no distingue usuarios).
