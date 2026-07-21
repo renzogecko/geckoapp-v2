@@ -941,27 +941,35 @@ botón ✏️ Editar que:
 - ✅ Bastidores (bastidores.js) — con filas múltiples + revestimiento
 - ✅ Impresión 3D (impresion3d.js) — formulario simple
 
-**Pendiente — Corpóreos (único cotizador que falta), sesión dedicada:**
-- Tiene 3+ modos con HTML completamente separado (Polifán, 
-  Chapa/Acrílico, Letras 3D) — no una variación chica del mismo 
-  formulario, como en los demás.
-- Se renderiza en un contenedor distinto (`#corporeosDinamico`, no 
-  `#panelConfigurador`) — hay que confirmar si el snapshot genérico 
-  sirve igual apuntando ahí o si necesita ajuste.
-- Posible código duplicado/viejo conviviendo: `calcularCorporeos()` / 
-  `addCorporeoAlPresupuesto()` (¿viejo?) vs `calcularChapaAcrilico()` / 
-  `calcularCostoPolifan()` (¿nuevo?) — HAY QUE CONFIRMAR EN EL 
-  NAVEGADOR (F12) cuál está realmente activo antes de tocar nada, 
-  puede que el otro sea código muerto para limpiar de paso.
-- Orden sugerido: Chapa/Acrílico primero, después Polifán, Letras 3D 
-  al final (o preguntarle a Renzo si vale la pena para un modo poco 
-  usado).
-- Aplicar el mismo patrón de 4 piezas ya validado (snapshot + 
-  origenCotizador + entrada en el mapa de configuración + enganche del 
-  botón), un modo a la vez, probando cada uno.
+**Corpóreos — COMPLETADO (20/07/2026):**
+Se investigó primero (Regla R10) y se confirmó que solo existen 3 
+modos reales alcanzables desde el menú (Polifán, Chapa/Acrílico, 
+Letras 3D); el 4to bloque de código encontrado (calcularCorporeos() / 
+addCorporeoAlPresupuesto()) es código muerto, inalcanzable desde la UI 
+— queda anotado para limpieza en otra sesión, no se tocó ahora.
+Se aplicó el mismo patrón de 4 piezas a los 3 modos reales, cada uno 
+con su propio origenCotizador (corporeos_polifan, corporeos_chapa, 
+corporeos_letras3d) y su propia función de setup para restaurar el 
+modo correcto (window._corpModo) antes de re-renderizar.
+
+**MEJ-021 · Etapa 2 — ESTADO FINAL: 100% completa.** Los 7 cotizadores 
+(Impresión, Corte, Textil, Láser/CNC, Bastidores, Impresión 3D, 
+Corpóreos con sus 3 modos) tienen el botón Editar funcionando.
 
 **Detalle menor sin resolver, revisar en otra sesión:**
 - Al editar un ítem y volver al cotizador (al menos visto en Láser/CNC 
   y CNC Router), el campo Cliente del cotizador queda con un valor 
   cargado de forma extraña. No se identificó la causa todavía — 
   investigar antes de tocar nada.
+
+### [MEJ-031] Limpieza de código muerto — calcularCorporeos() viejo
+- **Sección:** corporeos.js
+- **Descripción:** existe un bloque de código (función 
+  window.calcularCorporeos, window.addCorporeoAlPresupuesto, campos 
+  corpNombre/corpAncho/corpAlto/corpPerimetro/corpProfundidad/
+  corpDesperdicio) que parece ser una versión anterior de Corpóreos. 
+  Se confirmó que no es alcanzable desde ningún link del menú (Renzo 
+  probó y solo ve Polifán, Chapa/Acrílico y Letras 3D). Candidato a 
+  limpieza, pero hay que confirmar con más detalle que nada más lo 
+  llame antes de borrarlo (Regla de "no dejar código muerto").
+- **Estado:** 🔵 Pendiente
