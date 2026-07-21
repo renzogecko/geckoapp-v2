@@ -100,12 +100,27 @@ window.calcularCosto3D = function () {
     const descPintura = filasPintura.length > 0
         ? ' | Pintura: ' + filasPintura.map(function (f) { return f.nombre + (f.codigo ? ' (' + f.codigo + ')' : ''); }).join(', ')
         : '';
+    // ── Snapshot de parámetros crudos (MEJ-021 Etapa 2) ──
+    const _geckoSnapshot3D = (function () {
+        const snap = { campos: {} };
+        document.querySelectorAll('#panelConfigurador [id]').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                snap.campos[el.id] = el.checked;
+            } else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                snap.campos[el.id] = el.value;
+            }
+        });
+        return snap;
+    })();
+
     window.itemActual3D = {
         tipo: '3d',
+        origenCotizador: '3d',
         textoOpciones: `Impresión 3D Técnica: ${nombreMat} (${gramos}gr)`,
         identificacion: document.getElementById('3dNombre')?.value?.trim() || '',
         costo: totalFinal,
-        otDetalle: `Peso: ${gramos}gr | Tiempo: ${horas}hs | Material: ${nombreMat}${descPintura}`
+        otDetalle: `Peso: ${gramos}gr | Tiempo: ${horas}hs | Material: ${nombreMat}${descPintura}`,
+        parametrosOriginales: _geckoSnapshot3D
     };
     window.itemActualCotizado = window.itemActual3D;
 

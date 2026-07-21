@@ -6218,6 +6218,12 @@ window._gpmConfigOrigenes = {
         tipoRestauracion: 'bastidores',
         setup: function () {},
         calcFinal: function () { if (typeof window.calcularCostoBastidores === 'function') window.calcularCostoBastidores(); }
+    },
+    '3d': {
+        categoria: '3d',
+        multiFila: false,
+        setup: function () {},
+        calcFinal: function () { if (typeof window.calcularCosto3D === 'function') window.calcularCosto3D(); }
     }
 };
 
