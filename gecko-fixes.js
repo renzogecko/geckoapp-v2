@@ -4104,6 +4104,23 @@ window.addEventListener('load', function () {
             console.log('🦎 GECKO-FIX: Interceptor de edición de ítems en agregarItemAlCarritoUI activo.');
         })();
 
+        // ── BUG-003: sincronizar window.GECKO_SETTINGS con la config real ──
+        (function () {
+            window.GECKO_SETTINGS = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || 'null') || {
+                cotizacionDolar: 1420, iva: 21, multiplicadorGlobal: 2.0,
+                minutoLaser: 820, minutoRouter: 860, valorHoraHombre: 3500, costoHora3D: 1500
+            };
+
+            var _origGuardarConfiguracion = window.guardarConfiguracion;
+            if (typeof _origGuardarConfiguracion === 'function') {
+                window.guardarConfiguracion = function () {
+                    _origGuardarConfiguracion.apply(this, arguments);
+                    window.GECKO_SETTINGS = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || 'null') || window.GECKO_SETTINGS;
+                };
+            }
+            console.log('🦎 GECKO-FIX: window.GECKO_SETTINGS sincronizado (BUG-003 dólar).');
+        })();
+
         // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
         // main.js corre DESPUÉS de gecko-fixes.js (por defer), por eso hacemos el override aquí.
         window.renderizarMovimientos = function () {
