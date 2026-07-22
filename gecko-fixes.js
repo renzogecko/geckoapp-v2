@@ -4116,6 +4116,37 @@ window.addEventListener('load', function () {
                 window.guardarConfiguracion = function () {
                     _origGuardarConfiguracion.apply(this, arguments);
                     window.GECKO_SETTINGS = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || 'null') || window.GECKO_SETTINGS;
+
+                    // Recalcular precios de materiales con costo en USD (clave real: gecko_materiales)
+                    try {
+                        const materiales = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+                        const nuevaCotiz = window.GECKO_SETTINGS.cotizacionDolar;
+                        let actualizados = false;
+                        materiales.forEach(m => {
+                            if (m.costoUSD && parseFloat(m.costoUSD) > 0) {
+                                m.costoARS = Math.round(parseFloat(m.costoUSD) * nuevaCotiz);
+                                const mult = m.multiplicador || window.GECKO_SETTINGS.multiplicadorGlobal || 2;
+                                m.precioVenta = Math.round(m.costoARS * mult);
+                                actualizados = true;
+                            }
+                        });
+                        if (actualizados) {
+                            localStorage.setItem('gecko_materiales', JSON.stringify(materiales));
+                            window.LISTA_MATERIALES = materiales;
+                            if (typeof window._geckoUpdateCache === 'function') window._geckoUpdateCache('gecko_materiales', materiales);
+                            materiales.forEach(m => {
+                                fetch('/app/api.php?endpoint=materiales', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(m)
+                                }).catch(() => { });
+                            });
+                            if (typeof window.renderInsumos === 'function') window.renderInsumos();
+                            if (typeof window.mostrarExito === 'function') {
+                                window.mostrarExito('Se recalcularon los precios de los materiales con costo en dólares.', '💵 Dólar actualizado');
+                            }
+                        }
+                    } catch (e) { console.warn('GECKO: error recalculando precios por dólar', e); }
                 };
             }
             console.log('🦎 GECKO-FIX: window.GECKO_SETTINGS sincronizado (BUG-003 dólar).');
