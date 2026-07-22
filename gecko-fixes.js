@@ -4182,10 +4182,10 @@ window.addEventListener('load', function () {
                     var calculado = { color: '#e4e4e7', fontWeight: '600' };
                     var campoActivo = (origen === 'USD') ? inputUSD : inputARS;
                     var campoCalculado = (origen === 'USD') ? inputARS : inputUSD;
-                    campoActivo.style.color = activo.color;
-                    campoActivo.style.fontWeight = activo.fontWeight;
-                    campoCalculado.style.color = calculado.color;
-                    campoCalculado.style.fontWeight = calculado.fontWeight;
+                    campoActivo.style.setProperty('color', activo.color, 'important');
+                    campoActivo.style.setProperty('font-weight', activo.fontWeight, 'important');
+                    campoCalculado.style.setProperty('color', calculado.color, 'important');
+                    campoCalculado.style.setProperty('font-weight', calculado.fontWeight, 'important');
                 };
             }
             console.log('🦎 GECKO-FIX: Color de campo activo USD/ARS en Materiales activo.');
