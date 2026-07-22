@@ -4117,17 +4117,34 @@ window.addEventListener('load', function () {
                     _origGuardarConfiguracion.apply(this, arguments);
                     window.GECKO_SETTINGS = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || 'null') || window.GECKO_SETTINGS;
 
-                    // Recalcular precios de materiales con costo en USD (clave real: gecko_materiales)
+                    // Recalcular "costo por m²/unidad" de materiales con costo en USD (clave real: gecko_materiales)
+                    // IMPORTANTE: Venta y Gremio NO se tocan acá — se calculan solos a partir de m.costo
+                    // en el momento de mostrarse (main.js / getPrecioMat), usando m.multiplicador y m.multGremio.
                     try {
                         const materiales = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
                         const nuevaCotiz = window.GECKO_SETTINGS.cotizacionDolar;
                         let actualizados = false;
                         materiales.forEach(m => {
                             if (m.costoUSD && parseFloat(m.costoUSD) > 0) {
-                                m.costoARS = Math.round(parseFloat(m.costoUSD) * nuevaCotiz);
-                                const mult = m.multiplicador || window.GECKO_SETTINGS.multiplicadorGlobal || 2;
-                                m.precioVenta = Math.round(m.costoARS * mult);
-                                actualizados = true;
+                                const costoARSTotal = parseFloat(m.costoUSD) * nuevaCotiz;
+                                const isFlexible = (m.categoria === 'flexible' || m.categoria === 'vinilos_lonas');
+                                let costoUnitario = 0;
+                                if ((m.unidadVenta || 'm2') === 'm2') {
+                                    const ancho = parseFloat(m.ancho) || 0;
+                                    const largo = parseFloat(m.largo) || 0;
+                                    const largoFinal = isFlexible ? (largo * 100) : largo;
+                                    if (ancho > 0 && largoFinal > 0) {
+                                        costoUnitario = costoARSTotal / (ancho * largoFinal / 10000);
+                                    }
+                                } else {
+                                    const contenido = parseFloat(m.contenidoUnidad) || 1;
+                                    if (contenido > 0) costoUnitario = costoARSTotal / contenido;
+                                }
+                                if (costoUnitario > 0) {
+                                    m.costoARS = Math.round(costoARSTotal);
+                                    m.costo = costoUnitario;
+                                    actualizados = true;
+                                }
                             }
                         });
                         if (actualizados) {
@@ -4150,6 +4167,28 @@ window.addEventListener('load', function () {
                 };
             }
             console.log('🦎 GECKO-FIX: window.GECKO_SETTINGS sincronizado (BUG-003 dólar).');
+        })();
+
+        // ── Colorear campo activo USD/ARS en el modal de Materiales ──
+        (function () {
+            var _origConvertirMoneda = window.convertirMoneda;
+            if (typeof _origConvertirMoneda === 'function') {
+                window.convertirMoneda = function (origen) {
+                    _origConvertirMoneda.apply(this, arguments);
+                    var inputUSD = document.getElementById('matCostUSD');
+                    var inputARS = document.getElementById('matCostARS');
+                    if (!inputUSD || !inputARS) return;
+                    var activo = { color: '#F15A24', fontWeight: '900' };
+                    var calculado = { color: '#e4e4e7', fontWeight: '600' };
+                    var campoActivo = (origen === 'USD') ? inputUSD : inputARS;
+                    var campoCalculado = (origen === 'USD') ? inputARS : inputUSD;
+                    campoActivo.style.color = activo.color;
+                    campoActivo.style.fontWeight = activo.fontWeight;
+                    campoCalculado.style.color = calculado.color;
+                    campoCalculado.style.fontWeight = calculado.fontWeight;
+                };
+            }
+            console.log('🦎 GECKO-FIX: Color de campo activo USD/ARS en Materiales activo.');
         })();
 
         // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
