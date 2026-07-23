@@ -4184,8 +4184,10 @@ window.addEventListener('load', function () {
                     var campoActivo = (origen === 'USD') ? inputUSD : inputARS;
                     var campoCalculado = (origen === 'USD') ? inputARS : inputUSD;
                     campoActivo.style.setProperty('color', activo.color, 'important');
+                    campoActivo.style.setProperty('-webkit-text-fill-color', activo.color, 'important');
                     campoActivo.style.setProperty('font-weight', activo.fontWeight, 'important');
                     campoCalculado.style.setProperty('color', calculado.color, 'important');
+                    campoCalculado.style.setProperty('-webkit-text-fill-color', calculado.color, 'important');
                     campoCalculado.style.setProperty('font-weight', calculado.fontWeight, 'important');
                 };
             }
