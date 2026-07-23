@@ -7524,9 +7524,8 @@ setTimeout(function () {
             window.materiales = mats;
             localStorage.setItem('gecko_materiales', JSON.stringify(mats));
             if (typeof window.geckoApiEliminar === 'function') window.geckoApiEliminar('gecko_materiales', id);
-            if (typeof renderInsumos === 'function') renderInsumos();
-            if (typeof window.poblarMaterialesGrafica === 'function') window.poblarMaterialesGrafica();
-            if (typeof window.mostrarExito === 'function') window.mostrarExito('Material eliminado.', '¡Eliminado!');
+            if (typeof window.mostrarExito === 'function') window.mostrarExito('Material eliminado — actualizando la lista...', '¡Eliminado!');
+            setTimeout(function () { location.reload(); }, 1200);
         });
     };
 }, 2000);
