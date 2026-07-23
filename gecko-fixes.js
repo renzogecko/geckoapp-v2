@@ -4258,34 +4258,105 @@ window.addEventListener('load', function () {
             console.log('🦎 GECKO-FIX: Reset de bloqueo USD/ARS al abrir Nuevo Insumo activo.');
         })();
 
-        // ── Forzar limpieza total al presionar "Nuevo Insumo" (borra los 3
-        // sistemas de borrador viejos que puedan haber quedado pegados) ──
+        // ── Sistema de borrador limpio para "Nuevo Insumo" (mismo patrón que GPM) ──
         (function () {
             var _origAbrirModalMaterialLimpio = window.abrirModalMaterial;
-            if (typeof _origAbrirModalMaterialLimpio === 'function') {
-                window.abrirModalMaterial = function () {
-                    localStorage.removeItem('gecko_mat_draft');
-                    localStorage.removeItem('gecko_mat_draft2');
-                    localStorage.removeItem('gecko_mat_draft3');
-                    _origAbrirModalMaterialLimpio.apply(this, arguments);
-                    setTimeout(function () {
-                        var form = document.getElementById('formMaterial');
-                        if (form) {
-                            form.reset();
-                            delete form.dataset.editId;
-                        }
-                        var subCat = document.getElementById('matSubCat');
-                        if (subCat) subCat.value = '';
-                        var nota = document.getElementById('matNota');
-                        if (nota) nota.value = '';
-                        var precioManual = document.getElementById('matPrecioVentaManual');
-                        if (precioManual) precioManual.value = '';
-                        var precioGremio = document.getElementById('matPrecioGremio');
-                        if (precioGremio) precioGremio.value = '';
-                    }, 100);
-                };
+
+            window._gkGuardarDraftMaterialNuevo = function () {
+                var form = document.getElementById('formMaterial');
+                if (!form || form.dataset.editId) return;
+                var nombre = document.getElementById('matNom');
+                if (!nombre || !nombre.value.trim()) return;
+                var draft = { campos: {}, estrategia: (document.getElementById('matEstrategia') || {}).value || 'dinamica' };
+                document.querySelectorAll('#modalMaterial [id]').forEach(function (el) {
+                    if (el.type === 'checkbox' || el.type === 'radio') draft.campos[el.id] = el.checked;
+                    else if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') draft.campos[el.id] = el.value;
+                });
+                localStorage.setItem('gecko_mat_draft_nuevo', JSON.stringify(draft));
+            };
+
+            var _origIntentarCerrarGk2 = window.intentarCerrarModal;
+            window.intentarCerrarModal = function (id) {
+                if (id === 'modalMaterial') window._gkGuardarDraftMaterialNuevo();
+                if (typeof _origIntentarCerrarGk2 === 'function') _origIntentarCerrarGk2(id);
+            };
+
+            function _gkAbrirMaterialLimpio() {
+                localStorage.removeItem('gecko_mat_draft');
+                localStorage.removeItem('gecko_mat_draft2');
+                localStorage.removeItem('gecko_mat_draft3');
+                if (typeof _origAbrirModalMaterialLimpio === 'function') _origAbrirModalMaterialLimpio.apply(window, []);
+                setTimeout(function () {
+                    var form = document.getElementById('formMaterial');
+                    if (form) { form.reset(); delete form.dataset.editId; }
+                    var subCat = document.getElementById('matSubCat');
+                    if (subCat) subCat.value = '';
+                    var nota = document.getElementById('matNota');
+                    if (nota) nota.value = '';
+                    var precioManual = document.getElementById('matPrecioVentaManual');
+                    if (precioManual) precioManual.value = '';
+                    var precioGremio = document.getElementById('matPrecioGremio');
+                    if (precioGremio) precioGremio.value = '';
+                }, 100);
             }
-            console.log('🦎 GECKO-FIX: "Nuevo Insumo" fuerza limpieza total de borradores viejos.');
+
+            window._gkMostrarModalBorradorMaterial = function (draftRaw) {
+                document.getElementById('_gkModalBorradorMat')?.remove();
+                var modal = document.createElement('div');
+                modal.id = '_gkModalBorradorMat';
+                modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10002;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+                modal.innerHTML = '<div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">' +
+                    '<h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Borrador encontrado</h3>' +
+                    '<p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Encontramos un material sin terminar de cargar. ¿Querés recuperarlo o empezar de cero?</p>' +
+                    '<div style="display:flex;gap:10px;">' +
+                    '<button id="_gkDescartarDraftMat" style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Empezar de cero</button>' +
+                    '<button id="_gkRecuperarDraftMat" style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Recuperar borrador</button>' +
+                    '</div></div>';
+                document.body.appendChild(modal);
+
+                document.getElementById('_gkDescartarDraftMat').onclick = function () {
+                    localStorage.removeItem('gecko_mat_draft_nuevo');
+                    modal.remove();
+                    _gkAbrirMaterialLimpio();
+                };
+                document.getElementById('_gkRecuperarDraftMat').onclick = function () {
+                    modal.remove();
+                    _gkAbrirMaterialLimpio();
+                    setTimeout(function () {
+                        try {
+                            var draft = JSON.parse(draftRaw);
+                            Object.keys(draft.campos || {}).forEach(function (id) {
+                                var el = document.getElementById(id);
+                                if (!el) return;
+                                if (el.type === 'checkbox' || el.type === 'radio') el.checked = draft.campos[id];
+                                else el.value = draft.campos[id];
+                                el.dispatchEvent(new Event('input', { bubbles: true }));
+                                el.dispatchEvent(new Event('change', { bubbles: true }));
+                            });
+                            if (draft.estrategia && typeof window.setEstrategiaVenta === 'function') window.setEstrategiaVenta(draft.estrategia);
+                            if (typeof window.recalcularCostoReal === 'function') window.recalcularCostoReal();
+                        } catch (e) { }
+                    }, 200);
+                };
+            };
+
+            window.abrirModalMaterial = function () {
+                var draftRaw = localStorage.getItem('gecko_mat_draft_nuevo');
+                if (draftRaw) {
+                    window._gkMostrarModalBorradorMaterial(draftRaw);
+                    return;
+                }
+                _gkAbrirMaterialLimpio();
+            };
+
+            var _fmClearDraftNuevoGk = document.getElementById('formMaterial');
+            if (_fmClearDraftNuevoGk) {
+                _fmClearDraftNuevoGk.addEventListener('submit', function () {
+                    localStorage.removeItem('gecko_mat_draft_nuevo');
+                });
+            }
+
+            console.log('🦎 GECKO-FIX: Sistema de borrador limpio para Materiales activo.');
         })();
 
         // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
@@ -7452,6 +7523,7 @@ setTimeout(function () {
             var mats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]').filter(function (m) { return String(m.id) !== String(id); });
             window.materiales = mats;
             localStorage.setItem('gecko_materiales', JSON.stringify(mats));
+            if (typeof window.geckoApiEliminar === 'function') window.geckoApiEliminar('gecko_materiales', id);
             if (typeof renderInsumos === 'function') renderInsumos();
             if (typeof window.poblarMaterialesGrafica === 'function') window.poblarMaterialesGrafica();
             if (typeof window.mostrarExito === 'function') window.mostrarExito('Material eliminado.', '¡Eliminado!');
