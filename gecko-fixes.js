@@ -4194,6 +4194,33 @@ window.addEventListener('load', function () {
             console.log('🦎 GECKO-FIX: Color de campo activo USD/ARS en Materiales activo.');
         })();
 
+        // ── Colorear campo USD/ARS al ABRIR un material existente para editar ──
+        (function () {
+            var _origEditarMaterial = window.editarMaterial;
+            if (typeof _origEditarMaterial === 'function') {
+                window.editarMaterial = function (id) {
+                    _origEditarMaterial.apply(this, arguments);
+                    setTimeout(function () {
+                        var mats = window.materiales || JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+                        var material = mats.find(function (m) { return String(m.id) === String(id); });
+                        var inputUSD = document.getElementById('matCostUSD');
+                        var inputARS = document.getElementById('matCostARS');
+                        if (!material || !inputUSD || !inputARS) return;
+                        var origenUSD = parseFloat(material.costoUSD) > 0;
+                        var campoActivo = origenUSD ? inputUSD : inputARS;
+                        var campoCalculado = origenUSD ? inputARS : inputUSD;
+                        campoActivo.style.setProperty('color', '#F15A24', 'important');
+                        campoActivo.style.setProperty('-webkit-text-fill-color', '#F15A24', 'important');
+                        campoActivo.style.setProperty('font-weight', '900', 'important');
+                        campoCalculado.style.setProperty('color', '#e4e4e7', 'important');
+                        campoCalculado.style.setProperty('-webkit-text-fill-color', '#e4e4e7', 'important');
+                        campoCalculado.style.setProperty('font-weight', '600', 'important');
+                    }, 50);
+                };
+            }
+            console.log('🦎 GECKO-FIX: Color USD/ARS al abrir material existente activo.');
+        })();
+
         // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
         // main.js corre DESPUÉS de gecko-fixes.js (por defer), por eso hacemos el override aquí.
         window.renderizarMovimientos = function () {
