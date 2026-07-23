@@ -8391,4 +8391,20 @@ window._geckoFechaISOaDDMMYYYY = function (fechaISO) {
 };
 
 // ── FIN FIX BUG-004 ──────────────────────────────────────────────────────────
+
+// ── FIX FINAL: garantizar que el borrador de Materiales se guarde al cerrar
+// el modal sin querer, sin importar qué otras envolturas de
+// intentarCerrarModal existan (esta corre última, con el delay más largo) ──
+window.addEventListener('load', function () {
+    setTimeout(function () {
+        var _origICMFinal = window.intentarCerrarModal;
+        window.intentarCerrarModal = function (id) {
+            if (id === 'modalMaterial' && typeof window._gkGuardarDraftMaterialNuevo === 'function') {
+                window._gkGuardarDraftMaterialNuevo();
+            }
+            if (typeof _origICMFinal === 'function') _origICMFinal(id);
+        };
+        console.log('🦎 GECKO-FIX: Guardado de borrador de Materiales garantizado (envoltura final).');
+    }, 2500);
+});
 // ── FIN FIX renderInsumos v2 ─────────────────────────────────────────────────
