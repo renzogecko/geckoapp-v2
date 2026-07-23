@@ -4160,8 +4160,9 @@ window.addEventListener('load', function () {
                             });
                             if (typeof window.renderInsumos === 'function') window.renderInsumos();
                             if (typeof window.mostrarExito === 'function') {
-                                window.mostrarExito('Se recalcularon los precios de los materiales con costo en dólares.', '💵 Dólar actualizado');
+                                window.mostrarExito('Se recalcularon los precios — recargando la pantalla en un instante...', '💵 Dólar actualizado');
                             }
+                            setTimeout(() => { location.reload(); }, 1800);
                         }
                     } catch (e) { console.warn('GECKO: error recalculando precios por dólar', e); }
                 };
