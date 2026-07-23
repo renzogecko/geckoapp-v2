@@ -4258,6 +4258,36 @@ window.addEventListener('load', function () {
             console.log('🦎 GECKO-FIX: Reset de bloqueo USD/ARS al abrir Nuevo Insumo activo.');
         })();
 
+        // ── Forzar limpieza total al presionar "Nuevo Insumo" (borra los 3
+        // sistemas de borrador viejos que puedan haber quedado pegados) ──
+        (function () {
+            var _origAbrirModalMaterialLimpio = window.abrirModalMaterial;
+            if (typeof _origAbrirModalMaterialLimpio === 'function') {
+                window.abrirModalMaterial = function () {
+                    localStorage.removeItem('gecko_mat_draft');
+                    localStorage.removeItem('gecko_mat_draft2');
+                    localStorage.removeItem('gecko_mat_draft3');
+                    _origAbrirModalMaterialLimpio.apply(this, arguments);
+                    setTimeout(function () {
+                        var form = document.getElementById('formMaterial');
+                        if (form) {
+                            form.reset();
+                            delete form.dataset.editId;
+                        }
+                        var subCat = document.getElementById('matSubCat');
+                        if (subCat) subCat.value = '';
+                        var nota = document.getElementById('matNota');
+                        if (nota) nota.value = '';
+                        var precioManual = document.getElementById('matPrecioVentaManual');
+                        if (precioManual) precioManual.value = '';
+                        var precioGremio = document.getElementById('matPrecioGremio');
+                        if (precioGremio) precioGremio.value = '';
+                    }, 100);
+                };
+            }
+            console.log('🦎 GECKO-FIX: "Nuevo Insumo" fuerza limpieza total de borradores viejos.');
+        })();
+
         // ── Parchar renderizarMovimientos DESPUÉS de main.js (que tiene defer) ──
         // main.js corre DESPUÉS de gecko-fixes.js (por defer), por eso hacemos el override aquí.
         window.renderizarMovimientos = function () {
