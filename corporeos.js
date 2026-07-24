@@ -18,6 +18,30 @@ window.getCorpPrecio = function (item) {
     return precioVenta;
 };
 
+// Helper global: resuelve el área (m²) de un cotizador de corpóreos.
+// Si hay Ancho y Alto cargados, calcula el área y bloquea el input (autocálculo).
+// Si falta alguno de los dos, habilita el input para carga manual y usa ese valor.
+window._geckoResolverArea = function (idArea, ancho, alto) {
+    const inputArea = document.getElementById(idArea);
+    const clasesAuto = ['opacity-50', 'cursor-not-allowed', 'bg-zinc-900/40'];
+    let areaM2;
+    if (ancho > 0 && alto > 0) {
+        areaM2 = (ancho * alto) / 10000;
+        if (inputArea) {
+            inputArea.value = areaM2.toFixed(2);
+            inputArea.readOnly = true;
+            inputArea.classList.add(...clasesAuto);
+        }
+    } else {
+        areaM2 = parseFloat(inputArea?.value) || 0;
+        if (inputArea) {
+            inputArea.readOnly = false;
+            inputArea.classList.remove(...clasesAuto);
+        }
+    }
+    return areaM2;
+};
+
 window.setCorpModo = function (modo) {
     window._corpModo = modo;
     // Actualización de navegación activa
@@ -62,7 +86,7 @@ window.setCorpModo = function (modo) {
             <!-- 02. Variables del Proyecto -->
             <div class="card-gecko space-y-2 animate-in fade-in slide-in-from-top-1">
                 <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">02. Variables de proyecto</p>
-                <div class="grid grid-cols-4 gap-4">
+                <div class="grid grid-cols-5 gap-4">
                     <div>
                         <label class="block text-[11px] text-zinc-400 mb-1">Ancho (cm)</label>
                         <input type="number" id="polifanAncho" class="gecko-input w-full" placeholder="0" oninput="window.calcularCostoPolifan()" onwheel="this.blur()">
@@ -70,6 +94,10 @@ window.setCorpModo = function (modo) {
                     <div>
                         <label class="block text-[11px] text-zinc-400 mb-1">Alto (cm)</label>
                         <input type="number" id="polifanAlto" class="gecko-input w-full" placeholder="0" oninput="window.calcularCostoPolifan()" onwheel="this.blur()">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-zinc-400 mb-1">Área (m²)</label>
+                        <input type="number" id="polifanArea" class="gecko-input w-full" placeholder="0" oninput="window.calcularCostoPolifan()" onwheel="this.blur()">
                     </div>
                     <div>
                         <label class="block text-[11px] text-zinc-400 mb-1">Perímetro (cm)</label>
@@ -244,7 +272,7 @@ window.setCorpModo = function (modo) {
             <!-- 02. Variables de Proyecto -->
             <div class="card-gecko space-y-2 animate-in fade-in slide-in-from-top-1">
                 <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">02. Variables de proyecto</p>
-                <div class="grid grid-cols-5 gap-3">
+                <div class="grid grid-cols-6 gap-3">
                     <div>
                         <label class="block text-[11px] text-zinc-400 mb-1">Ancho (cm)</label>
                         <input type="number" id="chapaAncho" class="gecko-input w-full" placeholder="0" oninput="window.calcularChapaAcrilico()">
@@ -252,6 +280,10 @@ window.setCorpModo = function (modo) {
                     <div>
                         <label class="block text-[11px] text-zinc-400 mb-1">Alto (cm)</label>
                         <input type="number" id="chapaAlto" class="gecko-input w-full" placeholder="0" oninput="window.calcularChapaAcrilico()">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-zinc-400 mb-1">Área (m²)</label>
+                        <input type="number" id="chapaArea" class="gecko-input w-full" placeholder="0" oninput="window.calcularChapaAcrilico()">
                     </div>
                     <div>
                         <label class="block text-[11px] text-zinc-400 mb-1">Perímetro (cm)</label>
@@ -346,9 +378,10 @@ window.setCorpModo = function (modo) {
 
             <div class="card-gecko space-y-2 animate-in fade-in slide-in-from-top-1">
                 <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">02. Variables de proyecto</p>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     <div><label class="block text-[11px] text-zinc-400 mb-1">Ancho (cm)</label><input type="number" id="3dAncho" class="gecko-input w-full" placeholder="0" oninput="window.calcularLetras3D()"></div>
                     <div><label class="block text-[11px] text-zinc-400 mb-1">Alto (cm)</label><input type="number" id="3dAlto" class="gecko-input w-full" placeholder="0" oninput="window.calcularLetras3D()"></div>
+                    <div><label class="block text-[11px] text-zinc-400 mb-1">Área (m²)</label><input type="number" id="3dArea" class="gecko-input w-full" placeholder="0" oninput="window.calcularLetras3D()"></div>
                     <div><label class="block text-[11px] text-zinc-400 mb-1">Perímetro (cm)</label><input type="number" id="3dPerimetro" class="gecko-input w-full" placeholder="0" oninput="window.calcularLetras3D()"></div>
                     <div><label class="block text-[11px] text-zinc-400 mb-1">Profundidad (cm)</label><input type="number" id="3dProfundidad" class="gecko-input w-full" placeholder="0" oninput="window.calcularLetras3D()"></div>
                 </div>
@@ -677,7 +710,7 @@ window.calcularLetras3D = function () {
 
     // Cálculo de volumen estimado (cuerpo/costados, sin cambios)
     const gramosCuerpo = perimetro * profundidad * 0.15;
-    const areaFrenteM2 = (ancho * alto) / 10000;
+    const areaFrenteM2 = window._geckoResolverArea('3dArea', ancho, alto);
     const settings3D = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
 
     // Frente: material aparte O integrado a la impresión (excluyentes)
@@ -784,7 +817,7 @@ window.calcularLetras3D = function () {
     const costoPinturaL3DTotal = filasPinturaL3D.reduce(function (acc, f) { return acc + f.valor; }, 0);
 
     // Iluminación (compartido con Chapa/Acrílico)
-    const resultadoIlum = window._geckoCalcularIluminacion((ancho * alto) / 10000, perimetro / 100);
+    const resultadoIlum = window._geckoCalcularIluminacion(areaFrenteM2, perimetro / 100);
     const costoIlumTotal = resultadoIlum.costoIlumTotal;
     const costoFuenteIlum = resultadoIlum.costoFuente;
 
@@ -1043,7 +1076,7 @@ window.calcularCostoPolifan = function () {
     const perimetro = parseFloat(document.getElementById('polifanPerimetro')?.value) || 0;
     const cantidad = parseInt(document.getElementById('polifanCantidad')?.value) || 1;
 
-    const areaM2 = (ancho * alto) / 10000;
+    const areaM2 = window._geckoResolverArea('polifanArea', ancho, alto);
     const perimetroMl = perimetro / 100;
 
     const auditCuerpo = [];
@@ -1673,7 +1706,7 @@ window.calcularChapaAcrilico = function () {
         if (panelParaPintura) panelParaPintura.appendChild(tarjetaPinturaChapa);
     }
 
-    const areaM2 = (ancho * alto) / 10000;
+    const areaM2 = window._geckoResolverArea('chapaArea', ancho, alto);
     const perimetroMl = perimetro / 100;
 
     // Función de normalización solicitada
