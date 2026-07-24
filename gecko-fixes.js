@@ -14,6 +14,12 @@ document.addEventListener('DOMContentLoaded', async function geckoAuthInit() {
             if (tabGastos) tabGastos.style.display = 'none';
             if (tabReportes) tabReportes.style.display = 'none';
             localStorage.setItem('gecko_finanzas_tab', 'movimientos');
+
+            const navConfig = document.getElementById('nav-configuracion');
+            if (navConfig) navConfig.style.display = 'none';
+
+            const btnToggleSaldos = document.getElementById('btnToggleSaldosAdmin');
+            if (btnToggleSaldos) btnToggleSaldos.style.display = 'none';
         }
 
         const iniciales = data.nombre.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
@@ -2080,6 +2086,16 @@ window._renderizarFinanzasCompleto = async function () {
     const contenedor = document.getElementById('contenedor-cajas');
     if (!contenedor) return;
 
+    // Aplicar estado guardado de ocultar/mostrar (solo lo usa el botón de admin)
+    const labelOjo = document.getElementById('labelOjoCajas');
+    if (localStorage.getItem('gecko_cajas_ocultas') === '1') {
+        contenedor.classList.add('hidden');
+        if (labelOjo) labelOjo.textContent = 'Mostrar saldos';
+    } else {
+        contenedor.classList.remove('hidden');
+        if (labelOjo) labelOjo.textContent = 'Ocultar saldos';
+    }
+
     const btnNueva = contenedor.querySelector(':scope > button');
 
     // Estilos por tipo de caja
@@ -2109,6 +2125,19 @@ window._renderizarFinanzasCompleto = async function () {
         const est = _CAJA_EST[caja.icono] || _CAJA_EST.efectivo;
         const path = _CAJA_SVG_PATH[caja.icono] || _CAJA_SVG_PATH.efectivo;
         const saldo = parseFloat(caja.saldo) || 0;
+        const ocultarSaldo = (window.GECKO_USER?.rol === 'usuario') && (window.GECKO_SETTINGS?.ocultarSaldosUsuario === true);
+        const saldoHTML = ocultarSaldo ? '🔒 ****' : ('$' + Math.round(saldo).toLocaleString('es-AR'));
+        const botonEditarHTML = (window.GECKO_USER?.rol === 'usuario') ? '' : `
+            <button onclick="event.stopPropagation(); window.editarCaja('${caja.id}')"
+                title="Editar caja"
+                style="position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;z-index:2;"
+                onmouseover="this.style.background='rgba(255,255,255,0.15)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </button>`;
         const card = document.createElement('div');
         card.style.cssText = `
             display:flex;flex-direction:column;gap:0;
@@ -2133,23 +2162,14 @@ window._renderizarFinanzasCompleto = async function () {
         card.onclick = (e) => { if (e.isTrusted) window._verHistorialCaja(caja.id); };
         card.style.position = 'relative';
         card.innerHTML = `
-            <button onclick="event.stopPropagation(); window.editarCaja('${caja.id}')"
-                title="Editar caja"
-                style="position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;z-index:2;"
-                onmouseover="this.style.background='rgba(255,255,255,0.15)'"
-                onmouseout="this.style.background='rgba(255,255,255,0.06)'">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-            </button>
+            ${botonEditarHTML}
             <div style="width:36px;height:36px;border-radius:10px;background:${est.iconBg};display:flex;align-items:center;justify-content:center;margin-bottom:14px;flex-shrink:0;">
                 <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="${est.iconColor}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                     <path d="${path}"/>
                 </svg>
             </div>
             <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#71717a;margin:0 0 5px 0;line-height:1;">${caja.nombre}</p>
-            <p style="font-size:22px;font-weight:900;color:${saldo >= 0 ? est.balColor : '#ef4444'};margin:0;line-height:1.15;letter-spacing:-0.3px;">$${Math.round(saldo).toLocaleString('es-AR')}</p>
+            <p style="font-size:22px;font-weight:900;color:${ocultarSaldo ? '#71717a' : (saldo >= 0 ? est.balColor : '#ef4444')};margin:0;line-height:1.15;letter-spacing:-0.3px;">${saldoHTML}</p>
         `;
         contenedor.insertBefore(card, btnNueva);
     });
@@ -2159,6 +2179,16 @@ window._renderizarFinanzasCompleto = async function () {
 };
 
 window.renderizarFinanzas = window._renderizarFinanzasCompleto;
+
+// ── Toggle Ocultar/Mostrar saldos de caja (solo admin) ──
+window.toggleVisibilidadCajas = function () {
+    const cont = document.getElementById('contenedor-cajas');
+    const label = document.getElementById('labelOjoCajas');
+    if (!cont) return;
+    const oculto = cont.classList.toggle('hidden');
+    localStorage.setItem('gecko_cajas_ocultas', oculto ? '1' : '0');
+    if (label) label.textContent = oculto ? 'Mostrar saldos' : 'Ocultar saldos';
+};
 
 window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
     const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');

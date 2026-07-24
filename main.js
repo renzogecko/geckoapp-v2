@@ -628,6 +628,8 @@ window.initConfiguracion = function () {
         v('cfgPrecioKm', s.precioKm || 0);
         const cond = document.getElementById('cfgCondicionesVenta');
         if (cond) cond.value = s.condicionesVenta || '';
+        const chkOcultar = document.getElementById('cfgOcultarSaldosUsuario');
+        if (chkOcultar) chkOcultar.checked = !!s.ocultarSaldosUsuario;
     };
 
     // Mostrar valores locales primero (respuesta inmediata)
@@ -677,7 +679,8 @@ window.guardarConfiguracion = function () {
         factorAreaPintura3D: g('cfgFactorAreaPintura3D'),
         factorPesoFrente3D: g('cfgFactorPesoFrente3D'),
         precioKm: g('cfgPrecioKm'),
-        condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || ''
+        condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || '',
+        ocultarSaldosUsuario: document.getElementById('cfgOcultarSaldosUsuario')?.checked || false
     };
     localStorage.setItem('GECKO_SETTINGS', JSON.stringify(GECKO_SETTINGS));
 
