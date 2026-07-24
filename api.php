@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('America/Argentina/Buenos_Aires');
 
 $isLocal = (
     isset($_SERVER['REMOTE_ADDR']) && in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']) ||
@@ -576,6 +577,57 @@ try {
             $stmt = $pdo->prepare("REPLACE INTO configuracion (clave, valor) VALUES ('GECKO_SETTINGS', ?)");
             $stmt->execute([$valor]);
             responder(["success" => true, "message" => "Configuración guardada."]);
+        }
+    }
+
+    // ══════════════════════════════════════════
+    // ACTIVIDAD (feed)
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'actividad') {
+
+        if ($method === 'GET') {
+            $since = $_GET['since'] ?? '';
+            if ($since !== '') {
+                $sinceFecha = is_numeric($since)
+                    ? date('Y-m-d H:i:s', strlen($since) > 10 ? intval($since / 1000) : intval($since))
+                    : date('Y-m-d H:i:s', strtotime($since));
+            } else {
+                $sinceFecha = date('Y-m-d H:i:s', time() - 1800);
+            }
+
+            $items = [];
+
+            $stmt = $pdo->prepare("SELECT id, caja, monto, creado_por, creado_en FROM movimientos
+                WHERE creado_por IS NOT NULL AND creado_en > ? ORDER BY creado_en DESC LIMIT 30");
+            $stmt->execute([$sinceFecha]);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $r['tipo'] = 'movimiento';
+                $r['ts'] = strtotime($r['creado_en']) * 1000;
+                $items[] = $r;
+            }
+
+            $stmt = $pdo->prepare("SELECT id, nombre, creado_por, creado_en FROM clientes
+                WHERE creado_por IS NOT NULL AND creado_en > ? ORDER BY creado_en DESC LIMIT 30");
+            $stmt->execute([$sinceFecha]);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $r['tipo'] = 'cliente';
+                $r['ts'] = strtotime($r['creado_en']) * 1000;
+                $items[] = $r;
+            }
+
+            $stmt = $pdo->prepare("SELECT id, cliente, status, creado_por, creado_en FROM presupuestos
+                WHERE creado_por IS NOT NULL AND creado_en > ? ORDER BY creado_en DESC LIMIT 30");
+            $stmt->execute([$sinceFecha]);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $r['tipo'] = 'presupuesto';
+                $r['ts'] = strtotime($r['creado_en']) * 1000;
+                $items[] = $r;
+            }
+
+            usort($items, function ($a, $b) { return strcmp($b['creado_en'], $a['creado_en']); });
+            $items = array_slice($items, 0, 30);
+
+            responder($items);
         }
     }
 

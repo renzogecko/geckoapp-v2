@@ -343,6 +343,30 @@
                     </svg>
                 </button>
 
+                <!-- Botón Feed de Actividad -->
+                <div class="relative">
+                    <button onclick="window.GeckoFeed && window.GeckoFeed.toggle()" id="geckoFeedBtn"
+                        class="relative w-10 h-10 md:w-11 md:h-11 shrink-0 flex items-center justify-center rounded-lg bg-white dark:bg-darkCard border border-gray-100 dark:border-darkBorder text-gray-400 hover:text-gray-600 dark:hover:text-white transition-all shadow-sm"
+                        title="Actividad reciente">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                        </svg>
+                        <span id="geckoFeedBadge"
+                            class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-darkCard">0</span>
+                    </button>
+
+                    <div id="geckoFeedPanel"
+                        class="hidden absolute right-0 mt-2 w-[340px] max-h-[420px] overflow-y-auto custom-scrollbar bg-white dark:bg-darkCard border border-gray-100 dark:border-darkBorder rounded-2xl shadow-xl z-50">
+                        <div class="px-4 py-3 border-b border-gray-100 dark:border-darkBorder">
+                            <p class="text-[13px] font-black dark:text-zinc-100">Actividad reciente</p>
+                        </div>
+                        <div id="geckoFeedList" class="divide-y divide-gray-100 dark:divide-darkBorder">
+                            <p class="px-4 py-6 text-center text-[12px] text-gray-400 dark:text-zinc-600 font-bold">Sin actividad reciente.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Botón Presupuesto Manual -->
                 <button onclick="window.abrirCotizadorManual()"
                     class="bg-zinc-800 text-white px-4 md:px-5 py-2.5 rounded-lg text-[13px] font-bold hover:bg-zinc-700 active:scale-[0.97] transition-all border border-zinc-700 flex items-center gap-2">
@@ -3531,6 +3555,7 @@
     <script src="gecko-fixes.js"></script>
     <script src="gecko-local.js"></script>
     <script src="gecko-docs.js"></script>
+    <script src="gecko-feed.js"></script>
 </body>
 
 </html>
