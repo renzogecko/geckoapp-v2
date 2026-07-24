@@ -9,12 +9,11 @@ document.addEventListener('DOMContentLoaded', async function geckoAuthInit() {
         window.GECKO_USER = { nombre: data.nombre, rol: data.rol, email: data.email };
 
         if (data.rol === 'usuario') {
-            const navFin = document.getElementById('nav-finanzas');
-            if (navFin) navFin.style.display = 'none';
-            const tabReportes = document.getElementById('tabFin-reportes');
-            if (tabReportes) tabReportes.style.display = 'none';
             const tabGastos = document.getElementById('tabFin-gastos');
+            const tabReportes = document.getElementById('tabFin-reportes');
             if (tabGastos) tabGastos.style.display = 'none';
+            if (tabReportes) tabReportes.style.display = 'none';
+            localStorage.setItem('gecko_finanzas_tab', 'movimientos');
         }
 
         const iniciales = data.nombre.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
