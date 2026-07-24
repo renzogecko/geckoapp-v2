@@ -176,7 +176,8 @@ window.calcularCostoCorte = function () {
     const getPrecioMat = (mat) => {
         const costoUnit = parseFloat(mat.costo) || 0;
         const mult = parseFloat(mat.multiplicador) || 2;
-        const precioPublico = Math.round(costoUnit * mult);
+        const precioPublicoCalculado = Math.round(costoUnit * mult);
+        const precioPublico = (parseFloat(mat.precioVenta) > 0) ? parseFloat(mat.precioVenta) : precioPublicoCalculado;
         const precioGremio = (parseFloat(mat.precioGremio) > 0)
             ? parseFloat(mat.precioGremio)
             : Math.round(costoUnit * (parseFloat(mat.multGremio) || 1.5));

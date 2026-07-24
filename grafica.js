@@ -325,7 +325,7 @@ window.GeckoGrafica = {
             }
 
             const factor = (mode === 'proyecto') ? 1 : (mat.multiplicador || 2.0);
-            let precioVenta = mat.costoARS * factor;
+            let precioVenta = (mode === 'proyecto') ? (mat.costoARS * factor) : ((mat.precioVenta && mat.precioVenta > 0) ? mat.precioVenta : (mat.costoARS * factor));
 
             if (isGremio && mode !== 'proyecto') {
                 const mGremio = mat.multGremio || 1.5;
@@ -399,7 +399,7 @@ window.GeckoGrafica = {
 
             if (lamMat) {
                 const factor = (mode === 'proyecto') ? 1 : lamMat.multiplicador;
-                const precioBase = lamMat.costoARS * factor;
+                const precioBase = (mode === 'proyecto') ? (lamMat.costoARS * factor) : ((lamMat.precioVenta && lamMat.precioVenta > 0) ? lamMat.precioVenta : (lamMat.costoARS * factor));
                 const sub = m2Laminado * precioBase;
                 serviciosCostos += sub;
                 activeTerms.push('Laminado');
@@ -445,7 +445,7 @@ window.GeckoGrafica = {
             let precioMaterial = 0;
             if (matPlaca) {
                 const factor = (mode === 'proyecto') ? 1 : matPlaca.multiplicador;
-                precioMaterial = matPlaca.costoARS * factor;
+                precioMaterial = (mode === 'proyecto') ? (matPlaca.costoARS * factor) : ((matPlaca.precioVenta && matPlaca.precioVenta > 0) ? matPlaca.precioVenta : (matPlaca.costoARS * factor));
 
                 // Actualizar Auditor de Placa
                 this.safeSetText('auditorPlacaRigida', `GDM: ${matPlaca.nombre} | Precio: $${Math.round(precioMaterial)}/m2`);
@@ -625,7 +625,7 @@ window.GeckoGrafica = {
                 if (this.isTermActive('checkLaminado')) {
                     const m2Lam = parseFloat(document.getElementById('graficaLaminadoMt2')?.value) || 0;
                     const lamMat = window.getGeckoItem('Laminado');
-                    const precioLam = lamMat ? lamMat.costoARS * (mode === 'proyecto' ? 1 : lamMat.multiplicador) : 4500;
+                    const precioLam = lamMat ? ((mode === 'proyecto') ? lamMat.costoARS * lamMat.multiplicador : ((lamMat.precioVenta && lamMat.precioVenta > 0) ? lamMat.precioVenta : lamMat.costoARS * lamMat.multiplicador)) : 4500;
                     termActivas.push({ label: 'Laminado', detalle: `${m2Lam}m² × ${fmtVal(precioLam)}/m²`, valor: m2Lam * precioLam });
                 }
                 if (this.isTermActive('checkMontado')) {
