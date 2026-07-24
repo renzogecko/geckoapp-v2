@@ -207,7 +207,8 @@ window.procesarGuardado = function (status) {
         sena: 0,
         estado_ot: status === 'OT' ? 'En Proceso' : '',
         items: window.presupuesto.map(it => ({ ...it })),
-        metodo_pago: ''
+        metodo_pago: '',
+        creadoPor: window.GECKO_USER?.nombre || null
     };
 
     lista.push(nuevo);
@@ -1971,7 +1972,8 @@ window._registrarSena = function (id) {
         fecha, caja: caja1, tipo: 'Ingreso', monto: monto1,
         detalle: `${desc} OT#${id} - ${cliente}${descMonto1 > 0 ? ` (Cubre $${Math.round(montoNominal1).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
         categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
-        otsAfectadas: [{ id: id, monto: montoNominal1 }]
+        otsAfectadas: [{ id: id, monto: montoNominal1 }],
+        creado_por: window.GECKO_USER?.nombre || null
     };
     movimientos.push(mov1);
 
@@ -1991,7 +1993,8 @@ window._registrarSena = function (id) {
             fecha, caja: caja2, tipo: 'Ingreso', monto: monto2,
             detalle: `${desc} OT#${id} - ${cliente} (${caja2})${descMonto2 > 0 ? ` (Cubre $${Math.round(montoNominal2).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
             categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
-            otsAfectadas: [{ id: id, monto: montoNominal2 }]
+            otsAfectadas: [{ id: id, monto: montoNominal2 }],
+            creado_por: window.GECKO_USER?.nombre || null
         };
         movimientos.push(mov2);
     }
@@ -3915,7 +3918,8 @@ window.addEventListener('load', function () {
                 caja: cajaNombre,
                 tipo: tipo,
                 monto: monto,
-                categoria: categoria
+                categoria: categoria,
+                creado_por: window.GECKO_USER?.nombre || null
             };
             if (otsAfectadas && otsAfectadas.length > 0) {
                 mov.otsAfectadas = otsAfectadas;
@@ -5150,6 +5154,7 @@ window.addEventListener('load', function () {
                 dir: document.getElementById('nuevoClienteDir')?.value || '',
                 loc: document.getElementById('nuevoClienteLoc')?.value || '',
                 rubro: document.getElementById('nuevoClienteRubro')?.value || '',
+                creado_por: window.GECKO_USER?.nombre || null,
             };
 
             let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
@@ -5753,7 +5758,7 @@ window.crearCaja = function () {
     window.LISTA_CAJAS = cajas;
     fetch('/app/api.php?endpoint=cajas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, nombre, saldo, icono: tipo }) }).catch(() => { });
     if (saldo !== 0) {
-        const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: 'Saldo inicial de caja', caja: nombre, tipo: saldo > 0 ? 'Ingreso' : 'Egreso', monto: Math.abs(saldo), categoria: 'Sistema' };
+        const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: 'Saldo inicial de caja', caja: nombre, tipo: saldo > 0 ? 'Ingreso' : 'Egreso', monto: Math.abs(saldo), categoria: 'Sistema', creado_por: window.GECKO_USER?.nombre || null };
         const movs = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
         movs.push(mov);
         _ls.setItem('gecko_movimientos', JSON.stringify(movs));

@@ -258,13 +258,13 @@ try {
             $cuits = isset($d['cuits']) ? (is_array($d['cuits']) ? json_encode($d['cuits']) : $d['cuits']) : '[]';
             $emails = isset($d['emails']) ? (is_array($d['emails']) ? json_encode($d['emails']) : $d['emails']) : '[]';
             $telefonos = isset($d['telefonos']) ? (is_array($d['telefonos']) ? json_encode($d['telefonos']) : $d['telefonos']) : '[]';
-            $stmt = $pdo->prepare("INSERT INTO clientes (id, nombre, cuit, tel, email, dir, loc, rubro, cuits, emails, telefonos)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO clientes (id, nombre, cuit, tel, email, dir, loc, rubro, cuits, emails, telefonos, creado_por)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid(), $d['nombre'] ?? '', $d['cuit'] ?? '',
                 $d['tel'] ?? '', $d['email'] ?? '', $d['dir'] ?? '',
                 $d['loc'] ?? '', $d['rubro'] ?? '',
-                $cuits, $emails, $telefonos
+                $cuits, $emails, $telefonos, $d['creado_por'] ?? null
             ]);
             responder(["success" => true, "message" => "Cliente creado."]);
         }
@@ -274,13 +274,18 @@ try {
             $cuits = isset($d['cuits']) ? (is_array($d['cuits']) ? json_encode($d['cuits']) : $d['cuits']) : '[]';
             $emails = isset($d['emails']) ? (is_array($d['emails']) ? json_encode($d['emails']) : $d['emails']) : '[]';
             $telefonos = isset($d['telefonos']) ? (is_array($d['telefonos']) ? json_encode($d['telefonos']) : $d['telefonos']) : '[]';
-            $stmt = $pdo->prepare("REPLACE INTO clientes (id, nombre, cuit, tel, email, dir, loc, rubro, cuits, emails, telefonos)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+            $stmtCreador = $pdo->prepare("SELECT creado_por FROM clientes WHERE id = ?");
+            $stmtCreador->execute([$d['id']]);
+            $creadorActual = $stmtCreador->fetchColumn();
+            $creadoPor = $d['creado_por'] ?? ($creadorActual !== false ? $creadorActual : null);
+
+            $stmt = $pdo->prepare("REPLACE INTO clientes (id, nombre, cuit, tel, email, dir, loc, rubro, cuits, emails, telefonos, creado_por)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'], $d['nombre'] ?? '', $d['cuit'] ?? '',
                 $d['tel'] ?? '', $d['email'] ?? '', $d['dir'] ?? '',
                 $d['loc'] ?? '', $d['rubro'] ?? '',
-                $cuits, $emails, $telefonos
+                $cuits, $emails, $telefonos, $creadoPor
             ]);
             responder(["success" => true, "message" => "Cliente actualizado."]);
         }
@@ -447,13 +452,13 @@ try {
 
         if ($method === 'POST') {
             $d = $body;
-            $stmt = $pdo->prepare("INSERT INTO movimientos (id, fecha, detalle, caja, tipo, monto, categoria)
-                VALUES (?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO movimientos (id, fecha, detalle, caja, tipo, monto, categoria, creado_por)
+                VALUES (?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid(), $d['fecha'] ?? date('d/m/Y'),
                 $d['detalle'] ?? '', $d['caja'] ?? '',
                 $d['tipo'] ?? 'Ingreso', $d['monto'] ?? 0,
-                $d['categoria'] ?? 'Varios'
+                $d['categoria'] ?? 'Varios', $d['creado_por'] ?? null
             ]);
             responder(["success" => true, "message" => "Movimiento registrado."]);
         }
