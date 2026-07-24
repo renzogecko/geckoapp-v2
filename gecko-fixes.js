@@ -4143,6 +4143,12 @@ window.addEventListener('load', function () {
                                 if (costoUnitario > 0) {
                                     m.costoARS = Math.round(costoARSTotal);
                                     m.costo = costoUnitario;
+                                    if (m.estrategiaVenta === 'dinamica') {
+                                        const mult = parseFloat(m.multiplicador) || 2;
+                                        const multGremio = parseFloat(m.multGremio) || 1.5;
+                                        m.precioVenta = Math.round(costoUnitario * mult);
+                                        m.precioGremio = Math.round(costoUnitario * multGremio);
+                                    }
                                     actualizados = true;
                                 }
                             }
