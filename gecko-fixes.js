@@ -208,7 +208,7 @@ window.procesarGuardado = function (status) {
         estado_ot: status === 'OT' ? 'En Proceso' : '',
         items: window.presupuesto.map(it => ({ ...it })),
         metodo_pago: '',
-        creadoPor: window.GECKO_USER?.nombre || null
+        creado_por: window.GECKO_USER?.nombre || null
     };
 
     lista.push(nuevo);
@@ -1982,7 +1982,8 @@ window._registrarSena = function (id) {
             id: 'mov_' + (Date.now() + 10),
             fecha, caja: caja1, tipo: 'Descuento', monto: descMonto1,
             detalle: `Descuento otorgado - OT#${id} - ${cliente}${nota ? ' · ' + nota : ''}`,
-            categoria: 'Descuento Otorgado'
+            categoria: 'Descuento Otorgado',
+            creado_por: window.GECKO_USER?.nombre || null
         });
     }
 
@@ -2004,7 +2005,8 @@ window._registrarSena = function (id) {
             id: 'mov_' + (Date.now() + 11),
             fecha, caja: caja2, tipo: 'Descuento', monto: descMonto2,
             detalle: `Descuento otorgado - OT#${id} - ${cliente} (${forma2})${nota ? ' · ' + nota : ''}`,
-            categoria: 'Descuento Otorgado'
+            categoria: 'Descuento Otorgado',
+            creado_por: window.GECKO_USER?.nombre || null
         });
     }
 
@@ -3006,7 +3008,8 @@ window.confirmarPagoGastoFijo = function () {
         caja: cajaNombre,
         tipo: 'Egreso',
         monto: g.monto,
-        categoria: g.categoria || 'Gastos Fijos'
+        categoria: g.categoria || 'Gastos Fijos',
+        creado_por: window.GECKO_USER?.nombre || null
     };
     const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
     movs.push(mov);
@@ -4823,7 +4826,7 @@ window.addEventListener('load', function () {
                 alert('Caja no encontrada en la base de datos.'); return;
             }
 
-            const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja: caja, tipo: tipoCapital, monto: monto, categoria: 'Varios' };
+            const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja: caja, tipo: tipoCapital, monto: monto, categoria: 'Varios', creado_por: window.GECKO_USER?.nombre || null };
             const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
             movs.push(mov);
             localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
@@ -5066,8 +5069,8 @@ window.addEventListener('load', function () {
 
             const ts = Date.now();
             const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-            movs.push({ id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}${desc ? ' - ' + desc : ''}`, caja: origen, tipo: 'Egreso', monto: monto, categoria: 'Transferencia' });
-            movs.push({ id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}${desc ? ' - ' + desc : ''}`, caja: destino, tipo: 'Ingreso', monto: monto, categoria: 'Transferencia' });
+            movs.push({ id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}${desc ? ' - ' + desc : ''}`, caja: origen, tipo: 'Egreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null });
+            movs.push({ id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}${desc ? ' - ' + desc : ''}`, caja: destino, tipo: 'Ingreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null });
 
             localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
 
@@ -5817,7 +5820,7 @@ window.guardarNuevoMovimiento = function () {
             if (cajObj) { tipoCapital === 'Ingreso' ? (cajObj.saldo += monto) : (cajObj.saldo -= monto); }
             _ls.setItem('gecko_cajas', JSON.stringify(cajas));
             window.LISTA_CAJAS = cajas;
-            const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja, tipo: tipoCapital, monto, categoria: 'Varios' };
+            const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja, tipo: tipoCapital, monto, categoria: 'Varios', creado_por: window.GECKO_USER?.nombre || null };
             const movs = window.LISTA_MOVIMIENTOS || JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
             movs.push(mov);
             _ls.setItem('gecko_movimientos', JSON.stringify(movs));
@@ -5850,8 +5853,8 @@ window.ejecutarTransferencia = function () {
     window.LISTA_CAJAS = cajas;
     const ts = Date.now();
     const movs = window.LISTA_MOVIMIENTOS || JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
-    movs.push({ id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}`, caja: origen, tipo: 'Egreso', monto, categoria: 'Transferencia' });
-    movs.push({ id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}`, caja: destino, tipo: 'Ingreso', monto, categoria: 'Transferencia' });
+    movs.push({ id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}`, caja: origen, tipo: 'Egreso', monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null });
+    movs.push({ id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}`, caja: destino, tipo: 'Ingreso', monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null });
     _ls.setItem('gecko_movimientos', JSON.stringify(movs));
     window.LISTA_MOVIMIENTOS = movs;
     document.getElementById('modalTransferencia').style.display = 'none';
