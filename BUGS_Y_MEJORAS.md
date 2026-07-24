@@ -1249,3 +1249,22 @@ precioGremio en materiales Dinámica (Fija sigue sin tocarse nunca).
 6. ⏳ Bloqueo real del lado del servidor (api.php) para las 
    restricciones de rol usuario — hoy son visuales (JavaScript). 
    Dejado para el final por decisión explícita del usuario.
+
+---
+
+## Resuelto en esta sesión
+
+- ✅ MEJ-032 punto 3 (feed de actividad tipo campanita): implementado 
+  con polling cada 60 segundos contra un endpoint nuevo 
+  (api.php?endpoint=actividad) que combina en una sola consulta lo 
+  nuevo de movimientos, clientes y presupuestos/OTs. Notifica en 
+  tiempo casi real entre distintas computadoras/usuarios (no solo en 
+  el mismo navegador). Columna creado_en (TIMESTAMP automático) 
+  agregada a las 3 tablas para permitir el filtrado por fecha. 
+  Zona horaria fijada explícitamente en api.php 
+  (date_default_timezone_set) para evitar desfasajes en el "hace X 
+  min". Polling se pausa cuando la pestaña no está activa 
+  (visibilitychange) para cuidar el límite de conexiones del hosting. 
+  Texto de cada ítem escapado contra HTML/XSS. Presupuestos leen 
+  creado_por desde la columna metadata (JSON), no como columna propia 
+  (a diferencia de movimientos/clientes que sí la tienen).
