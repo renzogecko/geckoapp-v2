@@ -21,8 +21,8 @@ window.getCorpPrecio = function (item) {
 // Helper global: resuelve el área (m²) de un cotizador de corpóreos.
 // Si hay Ancho y Alto cargados, calcula el área y bloquea el input (autocálculo).
 // Si falta alguno de los dos, habilita el input para carga manual y usa ese valor.
-window._geckoResolverArea = function (idArea, ancho, alto) {
-    const inputArea = document.getElementById(idArea);
+window._geckoResolverArea = function (idOrElArea, ancho, alto) {
+    const inputArea = typeof idOrElArea === 'string' ? document.getElementById(idOrElArea) : idOrElArea;
     const clasesAuto = ['opacity-50', 'cursor-not-allowed', 'bg-zinc-900/40'];
     let areaM2;
     if (ancho > 0 && alto > 0) {

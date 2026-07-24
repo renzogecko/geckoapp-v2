@@ -1509,16 +1509,18 @@ window.cambiarCategoriaCotizador = function (cat) {
     
     <div id="contenedorFilasVariables" class="multifila-contenedor">
         <!-- Títulos de Columnas -->
-        <div class="grid grid-cols-4 gap-4 px-1 mb-1">
+        <div class="grid grid-cols-5 gap-4 px-1 mb-1">
             <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Ancho (cm)</span>
             <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Alto (cm)</span>
             <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold text-center">Cant</span>
+            <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Área (m²)</span>
             <span></span>
         </div>
         <div class="gecko-input-row">
             <input type="number" placeholder="Ancho" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
             <input type="number" placeholder="Alto" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
             <input type="number" placeholder="Cant" class="text-center" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
+            <input type="number" placeholder="Área" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
             <div class="flex justify-end pr-2 pb-1">
                 <button onclick="this.closest('.gecko-input-row').remove(); window.calcularCostoGrafica();" class="text-zinc-700 hover:text-red-500 transition-colors">✕</button>
             </div>
@@ -1674,11 +1676,12 @@ window.cambiarCategoriaCotizador = function (cat) {
             <p id="auditorPlacaRigida" class="hidden"></p>
 
             <!-- Títulos de Columnas -->
-            <div class="grid grid-cols-4 gap-4 px-1 mb-1">
+            <div class="grid grid-cols-5 gap-4 px-1 mb-1">
                 <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Ancho</span>
                 <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Alto</span>
                 <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold text-center">Cant</span>
                 <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Corte ML</span>
+                <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Área (m²)</span>
             </div>
 
             <div id="contenedor-filas-rigidos" class="space-y-1">

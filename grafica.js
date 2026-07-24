@@ -298,7 +298,8 @@ window.GeckoGrafica = {
             const w = parseFloat(inputs[0]?.value) || 0;
             const h = parseFloat(inputs[1]?.value) || 0;
             const c = parseFloat(inputs[2]?.value) || 1;
-            mt2Totales += (w * h / 10000) * c;
+            const areaFila = window._geckoResolverArea(inputs[3], w, h);
+            mt2Totales += areaFila * c;
         });
 
         // 2. Material Base
@@ -468,13 +469,14 @@ window.GeckoGrafica = {
                     const filas = containerRigidos.querySelectorAll('.fila-rigido');
                     filas.forEach(fila => {
                         const inputs = fila.querySelectorAll('input');
-                        if (inputs.length >= 4) {
+                        if (inputs.length >= 5) {
                             const ancho = parseFloat(inputs[0]?.value) || 0;
                             const alto = parseFloat(inputs[1]?.value) || 0;
                             const cant = parseFloat(inputs[2]?.value) || 1;
                             const corteML = parseFloat(inputs[3]?.value) || 0;
+                            const areaFila = window._geckoResolverArea(inputs[4], ancho, alto);
 
-                            const costoMaterial = (ancho * alto * cant / 10000) * precioMaterial;
+                            const costoMaterial = (areaFila * cant) * precioMaterial;
                             const costoCorte = corteML * precioCorteRealRigido;
 
                             totalRigidos += (costoMaterial + costoCorte);
@@ -745,7 +747,8 @@ window.GeckoGrafica = {
             if (ins.length >= 2) {
                 const w = parseFloat(ins[0]?.value) || 0;
                 const h = parseFloat(ins[1]?.value) || 0;
-                if (w > 0 && h > 0) valida = true;
+                const area = parseFloat(ins[3]?.value) || 0;
+                if ((w > 0 && h > 0) || area > 0) valida = true;
             }
         });
 
@@ -833,10 +836,11 @@ window.GeckoGrafica = {
         const container = document.getElementById('contenedorFilasVariables');
         if (container) {
             container.innerHTML = `
-                <div class="grid grid-cols-4 gap-4 px-1 mb-1">
+                <div class="grid grid-cols-5 gap-4 px-1 mb-1">
                     <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Ancho (cm)</span>
                     <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Alto (cm)</span>
                     <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold text-center">Cant</span>
+                    <span class="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Área (m²)</span>
                     <span></span>
                 </div>
             `;
@@ -881,7 +885,8 @@ window.GeckoGrafica = {
                 const w = parseFloat(inputs[0]?.value) || 0;
                 const h = parseFloat(inputs[1]?.value) || 0;
                 const c = parseFloat(inputs[2]?.value) || 0;
-                areaTot += (w * h / 10000) * c;
+                const areaFila = window._geckoResolverArea(inputs[3], w, h);
+                areaTot += areaFila * c;
             });
             input.value = areaTot.toFixed(2);
             if (force === true) this.calcular();
@@ -905,9 +910,10 @@ window.agregarFilaMontado = function () {
         <input type="number" placeholder="Ancho" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
         <input type="number" placeholder="Alto" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
         <input type="number" value="1" class="text-center" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
+        <input type="number" placeholder="ML" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
         <div class="flex items-center gap-2">
-            <input type="number" placeholder="ML" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
-            <button onclick="this.closest('.gecko-input-row').remove(); window.calcularCostoGrafica();" 
+            <input type="number" placeholder="Área" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
+            <button onclick="this.closest('.gecko-input-row').remove(); window.calcularCostoGrafica();"
                 class="text-zinc-700 hover:text-red-500 transition-colors px-2 pb-1">✕</button>
         </div>
     `;
@@ -928,8 +934,9 @@ window.agregarFilaTrabajo = function () {
         <input type="number" placeholder="Ancho" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
         <input type="number" placeholder="Alto" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
         <input type="number" value="1" class="text-center" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
+        <input type="number" placeholder="Área" oninput="window.calcularCostoGrafica()" onwheel="this.blur()">
         <div class="flex justify-end pr-2 pb-1">
-            <button onclick="this.closest('.gecko-input-row').remove(); window.GeckoGrafica.syncLaminado(); window.calcularCostoGrafica();" 
+            <button onclick="this.closest('.gecko-input-row').remove(); window.GeckoGrafica.syncLaminado(); window.calcularCostoGrafica();"
                 class="text-zinc-700 hover:text-red-500 transition-colors">✕</button>
         </div>
     `;

@@ -334,7 +334,7 @@
         /* PREMIUM INPUT ROW STYLE (Tarjeta 02 & 05) */
         .gecko-input-row {
             display: grid !important;
-            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
             gap: 1rem !important;
             align-items: flex-end !important;
             width: 100% !important;
