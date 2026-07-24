@@ -615,10 +615,14 @@ try {
                 $items[] = $r;
             }
 
-            $stmt = $pdo->prepare("SELECT id, cliente, status, creado_por, creado_en FROM presupuestos
-                WHERE creado_por IS NOT NULL AND creado_en > ? ORDER BY creado_en DESC LIMIT 30");
+            $stmt = $pdo->prepare("SELECT id, cliente, status, metadata, creado_en FROM presupuestos
+                WHERE creado_en > ? ORDER BY creado_en DESC LIMIT 30");
             $stmt->execute([$sinceFecha]);
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $meta = json_decode($r['metadata'] ?? '', true);
+                $r['creado_por'] = is_array($meta) ? ($meta['creado_por'] ?? null) : null;
+                if (empty($r['creado_por'])) continue;
+                unset($r['metadata']);
                 $r['tipo'] = 'presupuesto';
                 $r['ts'] = strtotime($r['creado_en']) * 1000;
                 $items[] = $r;
