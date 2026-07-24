@@ -1192,3 +1192,60 @@ precioGremio en materiales Dinámica (Fija sigue sin tocarse nunca).
   Venta y Precio Gremio son 100% manuales, para siempre.
 - Todos los cotizadores leen directo esos dos campos, sin calcular 
   nada por su cuenta.
+
+---
+
+### Sesión 24/07/2026 — MEJ-032: permisos rol Usuario en Finanzas + auditoría "creado por"
+
+## Resuelto en esta sesión (MEJ-032)
+
+- ✅ MEJ-032 punto 2: Ocultar pestañas "Reportes" y "Gastos Fijos" en 
+  Finanzas para rol usuario — corregido (antes ocultaba la sección 
+  entera de Finanzas por error).
+- ✅ MEJ-032 punto 3: Ocultar saldos de caja para rol usuario — 
+  implementado como interruptor configurable en Configuración > 
+  Finanzas ("Ocultar saldos de caja al rol Usuario"), visible solo 
+  para admin. Cuando está activo, el rol usuario ve 🔒 **** en vez del 
+  monto. Se sumó además: botón de admin "Ocultar/Mostrar saldos" 
+  (colapsa toda la fila de tarjetas, con recuerdo vía localStorage, 
+  solo para admin); botón de lápiz (editar caja) oculto para rol 
+  usuario; navegación a "Configuración" oculta para rol usuario. Click 
+  en una tarjeta de caja sigue abriendo el historial de movimientos de 
+  esa caja para todos los roles (sin cambios, comportamiento previo 
+  confirmado como correcto).
+- ✅ MEJ-032 punto 5: Auditoría "creado por" — columnas `creado_por` 
+  agregadas a las tablas MySQL `movimientos` y `clientes` (ALTER TABLE, 
+  con backup previo). Para `presupuestos`/OTs se usa el campo 
+  `creado_por` (unificado desde `creadoPor`) dentro de la columna 
+  `metadata` ya existente, sin requerir cambio de esquema. El PUT de 
+  clientes preserva el `creado_por` original en cada edición (SELECT 
+  previo, no se pisa con el editor). Cubre: movimiento manual (bug real 
+  encontrado y corregido — la función activa en producción no era la 
+  que parecía a primera vista, por una segunda definición que pisaba 
+  la primera 1.5s después de cargar la página), transferencias entre 
+  cajas, cobro de seña/saldo (incluyendo el movimiento de "Descuento 
+  Otorgado"), pago de gasto fijo, alta de cliente, alta de 
+  presupuesto/OT. Fuente: window.GECKO_USER?.nombre.
+
+## Código muerto identificado (pendiente — sesión de limpieza aparte, no tocar sin sesión dedicada)
+
+- `guardarNuevaCaja` — 3 definiciones huérfanas: gecko-fixes.js 
+  (~línea 2300 y ~línea 2430) y main.js (~línea 2779). Ningún botón 
+  las llama — la UI real usa `crearCaja()` (gecko-fixes.js, definición 
+  única, línea ~5742).
+- `guardarCliente` — 1 definición pisada en gecko-fixes.js (~línea 
+  6056, código de nivel superior). Nunca se ejecuta porque la versión 
+  dentro del bloque `window.addEventListener('load', ...)` 
+  (~línea 5129) corre después y gana.
+
+## Próximos pasos de MEJ-032 (en orden)
+
+3. ⏳ Feed de actividad tipo campanita (ej: "Nico creó el Presupuesto 
+   #1234 — hace 5 min") — ahora desbloqueado, ya existe el dato de 
+   "creado por" necesario.
+4. ⏳ Conectar con el Dashboard (MEJ-023, diseño ya aprobado).
+5. ⏳ Pantalla de administración de usuarios (alta/edición de roles sin 
+   depender de phpMyAdmin).
+6. ⏳ Bloqueo real del lado del servidor (api.php) para las 
+   restricciones de rol usuario — hoy son visuales (JavaScript). 
+   Dejado para el final por decisión explícita del usuario.
