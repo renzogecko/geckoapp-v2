@@ -16,8 +16,7 @@
 - **Sección:** configuracion - modal Materiales
 - **Descripción:** el valor de la configuracion deberia estar linkeado con una api para mantenerse actualizada, de manera automatica, o en su defecto un boton para actualizarlo manualmente.
 Por el lado del modal de materiales , en la seccion de costo que tiene una calculadora automatica , eso esta harcodeado en 1420 hoy , pero ese valor se bee actualizar con el valor actual del dolar ya se por api o por un boton de actualizar. Elegir la mejor opcion 
-- **Estado:** ✅ Resuelto (confirmado por Renzo, sin detalle de fecha
-  exacta ni de la solución aplicada — no se documentó en su momento)
+- **Estado:** ✅ Resuelto 22-23/07/2026 (ver detalle completo en la sesión de esa fecha, más abajo)
  
 ---
 
@@ -1099,3 +1098,97 @@ todo"):**
 **6. Pantalla de administración de usuarios (solo admins):**
 - Alta/baja de usuarios, cambiar contraseña de otros, cambiar rol — 
   sin necesidad de entrar a phpMyAdmin.
+
+---
+
+### Sesión 22-23/07/2026 — BUG-003 (dólar) resuelto de raíz + saga 
+completa de Materiales y Cotizadores
+
+Esta sesión terminó siendo mucho más profunda de lo esperado: arreglar 
+el dólar destapó una cadena de bugs relacionados en cómo los 
+cotizadores calculan precios. Quedó resuelto todo el frente, de punta 
+a punta.
+
+**1. [BUG-003] Cotización de dólar hardcodeada — RESUELTO**
+Causa raíz: `window.GECKO_SETTINGS` nunca se sincronizaba con la 
+variable real `GECKO_SETTINGS` (declarada con `let` en main.js, nunca 
+expuesta en `window`). Se agregó sincronización al cargar la página y 
+al guardar Configuración.
+
+**2. Recálculo de "costo" al cambiar el dólar — RESUELTO**
+El recálculo automático actualiza el campo correcto (`costo`, por 
+m²/unidad) para materiales con costoUSD > 0. Como la tabla de 
+Materiales se dibuja con una variable que no se actualiza sola, se 
+agregó recarga automática de la página tras el recálculo.
+
+**3. Modal de Materiales — USD/ARS: bloqueo mutuo en vez de color**
+Se descartó la idea de colorear el campo activo (chocaba con reglas 
+CSS `!important`) por un mecanismo más robusto: mientras un campo (USD 
+o ARS) tiene valor, el otro queda deshabilitado y atenuado (visible, no 
+editable). Los materiales cargados ANTES de este cambio no tienen 
+forma de saber cuál fue el campo original — Renzo los corrige a mano al 
+editarlos.
+
+**4. Borrado de Materiales no llegaba a MySQL — RESUELTO**
+Causa: `materiales` es catálogo blindado (R3) — la sincronización por 
+diff de array se salta a propósito los catálogos blindados, confiando 
+en `window.geckoApiEliminar()`. El botón de eliminar nunca la llamaba. 
+Ahora sí, + recarga automática tras borrar.
+
+**5. Sistema de borrador limpio para "Nuevo Insumo" — RESUELTO**
+Reemplazados 3 sistemas de borrador viejos y enredados por uno solo, 
+con confirmación explícita, igual al patrón del Presupuestador Manual. 
+Detalle técnico: `intentarCerrarModal` estaba envuelta 5 veces en 
+cadena, y una envoltura intermedia rompía la cadena sin llamar a la 
+anterior. Solución: envoltura nueva al FINAL absoluto del archivo, con 
+el mayor delay de todos (2500ms), para garantizar que sea la última en 
+aplicarse siempre.
+
+**6. Corrección de datos: 11 materiales Fija con Precio de Venta 
+corrupto**
+Un primer intento fallido (ya descartado) del fix del dólar alcanzó a 
+ejecutarse una vez y sobreescribió el "Precio de Venta" de materiales 
+en estrategia FIJA con `costoARS × multiplicador` — fórmula que nunca 
+debió aplicarse ahí (en Fija el precio es 100% manual). Se 
+identificaron y corrigieron a mano los 11 materiales afectados, con 
+los valores reales de Renzo. El Precio Gremio nunca fue tocado por el 
+bug.
+
+**7. [BUG NUEVO ENCONTRADO Y RESUELTO] Los cotizadores no respetaban el 
+Precio de Venta guardado — afectaba a TODOS los presupuestos**
+Al corregir el punto 6, se descubrió un bug preexistente, más grave: 
+varios cotizadores NUNCA leían el `precioVenta` guardado del material 
+— siempre recalculaban con `costo × multiplicador` por su cuenta, 
+ignorando la estrategia. Esto invalidaba el precio real en cualquier 
+presupuesto que usara un material de estrategia Fija. Se auditaron 
+TODOS los cotizadores:
+- ✅ Corte, Bastidores, Corpóreos, Textil, Impresión 3D — ya estaban 
+  bien (priorizaban el precio guardado).
+- ❌ Gráfica — corregido en 3 puntos: material principal, Laminado 
+  (cálculo + texto del auditor), Montado en Rígido.
+- ❌ Láser/CNC — corregido en su función `getPrecioMat` (afecta piezas 
+  rígidas y acabados/vinilos).
+Ahora TODOS los cotizadores leen directo el Precio de Venta y Precio 
+Gremio de la lista de Materiales — nunca recalculan nada por su cuenta, 
+sea cual sea la estrategia.
+
+**8. [BUG NUEVO ENCONTRADO Y RESUELTO] Materiales Dinámica con Precio 
+de Venta desactualizado**
+Al arreglar el punto 7, se destapó que el arreglo del punto 2 nunca 
+recalculaba `precioVenta`/`precioGremio` en materiales de estrategia 
+Dinámica cuando cambiaba el costo — quedaban con precios viejos, 
+"tapados" hasta ahora porque los cotizadores (antes del punto 7) 
+ignoraban ese campo de todos modos. Se corrigieron TODOS los 
+materiales Dinámica de una sola vez (sin ambigüedad, fórmula 
+automática) vía consola, y se extendió el recálculo automático del 
+dólar para que, de acá en adelante, también actualice precioVenta y 
+precioGremio en materiales Dinámica (Fija sigue sin tocarse nunca).
+
+**Diseño final confirmado y funcionando:**
+- La lista de Materiales es la ÚNICA fuente de verdad para precios.
+- Dinámica: costo, Precio de Venta y Precio Gremio se recalculan solos 
+  siempre que cambia el dólar.
+- Fija: solo "costo" se actualiza (referencia informativa); Precio de 
+  Venta y Precio Gremio son 100% manuales, para siempre.
+- Todos los cotizadores leen directo esos dos campos, sin calcular 
+  nada por su cuenta.
