@@ -1078,7 +1078,7 @@ window.calcularCostoPolifan = function () {
     const perimetro = parseFloat(document.getElementById('polifanPerimetro')?.value) || 0;
     const cantidad = parseInt(document.getElementById('polifanCantidad')?.value) || 1;
 
-    const areaM2 = window._geckoResolverArea('polifanArea', ancho, alto);
+    const areaM2 = window._geckoResolverArea('polifanArea', ancho, alto, cantidad);
     const perimetroMl = perimetro / 100;
 
     const auditCuerpo = [];
@@ -1708,7 +1708,7 @@ window.calcularChapaAcrilico = function () {
         if (panelParaPintura) panelParaPintura.appendChild(tarjetaPinturaChapa);
     }
 
-    const areaM2 = window._geckoResolverArea('chapaArea', ancho, alto);
+    const areaM2 = window._geckoResolverArea('chapaArea', ancho, alto, cantidad);
     const perimetroMl = perimetro / 100;
 
     // Función de normalización solicitada
