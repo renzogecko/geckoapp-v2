@@ -298,7 +298,7 @@ window.GeckoGrafica = {
             const w = parseFloat(inputs[0]?.value) || 0;
             const h = parseFloat(inputs[1]?.value) || 0;
             const c = parseFloat(inputs[2]?.value) || 1;
-            const areaFila = window._geckoResolverArea(inputs[3], w, h);
+            const areaFila = window._geckoResolverArea(inputs[3], w, h, c);
             mt2Totales += areaFila * c;
         });
 
@@ -474,7 +474,7 @@ window.GeckoGrafica = {
                             const alto = parseFloat(inputs[1]?.value) || 0;
                             const cant = parseFloat(inputs[2]?.value) || 1;
                             const corteML = parseFloat(inputs[3]?.value) || 0;
-                            const areaFila = window._geckoResolverArea(inputs[4], ancho, alto);
+                            const areaFila = window._geckoResolverArea(inputs[4], ancho, alto, cant);
 
                             const costoMaterial = (areaFila * cant) * precioMaterial;
                             const costoCorte = corteML * precioCorteRealRigido;
@@ -885,7 +885,7 @@ window.GeckoGrafica = {
                 const w = parseFloat(inputs[0]?.value) || 0;
                 const h = parseFloat(inputs[1]?.value) || 0;
                 const c = parseFloat(inputs[2]?.value) || 0;
-                const areaFila = window._geckoResolverArea(inputs[3], w, h);
+                const areaFila = window._geckoResolverArea(inputs[3], w, h, c);
                 areaTot += areaFila * c;
             });
             input.value = areaTot.toFixed(2);

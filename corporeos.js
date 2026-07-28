@@ -21,25 +21,27 @@ window.getCorpPrecio = function (item) {
 // Helper global: resuelve el área (m²) de un cotizador de corpóreos.
 // Si hay Ancho y Alto cargados, calcula el área y bloquea el input (autocálculo).
 // Si falta alguno de los dos, habilita el input para carga manual y usa ese valor.
-window._geckoResolverArea = function (idOrElArea, ancho, alto) {
+window._geckoResolverArea = function (idOrElArea, ancho, alto, cantidad = 1) {
     const inputArea = typeof idOrElArea === 'string' ? document.getElementById(idOrElArea) : idOrElArea;
     const clasesAuto = ['opacity-50', 'cursor-not-allowed', 'bg-zinc-900/40'];
-    let areaM2;
+    let areaUnitaria;
     if (ancho > 0 && alto > 0) {
-        areaM2 = (ancho * alto) / 10000;
+        areaUnitaria = (ancho * alto) / 10000;
         if (inputArea) {
-            inputArea.value = areaM2.toFixed(2);
+            const areaTotalMostrada = areaUnitaria * (cantidad || 1);
+            inputArea.value = areaTotalMostrada.toFixed(2);
             inputArea.readOnly = true;
             inputArea.classList.add(...clasesAuto);
         }
     } else {
-        areaM2 = parseFloat(inputArea?.value) || 0;
+        const totalCargadoAMano = parseFloat(inputArea?.value) || 0;
+        areaUnitaria = totalCargadoAMano / (cantidad || 1);
         if (inputArea) {
             inputArea.readOnly = false;
             inputArea.classList.remove(...clasesAuto);
         }
     }
-    return areaM2;
+    return areaUnitaria; // Sigue devolviendo el área POR UNIDAD, igual que antes — el cálculo en pesos no cambia
 };
 
 window.setCorpModo = function (modo) {
