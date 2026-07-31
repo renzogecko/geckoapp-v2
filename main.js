@@ -2556,7 +2556,7 @@ function renderReportesDashboard() {
 
     // --- 2. LIQUIDEZ Y CALLE ---
     const totalCajas = LISTA_CAJAS.reduce((acc, c) => acc + c.saldo, 0);
-    const totalCobrar = listaPresupuestos.filter(p => p.status === 'OT' && p.estado_ot !== 'Entregado')
+    const totalCobrar = listaPresupuestos.filter(p => p.status === 'OT' && p.estado_ot !== 'Finalizado')
         .reduce((acc, p) => acc + (p.total - (p.sena || 0)), 0);
     const elMetricCajas = document.getElementById('metricCajas');
     const elMetricCobrar = document.getElementById('metricCobrar');
@@ -2612,7 +2612,7 @@ function renderReportesDashboard() {
     const estados = ['En Proceso', 'Impresión', 'En Taller', 'Terminaciones', 'Listo'];
     const conteoEstados = {};
     estados.forEach(e => conteoEstados[e] = 0);
-    listaPresupuestos.filter(p => p.status === 'OT' && p.estado_ot !== 'Entregado').forEach(ot => {
+    listaPresupuestos.filter(p => p.status === 'OT' && p.estado_ot !== 'Finalizado').forEach(ot => {
         const est = ot.estado_ot || 'En Proceso';
         if (conteoEstados[est] !== undefined) conteoEstados[est]++;
     });
@@ -2879,7 +2879,7 @@ function abrirFichaCliente(nombre) {
     clienteActualFicha = nombre;
 
     const trabajos = listaPresupuestos.filter(p => p.cliente === nombre && p.status === 'OT');
-    const activos = trabajos.filter(p => p.estado_ot !== 'Entregado');
+    const activos = trabajos.filter(p => p.estado_ot !== 'Finalizado');
     const saldoTotal = activos.reduce((acc, p) => acc + (p.total - (p.sena || 0)), 0);
 
     const ahora = new Date();
@@ -3005,7 +3005,7 @@ function _expandirPagosCliente() {
 
 function abrirHistorialTrabajosCliente() {
     const historial = listaPresupuestos.filter(p =>
-        p.cliente === clienteActualFicha && p.status === 'OT' && p.estado_ot === 'Entregado'
+        p.cliente === clienteActualFicha && p.status === 'OT' && p.estado_ot === 'Finalizado'
     );
     document.getElementById('listaHistorialTrabajos').innerHTML = historial.length === 0
         ? '<p class="text-[#71717a] text-center py-8 text-sm italic">Sin trabajos entregados</p>'

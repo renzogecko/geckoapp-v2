@@ -517,7 +517,7 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
         'Entregado': '#6b7280'
     };
 
-    if (nuevoEstado === 'Entregado') {
+    if (nuevoEstado === 'Finalizado') {
         const modalExist = document.getElementById('_geckoModalArchivarOT');
         if (modalExist) modalExist.remove();
 
@@ -594,13 +594,14 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
         const label = document.getElementById('estado-ot-label-' + id);
         if (label) label.textContent = nuevoEstado;
     }
+    setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
 };
 
 window._archivarOT = function (id) {
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const idx = lista.findIndex(x => String(x.id) === String(id));
     if (idx !== -1) {
-        lista[idx].estado_ot = 'Entregado';
+        lista[idx].estado_ot = 'Finalizado';
         localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
     }
     if (typeof window.mostrarExito === 'function') window.mostrarExito('OT archivada correctamente.', '¡Listo!');
@@ -3375,7 +3376,7 @@ window.renderReportesDashboard = function () {
     if (elCajas) elCajas.innerText = `$${Math.round(totalCajas).toLocaleString('es-AR')}`;
 
     // Por cobrar (saldos pendientes de OTs activas)
-    const porCobrar = lista.filter(p => p.status === 'OT' && p.estado_ot !== 'Entregado')
+    const porCobrar = lista.filter(p => p.status === 'OT' && p.estado_ot !== 'Finalizado')
         .reduce((a, p) => a + Math.max(0, (p.total || 0) - (p.sena || 0)), 0);
     const elCobrar = document.getElementById('metricCobrar');
     if (elCobrar) elCobrar.innerText = `$${Math.round(porCobrar).toLocaleString('es-AR')}`;
@@ -4017,9 +4018,9 @@ window.addEventListener('load', function () {
             const busqueda = document.getElementById('filtroOtBusqueda')?.value?.toLowerCase() || '';
 
             const filtrados = ots.filter(ot => {
-                const entregado = ot.estado_ot === 'Entregado';
-                if (!mostrarHistorial && entregado) return false;
-                if (mostrarHistorial && !entregado) return false;
+                const finalizado = ot.estado_ot === 'Finalizado';
+                if (!mostrarHistorial && finalizado) return false;
+                if (mostrarHistorial && !finalizado) return false;
                 if (busqueda && !ot.cliente?.toLowerCase().includes(busqueda)) return false;
                 return true;
             });
@@ -4032,13 +4033,13 @@ window.addEventListener('load', function () {
                 return;
             }
 
-            const _EST = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado'];
-            const _COL = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#ef4444', 'Entregado': '#6b7280' };
+            const _EST = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado', 'Finalizado'];
+            const _COL = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#ef4444', 'Entregado': '#6b7280', 'Finalizado': '#15803d' };
 
             tbody.innerHTML = filtrados.map(ot => {
                 const estado = ot.estado_ot || 'En Proceso';
                 const color = _COL[estado] || '#F15A24';
-                const saldo = (ot.total || 0) - (ot.sena || 0);
+                const saldo = window.calcularSaldoOT(ot);
                 const estadoOpts = _EST.map(e =>
                     `<div onclick="window._seleccionarEstadoOT('${ot.id}','${e}');event.stopPropagation()"
                           style="padding:8px 14px;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;color:${_COL[e] || '#F15A24'};letter-spacing:0.5px;"
@@ -4068,6 +4069,7 @@ window.addEventListener('load', function () {
                     <td class="py-4 px-6 text-[11px] font-black uppercase text-zinc-500 hidden xl:table-cell">#${ot.id}</td>
                     <td class="py-4 px-6">
                         <span onclick="event.stopPropagation();window.abrirFichaCliente('${(ot.cliente || '').replace(/'/g, "\\'")}')" class="text-[14px] font-extrabold dark:text-white uppercase cursor-pointer" title="Ver ficha de cliente">${ot.cliente || 'S/N'}</span>
+                        ${(ot.estado_ot === 'Entregado' && window.calcularSaldoOT(ot) > 0) ? '<span style="display:inline-block;margin-left:8px;padding:2px 7px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#ef4444;border-radius:6px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:0.3px;">⚠️ Entregado · Sin cobrar</span>' : ''}
                     </td>
                     <td class="py-4 px-6 max-w-[200px] hidden sm:table-cell">
                         <div class="flex flex-col">
