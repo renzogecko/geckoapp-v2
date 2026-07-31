@@ -1900,6 +1900,76 @@ window._calcularResto = function (id) {
     // Podría autocompletar el 2do pago, por ahora vacío
 };
 
+window.calcularSaldoOT = function (ot) {
+    return Math.round((parseFloat(ot.total) || 0) - (parseFloat(ot.sena) || 0));
+};
+
+window.getOTsPendientesDeCliente = function (nombreCliente) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    return lista.filter(p => p.cliente === nombreCliente && p.status === 'OT' && window.calcularSaldoOT(p) > 0)
+        .sort((a, b) => {
+            const fa = (a.fecha || '').split('/').reverse().join('-');
+            const fb = (b.fecha || '').split('/').reverse().join('-');
+            return fa.localeCompare(fb) || (parseInt(a.id) - parseInt(b.id));
+        });
+};
+
+window.registrarExcedenteComoCredito = function (nombreCliente, monto, detalle) {
+    monto = Math.round(monto);
+    if (monto <= 0) return;
+    let bdClientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+    const idx = bdClientes.findIndex(c => c.nombre === nombreCliente);
+    if (idx === -1) return;
+    const cliente = bdClientes[idx];
+    if (!Array.isArray(cliente.creditoLedger)) cliente.creditoLedger = [];
+    cliente.creditoLedger.push({
+        id: 'cred_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        fecha: new Date().toLocaleDateString('es-AR'),
+        tipo: 'generado',
+        monto: monto,
+        detalle: detalle || '',
+        otId: null,
+        creado_por: window.GECKO_USER?.nombre || null
+    });
+    cliente.creditoDisponible = cliente.creditoLedger.reduce((s, m) => s + m.monto, 0);
+    localStorage.setItem('clientes', JSON.stringify(bdClientes));
+    localStorage.setItem('gecko_clientes', JSON.stringify(bdClientes));
+    window.LISTA_CLIENTES = bdClientes;
+};
+
+window.aplicarCreditoAOT = function (nombreCliente, otId, montoAAplicar) {
+    let bdClientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+    const idxCliente = bdClientes.findIndex(c => c.nombre === nombreCliente);
+    if (idxCliente === -1) return 0;
+    const cliente = bdClientes[idxCliente];
+    if (!Array.isArray(cliente.creditoLedger)) cliente.creditoLedger = [];
+    const disponible = cliente.creditoLedger.reduce((s, m) => s + m.monto, 0);
+    const monto = Math.round(Math.min(disponible, montoAAplicar));
+    if (monto <= 0) return 0;
+
+    let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const idxOT = lista.findIndex(x => String(x.id) === String(otId));
+    if (idxOT === -1) return 0;
+    lista[idxOT].sena = (lista[idxOT].sena || 0) + monto;
+    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+
+    cliente.creditoLedger.push({
+        id: 'cred_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        fecha: new Date().toLocaleDateString('es-AR'),
+        tipo: 'aplicado',
+        monto: -monto,
+        detalle: `Aplicado a OT #${otId}`,
+        otId: otId,
+        creado_por: window.GECKO_USER?.nombre || null
+    });
+    cliente.creditoDisponible = cliente.creditoLedger.reduce((s, m) => s + m.monto, 0);
+    localStorage.setItem('clientes', JSON.stringify(bdClientes));
+    localStorage.setItem('gecko_clientes', JSON.stringify(bdClientes));
+    window.LISTA_CLIENTES = bdClientes;
+
+    return monto;
+};
+
 window._registrarSena = function (id) {
     const monto1 = window._parseMontoValor(document.getElementById('sena1Monto')?.value);
     const forma1 = document.getElementById('sena1Forma')?.value || 'Efectivo';
@@ -5158,12 +5228,14 @@ window.addEventListener('load', function () {
                 loc: document.getElementById('nuevoClienteLoc')?.value || '',
                 rubro: document.getElementById('nuevoClienteRubro')?.value || '',
                 creado_por: window.GECKO_USER?.nombre || null,
+                creditoDisponible: 0,
+                creditoLedger: [],
             };
 
             let bdClientes = JSON.parse(localStorage.getItem('clientes')) || [];
             const index = bdClientes.findIndex(c => c.nombre.toLowerCase() === nombre.toLowerCase());
             if (index !== -1) {
-                bdClientes[index] = nuevoCliente;
+                bdClientes[index] = { ...bdClientes[index], ...nuevoCliente, id: bdClientes[index].id };
             } else {
                 bdClientes.push(nuevoCliente);
             }

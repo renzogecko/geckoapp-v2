@@ -32,7 +32,8 @@ const GECKO_NUMERIC_FIELDS = {
     'gecko_cajas':      ['saldo'],
     'gecko_movimientos':['monto'],
     'gecko_gastos_fijos':['monto'],
-    'gecko_listaPresupuestos': ['total','sena']
+    'gecko_listaPresupuestos': ['total','sena'],
+    'clientes': ['creditoDisponible']
 };
 
 const _cache = {};
