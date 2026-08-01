@@ -2271,6 +2271,26 @@ window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
     const mov = movs.find(m => String(m.id) === String(movId));
     if (!mov) return;
 
+    if (mov.categoria === 'Descuento Otorgado') {
+        document.getElementById('_geckoAvisoNoElimMov')?.remove();
+        const aviso = document.createElement('div');
+        aviso.id = '_geckoAvisoNoElimMov';
+        aviso.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10003;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+        aviso.innerHTML = `
+            <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+                <div style="width:56px;height:56px;background:rgba(251,191,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                </div>
+                <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">No se puede eliminar este movimiento</h3>
+                <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Este movimiento (${mov.categoria}) forma parte del historial permanente de la operación y no puede eliminarse.</p>
+                <button onclick="document.getElementById('_geckoAvisoNoElimMov').remove()"
+                    style="width:100%;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Entendido</button>
+            </div>`;
+        document.body.appendChild(aviso);
+        aviso.addEventListener('click', e => { if (e.target === aviso) aviso.remove(); });
+        return;
+    }
+
     document.getElementById('_geckoConfirmElimMovHist')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmElimMovHist';
@@ -2297,7 +2317,9 @@ window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
         const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
         const cajaObj = cajas.find(c => c.nombre === mov.caja);
         if (cajaObj) {
-            if (mov.tipo === 'Ingreso') { cajaObj.saldo -= mov.monto; } else { cajaObj.saldo += mov.monto; }
+            if (mov.tipo === 'Ingreso') { cajaObj.saldo -= mov.monto; }
+            else if (mov.tipo === 'Egreso') { cajaObj.saldo += mov.monto; }
+            else { console.warn('[_eliminarMovimientoDesdeHistorial] tipo de movimiento desconocido, no se revirtió saldo:', mov); }
             localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
             window.LISTA_CAJAS = cajas;
         }
@@ -4916,6 +4938,26 @@ window.addEventListener('load', function () {
             const mov = movs[index];
             if (!mov) return;
 
+            if (mov.categoria === 'Descuento Otorgado') {
+                document.getElementById('_geckoAvisoNoElimMov')?.remove();
+                const aviso = document.createElement('div');
+                aviso.id = '_geckoAvisoNoElimMov';
+                aviso.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+                aviso.innerHTML = `
+                    <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+                        <div style="width:56px;height:56px;background:rgba(251,191,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                        </div>
+                        <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">No se puede eliminar este movimiento</h3>
+                        <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Este movimiento (${mov.categoria}) forma parte del historial permanente de la operación y no puede eliminarse.</p>
+                        <button onclick="document.getElementById('_geckoAvisoNoElimMov').remove()"
+                            style="width:100%;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Entendido</button>
+                    </div>`;
+                document.body.appendChild(aviso);
+                aviso.addEventListener('click', e => { if (e.target === aviso) aviso.remove(); });
+                return;
+            }
+
             // 1. Crear Modal Dinámico estilo GECKO
             document.getElementById('_geckoConfirmElimMov')?.remove();
             const modal = document.createElement('div');
@@ -4953,8 +4995,10 @@ window.addEventListener('load', function () {
                 if (cajaObj) {
                     if (mov.tipo === 'Ingreso') {
                         cajaObj.saldo -= mov.monto;
-                    } else {
+                    } else if (mov.tipo === 'Egreso') {
                         cajaObj.saldo += mov.monto;
+                    } else {
+                        console.warn('[eliminarMovimiento] tipo de movimiento desconocido, no se revirtió saldo:', mov);
                     }
                     localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
                 }
