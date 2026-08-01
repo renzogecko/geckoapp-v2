@@ -2048,14 +2048,16 @@ window._registrarSena = function (id) {
     };
     movimientos.push(mov1);
 
+    let descMov1 = null;
     if (descMonto1 > 0) {
-        movimientos.push({
+        descMov1 = {
             id: 'mov_' + (Date.now() + 10),
             fecha, caja: caja1, tipo: 'Descuento', monto: descMonto1,
             detalle: `Descuento otorgado - OT#${id} - ${cliente}${nota ? ' · ' + nota : ''}`,
             categoria: 'Descuento Otorgado',
             creado_por: window.GECKO_USER?.nombre || null
-        });
+        };
+        movimientos.push(descMov1);
     }
 
     let mov2 = null;
@@ -2071,14 +2073,16 @@ window._registrarSena = function (id) {
         movimientos.push(mov2);
     }
 
+    let descMov2 = null;
     if (descMonto2 > 0) {
-        movimientos.push({
+        descMov2 = {
             id: 'mov_' + (Date.now() + 11),
             fecha, caja: caja2, tipo: 'Descuento', monto: descMonto2,
             detalle: `Descuento otorgado - OT#${id} - ${cliente} (${forma2})${nota ? ' · ' + nota : ''}`,
             categoria: 'Descuento Otorgado',
             creado_por: window.GECKO_USER?.nombre || null
-        });
+        };
+        movimientos.push(descMov2);
     }
 
     // Actualizar saldo de cajas
@@ -2106,7 +2110,7 @@ window._registrarSena = function (id) {
     window.LISTA_CAJAS = cajas;
 
     // Sincronizar con API
-    [mov1, mov2].filter(Boolean).forEach(mov => {
+    [mov1, mov2, descMov1, descMov2].filter(Boolean).forEach(mov => {
         fetch('/app/api.php?endpoint=movimientos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
