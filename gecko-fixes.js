@@ -3073,11 +3073,11 @@ window.confirmarPagoGastoFijo = function () {
     if (!g) return;
 
     const cajaNombre = document.getElementById('pagoGfCaja').value;
-    if (!cajaNombre) { alert("Seleccion\u00e1 la caja desde donde se pagar\u00e1."); return; }
+    if (!cajaNombre) { alert("Seleccioná la caja desde donde se pagará."); return; }
 
     const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
     const cajaObj = cajas.find(c => c.nombre === cajaNombre);
-    if (!cajaObj) { alert("Caja no v\u00e1lida."); return; }
+    if (!cajaObj) { alert("Caja no válida."); return; }
 
     // 1. Restar saldo de la caja seleccionada
     cajaObj.saldo -= g.monto;
@@ -3116,7 +3116,7 @@ window.confirmarPagoGastoFijo = function () {
     window.renderGastosFijos();
     if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
     if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
-    if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${cajaNombre}.`, '\u00a1Abonado!');
+    if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${cajaNombre}.`, '¡Abonado!');
 };
 
 window.revertirPagoGastoFijo = function (idx) {
@@ -3216,7 +3216,7 @@ window.editarGastoFijo = function (idx) {
     modal.className = 'gecko-modal-overlay';
     modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;';
     const cats = ['Alquiler', 'Servicios', 'Internet', 'Sueldos', 'Impuestos', 'Insumos', 'Varios'];
-    const catLabels = { Alquiler: 'Alquiler', Servicios: 'Servicios (Luz, Agua, Gas)', Internet: 'Internet / Telefon\u00eda', Sueldos: 'Sueldos', Impuestos: 'Impuestos / Monotributo', Insumos: 'Insumos recurrentes', Varios: 'Varios' };
+    const catLabels = { Alquiler: 'Alquiler', Servicios: 'Servicios (Luz, Agua, Gas)', Internet: 'Internet / Telefonía', Sueldos: 'Sueldos', Impuestos: 'Impuestos / Monotributo', Insumos: 'Insumos recurrentes', Varios: 'Varios' };
 
     modal.innerHTML = `
             <div class="gecko-modal-box max-w-md w-full mx-4">
@@ -3242,13 +3242,13 @@ window.editarGastoFijo = function (idx) {
                             </div>
                         </div>
                         <div>
-                            <label class="gecko-label">D\u00eda vencimiento</label>
+                            <label class="gecko-label">Día vencimiento</label>
                             <input id="_editGastoVencimiento" type="number" min="1" max="31" class="gecko-input-line mt-1" value="${g.vencimiento || 1}">
                         </div>
                     </div>
 
                     <div>
-                        <label class="gecko-label">Categor\u00eda</label>
+                        <label class="gecko-label">Categoría</label>
                         <select id="_editGastoCategoria" class="gecko-select-pro">
                             ${cats.map(c => `<option value="${c}" ${g.categoria === c ? 'selected' : ''}>${catLabels[c]}</option>`).join('')}
                         </select>
@@ -3269,7 +3269,7 @@ window.editarGastoFijo = function (idx) {
         const monto = parseFloat(modal.querySelector('#_editGastoMonto').value) || 0;
         const vencimiento = modal.querySelector('#_editGastoVencimiento').value.trim() || '1';
         const categoria = modal.querySelector('#_editGastoCategoria').value;
-        if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
+        if (!concepto || monto <= 0) { alert('Completá concepto y monto.'); return; }
         const arr = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
         if (!arr[idx]) return;
         arr[idx] = { ...arr[idx], concepto, monto, vencimiento, categoria };
@@ -3278,7 +3278,7 @@ window.editarGastoFijo = function (idx) {
         if (window._syncQueue) await window._syncQueue;
         modal.remove();
         window.renderGastosFijos();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} actualizado.`, '\u00a1Guardado!');
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} actualizado.`, '¡Guardado!');
     };
 };
 
@@ -3312,17 +3312,17 @@ window.abrirModalNuevoGastoFijo = function () {
                             </div>
                         </div>
                         <div>
-                            <label class="gecko-label">D\u00eda vencimiento</label>
+                            <label class="gecko-label">Día vencimiento</label>
                             <input id="_gastoVencimiento" type="number" min="1" max="31" class="gecko-input-line mt-1" placeholder="Ej: 15">
                         </div>
                     </div>
 
                     <div>
-                        <label class="gecko-label">Categor\u00eda</label>
+                        <label class="gecko-label">Categoría</label>
                         <select id="_gastoCategoria" class="gecko-select-pro">
                             <option value="Alquiler">Alquiler</option>
                             <option value="Servicios">Servicios (Luz, Agua, Gas)</option>
-                            <option value="Internet">Internet / Telefon\u00eda</option>
+                            <option value="Internet">Internet / Telefonía</option>
                             <option value="Sueldos">Sueldos</option>
                             <option value="Impuestos">Impuestos / Monotributo</option>
                             <option value="Insumos">Insumos recurrentes</option>
@@ -3344,7 +3344,7 @@ window.abrirModalNuevoGastoFijo = function () {
         const monto = parseFloat(modal.querySelector('#_gastoMonto').value) || 0;
         const vencimiento = modal.querySelector('#_gastoVencimiento').value.trim() || '1';
         const categoria = modal.querySelector('#_gastoCategoria').value;
-        if (!concepto || monto <= 0) { alert('Complet\u00e1 concepto y monto.'); return; }
+        if (!concepto || monto <= 0) { alert('Completá concepto y monto.'); return; }
         if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
         const nuevoGasto = {
             id: 'gf_' + Date.now().toString(16) + Math.random().toString(16).slice(2, 7),
@@ -3359,7 +3359,7 @@ window.abrirModalNuevoGastoFijo = function () {
         await window._syncQueue;
         modal.remove();
         window.renderGastosFijos();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '\u00a1Guardado!');
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${concepto} agregado.`, '¡Guardado!');
     };
 };
 
