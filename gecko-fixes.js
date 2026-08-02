@@ -3067,7 +3067,9 @@ window.pagarGastoFijo = function (idx) {
     // Resetear bloque de segunda caja
     const bloque2 = document.getElementById('bloqueSegundaCajaGf');
     const btnToggle2 = document.getElementById('btnToggleSegundaCajaGf');
+    const filaMonto1Reset = document.getElementById('filaMontoCaja1Gf');
     if (bloque2) bloque2.style.display = 'none';
+    if (filaMonto1Reset) filaMonto1Reset.style.display = 'none';
     if (btnToggle2) btnToggle2.textContent = '+ Combinar con una segunda caja';
     const m1 = document.getElementById('pagoGfMonto1');
     const m2 = document.getElementById('pagoGfMonto2');
@@ -3079,10 +3081,12 @@ window.pagarGastoFijo = function (idx) {
 
 window._toggleSegundaCajaGf = function () {
     const bloque = document.getElementById('bloqueSegundaCajaGf');
+    const filaMonto1 = document.getElementById('filaMontoCaja1Gf');
     const btn = document.getElementById('btnToggleSegundaCajaGf');
     if (!bloque) return;
     const visible = bloque.style.display !== 'none';
     bloque.style.display = visible ? 'none' : 'block';
+    if (filaMonto1) filaMonto1.style.display = visible ? 'none' : 'block';
     if (btn) btn.textContent = visible ? '+ Combinar con una segunda caja' : '− Quitar segunda caja';
     if (!visible) window._recalcularMonto2Gf();
 };
