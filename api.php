@@ -425,15 +425,15 @@ try {
         if ($method === 'POST') {
             $b = json_decode(file_get_contents('php://input'), true);
             $id = $b['id'] ?? uniqid('gf_');
-            $stmt = $pdo->prepare("INSERT INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria) VALUES (?,?,?,?,?,?)");
-            $stmt->execute([$id, $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1', $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null]);
+            $stmt = $pdo->prepare("INSERT INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria, periodo_pagado) VALUES (?,?,?,?,?,?,?)");
+            $stmt->execute([$id, $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1', $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null, $b['periodoPagado'] ?? null]);
             echo json_encode(['success'=>true,'id'=>$id]); exit;
         }
 
         if ($method === 'PUT') {
             $b = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("REPLACE INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria) VALUES (?,?,?,?,?,?)");
-            $stmt->execute([$b['id'], $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1', $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null]);
+            $stmt = $pdo->prepare("REPLACE INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria, periodo_pagado) VALUES (?,?,?,?,?,?,?)");
+            $stmt->execute([$b['id'], $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1', $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null, $b['periodoPagado'] ?? null]);
             echo json_encode(['success'=>true]); exit;
         }
 

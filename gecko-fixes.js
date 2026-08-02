@@ -3053,6 +3053,14 @@ window.pagarGastoFijo = function (idx) {
     if (nombreEl) nombreEl.innerText = g.concepto;
     if (montoEl) montoEl.innerText = '$' + Math.round(g.monto).toLocaleString('es-AR');
 
+    // Precargar el período con el mes actual (formato YYYY-MM), editable por el usuario
+    const periodoEl = document.getElementById('pagoGfPeriodo');
+    if (periodoEl) {
+        const ahora = new Date();
+        const mesActual = String(ahora.getMonth() + 1).padStart(2, '0');
+        periodoEl.value = g.periodoPagado || `${ahora.getFullYear()}-${mesActual}`;
+    }
+
     document.getElementById('modalPagoGastoFijo').style.display = 'flex';
 };
 
@@ -3092,9 +3100,13 @@ window.confirmarPagoGastoFijo = function () {
     window.LISTA_MOVIMIENTOS = movs;
 
     // 3. Actualizar estado del Gasto a "Pagado" y guardar referencia al movimiento para poder revertirlo
+    const periodoEl = document.getElementById('pagoGfPeriodo');
+    const ahoraFallback = new Date();
+    const mesFallback = String(ahoraFallback.getMonth() + 1).padStart(2, '0');
     g.estado = 'Pagado';
     g.movimientoId = mov.id;
     g.cajaPago = cajaNombre;
+    g.periodoPagado = (periodoEl && periodoEl.value) ? periodoEl.value : `${ahoraFallback.getFullYear()}-${mesFallback}`;
     localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
     window.LISTA_GASTOS_FIJOS = lista;
 
@@ -3806,8 +3818,18 @@ window._ejecutarCierreMensualGecko = function () {
         window.HISTORICO_CIERRES = hist;
         localStorage.setItem('gecko_historico_cierres', JSON.stringify(hist));
 
-        // Reiniciar gastos fijos
-        gastosFijos.forEach(g => { g.estado = 'Pendiente'; delete g.movimientoId; delete g.cajaPago; });
+        // Reiniciar gastos fijos — SOLO si su período pagado ya pasó o es el mes que se cierra.
+        // Si fueron pagados por adelantado para un mes futuro, se respetan y no se tocan.
+        const periodoDelCierre = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+        gastosFijos.forEach(g => {
+            const esFuturo = g.periodoPagado && g.periodoPagado > periodoDelCierre;
+            if (!esFuturo) {
+                g.estado = 'Pendiente';
+                delete g.movimientoId;
+                delete g.cajaPago;
+                delete g.periodoPagado;
+            }
+        });
         localStorage.setItem('gecko_gastos_fijos', JSON.stringify(gastosFijos));
         window.LISTA_GASTOS_FIJOS = gastosFijos;
 
