@@ -3042,10 +3042,13 @@ window.pagarGastoFijo = function (idx) {
     window._gastoFijoAPagarIdx = idx;
 
     // Poblar select
+    window._gastoFijoAPagarTotal = g.monto;
     const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
     const opts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
     const sel = document.getElementById('pagoGfCaja');
     if (sel) sel.innerHTML = `<option value="">Seleccionar caja origen...</option>` + opts;
+    const sel2 = document.getElementById('pagoGfCaja2');
+    if (sel2) sel2.innerHTML = `<option value="">Seleccionar caja...</option>` + opts;
 
     // Poblar datos visuales
     const nombreEl = document.getElementById('pagoGfNombre');
@@ -3061,7 +3064,34 @@ window.pagarGastoFijo = function (idx) {
         periodoEl.value = g.periodoPagado || `${ahora.getFullYear()}-${mesActual}`;
     }
 
+    // Resetear bloque de segunda caja
+    const bloque2 = document.getElementById('bloqueSegundaCajaGf');
+    const btnToggle2 = document.getElementById('btnToggleSegundaCajaGf');
+    if (bloque2) bloque2.style.display = 'none';
+    if (btnToggle2) btnToggle2.textContent = '+ Combinar con una segunda caja';
+    const m1 = document.getElementById('pagoGfMonto1');
+    const m2 = document.getElementById('pagoGfMonto2');
+    if (m1) m1.value = g.monto;
+    if (m2) m2.value = 0;
+
     document.getElementById('modalPagoGastoFijo').style.display = 'flex';
+};
+
+window._toggleSegundaCajaGf = function () {
+    const bloque = document.getElementById('bloqueSegundaCajaGf');
+    const btn = document.getElementById('btnToggleSegundaCajaGf');
+    if (!bloque) return;
+    const visible = bloque.style.display !== 'none';
+    bloque.style.display = visible ? 'none' : 'block';
+    if (btn) btn.textContent = visible ? '+ Combinar con una segunda caja' : '− Quitar segunda caja';
+    if (!visible) window._recalcularMonto2Gf();
+};
+
+window._recalcularMonto2Gf = function () {
+    const total = window._gastoFijoAPagarTotal || 0;
+    const m1 = parseFloat(document.getElementById('pagoGfMonto1')?.value) || 0;
+    const m2El = document.getElementById('pagoGfMonto2');
+    if (m2El) m2El.value = Math.max(0, total - m1);
 };
 
 window.confirmarPagoGastoFijo = function () {
@@ -3075,37 +3105,65 @@ window.confirmarPagoGastoFijo = function () {
     const cajaNombre = document.getElementById('pagoGfCaja').value;
     if (!cajaNombre) { alert("Seleccioná la caja desde donde se pagará."); return; }
 
+    const bloque2 = document.getElementById('bloqueSegundaCajaGf');
+    const usaSegundaCaja = bloque2 && bloque2.style.display !== 'none';
+
+    let caja2Nombre = '', monto1 = g.monto, monto2 = 0;
+    if (usaSegundaCaja) {
+        caja2Nombre = document.getElementById('pagoGfCaja2')?.value || '';
+        monto1 = parseFloat(document.getElementById('pagoGfMonto1')?.value) || 0;
+        monto2 = parseFloat(document.getElementById('pagoGfMonto2')?.value) || 0;
+        if (!caja2Nombre) { alert("Seleccioná la segunda caja."); return; }
+        if (caja2Nombre === cajaNombre) { alert("Elegí dos cajas distintas."); return; }
+        if (monto1 <= 0 || monto2 <= 0) { alert("Ambos montos deben ser mayores a 0."); return; }
+        if (Math.round(monto1 + monto2) !== Math.round(g.monto)) { alert("La suma de ambos montos debe ser igual al total a pagar."); return; }
+    }
+
     const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
     const cajaObj = cajas.find(c => c.nombre === cajaNombre);
     if (!cajaObj) { alert("Caja no válida."); return; }
+    let caja2Obj = null;
+    if (usaSegundaCaja) {
+        caja2Obj = cajas.find(c => c.nombre === caja2Nombre);
+        if (!caja2Obj) { alert("Caja 2 no válida."); return; }
+    }
 
-    // 1. Restar saldo de la caja seleccionada
-    cajaObj.saldo -= g.monto;
+    // 1. Restar saldo de la(s) caja(s)
+    cajaObj.saldo -= monto1;
+    if (usaSegundaCaja) caja2Obj.saldo -= monto2;
     localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
 
-    // 2. Crear el movimiento en el historial
-    const mov = {
+    // 2. Crear el/los movimiento(s)
+    const fecha = new Date().toLocaleDateString('es-AR');
+    const mov1 = {
         id: 'mov_' + Date.now(),
-        fecha: new Date().toLocaleDateString('es-AR'),
+        fecha, caja: cajaNombre, tipo: 'Egreso', monto: monto1,
         detalle: g.concepto,
-        caja: cajaNombre,
-        tipo: 'Egreso',
-        monto: g.monto,
         categoria: g.categoria || 'Gastos Fijos',
         creado_por: window.GECKO_USER?.nombre || null
     };
     const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-    movs.push(mov);
+    movs.push(mov1);
+    if (usaSegundaCaja) {
+        const mov2 = {
+            id: 'mov_' + (Date.now() + 1),
+            fecha, caja: caja2Nombre, tipo: 'Egreso', monto: monto2,
+            detalle: g.concepto,
+            categoria: g.categoria || 'Gastos Fijos',
+            creado_por: window.GECKO_USER?.nombre || null
+        };
+        movs.push(mov2);
+    }
     localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
     window.LISTA_MOVIMIENTOS = movs;
 
-    // 3. Actualizar estado del Gasto a "Pagado" y guardar referencia al movimiento para poder revertirlo
+    // 3. Actualizar estado del Gasto
     const periodoEl = document.getElementById('pagoGfPeriodo');
     const ahoraFallback = new Date();
     const mesFallback = String(ahoraFallback.getMonth() + 1).padStart(2, '0');
     g.estado = 'Pagado';
-    g.movimientoId = mov.id;
-    g.cajaPago = cajaNombre;
+    g.movimientoId = mov1.id;
+    g.cajaPago = usaSegundaCaja ? `${cajaNombre} + ${caja2Nombre}` : cajaNombre;
     g.periodoPagado = (periodoEl && periodoEl.value) ? periodoEl.value : `${ahoraFallback.getFullYear()}-${mesFallback}`;
     localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
     window.LISTA_GASTOS_FIJOS = lista;
@@ -3116,7 +3174,7 @@ window.confirmarPagoGastoFijo = function () {
     window.renderGastosFijos();
     if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
     if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
-    if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${cajaNombre}.`, '¡Abonado!');
+    if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${g.cajaPago}.`, '¡Abonado!');
 };
 
 window.revertirPagoGastoFijo = function (idx) {
