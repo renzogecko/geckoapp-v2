@@ -2487,27 +2487,25 @@ function filtrarMovimientos(filtro) {
 function renderReportesDashboard() {
     const reportes = listaPresupuestos || window.listaPresupuestos || [];
     if (!reportes || reportes.length === 0) return;
-    const ahora = new Date();
-    const mesActual = ahora.getMonth();
-    const anioActual = ahora.getFullYear();
+    const inicioPeriodo = window.obtenerFechaInicioPeriodoActual();
 
-    const movimientosMes = LISTA_MOVIMIENTOS.filter(m => {
+    const movimientosPeriodo = LISTA_MOVIMIENTOS.filter(m => {
         const [d, mo, y] = m.fecha.split('/');
-        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+        return new Date(parseInt(y), parseInt(mo) - 1, parseInt(d)) >= inicioPeriodo;
     });
 
-    const otsMes = listaPresupuestos.filter(p => {
+    const otsPeriodo = listaPresupuestos.filter(p => {
         const [d, mo, y] = p.fecha.split('/');
-        return p.status === 'OT' && (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+        return p.status === 'OT' && new Date(parseInt(y), parseInt(mo) - 1, parseInt(d)) >= inicioPeriodo;
     });
 
-    const presupuestosMes = listaPresupuestos.filter(p => {
+    const presupuestosPeriodo = listaPresupuestos.filter(p => {
         const [d, mo, y] = p.fecha.split('/');
-        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+        return new Date(parseInt(y), parseInt(mo) - 1, parseInt(d)) >= inicioPeriodo;
     });
 
-    const ingresos = movimientosMes.filter(m => m.tipo === 'Ingreso').reduce((acc, curr) => acc + curr.monto, 0);
-    const egresos = movimientosMes.filter(m => m.tipo === 'Egreso').reduce((acc, curr) => acc + curr.monto, 0);
+    const ingresos = movimientosPeriodo.filter(m => m.tipo === 'Ingreso').reduce((acc, curr) => acc + curr.monto, 0);
+    const egresos = movimientosPeriodo.filter(m => m.tipo === 'Egreso').reduce((acc, curr) => acc + curr.monto, 0);
     const balance = ingresos - egresos;
 
     // --- 0. MÉTRICAS HOLDPRINT ---
@@ -2518,13 +2516,13 @@ function renderReportesDashboard() {
     if (elEstancado) elEstancado.innerText = `$${Math.round(estancado).toLocaleString('es-AR')}`;
 
     // Tasa de Cierre
-    const tasaCierre = presupuestosMes.length > 0 ? ((otsMes.length / presupuestosMes.length) * 100).toFixed(1) : 0;
+    const tasaCierre = presupuestosPeriodo.length > 0 ? ((otsPeriodo.length / presupuestosPeriodo.length) * 100).toFixed(1) : 0;
     const elTasa = document.getElementById('metricTasaCierre');
     if (elTasa) elTasa.innerText = `${tasaCierre}%`;
 
     // Ticket Promedio
-    const totalOtVal = otsMes.reduce((acc, p) => acc + p.total, 0);
-    const ticketProm = otsMes.length > 0 ? (totalOtVal / otsMes.length).toFixed(0) : 0;
+    const totalOtVal = otsPeriodo.reduce((acc, p) => acc + p.total, 0);
+    const ticketProm = otsPeriodo.length > 0 ? (totalOtVal / otsPeriodo.length).toFixed(0) : 0;
     const elTicket = document.getElementById('metricTicketProm');
     if (elTicket) elTicket.innerText = `$${parseInt(ticketProm).toLocaleString('es-AR')}`;
 
@@ -2661,7 +2659,7 @@ function renderReportesDashboard() {
         return 'Otros';
     }
     const counts = {};
-    otsMes.forEach(p => (p.items || []).forEach(it => {
+    otsPeriodo.forEach(p => (p.items || []).forEach(it => {
         const rubro = rubroDeItem(it, p);
         counts[rubro] = (counts[rubro] || 0) + 1;
     }));
@@ -2673,7 +2671,7 @@ function renderReportesDashboard() {
     const contRanking = document.getElementById('repoRankingProductos');
     if (contRanking) {
         contRanking.innerHTML = ranking.length === 0
-            ? `<p class="text-gray-400 text-[11px] italic">Sin ventas este mes.</p>`
+            ? `<p class="text-gray-400 text-[11px] italic">Sin ventas en el período.</p>`
             : ranking.map(([rubro, count]) => `
                     <div class="flex items-center gap-2.5">
                         <span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:${RUBRO_COLORS[rubro] || '#71717a'}"></span>
@@ -2685,7 +2683,7 @@ function renderReportesDashboard() {
 
     // --- 7. ESTRUCTURA DE GASTOS ---
     const gastosPorCategoria = {};
-    movimientosMes.filter(m => m.tipo === 'Egreso').forEach(m => {
+    movimientosPeriodo.filter(m => m.tipo === 'Egreso').forEach(m => {
         const cat = m.categoria || 'Varios';
         gastosPorCategoria[cat] = (gastosPorCategoria[cat] || 0) + m.monto;
     });
@@ -2719,7 +2717,7 @@ function renderReportesDashboard() {
 
     const actividadCajas = {};
     LISTA_CAJAS.forEach(c => actividadCajas[c.nombre] = 0);
-    movimientosMes.forEach(m => { if (actividadCajas[m.caja] !== undefined) actividadCajas[m.caja]++; });
+    movimientosPeriodo.forEach(m => { if (actividadCajas[m.caja] !== undefined) actividadCajas[m.caja]++; });
 
     const entriesActividad = Object.entries(actividadCajas).sort((a, b) => b[1] - a[1]);
     const cajaMasActivaName = entriesActividad.length > 0 ? entriesActividad[0][0] : null;

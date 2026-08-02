@@ -3410,15 +3410,16 @@ window.renderReportesDashboard = function () {
         if (elFcrDetalle) elFcrDetalle.innerText = `Cajas: $${Math.round(totalCajas).toLocaleString('es-AR')} — Costos Fijos: $${Math.round(costosFijosNum).toLocaleString('es-AR')}`;
     }
 
-    // ── Descuentos Otorgados (mes actual) ──
+    // ── Descuentos Otorgados (desde el último Cierre de Mes) ──
     const movsTodos = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-    const movsMesActual = movsTodos.filter(m => {
+    const inicioPeriodo = window.obtenerFechaInicioPeriodoActual();
+    const movsPeriodo = movsTodos.filter(m => {
         const pts = (m.fecha || '').split('/');
-        return pts.length >= 3 && (parseInt(pts[1]) - 1) === ahora.getMonth() && parseInt(pts[2]) === ahora.getFullYear();
+        return pts.length >= 3 && new Date(parseInt(pts[2]), parseInt(pts[1]) - 1, parseInt(pts[0])) >= inicioPeriodo;
     });
-    const descuentosMes = movsMesActual.filter(m => m.tipo === 'Descuento');
+    const descuentosMes = movsPeriodo.filter(m => m.tipo === 'Descuento');
     const totalDescuentos = descuentosMes.reduce((a, m) => a + (parseFloat(m.monto) || 0), 0);
-    const ingresosMes = movsMesActual.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + (parseFloat(m.monto) || 0), 0);
+    const ingresosMes = movsPeriodo.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + (parseFloat(m.monto) || 0), 0);
     const pctDescuentos = ingresosMes > 0 ? (totalDescuentos / ingresosMes) * 100 : 0;
     const elDoMonto = document.getElementById('doMonto');
     const elDoCantidad = document.getElementById('doCantidad');
@@ -3530,19 +3531,17 @@ window.renderMiniDesgloseGastos = function () {
     const cont = document.getElementById('repoMiniDesgloseGastos');
     if (!cont) return;
 
-    const ahora = new Date();
-    const mesActual = ahora.getMonth();
-    const anioActual = ahora.getFullYear();
+    const inicioPeriodo = window.obtenerFechaInicioPeriodoActual();
     const movimientos = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
 
-    const movsMes = movimientos.filter(m => {
+    const movsPeriodo = movimientos.filter(m => {
         const [d, mo, y] = (m.fecha || '').split('/');
-        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+        return new Date(parseInt(y), parseInt(mo) - 1, parseInt(d)) >= inicioPeriodo;
     });
 
-    const egresosMes = movsMes.filter(m => m.tipo === 'Egreso');
+    const egresosMes = movsPeriodo.filter(m => m.tipo === 'Egreso');
     if (egresosMes.length === 0) {
-        cont.innerHTML = '<p style="color:#71717a;font-size:11px;font-style:italic;">Sin egresos registrados este mes.</p>';
+        cont.innerHTML = '<p style="color:#71717a;font-size:11px;font-style:italic;">Sin egresos registrados en el período.</p>';
         return;
     }
 
@@ -3589,19 +3588,17 @@ window.renderTicketPorRubro = function () {
         return 'Otros';
     }
 
-    const ahora = new Date();
-    const mesActual = ahora.getMonth();
-    const anioActual = ahora.getFullYear();
+    const inicioPeriodo = window.obtenerFechaInicioPeriodoActual();
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
 
-    const otsMes = lista.filter(p => {
+    const otsPeriodo = lista.filter(p => {
         if (p.status !== 'OT') return false;
         const [d, mo, y] = (p.fecha || '').split('/');
-        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+        return new Date(parseInt(y), parseInt(mo) - 1, parseInt(d)) >= inicioPeriodo;
     });
 
     const sumas = {}, conteos = {};
-    otsMes.forEach(p => (p.items || []).forEach(it => {
+    otsPeriodo.forEach(p => (p.items || []).forEach(it => {
         const rubro = rubroDeItemLocal(it, p);
         if (rubro === 'Otros') return;
         sumas[rubro] = (sumas[rubro] || 0) + (parseFloat(it.costo) || 0);
@@ -3610,7 +3607,7 @@ window.renderTicketPorRubro = function () {
 
     const rubros = Object.keys(sumas);
     if (rubros.length === 0) {
-        elNombre.innerText = 'Sin datos este mes';
+        elNombre.innerText = 'Sin datos en el período';
         elValor.innerText = '';
         return;
     }
@@ -3654,35 +3651,33 @@ window.renderPuntoEquilibrio = function () {
     const cont = document.getElementById('cardPuntoEquilibrio');
     if (!cont) return;
 
-    const ahora = new Date();
-    const mesActual = ahora.getMonth();
-    const anioActual = ahora.getFullYear();
+    const inicioPeriodo = window.obtenerFechaInicioPeriodoActual();
 
     const movimientos = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
     const gastosFijos = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
 
-    const movsMes = movimientos.filter(m => {
+    const movsPeriodo = movimientos.filter(m => {
         const [d, mo, y] = (m.fecha || '').split('/');
-        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+        return new Date(parseInt(y), parseInt(mo) - 1, parseInt(d)) >= inicioPeriodo;
     });
 
-    const ingresos = movsMes.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + (m.monto || 0), 0);
+    const ingresos = movsPeriodo.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + (m.monto || 0), 0);
 
-    const egresosFijosCategorias = movsMes.filter(m => m.tipo === 'Egreso' && ['Alquiler', 'Sueldos'].includes(m.categoria))
+    const egresosFijosCategorias = movsPeriodo.filter(m => m.tipo === 'Egreso' && ['Alquiler', 'Sueldos'].includes(m.categoria))
         .reduce((a, m) => a + (m.monto || 0), 0);
     const totalGastosFijosCargados = gastosFijos.reduce((a, g) => a + (parseFloat(g.monto) || 0), 0);
     const costosFijos = totalGastosFijosCargados + egresosFijosCategorias;
 
-    const costosVariables = movsMes.filter(m => m.tipo === 'Egreso' && m.categoria === 'Insumos')
+    const costosVariables = movsPeriodo.filter(m => m.tipo === 'Egreso' && m.categoria === 'Insumos')
         .reduce((a, m) => a + (m.monto || 0), 0);
 
-    const otsMes = lista.filter(p => {
+    const otsPeriodo = lista.filter(p => {
         if (p.status !== 'OT') return false;
         const [d, mo, y] = (p.fecha || '').split('/');
-        return (parseInt(mo) - 1) === mesActual && parseInt(y) === anioActual;
+        return new Date(parseInt(y), parseInt(mo) - 1, parseInt(d)) >= inicioPeriodo;
     });
-    const ticketProm = otsMes.length > 0 ? (otsMes.reduce((a, p) => a + (p.total || 0), 0) / otsMes.length) : 0;
+    const ticketProm = otsPeriodo.length > 0 ? (otsPeriodo.reduce((a, p) => a + (p.total || 0), 0) / otsPeriodo.length) : 0;
 
     const elAviso = document.getElementById('peAvisoFaltaDato');
 
@@ -3690,7 +3685,7 @@ window.renderPuntoEquilibrio = function () {
         if (elAviso) {
             elAviso.style.display = 'block';
             elAviso.innerText = ingresos <= 0
-                ? 'FALTA DATO: no hay ingresos registrados este mes todavía para calcular el margen.'
+                ? 'FALTA DATO: no hay ingresos registrados en el período todavía para calcular el margen.'
                 : 'FALTA DATO: no hay Gastos Fijos cargados este mes.';
         }
         document.getElementById('pePuntoEquilibrioMonto').innerText = '—';
@@ -3719,7 +3714,7 @@ window.renderPuntoEquilibrio = function () {
     const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
 
     window._geckoAnimarNumero(document.getElementById('pePuntoEquilibrioMonto'), peMonto, v => fmt(v));
-    document.getElementById('pePuntoEquilibrioOts').innerText = `≈ ${peOts} OTs este mes`;
+    document.getElementById('pePuntoEquilibrioOts').innerText = `≈ ${peOts} OTs en el período`;
     document.getElementById('peFacturadoLabel').innerText = `Facturado: ${fmt(ingresos)}`;
     document.getElementById('peFaltanLabel').innerText = avanceMes >= 100
         ? '¡Punto de equilibrio alcanzado!'
@@ -3730,14 +3725,35 @@ window.renderPuntoEquilibrio = function () {
     document.getElementById('peAvanceMes').innerText = avanceMes.toFixed(0) + '%';
 };
 
+// ── Fecha de inicio del período actual: desde el último Cierre de Mes, o 01/07/2026 si no hay cierres previos ──
+window.obtenerFechaInicioPeriodoActual = function () {
+    const hist = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+    if (hist.length > 0) {
+        const ultimo = hist[hist.length - 1];
+        const [d, m, y] = (ultimo.fecha_cierre || '').split('/');
+        if (d && m && y) return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    }
+    return new Date(2026, 6, 1); // 01/07/2026 fijo (mes 6 = Julio, 0-indexed)
+};
+
 // ── Cierre mensual con modal Gecko ──
 window._ejecutarCierreMensualGecko = function () {
     window.ejecutarCierreMensual = window._ejecutarCierreMensualGecko;
+    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const ahoraValidacion = new Date();
+
+    // Anti-doble-cierre: bloquea si el mes calendario actual ya fue cerrado
+    const histValidacion = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+    const ultimoCierreValidacion = histValidacion.length > 0 ? histValidacion[histValidacion.length - 1] : null;
+    if (ultimoCierreValidacion && ultimoCierreValidacion.mes === ahoraValidacion.getMonth() && ultimoCierreValidacion.anio === ahoraValidacion.getFullYear()) {
+        window.mostrarAdvertencia(`El mes de ${meses[ahoraValidacion.getMonth()]} ${ahoraValidacion.getFullYear()} ya fue cerrado el ${ultimoCierreValidacion.fecha_cierre}.`, 'CIERRE YA REALIZADO');
+        return;
+    }
+
     document.getElementById('_geckoConfirmCierre')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmCierre';
     modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
-    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const mesNom = meses[new Date().getMonth()];
     modal.innerHTML = `
         <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
@@ -3758,26 +3774,31 @@ window._ejecutarCierreMensualGecko = function () {
     document.getElementById('_geckoCierreOk').onclick = function () {
         modal.remove();
         const ahora = new Date();
+        const inicioPeriodo = window.obtenerFechaInicioPeriodoActual();
         const movs = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-        const movsMes = movs.filter(m => {
+        const movsPeriodo = movs.filter(m => {
             const pts = (m.fecha || '').split('/');
-            return pts.length >= 3 && parseInt(pts[1]) - 1 === ahora.getMonth() && parseInt(pts[2]) === ahora.getFullYear();
+            if (pts.length < 3) return false;
+            return new Date(parseInt(pts[2]), parseInt(pts[1]) - 1, parseInt(pts[0])) >= inicioPeriodo;
         });
-        const ing = movsMes.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + m.monto, 0);
-        const egr = movsMes.filter(m => m.tipo === 'Egreso').reduce((a, m) => a + m.monto, 0);
+        const ing = movsPeriodo.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + m.monto, 0);
+        const egr = movsPeriodo.filter(m => m.tipo === 'Egreso').reduce((a, m) => a + m.monto, 0);
         const gastosFijos = window.LISTA_GASTOS_FIJOS || [];
 
-        // Guardar en historial
+        // Guardar en historial — mes/anio quedan como metadata calendario (validación anti-doble-cierre);
+        // ingresos/egresos/balance/periodo reflejan TODO el período desde el cierre anterior
+        const inicioPeriodoStr = inicioPeriodo.toLocaleDateString('es-AR');
+        const finPeriodoStr = ahora.toLocaleDateString('es-AR');
         const cierre = {
             id: 'cierre_' + Date.now(),
-            periodo: `${meses[ahora.getMonth()]} ${ahora.getFullYear()}`,
+            periodo: `${meses[ahora.getMonth()]} ${ahora.getFullYear()} (${inicioPeriodoStr} al ${finPeriodoStr})`,
             mes: ahora.getMonth(),
             anio: ahora.getFullYear(),
             ingresos: ing,
             gastos: egr,
             balance: ing - egr,
             fecha_cierre: ahora.toLocaleDateString('es-AR'),
-            movimientos: movsMes.length,
+            movimientos: movsPeriodo.length,
             gastos_fijos: gastosFijos.length
         };
         const hist = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
@@ -3793,9 +3814,6 @@ window._ejecutarCierreMensualGecko = function () {
         if (typeof window.renderGastosFijos === 'function') window.renderGastosFijos();
         if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
 
-        // Guardar en MySQL via localStorage proxy
-        window.HISTORICO_CIERRES = hist;
-        localStorage.setItem('gecko_historico_cierres', JSON.stringify(hist));
         // Sincronizar cierre individual con MySQL directamente
         fetch('/app/api.php?endpoint=historico_cierres', {
             method: 'POST',
@@ -3814,8 +3832,8 @@ window._ejecutarCierreMensualGecko = function () {
                     <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 6px;">Mes cerrado</p>
-                <h3 style="color:white;font-size:22px;font-weight:900;margin:0 0 4px;">${meses[ahora.getMonth()]} ${ahora.getFullYear()}</h3>
-                <p style="color:#71717a;font-size:12px;margin:0 0 24px;">${ahora.toLocaleDateString('es-AR')} · ${movsMes.length} movimientos</p>
+                <h3 style="color:white;font-size:22px;font-weight:900;margin:0 0 4px;">${cierre.periodo}</h3>
+                <p style="color:#71717a;font-size:12px;margin:0 0 24px;">${finPeriodoStr} · ${movsPeriodo.length} movimientos</p>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;">
                     <div style="background:#1e1f20;border-radius:12px;padding:12px 8px;">
                         <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Ingresos</div>
@@ -3844,7 +3862,7 @@ window._ejecutarCierreMensualGecko = function () {
             </div>`;
         document.body.appendChild(modalResult);
         document.getElementById('_geckoCierreDescargar').onclick = function () {
-            window._generarPDFCierreMes(meses[ahora.getMonth()], ahora.getFullYear(), ing, egr, movsMes, gastosFijos);
+            window._generarPDFCierreMes(cierre.periodo, '', ing, egr, movsPeriodo, gastosFijos);
         };
         document.getElementById('_geckoCierreCerrar').onclick = function () {
             modalResult.remove();
