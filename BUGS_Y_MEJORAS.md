@@ -1268,3 +1268,153 @@ precioGremio en materiales Dinámica (Fija sigue sin tocarse nunca).
   Texto de cada ítem escapado contra HTML/XSS. Presupuestos leen 
   creado_por desde la columna metadata (JSON), no como columna propia 
   (a diferencia de movimientos/clientes que sí la tienen).
+
+---
+
+### Sesión 02/08/2026 — MEJ-032 (permisos avanzados), Cotizadores (Área m²), Finanzas (reparto de pagos/crédito/estado OTs) y Reportes (período contable)
+
+## Resuelto en esta sesión
+
+### MEJ-032 (Usuarios/Roles/Permisos)
+- ✅ Punto 2: Ocultar pestañas Reportes/Gastos Fijos en Finanzas para
+  rol usuario (corregido, antes ocultaba toda la sección).
+- ✅ Punto 3: Ocultar saldos de caja para rol usuario — interruptor
+  configurable en Configuración > Finanzas, candado 🔒, botón de admin
+  para ocultar/mostrar toda la fila de cajas, lápiz de editar caja
+  oculto para usuario, navegación a Configuración oculta para usuario.
+- ✅ Punto 5: Auditoría "creado por" — columna creado_por en
+  movimientos y clientes (MySQL), campo creado_por dentro de metadata
+  para presupuestos/OTs. Cubre: movimiento manual, transferencias,
+  cobro de seña/saldo (incluido Descuento Otorgado), pago de gasto
+  fijo, alta de cliente, alta de presupuesto/OT.
+- ✅ Feed de actividad tipo campanita — polling cada 60s contra
+  api.php?endpoint=actividad (combina movimientos+clientes+presupuestos
+  nuevos en una sola consulta), notifica entre distintas computadoras/
+  usuarios, columna creado_en (TIMESTAMP) en las 3 tablas, zona horaria
+  fijada explícitamente, pausa en pestaña inactiva.
+
+### Cotizadores — campo Área (m²)
+- ✅ Agregado a Polifán, Chapa/Acrílico, Letras 3D y Gráfica-Impresión
+  (Variables + Montado en Rígido). Autocalcula si hay Ancho+Alto
+  (mostrando el TOTAL de la fila, ancho×alto×cantidad), editable a
+  mano si faltan medidas (interpretado como total, dividido por
+  cantidad para el cálculo interno). Helper compartido
+  window._geckoResolverArea en corporeos.js, reutilizado por
+  grafica.js con soporte de filas dinámicas sin id.
+
+### Finanzas — Reparto de pagos, crédito, y estado de OTs (MEJ-022/MEJ-027)
+- ✅ ETAPA A: esquema MySQL de crédito (creditoDisponible,
+  creditoLedger en clientes), helpers de dinero (calcularSaldoOT,
+  getOTsPendientesDeCliente, registrarExcedenteComoCredito,
+  aplicarCreditoAOT), fix de integridad en guardarCliente.
+- ✅ ETAPA B: nuevo estado "Finalizado" en el flujo de OTs. "Entregado"
+  redefinido a solo "salió del taller" (ya no dispara archivado/pago,
+  la deuda sigue contando). "Finalizado" hereda el comportamiento
+  viejo de "Entregado" (chequea saldo, archiva o pide pago). Cartel
+  visual "⚠️ Entregado · Sin cobrar" en la lista de OTs. 6 lugares
+  actualizados (Ficha Cliente, Historial, Dashboard, Reportes) para
+  excluir "Finalizado" en vez de "Entregado" del cálculo de deuda.
+  Migración SQL ejecutada (OTs viejas "Entregado" → "Finalizado"). Fix
+  de actualización en tiempo real del cartel al cambiar estado.
+- ⏳ PENDIENTE (prioridad, retomar apenas se cierren los 3 Temas de
+  Gastos Fijos/Cierre de Mes de la próxima sesión):
+  * ETAPA C (mayor riesgo del plan): reescribir confirmarCobro para
+    que reparta el pago en FIFO real entre las OTs pendientes del
+    cliente, registre el excedente como crédito (usando los helpers
+    ya creados en la Etapa A), y muestre el modal de archivado
+    múltiple cuando el reparto salde más de una OT.
+  * ETAPA D: tarjeta tricolor (rojo=deuda / verde=crédito a favor /
+    gris=al día) en la Ficha del Cliente, reemplazando la lógica
+    binaria actual.
+  * ETAPA E: Modal B — ofrecer aplicar el crédito disponible del
+    cliente a una OT recién convertida desde Presupuesto, con
+    confirmación previa (no automático).
+  Diseño completo de las 3 etapas ya validado con el usuario en la
+  sesión anterior — no requiere nueva charla de diseño, solo
+  implementación siguiendo el plan ya acordado.
+
+### Finanzas — Bugs de integridad encontrados y corregidos
+- ✅ Bug: borrar un movimiento de "Descuento Otorgado" sumaba
+  incorrectamente ese monto de vuelta a la caja (el descuento nunca
+  había restado nada, era informativo). Corregido: la lógica de
+  reversión de saldo ahora es explícita (Ingreso resta / Egreso suma /
+  cualquier otro tipo no toca la caja).
+- ✅ Bug más grave: el movimiento de "Descuento Otorgado" (generado en
+  _registrarSena al cobrar con descuento) nunca se sincronizaba a
+  MySQL — solo mov1/mov2 (los Ingresos) se posteaban a la API. Esto
+  causaba que el descuento desapareciera al recargar la página (F5), y
+  que la tarjeta "Descuentos Otorgados" de Reportes quedara subestimada.
+  Corregido: los movimientos de descuento ahora se incluyen en el
+  mismo loop de sincronización.
+- ⚠️ NOTA: se intentó bloquear el borrado de movimientos "Descuento
+  Otorgado" (para que no se puedan eliminar nunca) pero se revirtió a
+  pedido del usuario — hay casos legítimos donde sí hace falta
+  borrarlos. Descartado, no reintentar sin volver a consultar.
+
+### Reportes — Período contable vs. mes calendario
+- ✅ Las tarjetas de Reportes (Ingresos, Egresos, Balance, Rentabilidad,
+  Descuentos Otorgados, Estructura de Gastos, Caja Más Activa,
+  Variación, Tasa de Cierre, Ticket Promedio, Ranking Mix, Punto de
+  Equilibrio, Ticket Promedio por Rubro, Mini Desglose de Gastos) ya
+  NO se resetean con el calendario — filtran "desde el último Cierre
+  de Mes" (función window.obtenerFechaInicioPeriodoActual(), fallback
+  fijo 01/07/2026 si nunca se cerró). Los 2 gráficos de tendencia de 6
+  meses quedan sin cambios (por diseño, son comparativas históricas).
+- ✅ Fix: el cálculo del propio Cierre de Mes también usa el período
+  completo (no solo el mes calendario en curso) — si julio nunca se
+  cerró, el cierre en agosto incluye julio completo. Etiqueta de
+  período ahora muestra el rango real de fechas, ej: "Agosto 2026
+  (01/07/2026 al 02/08/2026)".
+- ✅ Fix: guardado duplicado del cierre en localStorage (redundante,
+  no duplicaba el registro, solo reescribía dos veces).
+- ✅ Fix: validación anti-doble-cierre (no se puede cerrar el mismo mes
+  dos veces).
+- ⚠️ IMPORTANTE: este cambio fue probado en Live Server / local,
+  TODAVÍA NO se aplicó en producción (Hostinger) ni se ejecutó el
+  Cierre de Mes real — bloqueado por el Tema 1 de abajo.
+
+## Pendiente — próxima sesión (prioridad, bloquea el cierre de mes real)
+
+### Tema 1 — Conflicto entre Cierre de Mes y estado de Gastos Fijos
+Al ejecutar el Cierre de Mes, el sistema resetea TODOS los gastos fijos
+a estado "Pendiente" (borra movimientoId y cajaPago), sin distinguir si
+ya fueron pagados para el período siguiente. Si se cierra el mes ahora
+en producción, gastos ya pagados (aunque sea adelantados) volverían a
+aparecer como pendientes, perdiendo el registro de que se pagaron.
+Investigar el mecanismo exacto de reseteo y diseñar una solución antes
+de ejecutar el Cierre de Mes real en Hostinger.
+
+### Tema 2 — Pago de Gasto Fijo combinado entre 2 cajas
+Hoy el modal de pago de un Gasto Fijo solo permite una caja. Se pidió
+poder combinarlo (ej: sueldo 70% Efectivo + 30% Banco Renzo), similar
+al pago de OT con 2 cajas que ya existe (_registrarSena).
+
+### Tema 3 — Atribución de Gastos Fijos no mensuales/desalineados
+Algunos gastos no siguen un ciclo mensual limpio (luz se paga cada 2
+meses, internet a principio de mes, monotributo a fin de mes). Definir
+cómo atribuir cada pago al "período" correcto para que los reportes de
+Gastos por categoría no queden distorsionados.
+
+### Después de los 3 Temas de arriba — retomar (prioridad)
+Reparto automático de pagos entre OTs (MEJ-022/MEJ-027) — Etapas C, D
+y E, diseño ya validado con el usuario, solo falta implementar:
+* ETAPA C (mayor riesgo del plan): reescribir confirmarCobro — reparto
+  FIFO real entre las OTs pendientes del cliente + registro de
+  excedente como crédito + modal de archivado múltiple cuando se
+  saldan varias OTs de un mismo pago.
+* ETAPA D: tarjeta tricolor (rojo=deuda / verde=crédito a favor /
+  gris=al día) en la Ficha del Cliente.
+* ETAPA E: Modal B — ofrecer aplicar el crédito disponible del cliente
+  a una OT recién convertida, con confirmación previa (no automático).
+
+### Otros pendientes ya anotados (de sesiones anteriores, sin cambios)
+- Limpieza de código muerto (guardarNuevaCaja x3, guardarCliente
+  duplicado en gecko-fixes.js:6059, renderOts vieja en línea 1005,
+  _cambiarEstadoOTDesplegable, cambiarEstadoOt en main.js).
+- Bloqueo real del lado del servidor (api.php) para las restricciones
+  de rol usuario — hoy son solo visuales (JavaScript). Dejado para el
+  final por decisión explícita del usuario.
+- Conectar con el Dashboard (MEJ-023).
+- Pantalla de administración de usuarios.
+- Verde en tabla general de Clientes (consistencia con Ficha
+  individual) — alcance a discutir.
