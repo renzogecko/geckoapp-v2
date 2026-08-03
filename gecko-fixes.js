@@ -3106,14 +3106,15 @@ window._toggleSegundaCajaGf = function () {
     const monto1 = document.getElementById('pagoGfMonto1');
     const btn = document.getElementById('btnToggleSegundaCajaGf');
     if (!bloque) return;
-    const visible = bloque.style.display !== 'none';
-    bloque.style.display = visible ? 'none' : 'block';
+    const estabaAbierta = bloque.style.display !== 'none';
+    const segundaCajaActiva = !estabaAbierta;
+    bloque.style.display = segundaCajaActiva ? 'block' : 'none';
     if (monto1) {
-        monto1.readOnly = visible;
-        if (visible) window._setMoneyValue(monto1, window._gastoFijoAPagarTotal);
+        monto1.readOnly = !segundaCajaActiva;
+        if (!segundaCajaActiva) window._setMoneyValue(monto1, window._gastoFijoAPagarTotal);
     }
-    if (btn) btn.style.display = visible ? 'block' : 'none';
-    if (!visible) window._recalcularMonto2Gf();
+    if (btn) btn.style.display = segundaCajaActiva ? 'none' : 'block';
+    if (segundaCajaActiva) window._recalcularMonto2Gf();
 };
 
 window._recalcularMonto2Gf = function () {

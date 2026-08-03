@@ -2011,6 +2011,7 @@ select.gecko-select-modal option {
     font-size: 14px;
     font-weight: 700;
     padding: 12px 14px;
+    padding-left: 18px;
     font-family: inherit;
     box-sizing: border-box;
     font-variant-numeric: tabular-nums;
