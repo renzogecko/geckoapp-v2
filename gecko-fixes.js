@@ -3067,13 +3067,11 @@ window.pagarGastoFijo = function (idx) {
     // Resetear bloque de segunda caja
     const bloque2 = document.getElementById('bloqueSegundaCajaGf');
     const btnToggle2 = document.getElementById('btnToggleSegundaCajaGf');
-    const filaMonto1Reset = document.getElementById('filaMontoCaja1Gf');
     if (bloque2) bloque2.style.display = 'none';
-    if (filaMonto1Reset) filaMonto1Reset.style.display = 'none';
     if (btnToggle2) btnToggle2.style.display = 'block';
     const m1 = document.getElementById('pagoGfMonto1');
     const m2 = document.getElementById('pagoGfMonto2');
-    if (m1) m1.value = g.monto;
+    if (m1) { m1.value = g.monto; m1.readOnly = true; }
     if (m2) m2.value = 0;
 
     document.getElementById('modalPagoGastoFijo').style.display = 'flex';
@@ -3081,12 +3079,15 @@ window.pagarGastoFijo = function (idx) {
 
 window._toggleSegundaCajaGf = function () {
     const bloque = document.getElementById('bloqueSegundaCajaGf');
-    const filaMonto1 = document.getElementById('filaMontoCaja1Gf');
+    const monto1 = document.getElementById('pagoGfMonto1');
     const btn = document.getElementById('btnToggleSegundaCajaGf');
     if (!bloque) return;
     const visible = bloque.style.display !== 'none';
     bloque.style.display = visible ? 'none' : 'block';
-    if (filaMonto1) filaMonto1.style.display = visible ? 'none' : 'block';
+    if (monto1) {
+        monto1.readOnly = visible;
+        if (visible) monto1.value = window._gastoFijoAPagarTotal || monto1.value;
+    }
     if (btn) btn.style.display = visible ? 'block' : 'none';
     if (!visible) window._recalcularMonto2Gf();
 };
