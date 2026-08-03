@@ -2999,3 +2999,10 @@ select.gecko-select-modal option {
     filter: invert(1);
     padding: 4px;
 }
+
+/* Padding forzado por ID — gana cualquier pelea de especificidad con
+   reglas genéricas de inputs del sistema */
+#pagoGfMonto1,
+#pagoGfMonto2 {
+    padding: 12px 14px 12px 4px !important;
+}
