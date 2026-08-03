@@ -3149,8 +3149,9 @@ window.confirmarPagoGastoFijo = function () {
     };
     const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
     movs.push(mov1);
+    let mov2 = null;
     if (usaSegundaCaja) {
-        const mov2 = {
+        mov2 = {
             id: 'mov_' + (Date.now() + 1),
             fecha, caja: caja2Nombre, tipo: 'Egreso', monto: monto2,
             detalle: g.concepto,
@@ -3169,6 +3170,9 @@ window.confirmarPagoGastoFijo = function () {
     g.estado = 'Pagado';
     g.movimientoId = mov1.id;
     g.cajaPago = usaSegundaCaja ? `${cajaNombre} + ${caja2Nombre}` : cajaNombre;
+    g.movimientosPago = usaSegundaCaja
+        ? [{ id: mov1.id, caja: cajaNombre, monto: monto1 }, { id: mov2.id, caja: caja2Nombre, monto: monto2 }]
+        : [{ id: mov1.id, caja: cajaNombre, monto: monto1 }];
     g.periodoPagado = (periodoEl && periodoEl.value) ? periodoEl.value : `${ahoraFallback.getFullYear()}-${mesFallback}`;
     localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
     window.LISTA_GASTOS_FIJOS = lista;
@@ -3210,24 +3214,38 @@ window.revertirPagoGastoFijo = function (idx) {
     document.getElementById('_geckoRevertirOk').onclick = function () {
         modal.remove();
         const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-        // Buscar el movimiento de egreso asociado (por id guardado, o por detalle+monto como fallback)
-        let movIdx = g.movimientoId ? movs.findIndex(m => m.id === g.movimientoId) : -1;
-        if (movIdx === -1) movIdx = movs.findIndex(m => m.tipo === 'Egreso' && m.detalle === g.concepto && m.monto === g.monto);
-        let cajaNombreRevertir = g.cajaPago;
-        if (movIdx !== -1) {
-            cajaNombreRevertir = cajaNombreRevertir || movs[movIdx].caja;
-            movs.splice(movIdx, 1);
-            localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
-            window.LISTA_MOVIMIENTOS = movs;
+        const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+
+        // Revertir un pago individual (id o detalle+monto como fallback) y devolver su saldo a su caja
+        const revertirUnPago = (movId, cajaNombre, monto) => {
+            let movIdx = movId ? movs.findIndex(m => m.id === movId) : -1;
+            if (movIdx === -1) movIdx = movs.findIndex(m => m.tipo === 'Egreso' && m.detalle === g.concepto && m.monto === monto);
+            let cajaNombreRevertir = cajaNombre;
+            if (movIdx !== -1) {
+                cajaNombreRevertir = cajaNombreRevertir || movs[movIdx].caja;
+                movs.splice(movIdx, 1);
+            }
+            if (cajaNombreRevertir) {
+                const cajaObj = cajas.find(c => c.nombre === cajaNombreRevertir);
+                if (cajaObj) cajaObj.saldo += monto;
+            }
+        };
+
+        if (Array.isArray(g.movimientosPago) && g.movimientosPago.length) {
+            g.movimientosPago.forEach(pago => revertirUnPago(pago.id, pago.caja, pago.monto));
+        } else {
+            // Compatibilidad: gastos pagados antes de esta mejora (un solo pago)
+            revertirUnPago(g.movimientoId, g.cajaPago, g.monto);
         }
-        if (cajaNombreRevertir) {
-            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-            const cajaObj = cajas.find(c => c.nombre === cajaNombreRevertir);
-            if (cajaObj) { cajaObj.saldo += g.monto; localStorage.setItem('gecko_cajas', JSON.stringify(cajas)); }
-        }
+
+        localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+        window.LISTA_MOVIMIENTOS = movs;
+        localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
+
         g.estado = 'Pendiente';
         delete g.movimientoId;
         delete g.cajaPago;
+        delete g.movimientosPago;
         localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
         window.LISTA_GASTOS_FIJOS = lista;
         window.renderGastosFijos();
