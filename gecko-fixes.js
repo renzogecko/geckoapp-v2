@@ -3033,6 +3033,30 @@ window.renderGastosFijos = function () {
     }
 };
 
+// Formatea un input de dinero mientras el usuario escribe: muestra
+// puntos de miles, guarda el valor numérico real en dataset.raw
+window._formatearInputDinero = function (input) {
+    let raw = (input.value || '').replace(/\D/g, '');
+    raw = raw.replace(/^0+(?=\d)/, ''); // sin ceros a la izquierda
+    input.dataset.raw = raw;
+    input.value = raw ? Number(raw).toLocaleString('es-AR') : '';
+};
+
+// Devuelve el valor numérico real de un input formateado con puntos
+window._getMoneyValue = function (input) {
+    if (!input) return 0;
+    if (input.dataset.raw !== undefined) return parseInt(input.dataset.raw, 10) || 0;
+    return parseFloat(String(input.value).replace(/\./g, '')) || 0;
+};
+
+// Setea el valor de un input de dinero formateado desde JS (no desde el usuario)
+window._setMoneyValue = function (input, numero) {
+    if (!input) return;
+    const n = Math.round(numero) || 0;
+    input.dataset.raw = String(n);
+    input.value = n ? n.toLocaleString('es-AR') : '';
+};
+
 window.pagarGastoFijo = function (idx) {
     const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
     const g = lista[idx];
@@ -3071,8 +3095,8 @@ window.pagarGastoFijo = function (idx) {
     if (btnToggle2) btnToggle2.style.display = 'block';
     const m1 = document.getElementById('pagoGfMonto1');
     const m2 = document.getElementById('pagoGfMonto2');
-    if (m1) { m1.value = g.monto; m1.readOnly = true; }
-    if (m2) m2.value = 0;
+    if (m1) { window._setMoneyValue(m1, g.monto); m1.readOnly = true; }
+    if (m2) window._setMoneyValue(m2, 0);
 
     document.getElementById('modalPagoGastoFijo').style.display = 'flex';
 };
@@ -3086,7 +3110,7 @@ window._toggleSegundaCajaGf = function () {
     bloque.style.display = visible ? 'none' : 'block';
     if (monto1) {
         monto1.readOnly = visible;
-        if (visible) monto1.value = window._gastoFijoAPagarTotal || monto1.value;
+        if (visible) window._setMoneyValue(monto1, window._gastoFijoAPagarTotal);
     }
     if (btn) btn.style.display = visible ? 'block' : 'none';
     if (!visible) window._recalcularMonto2Gf();
@@ -3094,9 +3118,9 @@ window._toggleSegundaCajaGf = function () {
 
 window._recalcularMonto2Gf = function () {
     const total = window._gastoFijoAPagarTotal || 0;
-    const m1 = parseFloat(document.getElementById('pagoGfMonto1')?.value) || 0;
+    const m1 = window._getMoneyValue(document.getElementById('pagoGfMonto1'));
     const m2El = document.getElementById('pagoGfMonto2');
-    if (m2El) m2El.value = Math.max(0, total - m1);
+    if (m2El) window._setMoneyValue(m2El, Math.max(0, total - m1));
 };
 
 window.confirmarPagoGastoFijo = function () {
@@ -3116,8 +3140,8 @@ window.confirmarPagoGastoFijo = function () {
     let caja2Nombre = '', monto1 = g.monto, monto2 = 0;
     if (usaSegundaCaja) {
         caja2Nombre = document.getElementById('pagoGfCaja2')?.value || '';
-        monto1 = parseFloat(document.getElementById('pagoGfMonto1')?.value) || 0;
-        monto2 = parseFloat(document.getElementById('pagoGfMonto2')?.value) || 0;
+        monto1 = window._getMoneyValue(document.getElementById('pagoGfMonto1'));
+        monto2 = window._getMoneyValue(document.getElementById('pagoGfMonto2'));
         if (!caja2Nombre) { alert("Seleccioná la segunda caja."); return; }
         if (caja2Nombre === cajaNombre) { alert("Elegí dos cajas distintas."); return; }
         if (monto1 <= 0 || monto2 <= 0) { alert("Ambos montos deben ser mayores a 0."); return; }

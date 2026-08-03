@@ -3361,7 +3361,11 @@
                     <select id="pagoGfCaja" class="gecko-select-pro"></select>
                     <div id="filaMontoCaja1Gf" style="margin-top:12px;">
                         <label class="gecko-label">Monto que sale de esta caja</label>
-                        <input type="number" id="pagoGfMonto1" class="gecko-select-pro" readonly oninput="window._recalcularMonto2Gf()">
+                        <div class="gecko-money-wrap">
+                            <span class="gecko-money-prefix">$</span>
+                            <input type="text" inputmode="numeric" id="pagoGfMonto1" readonly
+                                oninput="window._formatearInputDinero(this); window._recalcularMonto2Gf()">
+                        </div>
                     </div>
                 </div>
 
@@ -3378,7 +3382,10 @@
                     <select id="pagoGfCaja2" class="gecko-select-pro"></select>
                     <div style="margin-top:12px;">
                         <label class="gecko-label">Monto que sale de esta caja (automático)</label>
-                        <input type="number" id="pagoGfMonto2" class="gecko-select-pro" readonly>
+                        <div class="gecko-money-wrap">
+                            <span class="gecko-money-prefix">$</span>
+                            <input type="text" inputmode="numeric" id="pagoGfMonto2" readonly>
+                        </div>
                     </div>
                 </div>
 
