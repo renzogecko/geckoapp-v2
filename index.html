@@ -3356,37 +3356,36 @@
                     <p id="pagoGfMonto" class="text-3xl font-black text-gecko">$0</p>
                 </div>
 
-                <div>
-                    <label class="gecko-label">Caja de Origen (Desde dónde se paga)</label>
+                <div id="cardCaja1Gf" style="background:#131314;border:1px solid #27272a;border-radius:16px;padding:16px;">
+                    <p style="color:#71717a;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 12px;">Caja 1</p>
                     <select id="pagoGfCaja" class="gecko-select-pro"></select>
-                </div>
-
-                <div id="filaMontoCaja1Gf" style="display:none;">
-                    <label class="gecko-label">Monto que sale de esta caja</label>
-                    <input type="number" id="pagoGfMonto1" class="gecko-select-pro" oninput="window._recalcularMonto2Gf()">
+                    <div id="filaMontoCaja1Gf" style="display:none;margin-top:12px;">
+                        <label class="gecko-label">Monto que sale de esta caja</label>
+                        <input type="number" id="pagoGfMonto1" class="gecko-select-pro" oninput="window._recalcularMonto2Gf()">
+                    </div>
                 </div>
 
                 <button type="button" id="btnToggleSegundaCajaGf" onclick="window._toggleSegundaCajaGf()"
-                    style="background:none;border:none;color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;padding:6px 0;text-align:left;">
+                    style="width:100%;background:transparent;border:1px dashed #333333;border-radius:14px;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;padding:12px;cursor:pointer;margin-top:12px;">
                     + Combinar con una segunda caja
                 </button>
 
-                <div id="bloqueSegundaCajaGf" style="display:none;border-top:1px dashed #333333;padding-top:16px;">
-                    <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 12px;">Segunda caja</p>
-                    <div>
-                        <label class="gecko-label">Caja</label>
-                        <select id="pagoGfCaja2" class="gecko-select-pro"></select>
+                <div id="bloqueSegundaCajaGf" style="display:none;background:#131314;border:1px solid #F15A24;border-left:3px solid #F15A24;border-radius:16px;padding:16px;margin-top:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <p style="color:#F15A24;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin:0;">Caja 2</p>
+                        <button type="button" onclick="window._toggleSegundaCajaGf()" style="background:none;border:none;color:#71717a;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;">Quitar ×</button>
                     </div>
-                    <div style="margin-top:14px;">
+                    <select id="pagoGfCaja2" class="gecko-select-pro"></select>
+                    <div style="margin-top:12px;">
                         <label class="gecko-label">Monto que sale de esta caja (automático)</label>
                         <input type="number" id="pagoGfMonto2" class="gecko-select-pro" readonly>
                     </div>
                 </div>
 
-                <div>
+                <div style="border-top:1px solid #27272a;margin-top:20px;padding-top:16px;">
                     <label class="gecko-label">¿Hasta qué mes queda cubierto este pago?</label>
                     <input type="month" id="pagoGfPeriodo" class="gecko-select-pro" style="color-scheme: dark;">
-                    <p class="text-[10px] text-gray-500 mt-1.5 leading-snug">Si pagás varios meses juntos (ej: alquiler adelantado), elegí el último mes que cubre.</p>
+                    <p style="color:#52525b;font-size:10px;margin-top:10px;line-height:1.5;font-style:italic;">Si pagás varios meses juntos (ej: alquiler adelantado), elegí el último mes que cubre.</p>
                 </div>
             </div>
 
