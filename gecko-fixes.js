@@ -3614,6 +3614,9 @@ window.renderReportesDashboard = function () {
 
         liquidezBarsEl.innerHTML = barsCajas + barCobrar;
     }
+
+    // ── Aviso de Gastos Fijos adelantados: se recalcula en cada entrada a Reportes ──
+    if (typeof window.renderAvisoGastosAdelantados === 'function') window.renderAvisoGastosAdelantados();
 };
 // Fuerza el primer dibujado ya con el override activo
 if (typeof window.renderReportesDashboard === 'function') window.renderReportesDashboard();
@@ -3624,6 +3627,8 @@ if (typeof window.renderPuntoEquilibrio === 'function') window.renderPuntoEquili
 if (typeof window.renderTicketPorRubro === 'function') window.renderTicketPorRubro();
 // ── Mini resumen de Egresos por Categoría (dentro de Rentabilidad y Flujo) ──
 if (typeof window.renderMiniDesgloseGastos === 'function') window.renderMiniDesgloseGastos();
+// ── Aviso de Gastos Fijos adelantados (primer pintado) ──
+if (typeof window.renderAvisoGastosAdelantados === 'function') window.renderAvisoGastosAdelantados();
 
 // ── Count-up (MEJ-002): anima los números ya calculados por main.js ──
 setTimeout(function () {
@@ -3841,6 +3846,30 @@ window.renderPuntoEquilibrio = function () {
     document.getElementById('peCostosFijos').innerText = fmt(costosFijos);
     document.getElementById('peMargenContribucion').innerText = (margenContribucion * 100).toFixed(0) + '%';
     document.getElementById('peAvanceMes').innerText = avanceMes.toFixed(0) + '%';
+};
+
+// ── Aviso de Gastos Fijos pagados por adelantado (periodoPagado posterior al mes calendario actual) ──
+window.renderAvisoGastosAdelantados = function () {
+    const gastosFijos = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    const ahora = new Date();
+    const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+
+    const adelantados = gastosFijos.filter(g => g.estado === 'Pagado' && g.periodoPagado && g.periodoPagado > mesActual);
+
+    const elAviso = document.getElementById('avisoGastosAdelantados');
+    const elTexto = document.getElementById('avisoGastosAdelantadosTexto');
+    if (!elAviso || !elTexto) return;
+
+    if (adelantados.length === 0) { elAviso.style.display = 'none'; return; }
+
+    const total = adelantados.reduce((a, g) => a + (parseFloat(g.monto) || 0), 0);
+    const nombres = adelantados.map(g => g.concepto);
+    const nombresTexto = nombres.length > 2
+        ? `${nombres.slice(0, 2).join(', ')} +${nombres.length - 2} más`
+        : nombres.join(', ');
+
+    elTexto.innerText = `Este mes incluye $${Math.round(total).toLocaleString('es-AR')} en pagos adelantados que también cubren meses futuros (${nombresTexto}).`;
+    elAviso.style.display = 'flex';
 };
 
 // ── Fecha de inicio del período actual: desde el último Cierre de Mes, o 01/07/2026 si no hay cierres previos ──
