@@ -2137,7 +2137,7 @@ window._registrarSena = function (id) {
     let mov2 = null;
     if (monto2 > 0) {
         mov2 = {
-            id: 'mov_' + (Date.now() + 1),
+            id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
             fecha, caja: caja2, tipo: 'Ingreso', monto: monto2,
             detalle: `${desc} OT#${id} - ${cliente} (${caja2})${descMonto2 > 0 ? ` (Cubre $${Math.round(montoNominal2).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
             categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
