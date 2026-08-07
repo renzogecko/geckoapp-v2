@@ -545,6 +545,52 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
         const btnStyle = 'width:100%;padding:15px;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:transform 0.15s ease, box-shadow 0.15s ease;';
         const btnHover = 'onmouseover="this.style.transform=\'scale(1.03)\';this.style.boxShadow=\'0 4px 20px rgba(0,0,0,0.3)\'" onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'none\'"';
 
+        // Si la OT ya está saldada, no tiene sentido ofrecer "Registrar Pago"
+        const listaOTFinalizar = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+        const otAFinalizar = listaOTFinalizar.find(x => String(x.id) === String(id));
+        const saldoOTFinalizar = otAFinalizar && typeof window.calcularSaldoOT === 'function' ? window.calcularSaldoOT(otAFinalizar) : null;
+
+        if (saldoOTFinalizar === 0) {
+            const modalSaldada = document.createElement('div');
+            modalSaldada.id = '_geckoModalArchivarOT';
+            modalSaldada.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.82);backdrop-filter:blur(5px);padding:16px;';
+            modalSaldada.innerHTML = `
+                <div style="background:#1e1f20;border:1px solid #2a2a2e;border-radius:22px;width:100%;max-width:420px;padding:36px;text-align:center;">
+                    <div style="width:52px;height:52px;background:rgba(16,185,129,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 8px 0;">Orden de Trabajo</p>
+                    <h3 style="color:white;font-size:19px;font-weight:900;margin:0 0 10px 0;text-transform:uppercase;">¿Archivar trabajo?</h3>
+                    <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;line-height:1.65;">Esta OT ya está saldada. ¿Archivarla como Finalizada?</p>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <button id="_geckoArchivarConfirmar" ${btnHover}
+                            style="${btnStyle}background:#F15A24;border:none;color:white;">
+                            Archivar
+                        </button>
+                        <button id="_geckoArchivarCancelar" ${btnHover}
+                            style="${btnStyle}background:#1c1c1f;border:1px solid #27272a;color:#52525b;">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modalSaldada);
+
+            document.getElementById('_geckoArchivarCancelar').onclick = function () {
+                modalSaldada.remove();
+            };
+
+            modalSaldada.addEventListener('click', function (e) {
+                if (e.target === modalSaldada) modalSaldada.remove();
+            });
+
+            document.getElementById('_geckoArchivarConfirmar').onclick = function () {
+                modalSaldada.remove();
+                window._archivarOT(id);
+            };
+
+            return;
+        }
+
         const modal = document.createElement('div');
         modal.id = '_geckoModalArchivarOT';
         modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.82);backdrop-filter:blur(5px);padding:16px;';
