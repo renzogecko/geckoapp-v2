@@ -3274,7 +3274,7 @@ window.confirmarPagoGastoFijo = function () {
     let mov2 = null;
     if (usaSegundaCaja) {
         mov2 = {
-            id: 'mov_' + (Date.now() + 1),
+            id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
             fecha, caja: caja2Nombre, tipo: 'Egreso', monto: monto2,
             detalle: g.concepto,
             categoria: g.categoria || 'Gastos Fijos',
