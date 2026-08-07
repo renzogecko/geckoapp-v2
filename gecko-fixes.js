@@ -5660,6 +5660,23 @@ window.addEventListener('load', function () {
             if (!st) return;
             const { cliente, cajaNombre, montoOriginal, pends } = st;
 
+            // Chequeo preventivo: si este pago va a generar crédito, el cliente
+            // tiene que existir en la sección Clientes, o el crédito se pierde.
+            let montoRestanteCheck = montoOriginal;
+            pends.forEach(p => {
+                if (!p._geckoTildada || montoRestanteCheck <= 0) return;
+                const saldo = window.calcularSaldoOT(p);
+                montoRestanteCheck -= Math.min(saldo, montoRestanteCheck);
+            });
+            if (montoRestanteCheck > 0) {
+                const bdClientesCheck = JSON.parse(localStorage.getItem('clientes') || '[]');
+                const clienteExiste = bdClientesCheck.some(c => c.nombre === cliente);
+                if (!clienteExiste) {
+                    window._mostrarAvisoClienteNoCargado(cliente, montoRestanteCheck);
+                    return;
+                }
+            }
+
             let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
 
             let montoRestante = montoOriginal;
@@ -5706,6 +5723,53 @@ window.addEventListener('load', function () {
                 if (creditoGenerado > 0) msg += ` Se generaron $${creditoGenerado.toLocaleString('es-AR')} de crédito a favor.`;
                 window.mostrarExito(msg, '¡Cobro Exitoso!');
             }
+        };
+
+        window._mostrarAvisoClienteNoCargado = function (nombreCliente, montoExcedente) {
+            document.getElementById('_geckoAvisoClienteNoCargado')?.remove();
+            const modal = document.createElement('div');
+            modal.id = '_geckoAvisoClienteNoCargado';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.85);backdrop-filter:blur(5px);padding:16px;';
+            modal.innerHTML = `
+        <div style="background:#1e1f20;border:1px solid #2a2a2e;border-radius:22px;width:100%;max-width:420px;padding:32px;text-align:center;">
+            <div style="width:52px;height:52px;background:rgba(251,191,36,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+            </div>
+            <p style="color:#fbbf24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 8px;">Atención</p>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 10px;">Cliente no cargado</h3>
+            <p style="color:#a1a1aa;font-size:13px;margin:0 0 28px;line-height:1.6;">
+                Este pago generaría <strong style="color:white;">$${Math.round(montoExcedente).toLocaleString('es-AR')} de crédito a favor</strong>
+                para "<strong style="color:white;">${nombreCliente}</strong>", pero ese nombre no está cargado en la sección Clientes.
+                Sin un registro de Cliente no se puede guardar el crédito — necesitás cargarlo primero.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button id="_geckoAvisoCargarClienteBtn"
+                    style="padding:15px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;">
+                    Cargar Cliente Ahora
+                </button>
+                <button id="_geckoAvisoCancelarBtn"
+                    style="padding:15px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;">
+                    Cancelar
+                </button>
+            </div>
+        </div>`;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+            document.getElementById('_geckoAvisoCancelarBtn').onclick = function () {
+                modal.remove();
+            };
+
+            document.getElementById('_geckoAvisoCargarClienteBtn').onclick = function () {
+                modal.remove();
+                if (typeof window.abrirModalNuevoCliente === 'function') {
+                    window.abrirModalNuevoCliente();
+                    setTimeout(() => {
+                        const inputNombre = document.getElementById('nuevoClienteNombre');
+                        if (inputNombre) inputNombre.value = nombreCliente;
+                    }, 50);
+                }
+            };
         };
 
         // ── Sistema Unificado de Cierre de Modales (Evita el bug del ESC) ──
