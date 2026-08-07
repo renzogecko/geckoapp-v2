@@ -5762,6 +5762,8 @@ window.addEventListener('load', function () {
 
             document.getElementById('_geckoAvisoCargarClienteBtn').onclick = function () {
                 modal.remove();
+                document.getElementById('_geckoModalAsignacionPago')?.remove();
+                window._geckoAsignacion = null;
                 if (typeof window.abrirModalNuevoCliente === 'function') {
                     window.abrirModalNuevoCliente();
                     setTimeout(() => {
