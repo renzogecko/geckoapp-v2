@@ -2934,7 +2934,7 @@ function abrirFichaCliente(nombre) {
 
     // Tabla Trabajos Activos
     document.getElementById('tbodyFichaActivos').innerHTML = activos.length === 0
-        ? '<tr><td colspan="4" class="py-8 text-center text-[#71717a] text-sm italic">Sin trabajos activos</td></tr>'
+        ? '<tr><td colspan="5" class="py-8 text-center text-[#71717a] text-sm italic">Sin trabajos activos</td></tr>'
         : activos.map(p => `
             <tr class="border-b border-[#333333] last:border-0 hover:bg-[#131314] transition-colors">
                 <td class="py-3 px-4 text-[11px] font-black">
@@ -2943,6 +2943,9 @@ function abrirFichaCliente(nombre) {
                 </td>
                 <td class="py-3 px-4 text-[10px] text-[#a1a1aa] max-w-[200px] truncate">
                     ${p.titulo || (p.items || []).map(it => it.textoOpciones || it.nombre).filter(Boolean).join(' · ') || 'Sin título'}
+                </td>
+                <td class="py-3 px-4 text-right font-black text-[12px]">
+                    $${Math.round(p.sena || 0).toLocaleString('es-AR')}
                 </td>
                 <td class="py-3 px-4 text-right font-black text-red-400 text-[12px]">
                     $${(p.total - (p.sena || 0)).toLocaleString('es-AR')}
