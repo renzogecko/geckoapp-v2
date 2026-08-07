@@ -2113,7 +2113,7 @@ window._registrarSena = function (id) {
     const cliente = lista[idx].cliente || 'Cliente';
 
     const mov1 = {
-        id: 'mov_' + Date.now(),
+        id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
         fecha, caja: caja1, tipo: 'Ingreso', monto: monto1,
         detalle: `${desc} OT#${id} - ${cliente}${descMonto1 > 0 ? ` (Cubre $${Math.round(montoNominal1).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
         categoria: tipo === 'saldo' ? 'Cobro Final' : 'Seña',
@@ -2493,7 +2493,7 @@ window.guardarNuevaCaja = function () {
     }).catch(() => { });
 
     if (saldo !== 0) {
-        const movId = 'mov_' + Date.now();
+        const movId = 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4);
         const mov = {
             id: movId,
             fecha: new Date().toLocaleDateString('es-AR'),
@@ -2625,7 +2625,7 @@ document.addEventListener('geckoDB_ready', () => {
         }).catch(e => console.warn('Error guardando caja:', e));
 
         if (saldo !== 0) {
-            const movId = 'mov_' + Date.now();
+            const movId = 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4);
             const mov = {
                 id: movId,
                 fecha: new Date().toLocaleDateString('es-AR'),
@@ -3263,7 +3263,7 @@ window.confirmarPagoGastoFijo = function () {
     // 2. Crear el/los movimiento(s)
     const fecha = new Date().toLocaleDateString('es-AR');
     const mov1 = {
-        id: 'mov_' + Date.now(),
+        id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
         fecha, caja: cajaNombre, tipo: 'Egreso', monto: monto1,
         detalle: g.concepto,
         categoria: g.categoria || 'Gastos Fijos',
@@ -4262,7 +4262,7 @@ window.addEventListener('load', function () {
             else caja.saldo -= monto;
 
             const mov = {
-                id: 'mov_' + Date.now(),
+                id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
                 fecha: new Date().toLocaleDateString('es-AR'),
                 detalle: detalle,
                 caja: cajaNombre,
@@ -5176,7 +5176,7 @@ window.addEventListener('load', function () {
                 alert('Caja no encontrada en la base de datos.'); return;
             }
 
-            const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja: caja, tipo: tipoCapital, monto: monto, categoria: 'Varios', creado_por: window.GECKO_USER?.nombre || null };
+            const mov = { id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja: caja, tipo: tipoCapital, monto: monto, categoria: 'Varios', creado_por: window.GECKO_USER?.nombre || null };
             const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
             movs.push(mov);
             localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
@@ -6130,7 +6130,7 @@ window.crearCaja = function () {
     window.LISTA_CAJAS = cajas;
     fetch('/app/api.php?endpoint=cajas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, nombre, saldo, icono: tipo }) }).catch(() => { });
     if (saldo !== 0) {
-        const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: 'Saldo inicial de caja', caja: nombre, tipo: saldo > 0 ? 'Ingreso' : 'Egreso', monto: Math.abs(saldo), categoria: 'Sistema', creado_por: window.GECKO_USER?.nombre || null };
+        const mov = { id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4), fecha: new Date().toLocaleDateString('es-AR'), detalle: 'Saldo inicial de caja', caja: nombre, tipo: saldo > 0 ? 'Ingreso' : 'Egreso', monto: Math.abs(saldo), categoria: 'Sistema', creado_por: window.GECKO_USER?.nombre || null };
         const movs = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
         movs.push(mov);
         _ls.setItem('gecko_movimientos', JSON.stringify(movs));
@@ -6189,7 +6189,7 @@ window.guardarNuevoMovimiento = function () {
             if (cajObj) { tipoCapital === 'Ingreso' ? (cajObj.saldo += monto) : (cajObj.saldo -= monto); }
             _ls.setItem('gecko_cajas', JSON.stringify(cajas));
             window.LISTA_CAJAS = cajas;
-            const mov = { id: 'mov_' + Date.now(), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja, tipo: tipoCapital, monto, categoria: 'Varios', creado_por: window.GECKO_USER?.nombre || null };
+            const mov = { id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja, tipo: tipoCapital, monto, categoria: 'Varios', creado_por: window.GECKO_USER?.nombre || null };
             const movs = window.LISTA_MOVIMIENTOS || JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
             movs.push(mov);
             _ls.setItem('gecko_movimientos', JSON.stringify(movs));
