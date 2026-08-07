@@ -2896,13 +2896,26 @@ function abrirFichaCliente(nombre) {
     const cli = (window.LISTA_CLIENTES || []).find(c => c.nombre === nombre);
     document.getElementById('fichaClienteRubro').innerText = cli?.rubro || '';
 
-    // Saldo card
+    // Saldo card (deuda / crédito a favor / al día)
     const elSaldo = document.getElementById('fichaClienteSaldo');
-    elSaldo.innerText = `$${Math.round(saldoTotal).toLocaleString('es-AR')}`;
-    elSaldo.className = saldoTotal > 0 ? 'text-2xl font-black text-red-400' : 'text-2xl font-black text-emerald-400';
-    document.getElementById('fichaCardSaldo').className = saldoTotal > 0
-        ? 'p-4 rounded-[14px] bg-red-500/10 border border-red-500/30'
-        : 'p-4 rounded-[14px] bg-[#1e1f20] border border-[#333333]';
+    const elSaldoLabel = document.getElementById('fichaCardSaldoLabel');
+    const creditoDisponible = cli?.creditoDisponible || 0;
+    if (saldoTotal > 0) {
+        elSaldo.innerText = `$${Math.round(saldoTotal).toLocaleString('es-AR')}`;
+        elSaldo.className = 'text-2xl font-black text-red-400';
+        document.getElementById('fichaCardSaldo').className = 'p-4 rounded-[14px] bg-red-500/10 border border-red-500/30';
+        if (elSaldoLabel) elSaldoLabel.innerText = 'Saldo Pendiente';
+    } else if (creditoDisponible > 0) {
+        elSaldo.innerText = `+$${Math.round(creditoDisponible).toLocaleString('es-AR')}`;
+        elSaldo.className = 'text-2xl font-black text-emerald-400';
+        document.getElementById('fichaCardSaldo').className = 'p-4 rounded-[14px] bg-emerald-500/10 border border-emerald-500/30';
+        if (elSaldoLabel) elSaldoLabel.innerText = 'Saldo a Favor';
+    } else {
+        elSaldo.innerText = '$0';
+        elSaldo.className = 'text-2xl font-black text-emerald-400';
+        document.getElementById('fichaCardSaldo').className = 'p-4 rounded-[14px] bg-[#1e1f20] border border-[#333333]';
+        if (elSaldoLabel) elSaldoLabel.innerText = 'Saldo Pendiente';
+    }
 
     // Scoring card mes — mismos umbrales que _geckoBadgeFijo
     const setG = JSON.parse(localStorage.getItem('GECKO_SETTINGS') || '{}');
@@ -2935,7 +2948,7 @@ function abrirFichaCliente(nombre) {
                     $${(p.total - (p.sena || 0)).toLocaleString('es-AR')}
                 </td>
                 <td class="py-3 px-4 text-center">
-                    ${badgeEstadoOT(p.estado_ot)}
+                    ${window._renderDropdownEstadoOTCompacto ? window._renderDropdownEstadoOTCompacto(p) : badgeEstadoOT(p.estado_ot)}
                 </td>
             </tr>
         `).join('');

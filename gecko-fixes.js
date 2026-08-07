@@ -390,7 +390,7 @@ window._descargarDesdePopup = function () {
 // ESTADOS OT
 // ══════════════════════════════════════════════════════
 
-const _EST = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado'];
+const _EST = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Pendiente de Pago', 'Entregado', 'Finalizado'];
 const ESTADO_COLORS = {
     'En Proceso': { bg: '#F15A24', text: 'white' },
     'En Taller': { bg: '#8b5cf6', text: 'white' },
@@ -398,6 +398,27 @@ const ESTADO_COLORS = {
     'Terminaciones': { bg: '#f59e0b', text: 'white' },
     'Listo': { bg: '#10b981', text: 'white' },
     'Entregado': { bg: '#6b7280', text: 'white' },
+};
+
+window._renderDropdownEstadoOTCompacto = function (ot) {
+    const COLORES_OT = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Pendiente de Pago': '#ef4444', 'Entregado': '#6b7280', 'Finalizado': '#22c55e' };
+    const estado = ot.estado_ot || 'En Proceso';
+    const color = COLORES_OT[estado] || '#F15A24';
+    const estadoOpts = _EST.map(e =>
+        `<div onclick="window._seleccionarEstadoOT('${ot.id}','${e}');event.stopPropagation()"
+              style="padding:8px 14px;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;color:${COLORES_OT[e] || '#F15A24'};letter-spacing:0.5px;"
+              onmouseover="this.style.background='#1f1f23'" onmouseout="this.style.background='transparent'">${e}</div>`
+    ).join('');
+    return `<div id="estado-ot-${ot.id}" style="position:relative;display:inline-block;">
+        <div onclick="window._toggleEstadoDropdown('${ot.id}',event)"
+             style="display:flex;align-items:center;gap:6px;background:${color}22;border:1.5px solid ${color}55;border-radius:20px;padding:4px 8px 4px 10px;cursor:pointer;">
+            <span id="estado-ot-label-${ot.id}" style="color:${color};font-size:9px;font-weight:900;text-transform:uppercase;">${estado}</span>
+            <span style="color:${color};font-size:7px;">▼</span>
+        </div>
+        <div id="estado-ot-dropdown-${ot.id}" style="display:none;background:#18181b;border:1px solid #27272a;border-radius:14px;padding:6px;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            ${estadoOpts}
+        </div>
+    </div>`;
 };
 
 // ── Detectar categoría (Gráfica / Industrial) ──
@@ -594,7 +615,13 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
         const label = document.getElementById('estado-ot-label-' + id);
         if (label) label.textContent = nuevoEstado;
     }
-    setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
+    setTimeout(() => {
+        if (typeof window.renderOts === 'function') window.renderOts();
+        if (typeof window.abrirFichaCliente === 'function' && document.getElementById('modalFichaCliente')?.style.display === 'flex') {
+            let _cliFicha; try { _cliFicha = clienteActualFicha; } catch (e) { _cliFicha = window.clienteActualFicha; }
+            if (_cliFicha) window.abrirFichaCliente(_cliFicha);
+        }
+    }, 300);
 };
 
 window._archivarOT = function (id) {
@@ -1905,8 +1932,8 @@ window.calcularSaldoOT = function (ot) {
     return Math.round((parseFloat(ot.total) || 0) - (parseFloat(ot.sena) || 0));
 };
 
-window.getOTsPendientesDeCliente = function (nombreCliente) {
-    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+window.getOTsPendientesDeCliente = function (nombreCliente, listaOverride) {
+    const lista = listaOverride || JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     return lista.filter(p => p.cliente === nombreCliente && p.status === 'OT' && window.calcularSaldoOT(p) > 0)
         .sort((a, b) => {
             const fa = (a.fecha || '').split('/').reverse().join('-');
@@ -1915,7 +1942,7 @@ window.getOTsPendientesDeCliente = function (nombreCliente) {
         });
 };
 
-window.registrarExcedenteComoCredito = function (nombreCliente, monto, detalle) {
+window.registrarExcedenteComoCredito = function (nombreCliente, monto, detalle, movId = null) {
     monto = Math.round(monto);
     if (monto <= 0) return;
     let bdClientes = JSON.parse(localStorage.getItem('clientes') || '[]');
@@ -1930,6 +1957,7 @@ window.registrarExcedenteComoCredito = function (nombreCliente, monto, detalle) 
         monto: monto,
         detalle: detalle || '',
         otId: null,
+        movId: movId,
         creado_por: window.GECKO_USER?.nombre || null
     });
     cliente.creditoDisponible = cliente.creditoLedger.reduce((s, m) => s + m.monto, 0);
@@ -2305,6 +2333,29 @@ window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
             localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
             window.LISTA_CAJAS = cajas;
         }
+
+        if (mov.otsAfectadas && mov.otsAfectadas.length > 0) {
+            const listaOts = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            mov.otsAfectadas.forEach(function (item) {
+                const ot = listaOts.find(function (o) { return String(o.id) === String(item.id); });
+                if (ot) { ot.sena = (ot.sena || 0) - item.monto; }
+            });
+            localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaOts));
+            try { listaPresupuestos = listaOts; } catch (e) { window.listaPresupuestos = listaOts; }
+            if (typeof window.renderOts === 'function') window.renderOts();
+        }
+
+        let bdClientesRevertir = JSON.parse(localStorage.getItem('clientes') || '[]');
+        const idxCliRevertir = bdClientesRevertir.findIndex(c => (c.creditoLedger || []).some(l => l.movId === mov.id));
+        if (idxCliRevertir !== -1) {
+            const cliRevertir = bdClientesRevertir[idxCliRevertir];
+            cliRevertir.creditoLedger = cliRevertir.creditoLedger.filter(l => l.movId !== mov.id);
+            cliRevertir.creditoDisponible = cliRevertir.creditoLedger.reduce((s, m) => s + m.monto, 0);
+            localStorage.setItem('clientes', JSON.stringify(bdClientesRevertir));
+            localStorage.setItem('gecko_clientes', JSON.stringify(bdClientesRevertir));
+            window.LISTA_CLIENTES = bdClientesRevertir;
+        }
+
         const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
         const dbIndex = dbMovs.findIndex(m => String(m.id) === String(mov.id));
         if (dbIndex !== -1) {
@@ -4185,6 +4236,8 @@ window.addEventListener('load', function () {
             if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
             if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
             if (typeof window.renderizarFiltrosCajas === 'function') window.renderizarFiltrosCajas();
+
+            return mov;
         };
 
         window.renderOts = function () {
@@ -5151,6 +5204,18 @@ window.addEventListener('load', function () {
                     if (typeof window.renderOts === 'function') window.renderOts();
                 }
 
+                // Revertir crédito generado por este movimiento, si corresponde
+                let bdClientesRevertir = JSON.parse(localStorage.getItem('clientes') || '[]');
+                const idxCliRevertir = bdClientesRevertir.findIndex(c => (c.creditoLedger || []).some(l => l.movId === mov.id));
+                if (idxCliRevertir !== -1) {
+                    const cliRevertir = bdClientesRevertir[idxCliRevertir];
+                    cliRevertir.creditoLedger = cliRevertir.creditoLedger.filter(l => l.movId !== mov.id);
+                    cliRevertir.creditoDisponible = cliRevertir.creditoLedger.reduce((s, m) => s + m.monto, 0);
+                    localStorage.setItem('clientes', JSON.stringify(bdClientesRevertir));
+                    localStorage.setItem('gecko_clientes', JSON.stringify(bdClientesRevertir));
+                    window.LISTA_CLIENTES = bdClientesRevertir;
+                }
+
                 // Eliminar de la base de datos principal
                 const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
                 const dbIndex = dbMovs.findIndex(m => m.id === mov.id || (m.fecha === mov.fecha && m.monto === mov.monto && m.detalle === mov.detalle));
@@ -5476,35 +5541,37 @@ window.addEventListener('load', function () {
             try { cliente = clienteActualFicha; } catch (e) { cliente = window.clienteActualFicha; }
             if (!cliente) { alert('No se encontró el cliente actual.'); return; }
 
-            let lista;
-            try { lista = listaPresupuestos; } catch (e) { lista = window.listaPresupuestos || []; }
-
-            let montoRestante = montoOriginal;
-            const pends = lista.filter(p => p.cliente === cliente && p.status === 'OT' && (p.total - (p.sena || 0)) > 0)
-                .sort((a, b) => {
-                    const fa = (a.fecha || '').split('/').reverse().join('-');
-                    const fb = (b.fecha || '').split('/').reverse().join('-');
-                    return fa.localeCompare(fb);
-                });
+            let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            const pends = window.getOTsPendientesDeCliente(cliente, lista);
 
             if (pends.length === 0) { alert('Este cliente no tiene deudas pendientes.'); return; }
 
+            let montoRestante = montoOriginal;
             const otsAfectadas = [];
+            const otsSaldadas = [];
             pends.forEach(p => {
                 if (montoRestante <= 0) return;
-                const saldo = p.total - (p.sena || 0);
+                const saldo = window.calcularSaldoOT(p);
                 const pago = Math.min(saldo, montoRestante);
                 p.sena = (p.sena || 0) + pago;
                 montoRestante -= pago;
                 otsAfectadas.push({ id: p.id, monto: pago });
+                if (window.calcularSaldoOT(p) === 0) otsSaldadas.push(p);
             });
 
+            let movCreado = null;
             if (typeof window.registrarMovimiento === 'function') {
-                window.registrarMovimiento(`Pago Cta. Cte. - ${cliente}`, cajaNombre, montoOriginal, 'Ingreso', 'Cobro Cliente', otsAfectadas);
+                movCreado = window.registrarMovimiento(`Pago Cta. Cte. - ${cliente}`, cajaNombre, montoOriginal, 'Ingreso', 'Cobro Cliente', otsAfectadas);
             }
 
-            try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
+            let creditoGenerado = 0;
+            if (montoRestante > 0 && typeof window.registrarExcedenteComoCredito === 'function') {
+                window.registrarExcedenteComoCredito(cliente, montoRestante, `Excedente de cobro (caja ${cajaNombre})`, movCreado ? movCreado.id : null);
+                creditoGenerado = montoRestante;
+            }
+
             localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+            try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
 
             document.getElementById('modalCobro').style.display = 'none';
 
@@ -5513,7 +5580,10 @@ window.addEventListener('load', function () {
             if (typeof window._geckoRenderFijo === 'function') window._geckoRenderFijo();
 
             if (typeof window.mostrarExito === 'function') {
-                window.mostrarExito(`Se aplicaron $${montoOriginal.toLocaleString('es-AR')} a la deuda de ${cliente}.`, '¡Cobro Exitoso!');
+                let msg = `Se aplicaron $${montoOriginal.toLocaleString('es-AR')} a la deuda de ${cliente}.`;
+                if (otsSaldadas.length > 0) msg += ` Se saldaron por completo ${otsSaldadas.length} OT${otsSaldadas.length > 1 ? 's' : ''}.`;
+                if (creditoGenerado > 0) msg += ` Se generaron $${creditoGenerado.toLocaleString('es-AR')} de crédito a favor.`;
+                window.mostrarExito(msg, '¡Cobro Exitoso!');
             }
         };
 
