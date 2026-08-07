@@ -2942,7 +2942,7 @@ function abrirFichaCliente(nombre) {
                     <p class="text-[9px] text-[#71717a] mt-0.5">${p.fecha}</p>
                 </td>
                 <td class="py-3 px-4 text-[10px] text-[#a1a1aa] max-w-[200px] truncate">
-                    ${p.items.map(it => it.textoOpciones).join(', ')}
+                    ${p.titulo || (p.items || []).map(it => it.textoOpciones || it.nombre).filter(Boolean).join(' · ') || 'Sin título'}
                 </td>
                 <td class="py-3 px-4 text-right font-black text-red-400 text-[12px]">
                     $${(p.total - (p.sena || 0)).toLocaleString('es-AR')}

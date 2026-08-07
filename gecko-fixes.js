@@ -620,6 +620,7 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
     if (idx === -1) return;
     lista[idx].estado_ot = nuevoEstado;
     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
 
     const color = COLORES[nuevoEstado] || '#F15A24';
     const wrapper = document.getElementById('estado-ot-' + id);
@@ -648,6 +649,7 @@ window._archivarOT = function (id) {
     if (idx !== -1) {
         lista[idx].estado_ot = 'Finalizado';
         localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+        try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
     }
     if (typeof window.mostrarExito === 'function') window.mostrarExito('OT archivada correctamente.', '¡Listo!');
     setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
