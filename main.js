@@ -3083,24 +3083,6 @@ function borrarOt(idx) {
     }
 }
 
-function cambiarEstadoOt(globalIdx) {
-    const p = listaPresupuestos[globalIdx];
-    const estados = ['En Proceso', 'En Taller', 'Impresión', 'Terminaciones', 'Listo', 'Entregado'];
-    let currentIdx = estados.indexOf(p.estado_ot || 'En Proceso');
-    if (currentIdx === -1) currentIdx = 0;
-
-    let nextIdx = (currentIdx + 1) % estados.length;
-    const proxEstado = estados[nextIdx];
-
-    if (proxEstado === 'Entregado') {
-        if (!confirm("¿Confirmas la entrega del trabajo? Se archivará en el historial.")) return;
-    }
-
-    p.estado_ot = proxEstado;
-    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaPresupuestos));
-    renderOts();
-}
-
 // ─── Lógica de Clientes ───
 window.abrirModalNuevoCliente = function () {
     openModal('modalNuevoCliente');

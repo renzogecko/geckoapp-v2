@@ -455,34 +455,6 @@ window._tagCategoria = function (doc) {
     return '<span style="display:inline-block;padding:1px 7px;' + s + 'border-radius:4px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">' + cat + '</span>';
 };
 
-window._cambiarEstadoOTDesplegable = function (id, nuevoEstado) {
-    if (nuevoEstado === 'Entregado') {
-        if (!confirm('¿Confirmar entrega? El trabajo pasará al historial.')) return;
-    }
-    let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-    const idx = lista.findIndex(x => String(x.id) === String(id));
-    if (idx === -1) return;
-    lista[idx].estado_ot = nuevoEstado;
-    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
-
-    const _C = { 'En Proceso': '#F15A24', 'En Taller': '#8b5cf6', 'Impresión': '#3b82f6', 'Terminaciones': '#f59e0b', 'Listo': '#10b981', 'Entregado': '#6b7280' };
-    const color = _C[nuevoEstado] || '#F15A24';
-    const wrapper = document.getElementById('estado-ot-' + id);
-    if (wrapper) {
-        const trigger = wrapper.querySelector('div');
-        if (trigger) {
-            trigger.style.background = color + '22';
-            trigger.style.borderColor = color + '55';
-            trigger.querySelectorAll('span').forEach(s => s.style.color = color);
-        }
-        const label = document.getElementById('estado-ot-label-' + id);
-        if (label) label.textContent = nuevoEstado;
-    }
-    if (nuevoEstado === 'Entregado') {
-        setTimeout(() => window.renderOts(), 300);
-    }
-};
-
 window._toggleEstadoDropdown = function (id, event) {
     event.stopPropagation();
 
@@ -1086,7 +1058,7 @@ window.renderOts = async function () {
     const busqueda = document.getElementById('filtroOtBusqueda')?.value?.toLowerCase() || '';
 
     const filtrados = ots.filter(ot => {
-        const entregado = ot.estado_ot === 'Entregado';
+        const entregado = ot.estado_ot === 'Finalizado';
         if (!mostrarHistorial && entregado) return false;
         if (mostrarHistorial && !entregado) return false;
         if (busqueda && !ot.cliente?.toLowerCase().includes(busqueda)) return false;
@@ -6450,7 +6422,7 @@ window._geckoRenderFijo = function () {
             }
 
             const pbd = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.sena) || 0)), 0);
+            let saldo = pbd.filter(p => p.cliente === c.nombre && p.status === 'OT' && p.estado_ot !== 'Finalizado').reduce((acc, o) => acc + ((parseFloat(o.total) || 0) - (parseFloat(o.sena) || 0)), 0);
 
             // Normalizar telefonos: puede ser string JSON legacy, array de strings, o array de {numero, etiqueta}
             let telefonosArr = [];
