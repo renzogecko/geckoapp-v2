@@ -5587,18 +5587,118 @@ window.addEventListener('load', function () {
             try { cliente = clienteActualFicha; } catch (e) { cliente = window.clienteActualFicha; }
             if (!cliente) { alert('No se encontró el cliente actual.'); return; }
 
-            let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            const pends = window.getOTsPendientesDeCliente(cliente, lista);
-
+            const pends = window.getOTsPendientesDeCliente(cliente);
             if (pends.length === 0) { alert('Este cliente no tiene deudas pendientes.'); return; }
+
+            document.getElementById('modalCobro').style.display = 'none';
+            window._abrirModalAsignacionPago(cliente, cajaNombre, montoOriginal, pends);
+        };
+
+        window._abrirModalAsignacionPago = function (cliente, cajaNombre, montoOriginal, pends) {
+            window._geckoAsignacion = { cliente, cajaNombre, montoOriginal, pends };
+
+            let acumulado = 0;
+            pends.forEach(p => {
+                const saldo = window.calcularSaldoOT(p);
+                p._geckoTildada = acumulado < montoOriginal;
+                acumulado += saldo;
+            });
+
+            document.getElementById('_geckoModalAsignacionPago')?.remove();
+            const modal = document.createElement('div');
+            modal.id = '_geckoModalAsignacionPago';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.82);backdrop-filter:blur(5px);padding:16px;';
+            modal.innerHTML = `
+        <div style="background:#1e1f20;border:1px solid #2a2a2e;border-radius:22px;width:100%;max-width:460px;padding:32px;max-height:88vh;overflow-y:auto;">
+            <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 6px;">Asignar Pago</p>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 6px;">${cliente}</h3>
+            <p style="color:#71717a;font-size:12px;margin:0 0 20px;line-height:1.5;">Elegí a qué órdenes de trabajo aplicar este pago de <strong style="color:white;">$${Math.round(montoOriginal).toLocaleString('es-AR')}</strong>. Por defecto se asigna de la más vieja a la más nueva.</p>
+            <div id="_geckoAsignacionLista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+            <div id="_geckoAsignacionResumen" style="background:#131314;border:1px solid #27272a;border-radius:12px;padding:14px;margin-bottom:20px;"></div>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('_geckoModalAsignacionPago').remove()"
+                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                <button id="_geckoConfirmarAsignacionBtn" onclick="window._aplicarAsignacionPago()"
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Confirmar Pago</button>
+            </div>
+        </div>`;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+            window._recalcularAsignacionPago();
+        };
+
+        window._recalcularAsignacionPago = function () {
+            const st = window._geckoAsignacion;
+            if (!st) return;
+
+            let montoRestante = st.montoOriginal;
+            const filas = st.pends.map(p => {
+                const saldo = window.calcularSaldoOT(p);
+                const checked = p._geckoTildada;
+                let asignado = 0;
+                if (checked && montoRestante > 0) {
+                    asignado = Math.min(saldo, montoRestante);
+                    montoRestante -= asignado;
+                }
+                return `
+        <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#131314;border:1px solid #27272a;border-radius:12px;cursor:pointer;">
+            <input type="checkbox" data-otid="${p.id}" ${checked ? 'checked' : ''}
+                onchange="window._toggleOTAsignacion('${p.id}', this.checked)"
+                style="width:18px;height:18px;accent-color:#F15A24;flex-shrink:0;">
+            <div style="flex:1;">
+                <p style="color:white;font-size:12px;font-weight:900;margin:0;">OT #${p.id}</p>
+                <p style="color:#71717a;font-size:10px;margin:2px 0 0;">${p.fecha} · Saldo total $${Math.round(saldo).toLocaleString('es-AR')}</p>
+            </div>
+            <span style="color:${asignado > 0 ? '#10b981' : '#52525b'};font-size:13px;font-weight:900;">$${Math.round(asignado).toLocaleString('es-AR')}</span>
+        </label>`;
+            }).join('');
+
+            const lista = document.getElementById('_geckoAsignacionLista');
+            if (lista) lista.innerHTML = filas;
+
+            const totalAsignado = st.montoOriginal - montoRestante;
+            const resumen = document.getElementById('_geckoAsignacionResumen');
+            if (resumen) {
+                let extra = '';
+                if (montoRestante > 0) {
+                    extra = `<p style="color:#60a5fa;font-size:11px;margin:6px 0 0;">Quedará $${Math.round(montoRestante).toLocaleString('es-AR')} como crédito a favor del cliente.</p>`;
+                }
+                resumen.innerHTML = `
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;">
+                <span style="color:#71717a;">Asignado</span>
+                <span style="color:white;">$${Math.round(totalAsignado).toLocaleString('es-AR')} de $${Math.round(st.montoOriginal).toLocaleString('es-AR')}</span>
+            </div>
+            ${extra}`;
+            }
+        };
+
+        window._toggleOTAsignacion = function (id, checked) {
+            const st = window._geckoAsignacion;
+            if (!st) return;
+            const p = st.pends.find(x => String(x.id) === String(id));
+            if (p) p._geckoTildada = checked;
+            window._recalcularAsignacionPago();
+        };
+
+        window._aplicarAsignacionPago = function () {
+            const st = window._geckoAsignacion;
+            if (!st) return;
+            const { cliente, cajaNombre, montoOriginal, pends } = st;
+
+            let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
 
             let montoRestante = montoOriginal;
             const otsAfectadas = [];
             const otsSaldadas = [];
-            pends.forEach(p => {
-                if (montoRestante <= 0) return;
+            pends.forEach(pTildada => {
+                if (!pTildada._geckoTildada || montoRestante <= 0) return;
+                const idx = lista.findIndex(x => String(x.id) === String(pTildada.id));
+                if (idx === -1) return;
+                const p = lista[idx];
                 const saldo = window.calcularSaldoOT(p);
                 const pago = Math.min(saldo, montoRestante);
+                if (pago <= 0) return;
                 p.sena = (p.sena || 0) + pago;
                 montoRestante -= pago;
                 otsAfectadas.push({ id: p.id, monto: pago });
@@ -5619,7 +5719,8 @@ window.addEventListener('load', function () {
             localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
             try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
 
-            document.getElementById('modalCobro').style.display = 'none';
+            document.getElementById('_geckoModalAsignacionPago')?.remove();
+            window._geckoAsignacion = null;
 
             if (typeof window.abrirFichaCliente === 'function') window.abrirFichaCliente(cliente);
             if (typeof window.renderOts === 'function') window.renderOts();
