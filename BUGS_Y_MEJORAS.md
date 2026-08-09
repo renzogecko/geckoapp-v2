@@ -785,10 +785,11 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
   Presupuestador Manual, que lleve de vuelta al cotizador original con 
   los datos precargados, y mecanismo para volver con los cambios 
   aplicados sin duplicar el ítem.
-- ⏳ [MEJ-022] Reparto automático (FIFO) de un pago único registrado 
+- ✅ [MEJ-022] Reparto automático (FIFO) de un pago único registrado 
   desde la Cuenta Corriente entre varios trabajos pendientes del mismo 
-  cliente, marcando visualmente cuáles quedan "Saldados" a medida que 
-  se completan.
+  cliente — RESUELTO 09/08/2026 (ver detalle completo en la sesión de 
+  esa fecha, más abajo). El indicador visual de "Saldados" queda 
+  trackeado aparte en [MEJ-027].
 
 ---
 
@@ -1375,19 +1376,15 @@ precioGremio en materiales Dinámica (Fija sigue sin tocarse nunca).
 
 ## Pendiente — próxima sesión (prioridad, bloquea el cierre de mes real)
 
-### Tema 1 — Conflicto entre Cierre de Mes y estado de Gastos Fijos
-Al ejecutar el Cierre de Mes, el sistema resetea TODOS los gastos fijos
-a estado "Pendiente" (borra movimientoId y cajaPago), sin distinguir si
-ya fueron pagados para el período siguiente. Si se cierra el mes ahora
-en producción, gastos ya pagados (aunque sea adelantados) volverían a
-aparecer como pendientes, perdiendo el registro de que se pagaron.
-Investigar el mecanismo exacto de reseteo y diseñar una solución antes
-de ejecutar el Cierre de Mes real en Hostinger.
+### Tema 1 — Conflicto entre Cierre de Mes y estado de Gastos Fijos ✅ RESUELTO 09/08/2026
+Al ejecutar el Cierre de Mes, el sistema reseteaba TODOS los gastos fijos
+a estado "Pendiente" (borraba movimientoId y cajaPago), sin distinguir si
+ya habían sido pagados para el período siguiente. Ver detalle completo en 
+la sesión de esa fecha, más abajo (campo `periodo_pagado`).
 
-### Tema 2 — Pago de Gasto Fijo combinado entre 2 cajas
-Hoy el modal de pago de un Gasto Fijo solo permite una caja. Se pidió
-poder combinarlo (ej: sueldo 70% Efectivo + 30% Banco Renzo), similar
-al pago de OT con 2 cajas que ya existe (_registrarSena).
+### Tema 2 — Pago de Gasto Fijo combinado entre 2 cajas ✅ RESUELTO 09/08/2026
+El modal de pago de un Gasto Fijo solo permitía una caja. Ver detalle
+completo en la sesión de esa fecha, más abajo.
 
 ### Tema 3 — Atribución de Gastos Fijos no mensuales/desalineados
 Algunos gastos no siguen un ciclo mensual limpio (luz se paga cada 2
@@ -1395,22 +1392,19 @@ meses, internet a principio de mes, monotributo a fin de mes). Definir
 cómo atribuir cada pago al "período" correcto para que los reportes de
 Gastos por categoría no queden distorsionados.
 
-### Después de los 3 Temas de arriba — retomar (prioridad)
-Reparto automático de pagos entre OTs (MEJ-022/MEJ-027) — Etapas C, D
-y E, diseño ya validado con el usuario, solo falta implementar:
-* ETAPA C (mayor riesgo del plan): reescribir confirmarCobro — reparto
-  FIFO real entre las OTs pendientes del cliente + registro de
-  excedente como crédito + modal de archivado múltiple cuando se
-  saldan varias OTs de un mismo pago.
-* ETAPA D: tarjeta tricolor (rojo=deuda / verde=crédito a favor /
-  gris=al día) en la Ficha del Cliente.
-* ETAPA E: Modal B — ofrecer aplicar el crédito disponible del cliente
-  a una OT recién convertida, con confirmación previa (no automático).
+### Reparto automático de pagos entre OTs (MEJ-022/MEJ-027) — Etapas C, D y E ✅ RESUELTAS 09/08/2026
+Diseño ya validado con el usuario en sesión anterior, implementado
+completo. Ver detalle completo en la sesión de esa fecha, más abajo.
+El indicador visual de "Saldados" (parte original de [MEJ-027]) sigue
+pendiente, sesión de diseño aparte.
 
-### Otros pendientes ya anotados (de sesiones anteriores, sin cambios)
-- Limpieza de código muerto (guardarNuevaCaja x3, guardarCliente
-  duplicado en gecko-fixes.js:6059, renderOts vieja en línea 1005,
-  _cambiarEstadoOTDesplegable, cambiarEstadoOt en main.js).
+### Otros pendientes ya anotados (de sesiones anteriores)
+- Limpieza de código muerto: guardarNuevaCaja x3 (gecko-fixes.js ~2300
+  y ~2430, main.js ~2779) y guardarCliente duplicado en gecko-fixes.js
+  ~6056 — siguen pendientes, sin cambios. (`_cambiarEstadoOTDesplegable`
+  y `cambiarEstadoOt` en main.js, junto con
+  `window._abrirModalArchivadoMultiple`, se eliminaron en la sesión del
+  09/08/2026 — ver más abajo.)
 - Bloqueo real del lado del servidor (api.php) para las restricciones
   de rol usuario — hoy son solo visuales (JavaScript). Dejado para el
   final por decisión explícita del usuario.
@@ -1418,3 +1412,109 @@ y E, diseño ya validado con el usuario, solo falta implementar:
 - Pantalla de administración de usuarios.
 - Verde en tabla general de Clientes (consistencia con Ficha
   individual) — alcance a discutir.
+- Tema 3 de arriba (Atribución de Gastos Fijos no mensuales) sigue
+  pendiente, no se tocó en la sesión del 09/08/2026.
+
+---
+
+### Sesión 09/08/2026 — Gastos Fijos/Cierre de Mes, Reparto de Pagos/Crédito (Etapas C-E), formato de dinero y limpieza
+
+## Resuelto en esta sesión
+
+### Gastos Fijos / Cierre de Mes
+- ✅ Tema 1: nuevo campo `periodo_pagado` en `gastos_fijos` — el Cierre
+  de Mes ya no resetea a ciegas todos los gastos fijos a "Pendiente";
+  respeta los pagos adelantados que cubren un período futuro y no los
+  vuelve a pedir.
+- ✅ Tema 2: pago de un Gasto Fijo con 2 cajas combinadas (ej: 70%
+  Efectivo + 30% Banco Renzo), mismo patrón que ya existía para el pago
+  de OT (`_registrarSena`). Incluye reversión correcta de ambas cajas
+  al eliminar el pago (antes solo revertía una).
+- ✅ Tema 3 (nuevo, detectado en esta sesión): aviso informativo en
+  Reportes (card Punto de Equilibrio) cuando el cliente tiene pagos
+  adelantados de Gastos Fijos que ya cubren meses futuros, para que no
+  se lea como un dato faltante.
+- ✅ Formato de dinero con separador de miles aplicado a inputs de
+  forma consistente — regla general nueva, con helpers reutilizables
+  `_formatearInputDinero` / `_getMoneyValue` / `_setMoneyValue`.
+- ✅ Fix: ids de movimiento duplicados — se agregó un sufijo random a
+  todos los `'mov_' + Date.now()`, que podían colisionar si dos
+  movimientos se generaban en el mismo milisegundo.
+
+### Reparto de pagos / Crédito de clientes (MEJ-022/MEJ-027, Etapas C-E)
+- ✅ Etapa C: `confirmarCobro` reescrito con reparto FIFO real vía
+  `getOTsPendientesDeCliente` / `calcularSaldoOT`. Nuevo modal de
+  asignación manual de pago (elegir con checkboxes a qué OTs se aplica
+  cada pago). El excedente se registra como crédito vinculado al
+  movimiento (`movId` dentro de `creditoLedger`), con reversión de
+  crédito al eliminar el movimiento que lo generó (en
+  `eliminarMovimiento` y en `_eliminarMovimientoDesdeHistorial`).
+- ✅ Aviso preventivo: si un pago generaría crédito para un cliente que
+  todavía no está cargado en la sección Clientes, se bloquea la
+  confirmación y se ofrece cargarlo ahí mismo (modal con acceso directo
+  a Nuevo Cliente).
+- ✅ Etapa D: tarjeta de saldo en Ficha de Cliente ahora es tricolor
+  (rojo deuda / verde crédito a favor / gris al día), reemplazando la
+  lógica binaria anterior.
+- ✅ Etapa E: al convertir un Presupuesto en OT, si el cliente tiene
+  crédito disponible, se ofrece aplicarlo a la OT nueva (con
+  confirmación, reutilizando `aplicarCreditoAOT` ya existente).
+- ✅ Estado de OT editable desde un desplegable directo en la Ficha de
+  Cliente (antes era un badge fijo, no editable) — reusa la misma
+  lógica de la lista principal de OTs. Se sacó el modal de archivado
+  del flujo de pago: el estado de la OT quedó 100% independiente del
+  pago, se cambia solo manualmente.
+- ✅ Columna "Seña" agregada a la tabla "Trabajos Activos" de la Ficha
+  de Cliente.
+- ✅ Fix: el título de OT en Ficha de Cliente ahora usa el mismo
+  criterio que la lista principal (`p.titulo` con fallback a items).
+- ✅ Fix: los cambios de estado de OT no se reflejaban en tiempo real
+  dentro de la Ficha de Cliente — faltaba sincronizar la variable en
+  memoria `listaPresupuestos` tras escribir en localStorage; corregido
+  en `_seleccionarEstadoOT` y `_archivarOT`.
+
+### Criterio "Entregado" vs "Finalizado" (arrastre de la Etapa B, sesión 02/08)
+- ✅ Fix: la `renderOts` vieja (la que corre en la ventana de arranque,
+  antes del PARCHE FINAL) todavía filtraba el historial usando
+  "Entregado" en vez de "Finalizado" — corregida para usar el criterio
+  nuevo.
+- ✅ Fix: el saldo en `renderClientes` / `_geckoRenderFijo` no excluía
+  las OTs ya "Finalizado", inflando el saldo pendiente general.
+
+### Limpieza de código muerto
+- ✅ Eliminadas sin caller en todo el repo: `window._abrirModalArchivadoMultiple`,
+  `window._cambiarEstadoOTDesplegable` (gecko-fixes.js), `cambiarEstadoOt`
+  (main.js).
+
+**Estado:** ✅ Todo lo de esta sesión probado y confirmado por Renzo.
+
+---
+
+### Sesión 09/08/2026 (continuación) — Ver Presupuesto en OTs, fix bug "Ver" en Presupuestos, fix precios Público/Gremio en Gráfica y Corte
+
+## Resuelto en esta sesión
+
+- ✅ Botón "Ver Presupuesto" agregado a la lista de OTs (junto a Ver OT /
+  Editar / Registrar Pago / Revertir / Eliminar) — permite ver la
+  plantilla de Presupuesto original de una OT ya convertida, sin perder
+  esa vista. `window.verDocumento` ahora acepta un 2do parámetro
+  opcional `forzarTipo` ('presupuesto' | 'OT'), retrocompatible con
+  todos los llamados existentes.
+- ✅ Fix: en la lista de Presupuestos (Ver Historial), el botón "Ver" de
+  un presupuesto ya convertido a OT mostraba por error la vista de OT
+  — ahora siempre muestra la vista de Presupuesto.
+- ✅ Fix bug de precios Público/Gremio en cotizadores:
+  - `grafica.js` — sección "Montado en Rígido" (Vinilo Impresión)
+    calculaba el precio del material siempre con el multiplicador de
+    Público, sin pasar por `getPrecioEfectivo()`. Corregido para usar
+    el helper compartido (preservando el "modo proyecto" sin markup).
+  - `corte.js` — sección "Montado sobre Rígidos" ya llamaba a
+    `getPrecioEfectivo()` pero sin pasarle el estado del toggle propio
+    de Corte (`modoGremioCorte`); como la función solo miraba el toggle
+    de Gráfica (`modoGremio`), el Gremio de Corte quedaba ignorado en
+    ese bloque puntual. `getPrecioEfectivo` ahora acepta un 2do
+    parámetro opcional `isGremioOverride` (retrocompatible), y
+    `corte.js` le pasa el OR de sus dos toggles posibles — mismo patrón
+    ya usado en otros 3 lugares de ese archivo.
+
+**Estado:** ✅ Todo lo de esta sesión probado y confirmado por Renzo.

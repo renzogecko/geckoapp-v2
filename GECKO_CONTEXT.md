@@ -137,6 +137,38 @@ Los cambios de Design System (modales de finanzas) están en local y GitHub pero
 
 ---
 
+## RECIENTEMENTE COMPLETADO
+
+### Sesión 09/08/2026 — Gastos Fijos/Cierre de Mes, Reparto de Pagos/Crédito y limpieza
+- **Gastos Fijos / Cierre de Mes:** campo `periodo_pagado` para que el
+  Cierre de Mes respete pagos adelantados sin resetearlos; pago de
+  Gasto Fijo combinado entre 2 cajas (con reversión correcta de ambas
+  al eliminar); aviso en Reportes (card Punto de Equilibrio) cuando hay
+  pagos adelantados que cubren meses futuros; formato de dinero con
+  separador de miles en inputs (regla general nueva, helpers
+  `_formatearInputDinero` / `_getMoneyValue` / `_setMoneyValue`); fix de
+  ids de movimiento duplicados (sufijo random en `'mov_' + Date.now()`).
+- **Reparto de pagos / Crédito de clientes:** `confirmarCobro`
+  reescrito con reparto FIFO real entre las OTs pendientes del cliente,
+  modal de asignación manual de pago, excedente registrado como crédito
+  vinculado al movimiento (con reversión al eliminarlo), aviso
+  preventivo si el pago generaría crédito para un cliente no cargado en
+  Clientes, tarjeta de saldo tricolor en Ficha de Cliente (deuda /
+  crédito a favor / al día), oferta de aplicar crédito disponible al
+  convertir un Presupuesto en OT, estado de OT editable desde
+  desplegable en la Ficha de Cliente, columna "Seña" en Trabajos
+  Activos.
+- **Fixes de arrastre "Entregado" vs "Finalizado":** `renderOts` vieja
+  y el cálculo de saldo en Clientes todavía usaban el criterio viejo
+  ("Entregado") en vez del nuevo ("Finalizado") en dos puntos que
+  habían quedado sin actualizar.
+- **Limpieza:** eliminadas `window._abrirModalArchivadoMultiple`,
+  `window._cambiarEstadoOTDesplegable` y `cambiarEstadoOt` (sin callers
+  en todo el repo).
+- Detalle completo en `BUGS_Y_MEJORAS.md`, sesión del 09/08/2026.
+
+---
+
 ## FLUJO DE TRABAJO
 
 ```
