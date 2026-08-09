@@ -445,8 +445,13 @@ window.GeckoGrafica = {
 
             let precioMaterial = 0;
             if (matPlaca) {
-                const factor = (mode === 'proyecto') ? 1 : matPlaca.multiplicador;
-                precioMaterial = (mode === 'proyecto') ? (matPlaca.costoARS * factor) : ((matPlaca.precioVenta && matPlaca.precioVenta > 0) ? matPlaca.precioVenta : (matPlaca.costoARS * factor));
+                if (mode === 'proyecto') {
+                    precioMaterial = matPlaca.costoARS;
+                } else {
+                    precioMaterial = (typeof window.getPrecioEfectivo === 'function')
+                        ? window.getPrecioEfectivo(matPlaca)
+                        : matPlaca.costoARS * (matPlaca.multiplicador || 2);
+                }
 
                 // Actualizar Auditor de Placa
                 this.safeSetText('auditorPlacaRigida', `GDM: ${matPlaca.nombre} | Precio: $${Math.round(precioMaterial)}/m2`);
