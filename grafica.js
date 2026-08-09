@@ -2,9 +2,11 @@
 // Enfoque: Consolidación de Montados, limpieza de UI y lógica de inventario real.
 
 // Helper global: retorna precio según modo Gremio activo
-window.getPrecioEfectivo = function (item) {
+window.getPrecioEfectivo = function (item, isGremioOverride) {
     if (!item) return 0;
-    const isGremio = document.getElementById('modoGremio')?.checked;
+    const isGremio = (typeof isGremioOverride === 'boolean')
+        ? isGremioOverride
+        : document.getElementById('modoGremio')?.checked;
     const cotiz = window.GECKO_SETTINGS?.cotizacionDolar || 1415;
     const multGlobal = window.GECKO_SETTINGS?.multiplicadorGlobal || 2.0;
     const costoARS = item.costo || item.costoReal || item.costoARS || (item.costoUSD * cotiz) || 0;

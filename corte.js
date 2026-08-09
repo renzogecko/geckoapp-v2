@@ -324,8 +324,10 @@ window.GeckoCorte = {
             const placaMat = window.getGeckoItem(placaId);
 
             if (placaMat) {
+                const isGremioCorte = document.getElementById('modoGremioCorte')?.checked
+                    || document.getElementById('modoGremio')?.checked;
                 const precioPlaca = (typeof window.getPrecioEfectivo === 'function')
-                    ? window.getPrecioEfectivo(placaMat)
+                    ? window.getPrecioEfectivo(placaMat, isGremioCorte)
                     : (placaMat.precioVenta || placaMat.costoARS * (placaMat.multiplicador || 2));
                 this.safeSetText('auditorPlacaCorte', `GDM: ${placaMat.nombre} | Precio: $${Math.round(precioPlaca)}/m2`);
 
