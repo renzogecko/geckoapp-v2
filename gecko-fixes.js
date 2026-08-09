@@ -939,6 +939,60 @@ window._confirmarConversionOT = async function (id) {
         m2.addEventListener('click', e => { if (e.target === m2) m2.remove(); });
         document.getElementById('_geckoSenaSi').onclick = function () { m2.remove(); window.abrirModalSena(id); };
     }, 400);
+
+    const bdClientesCredito = JSON.parse(localStorage.getItem('clientes') || '[]');
+    const clienteCredito = bdClientesCredito.find(c => c.nombre === p.cliente);
+    if (clienteCredito && (clienteCredito.creditoDisponible || 0) > 0) {
+        window._ofrecerAplicarCreditoAOT(p.cliente, id, clienteCredito.creditoDisponible, p.total);
+    }
+};
+
+window._ofrecerAplicarCreditoAOT = function (nombreCliente, otId, creditoDisponible, totalOT) {
+    document.getElementById('_geckoOfrecerCreditoOT')?.remove();
+    const montoAplicable = Math.min(creditoDisponible, totalOT);
+    const modal = document.createElement('div');
+    modal.id = '_geckoOfrecerCreditoOT';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.85);backdrop-filter:blur(5px);padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#1e1f20;border:1px solid #2a2a2e;border-radius:22px;width:100%;max-width:420px;padding:32px;text-align:center;">
+            <div style="width:52px;height:52px;background:rgba(16,185,129,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <p style="color:#10b981;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 8px;">Crédito Disponible</p>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 10px;">${nombreCliente} tiene crédito a favor</h3>
+            <p style="color:#a1a1aa;font-size:13px;margin:0 0 28px;line-height:1.6;">
+                Tiene <strong style="color:white;">$${Math.round(creditoDisponible).toLocaleString('es-AR')}</strong> de crédito disponible.
+                ¿Aplicar <strong style="color:#10b981;">$${Math.round(montoAplicable).toLocaleString('es-AR')}</strong> a esta OT recién creada?
+            </p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button id="_geckoAplicarCreditoOTBtn"
+                    style="padding:15px;background:#F15A24;border:none;color:white;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;">
+                    Aplicar Crédito
+                </button>
+                <button id="_geckoNoAplicarCreditoOTBtn"
+                    style="padding:15px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;">
+                    Ahora no
+                </button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    document.getElementById('_geckoNoAplicarCreditoOTBtn').onclick = function () {
+        modal.remove();
+    };
+
+    document.getElementById('_geckoAplicarCreditoOTBtn').onclick = function () {
+        modal.remove();
+        const aplicado = window.aplicarCreditoAOT(nombreCliente, otId, montoAplicable);
+        if (aplicado > 0) {
+            try { listaPresupuestos = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]'); } catch (e) { window.listaPresupuestos = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]'); }
+            if (typeof window.renderOts === 'function') window.renderOts();
+            if (typeof window.mostrarExito === 'function') {
+                window.mostrarExito(`Se aplicaron $${Math.round(aplicado).toLocaleString('es-AR')} de crédito a la OT #${otId}.`, '¡Crédito Aplicado!');
+            }
+        }
+    };
 };
 
 window.convertirPresupuestoAOT = function (id) {
