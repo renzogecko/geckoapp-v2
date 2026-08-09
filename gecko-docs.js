@@ -471,19 +471,24 @@ window._otMostrarPreview = async function (p) {
     };
 };
 
-window.verDocumento = async function (id) {
+window.verDocumento = async function (id, forzarTipo) {
     const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const todos = lista.filter(x => String(x.id) === String(id));
     const p = todos[todos.length - 1];
     if (!p) { alert('No se encontró el documento.'); return; }
 
-    const esOT = p.status === 'OT';
+    const esOT = forzarTipo ? forzarTipo === 'OT' : p.status === 'OT';
     if (esOT) {
         window._otMostrarSelectorImpresion(id);
         return;
     }
 
-    await window._otMostrarPreview({ ...p, mostrarPrecios: p.mostrarPrecios !== false, imagenes: p.imagenes || [] });
+    await window._otMostrarPreview({
+        ...p,
+        status: forzarTipo === 'presupuesto' ? 'Presupuesto' : p.status,
+        mostrarPrecios: p.mostrarPrecios !== false,
+        imagenes: p.imagenes || []
+    });
 };
 
 // ══════════════════════════════════════════════════════════════
