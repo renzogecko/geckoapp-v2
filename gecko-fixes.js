@@ -4057,6 +4057,13 @@ window._ejecutarCierreMensualGecko = function () {
         const egr = movsPeriodo.filter(m => m.tipo === 'Egreso').reduce((a, m) => a + m.monto, 0);
         const gastosFijos = window.LISTA_GASTOS_FIJOS || [];
 
+        // Datos extra para el PDF: comparación con el cierre anterior y saldo por cobrar
+        const histParaComparar = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+        const cierreAnteriorParaPDF = histParaComparar.length > 0 ? histParaComparar[histParaComparar.length - 1] : null;
+        const listaParaCobrar = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+        const porCobrarParaPDF = listaParaCobrar.filter(p => p.status === 'OT' && p.estado_ot !== 'Finalizado')
+            .reduce((a, p) => a + Math.max(0, (p.total || 0) - (p.sena || 0)), 0);
+
         // Guardar en historial — mes/anio quedan como metadata calendario (validación anti-doble-cierre);
         // ingresos/egresos/balance/periodo reflejan TODO el período desde el cierre anterior
         const inicioPeriodoStr = inicioPeriodo.toLocaleDateString('es-AR');
@@ -4144,7 +4151,12 @@ window._ejecutarCierreMensualGecko = function () {
             </div>`;
         document.body.appendChild(modalResult);
         document.getElementById('_geckoCierreDescargar').onclick = function () {
-            window._generarPDFCierreMes(cierre.periodo, '', ing, egr, movsPeriodo, gastosFijos);
+            window._generarPDFCierreMes(meses[ahora.getMonth()], ahora.getFullYear(), ing, egr, movsPeriodo, gastosFijos, {
+                periodoDesde: inicioPeriodoStr,
+                periodoHasta: finPeriodoStr,
+                cierreAnterior: cierreAnteriorParaPDF,
+                porCobrar: porCobrarParaPDF
+            });
         };
         document.getElementById('_geckoCierreCerrar').onclick = function () {
             modalResult.remove();
@@ -4152,9 +4164,11 @@ window._ejecutarCierreMensualGecko = function () {
     };
 };
 
-window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimientos, gastosFijos) {
+window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimientos, gastosFijos, extra = {}) {
     const balance = ingresos - egresos;
     const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+    const { periodoDesde, periodoHasta, cierreAnterior, porCobrar } = extra;
+
     const filasMov = movimientos.map(m => `
         <tr style="border-bottom:1px solid #eee;">
             <td style="padding:6px 8px;font-size:11px;color:#555;">${m.fecha}</td>
@@ -4173,47 +4187,94 @@ window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimie
             </td>
         </tr>`).join('');
 
+    let comparacionHTML = '';
+    if (cierreAnterior && cierreAnterior.ingresos > 0) {
+        const variacion = ((ingresos / cierreAnterior.ingresos) - 1) * 100;
+        const subeBaja = variacion >= 0 ? '▲' : '▼';
+        const color = variacion >= 0 ? '#16a34a' : '#dc2626';
+        const bg = variacion >= 0 ? '#f0fdf4' : '#fef2f2';
+        comparacionHTML = `
+        <div class="comparacion" style="background:${bg};">
+            <span style="color:${color};font-weight:900;">${subeBaja} ${Math.abs(variacion).toFixed(1)}%</span>
+            <span class="comp-detalle">vs ${cierreAnterior.periodo || 'período anterior'} (${fmt(cierreAnterior.ingresos)} → ${fmt(ingresos)})</span>
+        </div>`;
+    }
+
+    const porCobrarHTML = (typeof porCobrar === 'number' && porCobrar > 0) ? `
+        <div class="por-cobrar">
+            <span class="pc-label">Por cobrar (OTs activas)</span>
+            <span class="pc-monto">${fmt(porCobrar)}</span>
+        </div>` : '';
+
+    const periodoHTML = (periodoDesde && periodoHasta) ? `<p class="periodo">Período: ${periodoDesde} — ${periodoHasta}</p>` : '';
+
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
         <title>Cierre ${mesNom} ${anio} — Gecko Estudio</title>
         <style>
             body { font-family: Arial, sans-serif; color: #1a1a1a; margin: 0; padding: 32px; }
-            h1 { color: #F15A24; font-size: 22px; margin: 0; }
-            h2 { font-size: 13px; color: #555; margin: 4px 0 24px; font-weight: normal; }
-            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #F15A24; padding-bottom: 16px; margin-bottom: 24px; }
-            .logo { font-size: 28px; font-weight: 900; color: #F15A24; letter-spacing: -1px; }
-            .kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 28px; }
-            .kpi { background: #f8f8f8; border-radius: 10px; padding: 14px 16px; }
-            .kpi-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-            .kpi-value { font-size: 20px; font-weight: 900; }
+            h1 { color: #F15A24; font-size: 22px; margin: 2px 0 0; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #F15A24; padding-bottom: 16px; margin-bottom: 20px; }
+            .header-logo { display: flex; align-items: center; gap: 12px; }
+            .header-logo img { width: 60px; height: auto; }
+            .header-logo span { font-size: 15px; font-weight: 900; color: #F15A24; }
+            .header-right { text-align: right; }
+            .header-right .label { font-size: 9px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+            .periodo { font-size: 9px; color: #888; margin: 4px 0 0; }
+            .fecha-cierre { font-size: 9px; color: #aaa; margin: 1px 0 0; }
+            .comparacion { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 8px 12px; margin-bottom: 18px; font-size: 11px; }
+            .comp-detalle { color: #555; }
+            .ganancia-hero { background: rgba(241,90,36,0.06); border: 1.5px solid #F15A24; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+            .ganancia-hero .gh-label { margin: 0 0 4px; font-size: 9px; color: #c2410c; text-transform: uppercase; letter-spacing: 1px; font-weight: 900; }
+            .ganancia-hero .gh-valor { margin: 0; font-size: 28px; font-weight: 900; }
+            .ganancia-hero .gh-detalle { margin: 4px 0 0; font-size: 10px; color: #888; }
+            .kpis { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 14px; }
+            .kpi { background: #f8f8f8; border-radius: 8px; padding: 12px; }
+            .kpi-label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+            .kpi-value { font-size: 15px; font-weight: 900; }
+            .por-cobrar { background: #fef2f2; border: 2px solid #dc2626; border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; }
+            .por-cobrar .pc-label { font-size: 11px; color: #991b1b; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px; }
+            .por-cobrar .pc-monto { font-size: 22px; font-weight: 900; color: #991b1b; }
             .section-title { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #F15A24; margin: 20px 0 8px; }
             table { width: 100%; border-collapse: collapse; }
             th { background: #f3f3f3; padding: 7px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
             .footer { margin-top: 32px; border-top: 1px solid #eee; padding-top: 12px; font-size: 10px; color: #aaa; text-align: center; }
+            @media print { body { padding: 16px; } }
         </style>
     </head><body>
         <div class="header">
-            <div>
-                <div class="logo">gecko</div>
-                <h1>Balance Mensual — ${mesNom} ${anio}</h1>
-                <h2>Gecko Estudio Creativo · Fecha de cierre: ${new Date().toLocaleDateString('es-AR')}</h2>
+            <div class="header-logo">
+                <img src="${typeof GECKO_LOGO_B64 !== 'undefined' ? GECKO_LOGO_B64 : ''}" alt="Gecko">
+                <span>Gecko Estudio Creativo</span>
+            </div>
+            <div class="header-right">
+                <p class="label">Balance mensual</p>
+                <h1>${mesNom}${anio ? ' ' + anio : ''}</h1>
+                ${periodoHTML}
+                <p class="fecha-cierre">Cierre: ${new Date().toLocaleDateString('es-AR')}</p>
             </div>
         </div>
-        <div class="kpis">
-            <div class="kpi"><div class="kpi-label">Ingresos del mes</div><div class="kpi-value" style="color:#16a34a;">${fmt(ingresos)}</div></div>
-            <div class="kpi"><div class="kpi-label">Egresos del mes</div><div class="kpi-value" style="color:#dc2626;">${fmt(egresos)}</div></div>
-            <div class="kpi"><div class="kpi-label">Balance neto</div><div class="kpi-value" style="color:${balance >= 0 ? '#16a34a' : '#dc2626'};">${fmt(balance)}</div></div>
+        ${comparacionHTML}
+        <div class="ganancia-hero">
+            <p class="gh-label">Ganancia neta del período</p>
+            <p class="gh-valor" style="color:${balance >= 0 ? '#1a1a1a' : '#dc2626'};">${fmt(balance)}</p>
+            <p class="gh-detalle">Ingresos ${fmt(ingresos)} − Egresos ${fmt(egresos)}</p>
         </div>
-        <div class="section-title">Movimientos del mes (${movimientos.length})</div>
+        <div class="kpis">
+            <div class="kpi"><div class="kpi-label">Ingresos</div><div class="kpi-value" style="color:#16a34a;">${fmt(ingresos)}</div></div>
+            <div class="kpi"><div class="kpi-label">Egresos</div><div class="kpi-value" style="color:#dc2626;">${fmt(egresos)}</div></div>
+        </div>
+        ${porCobrarHTML}
+        <div class="section-title">Movimientos del período (${movimientos.length})</div>
         <table>
             <thead><tr><th>Fecha</th><th>Detalle</th><th>Categoría</th><th>Caja</th><th style="text-align:right;">Monto</th></tr></thead>
             <tbody>${filasMov || '<tr><td colspan="5" style="padding:12px;text-align:center;color:#aaa;font-size:11px;">Sin movimientos registrados</td></tr>'}</tbody>
         </table>
-        <div class="section-title">Gastos fijos del mes (${gastosFijos.length})</div>
+        <div class="section-title">Gastos fijos del período (${gastosFijos.length})</div>
         <table>
             <thead><tr><th>Concepto</th><th>Categoría</th><th style="text-align:right;">Monto</th><th style="text-align:center;">Estado</th></tr></thead>
             <tbody>${filasGastos || '<tr><td colspan="4" style="padding:12px;text-align:center;color:#aaa;font-size:11px;">Sin gastos fijos</td></tr>'}</tbody>
         </table>
-        <div class="footer">Gecko Estudio Creativo · Balance generado automáticamente por GeckoApp v2</div>
+        <div class="footer">Gecko Estudio Creativo · Documento interno · Generado automáticamente</div>
     </body></html>`;
 
     const win = window.open('', '_blank');
