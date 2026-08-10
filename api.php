@@ -544,12 +544,13 @@ try {
 
         if ($method === 'POST') {
             $d = $body;
-            $stmt = $pdo->prepare("INSERT INTO historico_cierres (id, periodo, mes, anio, ingresos, gastos, balance, fecha_cierre, movimientos, gastos_fijos) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO historico_cierres (id, periodo, mes, anio, ingresos, gastos, balance, fecha_cierre, movimientos, gastos_fijos, pdf_html) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid('cierre_'),
                 $d['periodo'] ?? '', $d['mes'] ?? 0, $d['anio'] ?? 0,
                 $d['ingresos'] ?? 0, $d['gastos'] ?? 0, $d['balance'] ?? 0,
-                $d['fecha_cierre'] ?? '', $d['movimientos'] ?? 0, $d['gastos_fijos'] ?? 0
+                $d['fecha_cierre'] ?? '', $d['movimientos'] ?? 0, $d['gastos_fijos'] ?? 0,
+                $d['pdf_html'] ?? null
             ]);
             responder(["success" => true, "message" => "Cierre guardado."]);
         }

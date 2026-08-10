@@ -3686,10 +3686,11 @@ window.renderReportesDashboard = function () {
                     </div>
                     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                         <p style="font-size:13px;font-weight:900;margin:0;color:${(c.balance || 0) >= 0 ? '#22c55e' : '#ef4444'};">$${Math.round(c.balance || 0).toLocaleString('es-AR')}</p>
-                        <button onclick="window._generarPDFCierreMes('${c.periodo}','',${c.ingresos || 0},${c.gastos || 0},[],[])"
+                        <button onclick="window._descargarPDFHistorialCierre('${c.id}')"
                             style="font-size:9px;color:#F15A24;background:none;border:none;cursor:pointer;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:0;">
                             ↓ PDF
                         </button>
+                        ${!c.pdf_html ? '<p style="font-size:8px;color:#52525b;margin:0;font-style:italic;text-align:right;">(cierre anterior a esta mejora, solo muestra el resumen)</p>' : ''}
                     </div>
                 </div>`).join('');
         }
@@ -4068,6 +4069,12 @@ window._ejecutarCierreMensualGecko = function () {
         // ingresos/egresos/balance/periodo reflejan TODO el período desde el cierre anterior
         const inicioPeriodoStr = inicioPeriodo.toLocaleDateString('es-AR');
         const finPeriodoStr = ahora.toLocaleDateString('es-AR');
+        const pdfHtmlSnapshot = window._construirHTMLCierreMes(meses[ahora.getMonth()], ahora.getFullYear(), ing, egr, movsPeriodo, gastosFijos, {
+            periodoDesde: inicioPeriodoStr,
+            periodoHasta: finPeriodoStr,
+            cierreAnterior: cierreAnteriorParaPDF,
+            porCobrar: porCobrarParaPDF
+        });
         const cierre = {
             id: 'cierre_' + Date.now(),
             periodo: `${meses[ahora.getMonth()]} ${ahora.getFullYear()} (${inicioPeriodoStr} al ${finPeriodoStr})`,
@@ -4078,7 +4085,8 @@ window._ejecutarCierreMensualGecko = function () {
             balance: ing - egr,
             fecha_cierre: ahora.toLocaleDateString('es-AR'),
             movimientos: movsPeriodo.length,
-            gastos_fijos: gastosFijos.length
+            gastos_fijos: gastosFijos.length,
+            pdf_html: pdfHtmlSnapshot
         };
         const hist = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
         hist.push(cierre);
@@ -4164,7 +4172,7 @@ window._ejecutarCierreMensualGecko = function () {
     };
 };
 
-window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimientos, gastosFijos, extra = {}) {
+window._construirHTMLCierreMes = function (mesNom, anio, ingresos, egresos, movimientos, gastosFijos, extra = {}) {
     const balance = ingresos - egresos;
     const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
     const { periodoDesde, periodoHasta, cierreAnterior, porCobrar } = extra;
@@ -4215,8 +4223,7 @@ window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimie
             h1 { color: #F15A24; font-size: 22px; margin: 2px 0 0; }
             .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #F15A24; padding-bottom: 16px; margin-bottom: 20px; }
             .header-logo { display: flex; align-items: center; gap: 12px; }
-            .header-logo img { width: 60px; height: auto; }
-            .header-logo span { font-size: 15px; font-weight: 900; color: #F15A24; }
+            .header-logo span { font-size: 18px; font-weight: 900; color: #F15A24; }
             .header-right { text-align: right; }
             .header-right .label { font-size: 9px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
             .periodo { font-size: 9px; color: #888; margin: 4px 0 0; }
@@ -4243,7 +4250,6 @@ window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimie
     </head><body>
         <div class="header">
             <div class="header-logo">
-                <img src="${typeof GECKO_LOGO_B64 !== 'undefined' ? GECKO_LOGO_B64 : ''}" alt="Gecko">
                 <span>Gecko Estudio Creativo</span>
             </div>
             <div class="header-right">
@@ -4277,11 +4283,32 @@ window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimie
         <div class="footer">Gecko Estudio Creativo · Documento interno · Generado automáticamente</div>
     </body></html>`;
 
+    return html;
+};
+
+window._generarPDFCierreMes = function (mesNom, anio, ingresos, egresos, movimientos, gastosFijos, extra = {}) {
+    const html = window._construirHTMLCierreMes(mesNom, anio, ingresos, egresos, movimientos, gastosFijos, extra);
     const win = window.open('', '_blank');
     if (win) {
         win.document.write(html);
         win.document.close();
         setTimeout(() => { win.print(); }, 500);
+    }
+};
+
+window._descargarPDFHistorialCierre = function (id) {
+    const hist = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+    const c = hist.find(h => String(h.id) === String(id));
+    if (!c) return;
+    if (c.pdf_html) {
+        const win = window.open('', '_blank');
+        if (win) {
+            win.document.write(c.pdf_html);
+            win.document.close();
+            setTimeout(() => { win.print(); }, 500);
+        }
+    } else {
+        window._generarPDFCierreMes(c.periodo, '', c.ingresos || 0, c.gastos || 0, [], []);
     }
 };
 
