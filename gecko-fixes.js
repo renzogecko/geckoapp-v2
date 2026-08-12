@@ -2420,10 +2420,10 @@ window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
         }
 
         let bdClientesRevertir = JSON.parse(localStorage.getItem('clientes') || '[]');
-        const idxCliRevertir = bdClientesRevertir.findIndex(c => (c.creditoLedger || []).some(l => l.movId === mov.id));
+        const idxCliRevertir = bdClientesRevertir.findIndex(c => (Array.isArray(c.creditoLedger) ? c.creditoLedger : []).some(l => l.movId === mov.id));
         if (idxCliRevertir !== -1) {
             const cliRevertir = bdClientesRevertir[idxCliRevertir];
-            cliRevertir.creditoLedger = cliRevertir.creditoLedger.filter(l => l.movId !== mov.id);
+            cliRevertir.creditoLedger = (Array.isArray(cliRevertir.creditoLedger) ? cliRevertir.creditoLedger : []).filter(l => l.movId !== mov.id);
             cliRevertir.creditoDisponible = cliRevertir.creditoLedger.reduce((s, m) => s + m.monto, 0);
             localStorage.setItem('clientes', JSON.stringify(bdClientesRevertir));
             localStorage.setItem('gecko_clientes', JSON.stringify(bdClientesRevertir));
@@ -5369,10 +5369,10 @@ window.addEventListener('load', function () {
 
                 // Revertir crédito generado por este movimiento, si corresponde
                 let bdClientesRevertir = JSON.parse(localStorage.getItem('clientes') || '[]');
-                const idxCliRevertir = bdClientesRevertir.findIndex(c => (c.creditoLedger || []).some(l => l.movId === mov.id));
+                const idxCliRevertir = bdClientesRevertir.findIndex(c => (Array.isArray(c.creditoLedger) ? c.creditoLedger : []).some(l => l.movId === mov.id));
                 if (idxCliRevertir !== -1) {
                     const cliRevertir = bdClientesRevertir[idxCliRevertir];
-                    cliRevertir.creditoLedger = cliRevertir.creditoLedger.filter(l => l.movId !== mov.id);
+                    cliRevertir.creditoLedger = (Array.isArray(cliRevertir.creditoLedger) ? cliRevertir.creditoLedger : []).filter(l => l.movId !== mov.id);
                     cliRevertir.creditoDisponible = cliRevertir.creditoLedger.reduce((s, m) => s + m.monto, 0);
                     localStorage.setItem('clientes', JSON.stringify(bdClientesRevertir));
                     localStorage.setItem('gecko_clientes', JSON.stringify(bdClientesRevertir));
