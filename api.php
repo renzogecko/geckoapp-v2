@@ -317,7 +317,10 @@ try {
                 if (!empty($r['metadata'])) {
                     $meta = json_decode($r['metadata'], true);
                     if (is_array($meta)) {
-                        foreach ($meta as $mk => $mv) { $r[$mk] = $mv; }
+                        foreach ($meta as $mk => $mv) {
+                            if ($mk === 'imagenes') continue;
+                            $r[$mk] = $mv;
+                        }
                     }
                 }
                 unset($r['metadata']);
@@ -362,6 +365,36 @@ try {
             $stmt = $pdo->prepare("DELETE FROM presupuestos WHERE id = ?");
             $stmt->execute([$id]);
             responder(["success" => true, "message" => "Presupuesto eliminado."]);
+        }
+    }
+
+    // ══════════════════════════════════════════
+    // IMÁGENES DE PRESUPUESTO/OT (tabla presupuesto_imagenes)
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'presupuesto_imagenes') {
+
+        if ($method === 'GET') {
+            $presupuestoId = $_GET['presupuesto_id'] ?? null;
+            if (!$presupuestoId) error("presupuesto_id requerido.");
+            $stmt = $pdo->prepare("SELECT * FROM presupuesto_imagenes WHERE presupuesto_id = ? ORDER BY orden ASC");
+            $stmt->execute([$presupuestoId]);
+            responder($stmt->fetchAll(PDO::FETCH_ASSOC));
+        }
+
+        if ($method === 'POST') {
+            $d = $body;
+            if (empty($d['presupuesto_id']) || empty($d['imagen'])) error("presupuesto_id e imagen son requeridos.");
+            $stmt = $pdo->prepare("INSERT INTO presupuesto_imagenes (presupuesto_id, imagen, orden) VALUES (?,?,?)");
+            $stmt->execute([$d['presupuesto_id'], $d['imagen'], $d['orden'] ?? 0]);
+            responder(["success" => true, "message" => "Imagen guardada."]);
+        }
+
+        if ($method === 'DELETE') {
+            $presupuestoId = $body['presupuesto_id'] ?? null;
+            if (!$presupuestoId) error("presupuesto_id requerido.");
+            $stmt = $pdo->prepare("DELETE FROM presupuesto_imagenes WHERE presupuesto_id = ?");
+            $stmt->execute([$presupuestoId]);
+            responder(["success" => true, "message" => "Imágenes eliminadas."]);
         }
     }
 
@@ -637,6 +670,52 @@ try {
             $items = array_slice($items, 0, 30);
 
             responder($items);
+        }
+    }
+
+    // ══════════════════════════════════════════
+    // MIGRACIÓN TEMPORAL — BORRAR DESPUÉS DE CORRER UNA VEZ
+    // Mueve 'imagenes' embebidas en metadata a la tabla presupuesto_imagenes
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'migrar_imagenes_presupuestos') {
+
+        if ($method === 'GET') {
+            $stmt = $pdo->query("SELECT id, metadata FROM presupuestos");
+            $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $presupuestosMigrados = 0;
+            $imagenesMovidas = 0;
+
+            $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM presupuesto_imagenes WHERE presupuesto_id = ?");
+            $stmtInsert = $pdo->prepare("INSERT INTO presupuesto_imagenes (presupuesto_id, imagen, orden) VALUES (?,?,?)");
+            $stmtUpdateMeta = $pdo->prepare("UPDATE presupuestos SET metadata = ? WHERE id = ?");
+
+            foreach ($filas as $fila) {
+                $meta = json_decode($fila['metadata'] ?? '', true);
+                if (!is_array($meta) || empty($meta['imagenes']) || !is_array($meta['imagenes'])) continue;
+
+                // Idempotencia: si ya se migró antes, solo limpiar metadata residual.
+                $stmtCheck->execute([$fila['id']]);
+                if ($stmtCheck->fetchColumn() > 0) {
+                    unset($meta['imagenes']);
+                    $stmtUpdateMeta->execute([json_encode($meta, JSON_UNESCAPED_UNICODE), $fila['id']]);
+                    continue;
+                }
+
+                $orden = 0;
+                foreach ($meta['imagenes'] as $img) {
+                    if (!is_string($img) || strlen($img) < 100) continue;
+                    $stmtInsert->execute([$fila['id'], $img, $orden]);
+                    $orden++;
+                    $imagenesMovidas++;
+                }
+
+                unset($meta['imagenes']);
+                $stmtUpdateMeta->execute([json_encode($meta, JSON_UNESCAPED_UNICODE), $fila['id']]);
+                $presupuestosMigrados++;
+            }
+
+            responder(["success" => true, "presupuestos_migrados" => $presupuestosMigrados, "imagenes_movidas" => $imagenesMovidas]);
         }
     }
 

@@ -117,6 +117,23 @@ function _getDatosActuales() {
     return { items, cliente, total };
 }
 
+// Fallback: obtiene las imágenes de referencia de un presupuesto/OT desde
+// MySQL cuando el objeto en memoria no las trae (ya no viajan embebidas en
+// localStorage).
+async function _geckoObtenerImagenesRemoto(presupuestoId) {
+    if (!presupuestoId) return [];
+    try {
+        const res = await fetch('/app/api.php?endpoint=presupuesto_imagenes&presupuesto_id=' + encodeURIComponent(presupuestoId));
+        if (!res.ok) return [];
+        const rows = await res.json();
+        if (!Array.isArray(rows)) return [];
+        return rows.map(r => r.imagen).filter(img => typeof img === 'string' && img.length > 0);
+    } catch (e) {
+        console.warn('GECKO-DOCS: Error al obtener imágenes de referencia:', e);
+        return [];
+    }
+}
+
 // ══════════════════════════════════════════════════════════════
 // GENERAR HTML PRESUPUESTO
 // ══════════════════════════════════════════════════════════════
@@ -134,7 +151,7 @@ window.generarDocPresupuesto = async function (p) {
     const entrega = p.entrega || p.fechaEntrega || p.fecha_entrega || 'A convenir';
     const nota = p.nota || '';
     const condicionesCliente = p.condiciones || '';
-    const imagenes = p.imagenes || [];
+    const imagenes = (Array.isArray(p.imagenes) && p.imagenes.length > 0) ? p.imagenes : await _geckoObtenerImagenesRemoto(p.id);
 
     const total = items.reduce((acc, it) => acc + (parseFloat(it.costo) || 0), 0);
     const descMonto = tipoDescuento === 'pct' ? total * (descuento / 100) : descuento;
@@ -250,7 +267,7 @@ window.generarDocOT = async function (p) {
     const entrega = p.entrega || 'A confirmar';
     const area = p.area || 'Producción';
     const instrucciones = p.instrucciones || '';
-    const imagenes = p.imagenes || [];
+    const imagenes = (Array.isArray(p.imagenes) && p.imagenes.length > 0) ? p.imagenes : await _geckoObtenerImagenesRemoto(p.id);
 
     const formatOtDetalle = (detalle) => {
         if (!detalle) return '—';

@@ -181,7 +181,18 @@ window.procesarGuardado = function (status) {
                 items: window.presupuesto.map(it => ({ ...it })),
                 status: lista[idx].status, // preserve OT/Cotizado
             });
-            localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+            try {
+                localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    console.warn('GECKO: QuotaExceededError al actualizar gecko_listaPresupuestos (edición).');
+                    if (typeof window.mostrarAdvertencia === 'function') {
+                        window.mostrarAdvertencia('El presupuesto se actualizó en la base de datos, pero el almacenamiento local está lleno. Recargá la página para verlo actualizado.', 'Atención');
+                    }
+                } else {
+                    throw e;
+                }
+            }
             window._editandoPresupuestoId = null;
 
             const successEl = document.getElementById('successVista');
@@ -6812,13 +6823,25 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
         `<option value="${a}" ${areaInicial === a ? 'selected' : ''}>${a}</option>`
     ).join('');
 
+    window._gpmImagenes = [];
     if (presupuestoEditId) {
-        const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-        const doc = lista.filter(x => String(x.id) === String(presupuestoEditId));
-        const docActual = doc[doc.length - 1];
-        window._gpmImagenes = (docActual?.imagenes || []).filter(img => typeof img === 'string' && img.startsWith('data:'));
+        window._gpmImagenesListo = false;
+        fetch('/app/api.php?endpoint=presupuesto_imagenes&presupuesto_id=' + encodeURIComponent(presupuestoEditId))
+            .then(res => res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status)))
+            .then(rows => {
+                window._gpmImagenes = (Array.isArray(rows) ? rows : [])
+                    .map(r => r.imagen)
+                    .filter(img => typeof img === 'string' && img.startsWith('data:'));
+                window._gpmImagenesListo = true;
+                window._gpmRenderPreviewImagenes();
+                window._gpmActualizarEstadoBotonGuardar();
+            })
+            .catch(e => {
+                console.warn('GECKO: No se pudieron cargar las imágenes existentes del presupuesto', presupuestoEditId, e);
+                window._gpmActualizarEstadoBotonGuardar();
+            });
     } else {
-        window._gpmImagenes = [];
+        window._gpmImagenesListo = true; // presupuesto nuevo: no hay nada que preservar
     }
     container.innerHTML = `
     <div style="max-width:100%;">
@@ -7034,11 +7057,11 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
       <!-- Footer acciones -->
       <div style="display:flex;justify-content:flex-end;align-items:center;padding:20px 0;gap:10px;">
         ${datosEdicion ? `
-          <button onclick="window._gpmGuardar('${datosEdicion.status || 'Cotizado'}')" class="gecko-btn-primary" style="flex:none;width:auto;">
+          <button id="gpmBtnGuardar" onclick="window._gpmGuardar('${datosEdicion.status || 'Cotizado'}')" class="gecko-btn-primary" style="flex:none;width:auto;${window._gpmImagenesListo ? '' : 'opacity:0.5;cursor:not-allowed;'}" ${window._gpmImagenesListo ? '' : 'disabled'}>
             ${datosEdicion.status === 'OT' ? 'Actualizar OT' : 'Actualizar Presupuesto'}
           </button>
         ` : `
-          <button onclick="window._gpmGuardar('Cotizado')" class="gecko-btn-primary" style="flex:none;width:auto;">
+          <button id="gpmBtnGuardar" onclick="window._gpmGuardar('Cotizado')" class="gecko-btn-primary" style="flex:none;width:auto;">
             Generar Presupuesto
           </button>
         `}
@@ -7091,29 +7114,43 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
     window._gpmCalc();
 
     // Mostrar previews de imágenes si hay imágenes cargadas (modo edición)
-    if (window._gpmImagenes.length > 0) {
-        const preview = document.getElementById('gpmImagenesPreview');
-        if (preview) {
-            window._gpmImagenes.forEach(b64 => {
-                const wrap = document.createElement('div');
-                wrap.style.cssText = 'position:relative;';
-                const img = document.createElement('img');
-                img.src = b64;
-                img.style.cssText = 'height:72px;width:auto;border-radius:10px;border:1px solid #333333;object-fit:cover;';
-                const del = document.createElement('button');
-                del.innerHTML = '✕';
-                del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;font-weight:900;';
-                del.onclick = () => {
-                    const idx = window._gpmImagenes.indexOf(b64);
-                    if (idx > -1) window._gpmImagenes.splice(idx, 1);
-                    wrap.remove();
-                };
-                wrap.appendChild(img);
-                wrap.appendChild(del);
-                preview.appendChild(wrap);
-            });
-        }
-    }
+    window._gpmRenderPreviewImagenes();
+};
+
+// ── Renderizar previews de imágenes de referencia (llamado al abrir el
+// formulario y de nuevo cuando llegan imágenes existentes por fetch) ──
+window._gpmRenderPreviewImagenes = function () {
+    const preview = document.getElementById('gpmImagenesPreview');
+    if (!preview) return;
+    preview.innerHTML = '';
+    (window._gpmImagenes || []).forEach(b64 => {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;';
+        const img = document.createElement('img');
+        img.src = b64;
+        img.style.cssText = 'height:72px;width:auto;border-radius:10px;border:1px solid #333333;object-fit:cover;';
+        const del = document.createElement('button');
+        del.innerHTML = '✕';
+        del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;font-weight:900;';
+        del.onclick = () => {
+            const idx = window._gpmImagenes.indexOf(b64);
+            if (idx > -1) window._gpmImagenes.splice(idx, 1);
+            wrap.remove();
+        };
+        wrap.appendChild(img);
+        wrap.appendChild(del);
+        preview.appendChild(wrap);
+    });
+};
+
+// ── Habilitar/deshabilitar el botón de guardar según si las imágenes
+// existentes ya terminaron de cargar (modo edición) ──
+window._gpmActualizarEstadoBotonGuardar = function () {
+    const btn = document.getElementById('gpmBtnGuardar');
+    if (!btn) return;
+    btn.disabled = !window._gpmImagenesListo;
+    btn.style.opacity = window._gpmImagenesListo ? '1' : '0.5';
+    btn.style.cursor = window._gpmImagenesListo ? 'pointer' : 'not-allowed';
 };
 
 // ── Sincronizar estilos del toggle visualmente ──
@@ -7731,13 +7768,13 @@ window._gpmGuardar = function (status) {
 
     // Marcar timestamp único para identificar el doc recién guardado
     const _tsGuardado = Date.now();
-    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, motivoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, imagenes: imagenesRef, _tsGuardado };
+    window._gpmMetadataPendiente = { titulo, notasInternas, condiciones, descuento, tipoDescuento, motivoDescuento, conIva: ivaOn, fechaEntrega, mostrarPrecios, _tsGuardado };
     if (!_tieneItemDeCotizadorReal) window._gpmMetadataPendiente.origenFormulario = 'gpm';
 
     window._gpmYaGuardado = true;
     window.procesarGuardado(status);
 
-    setTimeout(() => {
+    setTimeout(async () => {
         const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
         let docTarget;
         if (_esEdicion) {
@@ -7753,19 +7790,31 @@ window._gpmGuardar = function (status) {
         }
         if (!docTarget) return;
 
-        // Garantizar que las imágenes estén en el doc antes de mostrar el PDF.
-        // No confiar en el timeout del hook — inyectarlas directamente en memoria.
-        const imagenesParaPDF = imagenesRef.length > 0
-            ? imagenesRef
-            : (Array.isArray(window._gpmImagenes) ? window._gpmImagenes.filter(img => typeof img === 'string' && img.length > 100) : []);
-        if (imagenesParaPDF.length > 0 && (!docTarget.imagenes || docTarget.imagenes.length === 0)) {
-            docTarget.imagenes = imagenesParaPDF;
-            // También persistir en localStorage para que verDocumento lo encuentre al leer
-            const idxDoc = lista.findIndex(x => String(x.id) === String(docTarget.id));
-            if (idxDoc !== -1) {
-                lista[idxDoc] = docTarget;
-                localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+        // Sincronizar imágenes de referencia en MySQL (tabla presupuesto_imagenes).
+        // En edición, solo tocamos las imágenes si ya sabemos con certeza cuáles
+        // eran las existentes (fetch de precarga terminado); si no, nos
+        // abstenemos para no arriesgar borrar imágenes que el usuario nunca
+        // llegó a ver ni a tocar.
+        if (!_esEdicion || window._gpmImagenesListo === true) {
+            try {
+                const delRes = await fetch('/app/api.php?endpoint=presupuesto_imagenes', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ presupuesto_id: docTarget.id })
+                });
+                if (!delRes.ok) throw new Error('DELETE presupuesto_imagenes falló: HTTP ' + delRes.status);
+                await Promise.all(imagenesRef.map((img, idx) =>
+                    fetch('/app/api.php?endpoint=presupuesto_imagenes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ presupuesto_id: docTarget.id, imagen: img, orden: idx })
+                    })
+                ));
+            } catch (e) {
+                console.warn('GECKO: Error sincronizando imágenes de referencia:', e);
             }
+        } else {
+            console.warn('GECKO: Se omitió la sincronización de imágenes — aún no se habían terminado de cargar las existentes.');
         }
 
         const _tabDestino = _statusFinal === 'OT' ? 'ots' : 'presupuestos';
@@ -7797,7 +7846,18 @@ window.procesarGuardado = function (status) {
             }
             if (target) {
                 Object.assign(target, window._gpmMetadataPendiente);
-                localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+                try {
+                    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+                } catch (e) {
+                    if (e.name === 'QuotaExceededError') {
+                        console.warn('GECKO: QuotaExceededError al persistir metadatos en localStorage. Ya se guardó en MySQL.');
+                        if (typeof window.mostrarAdvertencia === 'function') {
+                            window.mostrarAdvertencia('Se guardó en la base de datos, pero el almacenamiento local está lleno. Recargá la página para ver los cambios completos.', 'Atención');
+                        }
+                    } else {
+                        throw e;
+                    }
+                }
             }
             window._gpmMetadataPendiente = null;
         }, 200);
