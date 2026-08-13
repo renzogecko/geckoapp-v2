@@ -119,11 +119,13 @@ function _getDatosActuales() {
 
 // Fallback: obtiene las imágenes de referencia de un presupuesto/OT desde
 // MySQL cuando el objeto en memoria no las trae (ya no viajan embebidas en
-// localStorage).
-async function _geckoObtenerImagenesRemoto(presupuestoId) {
+// localStorage). itemIndex null = nivel OT; itemIndex = N = imágenes del ítem N.
+async function _geckoObtenerImagenesRemoto(presupuestoId, itemIndex = null) {
     if (!presupuestoId) return [];
     try {
-        const res = await fetch('/app/api.php?endpoint=presupuesto_imagenes&presupuesto_id=' + encodeURIComponent(presupuestoId));
+        let url = '/app/api.php?endpoint=presupuesto_imagenes&presupuesto_id=' + encodeURIComponent(presupuestoId);
+        if (itemIndex !== null) url += '&item_index=' + encodeURIComponent(itemIndex);
+        const res = await fetch(url);
         if (!res.ok) return [];
         const rows = await res.json();
         if (!Array.isArray(rows)) return [];
@@ -131,6 +133,31 @@ async function _geckoObtenerImagenesRemoto(presupuestoId) {
     } catch (e) {
         console.warn('GECKO-DOCS: Error al obtener imágenes de referencia:', e);
         return [];
+    }
+}
+
+// Igual que _geckoObtenerImagenesRemoto pero trae TODO (nivel OT + todos los
+// ítems) en un solo request, agrupado por bucket. Clave 'ot' = nivel OT,
+// clave '0','1',... = índice del ítem. Usado por generarDocOT para evitar
+// un fetch por cada ítem.
+async function _geckoObtenerImagenesPorItemRemoto(presupuestoId) {
+    if (!presupuestoId) return {};
+    try {
+        const res = await fetch('/app/api.php?endpoint=presupuesto_imagenes&presupuesto_id=' + encodeURIComponent(presupuestoId) + '&scope=all');
+        if (!res.ok) return {};
+        const rows = await res.json();
+        if (!Array.isArray(rows)) return {};
+        const map = {};
+        rows.forEach(r => {
+            if (typeof r.imagen !== 'string' || r.imagen.length === 0) return;
+            const key = (r.item_index === null || r.item_index === undefined) ? 'ot' : String(r.item_index);
+            if (!map[key]) map[key] = [];
+            map[key].push(r.imagen);
+        });
+        return map;
+    } catch (e) {
+        console.warn('GECKO-DOCS: Error al obtener imágenes remotas (scope=all):', e);
+        return {};
     }
 }
 
@@ -267,7 +294,14 @@ window.generarDocOT = async function (p) {
     const entrega = p.entrega || 'A confirmar';
     const area = p.area || 'Producción';
     const instrucciones = p.instrucciones || '';
-    const imagenes = (Array.isArray(p.imagenes) && p.imagenes.length > 0) ? p.imagenes : await _geckoObtenerImagenesRemoto(p.id);
+
+    const _faltaImagenesOT = !Array.isArray(p.imagenes) || p.imagenes.length === 0;
+    const _faltaImagenesItem = items.some(it => !(it.otFicha && Array.isArray(it.otFicha.imagenes) && it.otFicha.imagenes.length > 0));
+    const _imagenesRemotasPorBucket = (_faltaImagenesOT || _faltaImagenesItem)
+        ? await _geckoObtenerImagenesPorItemRemoto(p.id)
+        : {};
+
+    const imagenes = (Array.isArray(p.imagenes) && p.imagenes.length > 0) ? p.imagenes : (_imagenesRemotasPorBucket.ot || []);
 
     const formatOtDetalle = (detalle) => {
         if (!detalle) return '—';
@@ -275,6 +309,7 @@ window.generarDocOT = async function (p) {
     };
 
     const renderFichaItem = (it, i) => {
+        const numReal = (it._otIndexReal ?? i) + 1;
         const f = it.otFicha || (typeof window._otParsearDetalleAFicha === 'function' ? window._otParsearDetalleAFicha(it.otDetalle) : null);
         const tieneFicha = f && typeof f === 'object' &&
             Object.keys(f).some(k => k !== 'imagenes' && k !== 'iluminacion' && f[k]);
@@ -282,7 +317,7 @@ window.generarDocOT = async function (p) {
         if (!tieneFicha) {
             return `
             <div class="spec-row">
-                <span class="spec-label">Ítem ${String(i + 1).padStart(2, '0')}</span>
+                <span class="spec-label">Ítem ${String(numReal).padStart(2, '0')}</span>
                 <span class="spec-value"><strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>${formatOtDetalle(it.otDetalle)}</span>
             </div>`;
         }
@@ -313,14 +348,14 @@ window.generarDocOT = async function (p) {
         if (filas.length === 0 && filasIlum.length === 0) {
             return `
             <div class="spec-row">
-                <span class="spec-label">Ítem ${String(i + 1).padStart(2, '0')}</span>
+                <span class="spec-label">Ítem ${String(numReal).padStart(2, '0')}</span>
                 <span class="spec-value"><strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>${formatOtDetalle(it.otDetalle)}</span>
             </div>`;
         }
 
         return `
         <div class="ficha-item-tabla">
-            <div class="ficha-item-header">Ítem ${String(i + 1).padStart(2, '0')} — ${it.nombre || it.textoOpciones || 'Trabajo'}</div>
+            <div class="ficha-item-header">Ítem ${String(numReal).padStart(2, '0')} — ${it.nombre || it.textoOpciones || 'Trabajo'}</div>
             ${filas.length > 0 ? `
             <table class="tabla-datos">
                 <tr><td colspan="2" class="tabla-titulo-seccion">DATOS DEL TRABAJO</td></tr>
@@ -339,15 +374,18 @@ window.generarDocOT = async function (p) {
         : '<div class="spec-row"><span class="spec-label">Sin ítems</span><span class="spec-value" style="color:#aaa">—</span></div>';
 
     const grupos = [];
-    items.forEach((it, i) => {
-        const imgsItem = (it.otFicha && Array.isArray(it.otFicha.imagenes)) ? it.otFicha.imagenes : [];
+    for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        const idxReal = it._otIndexReal ?? i;
+        const imgsEmbebidas = (it.otFicha && Array.isArray(it.otFicha.imagenes)) ? it.otFicha.imagenes : [];
+        const imgsItem = imgsEmbebidas.length > 0 ? imgsEmbebidas : (_imagenesRemotasPorBucket[String(idxReal)] || []);
         if (imgsItem.length > 0) {
             grupos.push({
-                titulo: `Ítem ${String(i + 1).padStart(2, '0')} — ${it.nombre || it.textoOpciones || 'Trabajo'}`,
+                titulo: `Ítem ${String(idxReal + 1).padStart(2, '0')} — ${it.nombre || it.textoOpciones || 'Trabajo'}`,
                 imagenes: imgsItem
             });
         }
-    });
+    }
     if (imagenes.length > 0) {
         grupos.push({ titulo: 'Planos generales de la orden', imagenes: imagenes });
     }
@@ -580,7 +618,9 @@ window._otGenerarConSeleccion = async function (id) {
     if (!ot) return;
 
     const checks = document.querySelectorAll('#modalSelectorImpresionOT input[type=checkbox]');
-    const itemsFiltrados = (ot.items || []).filter((it, i) => checks[i]?.checked);
+    const itemsFiltrados = (ot.items || [])
+        .map((it, i) => ({ ...it, _otIndexReal: i }))
+        .filter((it, i) => checks[i]?.checked);
 
     document.getElementById('modalSelectorImpresionOT')?.remove();
 

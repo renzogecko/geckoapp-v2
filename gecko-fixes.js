@@ -154,6 +154,33 @@ window._gpAbrirCambiarPassword = function () {
     };
 };
 
+// Elimina campos de imagen embebidos en base64 de un array de ítems antes de
+// persistir a localStorage (ya viajan aparte, sincronizados contra la tabla
+// presupuesto_imagenes). Devuelve una copia nueva, no muta el array original.
+window._geckoSanearItemsParaStorage = function (items) {
+    return (items || []).map(it => {
+        const itCopia = { ...it };
+        if (itCopia.imagenBase64) delete itCopia.imagenBase64;
+        if (itCopia.imagenes) delete itCopia.imagenes;
+        if (itCopia.otFicha && itCopia.otFicha.imagenes) {
+            itCopia.otFicha = { ...itCopia.otFicha };
+            delete itCopia.otFicha.imagenes;
+        }
+        return itCopia;
+    });
+};
+
+// Sanea un único registro de presupuesto/OT (nivel OT + sus ítems) antes de
+// persistirlo. Se aplica solo al registro que se está guardando en esta
+// operación — NUNCA a otros registros de la lista, para no arriesgar borrar
+// imágenes de otras OTs que todavía no se hayan sincronizado a MySQL.
+window._geckoSanearRegistroParaStorage = function (registro) {
+    const copia = { ...registro };
+    if (copia.imagenes) delete copia.imagenes;
+    if (copia.items) copia.items = window._geckoSanearItemsParaStorage(copia.items);
+    return copia;
+};
+
 window.procesarGuardado = function (status) {
     const cliente = document.getElementById('clienteNombre')?.value?.trim() || 'Cliente Genérico';
     const total = parseFloat(document.getElementById('precioTotal')?.value) ||
@@ -181,8 +208,11 @@ window.procesarGuardado = function (status) {
                 items: window.presupuesto.map(it => ({ ...it })),
                 status: lista[idx].status, // preserve OT/Cotizado
             });
+            const listaParaStorage = lista.map(p =>
+                String(p.id) === String(editId) ? window._geckoSanearRegistroParaStorage(p) : p
+            );
             try {
-                localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+                localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaParaStorage));
             } catch (e) {
                 if (e.name === 'QuotaExceededError') {
                     console.warn('GECKO: QuotaExceededError al actualizar gecko_listaPresupuestos (edición).');
@@ -224,17 +254,9 @@ window.procesarGuardado = function (status) {
 
     lista.push(nuevo);
     // Fix A: Guardar en localStorage SIN imágenes para evitar QuotaExceededError
-    const listaParaStorage = lista.map(p => {
-        const copia = { ...p };
-        if (copia.imagenes) delete copia.imagenes;
-        if (copia.items) copia.items = copia.items.map(it => {
-            const itCopia = { ...it };
-            if (itCopia.imagenBase64) delete itCopia.imagenBase64;
-            if (itCopia.imagenes) delete itCopia.imagenes;
-            return itCopia;
-        });
-        return copia;
-    });
+    const listaParaStorage = lista.map(p =>
+        p.id === nuevo.id ? window._geckoSanearRegistroParaStorage(p) : p
+    );
     try {
         localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaParaStorage));
     } catch (e) {
@@ -1437,12 +1459,51 @@ window.editarOT = function (id) {
         </div>`;
     }).join('');
 
+    // Sembrado síncrono desde lo embebido (compatibilidad con OTs viejas no
+    // migradas): el modal nunca se ve vacío mientras se resuelve el fetch de abajo.
     window._otEditImagenes = Array.isArray(ot.imagenes) ? [...ot.imagenes] : [];
     window._otItemImagenes = {};
     (ot.items || []).forEach((it, i) => {
         window._otItemImagenes[i] = Array.isArray(it.otFicha?.imagenes) ? [...it.otFicha.imagenes] : [];
     });
     window._otActiveItemIndex = null;
+
+    // Precarga desde MySQL (fuente de verdad si ya se sincronizó alguna vez).
+    // Si hay filas para un bucket (nivel OT o un ítem puntual), reemplazan lo
+    // embebido; si un bucket viene vacío, se conserva lo embebido (todavía
+    // no migrado). Si el fetch falla, se degrada: se sigue permitiendo
+    // guardar con lo embebido y _guardarEdicionOT se salta el sync a MySQL.
+    window._otImagenesListo = false;
+    window._otSyncMysqlDisponible = false;
+    fetch('/app/api.php?endpoint=presupuesto_imagenes&presupuesto_id=' + encodeURIComponent(id) + '&scope=all')
+        .then(res => res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status)))
+        .then(rows => {
+            if (!Array.isArray(rows)) throw new Error('Respuesta inválida');
+            const porBucket = {};
+            rows.forEach(r => {
+                if (typeof r.imagen !== 'string' || !r.imagen) return;
+                const key = (r.item_index === null || r.item_index === undefined) ? 'ot' : String(r.item_index);
+                (porBucket[key] = porBucket[key] || []).push(r.imagen);
+            });
+            if (porBucket.ot) {
+                window._otEditImagenes = porBucket.ot;
+                window._otRenderEditPreview();
+            }
+            Object.keys(window._otItemImagenes).forEach(i => {
+                if (porBucket[i]) {
+                    window._otItemImagenes[i] = porBucket[i];
+                    window._otRenderItemPreview(i);
+                }
+            });
+            window._otSyncMysqlDisponible = true;
+            window._otImagenesListo = true;
+            window._otActualizarEstadoBotonGuardar();
+        })
+        .catch(e => {
+            console.warn('GECKO: No se pudieron cargar las imágenes existentes de la OT', id, e);
+            window._otImagenesListo = true; // degrada: permite guardar igual con lo embebido
+            window._otActualizarEstadoBotonGuardar();
+        });
 
     const modal = document.createElement('div');
     modal.id = 'modalEditarOT';
@@ -1522,7 +1583,7 @@ window.editarOT = function (id) {
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Reimprimir
                 </button>
-                <button class="gecko-btn-primary" onclick="window._guardarEdicionOT('${id}')">
+                <button class="gecko-btn-primary" id="otGuardarCambiosBtn" onclick="window._guardarEdicionOT('${id}')" style="opacity:0.5;cursor:not-allowed;" disabled>
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     Guardar cambios
                 </button>
@@ -1533,34 +1594,29 @@ window.editarOT = function (id) {
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
 
-    const preview = document.getElementById('otEditImagenesPreview');
-    if (preview && window._otEditImagenes.length > 0) {
-        window._otEditImagenes.forEach(b64 => {
-            const wrap = document.createElement('div');
-            wrap.style.cssText = 'position:relative;';
-            const img = document.createElement('img');
-            img.src = b64;
-            img.style.cssText = 'height:64px;width:auto;border-radius:8px;border:1px solid #333333;object-fit:cover;';
-            const del = document.createElement('button');
-            del.innerHTML = '✕';
-            del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:17px;height:17px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;';
-            del.onclick = () => {
-                const idx = window._otEditImagenes.indexOf(b64);
-                if (idx > -1) window._otEditImagenes.splice(idx, 1);
-                wrap.remove();
-            };
-            wrap.appendChild(img);
-            wrap.appendChild(del);
-            preview.appendChild(wrap);
-        });
-    }
+    window._otRenderEditPreview();
+    Object.keys(window._otItemImagenes).forEach(idx => window._otRenderItemPreview(idx));
+};
 
-    Object.keys(window._otItemImagenes).forEach(idx => {
-        const previewItem = document.getElementById('otItemImagenesPreview' + idx);
-        if (previewItem && window._otItemImagenes[idx].length > 0) {
-            window._otItemImagenes[idx].forEach(b64 => window._otItemRenderMiniatura(idx, b64));
-        }
-    });
+window._otActualizarEstadoBotonGuardar = function () {
+    const btn = document.getElementById('otGuardarCambiosBtn');
+    if (!btn) return;
+    btn.disabled = !window._otImagenesListo;
+    btn.style.opacity = window._otImagenesListo ? '1' : '0.5';
+    btn.style.cursor = window._otImagenesListo ? 'pointer' : 'not-allowed';
+};
+
+window._otRenderEditPreview = function () {
+    const preview = document.getElementById('otEditImagenesPreview');
+    if (!preview) return;
+    preview.innerHTML = '';
+    (window._otEditImagenes || []).forEach(b64 => window._otEditAgregarThumbnail(b64));
+};
+
+window._otRenderItemPreview = function (idx) {
+    const preview = document.getElementById('otItemImagenesPreview' + idx);
+    if (preview) preview.innerHTML = '';
+    (window._otItemImagenes[idx] || []).forEach(b64 => window._otItemRenderMiniatura(idx, b64));
 };
 
 window._otToggleItemFicha = function (idx) {
@@ -1572,30 +1628,34 @@ window._otToggleItemFicha = function (idx) {
     if (chevron) chevron.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
 };
 
-window._otEditAgregarUnaImagen = function (file) {
+window._otEditAgregarThumbnail = function (b64) {
     const preview = document.getElementById('otEditImagenesPreview');
     if (!preview) return;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;';
+    const img = document.createElement('img');
+    img.src = b64;
+    img.style.cssText = 'height:64px;width:auto;border-radius:8px;border:1px solid #333333;object-fit:cover;';
+    const del = document.createElement('button');
+    del.innerHTML = '✕';
+    del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:17px;height:17px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;';
+    del.onclick = () => {
+        const idx = window._otEditImagenes.indexOf(b64);
+        if (idx > -1) window._otEditImagenes.splice(idx, 1);
+        wrap.remove();
+    };
+    wrap.appendChild(img);
+    wrap.appendChild(del);
+    preview.appendChild(wrap);
+};
+
+window._otEditAgregarUnaImagen = function (file) {
     const reader = new FileReader();
     reader.onload = function (e) {
         const b64 = e.target.result;
         window._otEditImagenes = window._otEditImagenes || [];
         window._otEditImagenes.push(b64);
-        const wrap = document.createElement('div');
-        wrap.style.cssText = 'position:relative;';
-        const img = document.createElement('img');
-        img.src = b64;
-        img.style.cssText = 'height:64px;width:auto;border-radius:8px;border:1px solid #333333;object-fit:cover;';
-        const del = document.createElement('button');
-        del.innerHTML = '✕';
-        del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;border:none;color:white;width:17px;height:17px;border-radius:50%;cursor:pointer;font-size:9px;padding:0;';
-        del.onclick = () => {
-            const idx = window._otEditImagenes.indexOf(b64);
-            if (idx > -1) window._otEditImagenes.splice(idx, 1);
-            wrap.remove();
-        };
-        wrap.appendChild(img);
-        wrap.appendChild(del);
-        preview.appendChild(wrap);
+        window._otEditAgregarThumbnail(b64);
     };
     reader.readAsDataURL(file);
 };
@@ -1680,7 +1740,22 @@ window._guardarEdicionOT = function (id) {
     lista[idx].telefono = document.getElementById('otEditTelefono')?.value?.trim() || '';
     lista[idx].atendido_por = document.getElementById('otEditAtendidoPor')?.value?.trim() || '';
     lista[idx].instrucciones = document.getElementById('otEditInstrucciones')?.value?.trim() || '';
-    lista[idx].imagenes = window._otEditImagenes || lista[idx].imagenes || [];
+
+    const nivelOTImagenes = window._otEditImagenes || [];
+    const itemImagenesPorIndice = window._otItemImagenes || {};
+    // Si la precarga desde MySQL funcionó, las imágenes viajan aparte contra
+    // presupuesto_imagenes y NO se embeben en el objeto que va a localStorage.
+    // Si falló (sin conexión, etc.), se degrada: se embeben como respaldo
+    // local para no perder lo que el usuario acaba de cargar, y se omite el
+    // sync a MySQL de esta vez (se reintentará la próxima vez que se abra y
+    // guarde esta OT con conexión).
+    const syncDisponible = window._otSyncMysqlDisponible === true;
+
+    if (syncDisponible) {
+        if (lista[idx].imagenes) delete lista[idx].imagenes;
+    } else {
+        lista[idx].imagenes = nivelOTImagenes;
+    }
 
     lista[idx].items = (lista[idx].items || []).map((it, i) => {
         it.otFicha = {
@@ -1702,17 +1777,61 @@ window._guardarEdicionOT = function (id) {
                 cantidad: document.getElementById('otItemIlumCantidad' + i)?.value?.trim() || '',
                 fuente: document.getElementById('otItemIlumFuente' + i)?.value?.trim() || '',
                 salidaCable: document.getElementById('otItemIlumCable' + i)?.value?.trim() || ''
-            } : (it.otFicha?.iluminacion || undefined),
-            imagenes: window._otItemImagenes[i] || it.otFicha?.imagenes || []
+            } : (it.otFicha?.iluminacion || undefined)
         };
+        if (!syncDisponible) {
+            it.otFicha.imagenes = itemImagenesPorIndice[i] || [];
+        }
         return it;
     });
 
-    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    // Red de seguridad: a diferencia del código anterior, esta escritura
+    // ahora está protegida contra QuotaExceededError.
+    try {
+        localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            console.warn('GECKO: QuotaExceededError al guardar la edición de la OT.');
+            if (typeof window.mostrarAdvertencia === 'function') {
+                window.mostrarAdvertencia('La OT se actualizó, pero el almacenamiento local está lleno. Recargá la página para verla actualizada.', 'Atención');
+            }
+        } else {
+            throw e;
+        }
+    }
+
     document.getElementById('modalEditarOT')?.remove();
 
     if (typeof window.mostrarExito === 'function') window.mostrarExito(`OT #${id} actualizada.`, '¡Guardado!');
     if (typeof window.renderOts === 'function') window.renderOts();
+
+    if (syncDisponible) {
+        const _otSyncBucket = async (itemIndexValue, imagenes) => {
+            const delRes = await fetch('/app/api.php?endpoint=presupuesto_imagenes', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ presupuesto_id: id, item_index: itemIndexValue })
+            });
+            if (!delRes.ok) throw new Error('DELETE presupuesto_imagenes falló: HTTP ' + delRes.status);
+            await Promise.all(imagenes.map((img, o) =>
+                fetch('/app/api.php?endpoint=presupuesto_imagenes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ presupuesto_id: id, item_index: itemIndexValue, imagen: img, orden: o })
+                })
+            ));
+        };
+        (async () => {
+            try {
+                await Promise.all([
+                    _otSyncBucket(null, nivelOTImagenes),
+                    ...Object.keys(itemImagenesPorIndice).map(i => _otSyncBucket(Number(i), itemImagenesPorIndice[i] || []))
+                ]);
+            } catch (e) {
+                console.warn('GECKO: Error sincronizando imágenes de la OT a MySQL:', e);
+            }
+        })();
+    }
 };
 
 window._reimprimir = async function (id) {
@@ -7800,14 +7919,14 @@ window._gpmGuardar = function (status) {
                 const delRes = await fetch('/app/api.php?endpoint=presupuesto_imagenes', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ presupuesto_id: docTarget.id })
+                    body: JSON.stringify({ presupuesto_id: docTarget.id, item_index: null })
                 });
                 if (!delRes.ok) throw new Error('DELETE presupuesto_imagenes falló: HTTP ' + delRes.status);
                 await Promise.all(imagenesRef.map((img, idx) =>
                     fetch('/app/api.php?endpoint=presupuesto_imagenes', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ presupuesto_id: docTarget.id, imagen: img, orden: idx })
+                        body: JSON.stringify({ presupuesto_id: docTarget.id, item_index: null, imagen: img, orden: idx })
                     })
                 ));
             } catch (e) {
@@ -9164,3 +9283,57 @@ window.addEventListener('load', function () {
     }, 2500);
 });
 // ── FIN FIX renderInsumos v2 ─────────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════════
+// MIGRACIÓN (temporal, borrar este bloque cuando ya no queden OTs
+// viejas con imágenes embebidas): mueve otFicha.imagenes — imágenes
+// por ítem del modal "Editar OT" guardadas antes de este fix — de
+// localStorage a la tabla presupuesto_imagenes (item_index). Corre una
+// sola vez por navegador; si falla, no marca el flag y reintenta en la
+// próxima carga de página (idempotente: DELETE+POST por ítem).
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('load', function () {
+    setTimeout(async function () {
+        if (localStorage.getItem('gecko_migracion_item_imagenes_v1') === 'done') return;
+        try {
+            const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            let huboCambios = false;
+            for (const p of lista) {
+                if (!Array.isArray(p.items)) continue;
+                for (let i = 0; i < p.items.length; i++) {
+                    const it = p.items[i];
+                    const imgs = (it.otFicha && Array.isArray(it.otFicha.imagenes)) ? it.otFicha.imagenes : [];
+                    if (imgs.length === 0) continue;
+                    const delRes = await fetch('/app/api.php?endpoint=presupuesto_imagenes', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ presupuesto_id: p.id, item_index: i })
+                    });
+                    if (!delRes.ok) throw new Error('DELETE falló: HTTP ' + delRes.status);
+                    await Promise.all(imgs.map((img, o) =>
+                        fetch('/app/api.php?endpoint=presupuesto_imagenes', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ presupuesto_id: p.id, item_index: i, imagen: img, orden: o })
+                        })
+                    ));
+                    delete it.otFicha.imagenes;
+                    huboCambios = true;
+                }
+            }
+            if (huboCambios) {
+                try {
+                    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+                } catch (e) {
+                    if (e.name !== 'QuotaExceededError') throw e;
+                    console.warn('GECKO: QuotaExceededError al limpiar imágenes ya migradas de localStorage; se reintentará en la próxima carga.');
+                    return; // No marca "done": ya se subieron a MySQL, solo falta limpiar el embebido local.
+                }
+                console.log('🦎 GECKO: Migración de imágenes por ítem de OT completada.');
+            }
+            localStorage.setItem('gecko_migracion_item_imagenes_v1', 'done');
+        } catch (e) {
+            console.warn('GECKO: Migración de imágenes por ítem de OT falló, se reintentará en la próxima carga:', e);
+        }
+    }, 3000);
+});

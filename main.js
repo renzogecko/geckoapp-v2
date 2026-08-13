@@ -1989,15 +1989,6 @@ function _mostrarSugerenciaMaterial(nombreMat, enStock) {
                 </button>`;
 }
 
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-}
-
 // ── Lógica del Carrito y Presupuesto ──
 window.agregarItemAlCarritoUI = async function () {
     if (!window.itemActualCotizado || isNaN(window.itemActualCotizado.costo) || window.itemActualCotizado.costo === 0) {
@@ -2083,65 +2074,6 @@ window.agregarItemAlPresupuesto = function (item) {
     console.log("📦 Item agregado al presupuesto:", item.nombre);
 };
 
-async function agregarItemAlCarrito() {
-    const item = window.itemActualCotizado;
-    if (!item || isNaN(item.costo)) return;
-
-    // —— Validación de material en stock ——
-    const _tiposSinStock = ['estampados']; // tipos que no usan stock de materiales
-    if (!_tiposSinStock.includes(item.tipo)) {
-        const _stockMats = JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
-        // Tomamos el nombre del material del textoOpciones (primera parte antes del paréntesis)
-        const _nombreMatUsado = (item.textoOpciones || '').split('(')[0].trim().toLowerCase();
-        const _enStock = _stockMats.some(m => m.nombre.toLowerCase() === _nombreMatUsado ||
-            _nombreMatUsado.includes(m.nombre.toLowerCase()));
-
-        if (!_enStock && _nombreMatUsado) {
-            const _agregar = confirm(
-                `⚠️ "${item.textoOpciones.split('(')[0].trim()}" no está registrado en el inventario.\n\n` +
-                `¿Deseas agregarlo al stock ahora?\n\n` +
-                `→ SÍ : Abre el formulario de alta de material.\n` +
-                `→ NO: Continúa como "Material Especial" (sin descuento de stock).`
-            );
-
-            if (_agregar) {
-                // Pre-poblar el modal de material con el nombre
-                if (typeof abrirModalMaterial === 'function') abrirModalMaterial();
-                setTimeout(() => {
-                    const _inputNom = document.getElementById('matNom');
-                    if (_inputNom) _inputNom.value = item.textoOpciones.split('(')[0].trim();
-                }, 150);
-                return; // No agrega al carrito aún
-            } else {
-                // Marca como material especial para que la lógica de OT no intente descontarlo
-                item.materialEspecial = true;
-            }
-        }
-    }
-
-    const inputAdj = document.getElementById('itemAdjuntoImg') || document.getElementById('itemAdjunto');
-    if (inputAdj && inputAdj.files && inputAdj.files[0]) {
-        const baseStr = await fileToBase64(inputAdj.files[0]);
-        item.imagenBase64 = baseStr;
-    }
-
-    // Guardar el modo de cálculo actual en el ítem
-    item.modoCalculo = typeof globalEstimationMode !== 'undefined' ? globalEstimationMode : (localStorage.getItem('globalEstimationMode') || 'simple');
-
-    if (typeof presupuesto !== 'undefined') {
-        presupuesto.push(item);
-    }
-    if (typeof renderizarPresupuesto === 'function') renderizarPresupuesto();
-
-    // Reset cotizador form (compatible con viewCotizadores)
-    const _btnAgregar = document.getElementById('btnAgregarAlPresupuesto');
-    if (_btnAgregar) _btnAgregar.classList.add('hidden');
-    const _adjunto = document.getElementById('contenedorAdjunto');
-    if (_adjunto) _adjunto.classList.add('hidden');
-    if (inputAdj) inputAdj.value = "";
-
-    window.itemActualCotizado = null;
-}
 
 window.renderizarPresupuesto = function () {
     const lista = document.getElementById('listaPresupuesto');

@@ -364,36 +364,54 @@ try {
             if (!$id) error("ID requerido.");
             $stmt = $pdo->prepare("DELETE FROM presupuestos WHERE id = ?");
             $stmt->execute([$id]);
+            // Evita filas huérfanas en presupuesto_imagenes al borrar la OT/presupuesto completo.
+            $pdo->prepare("DELETE FROM presupuesto_imagenes WHERE presupuesto_id = ?")->execute([$id]);
             responder(["success" => true, "message" => "Presupuesto eliminado."]);
         }
     }
 
     // ══════════════════════════════════════════
     // IMÁGENES DE PRESUPUESTO/OT (tabla presupuesto_imagenes)
+    // item_index NULL = nivel OT (planos generales). item_index = N = imagen del ítem N de items[].
     // ══════════════════════════════════════════
     elseif ($endpoint === 'presupuesto_imagenes') {
 
         if ($method === 'GET') {
             $presupuestoId = $_GET['presupuesto_id'] ?? null;
             if (!$presupuestoId) error("presupuesto_id requerido.");
-            $stmt = $pdo->prepare("SELECT * FROM presupuesto_imagenes WHERE presupuesto_id = ? ORDER BY orden ASC");
-            $stmt->execute([$presupuestoId]);
+            if (isset($_GET['scope']) && $_GET['scope'] === 'all') {
+                $stmt = $pdo->prepare("SELECT * FROM presupuesto_imagenes WHERE presupuesto_id = ? ORDER BY item_index ASC, orden ASC");
+                $stmt->execute([$presupuestoId]);
+            } elseif (isset($_GET['item_index'])) {
+                $stmt = $pdo->prepare("SELECT * FROM presupuesto_imagenes WHERE presupuesto_id = ? AND item_index = ? ORDER BY orden ASC");
+                $stmt->execute([$presupuestoId, (int)$_GET['item_index']]);
+            } else {
+                $stmt = $pdo->prepare("SELECT * FROM presupuesto_imagenes WHERE presupuesto_id = ? AND item_index IS NULL ORDER BY orden ASC");
+                $stmt->execute([$presupuestoId]);
+            }
             responder($stmt->fetchAll(PDO::FETCH_ASSOC));
         }
 
         if ($method === 'POST') {
             $d = $body;
             if (empty($d['presupuesto_id']) || empty($d['imagen'])) error("presupuesto_id e imagen son requeridos.");
-            $stmt = $pdo->prepare("INSERT INTO presupuesto_imagenes (presupuesto_id, imagen, orden) VALUES (?,?,?)");
-            $stmt->execute([$d['presupuesto_id'], $d['imagen'], $d['orden'] ?? 0]);
+            $itemIndex = isset($d['item_index']) && $d['item_index'] !== null ? (int)$d['item_index'] : null;
+            $stmt = $pdo->prepare("INSERT INTO presupuesto_imagenes (presupuesto_id, item_index, imagen, orden) VALUES (?,?,?,?)");
+            $stmt->execute([$d['presupuesto_id'], $itemIndex, $d['imagen'], $d['orden'] ?? 0]);
             responder(["success" => true, "message" => "Imagen guardada."]);
         }
 
         if ($method === 'DELETE') {
             $presupuestoId = $body['presupuesto_id'] ?? null;
             if (!$presupuestoId) error("presupuesto_id requerido.");
-            $stmt = $pdo->prepare("DELETE FROM presupuesto_imagenes WHERE presupuesto_id = ?");
-            $stmt->execute([$presupuestoId]);
+            if (array_key_exists('item_index', $body) && $body['item_index'] !== null) {
+                $stmt = $pdo->prepare("DELETE FROM presupuesto_imagenes WHERE presupuesto_id = ? AND item_index = ?");
+                $stmt->execute([$presupuestoId, (int)$body['item_index']]);
+            } else {
+                // Sin item_index (o null) = solo nivel OT. Nunca toca filas con item_index NOT NULL.
+                $stmt = $pdo->prepare("DELETE FROM presupuesto_imagenes WHERE presupuesto_id = ? AND item_index IS NULL");
+                $stmt->execute([$presupuestoId]);
+            }
             responder(["success" => true, "message" => "Imágenes eliminadas."]);
         }
     }
