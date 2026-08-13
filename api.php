@@ -456,6 +456,19 @@ try {
     }
 
     // ══════════════════════════════════════════
+    // CAJAS HISTORIAL (auditoría de ediciones manuales de saldo)
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'cajas_historial') {
+
+        if ($method === 'POST') {
+            $d = $body;
+            $stmt = $pdo->prepare("INSERT INTO cajas_historial (caja_id, caja_nombre, saldo_anterior, saldo_nuevo, usuario) VALUES (?,?,?,?,?)");
+            $stmt->execute([$d['caja_id'] ?? '', $d['caja_nombre'] ?? '', $d['saldo_anterior'] ?? 0, $d['saldo_nuevo'] ?? 0, $d['usuario'] ?? null]);
+            responder(["success" => true]);
+        }
+    }
+
+    // ══════════════════════════════════════════
     // GASTOS FIJOS
     // ══════════════════════════════════════════
     elseif ($endpoint === 'gastos_fijos') {

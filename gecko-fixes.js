@@ -3033,6 +3033,7 @@ document.addEventListener('geckoDB_ready', () => {
         let cajas = JSON.parse(_ls.getItem('gecko_cajas') || '[]');
         const idx = cajas.findIndex(c => c.id === id);
         if (idx === -1) return;
+        const saldoAnterior = cajas[idx].saldo;
         cajas[idx] = { ...cajas[idx], nombre, icono, saldo };
         _ls.setItem('gecko_cajas', JSON.stringify(cajas));
         window.LISTA_CAJAS = cajas;
@@ -3042,6 +3043,18 @@ document.addEventListener('geckoDB_ready', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, nombre, icono, saldo })
         }).catch(() => { });
+
+        if (saldoAnterior !== saldo) {
+            fetch('/app/api.php?endpoint=cajas_historial', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    caja_id: id, caja_nombre: nombre,
+                    saldo_anterior: saldoAnterior, saldo_nuevo: saldo,
+                    usuario: window.GECKO_USER?.nombre || null
+                })
+            }).catch(() => {});
+        }
 
         document.getElementById('modalEditarCaja').style.display = 'none';
         if (typeof window.mostrarExito === 'function') window.mostrarExito(`Caja "${nombre}" actualizada.`, '¡Guardado!');
