@@ -102,6 +102,31 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 - **Descripción:** hoy, si te equivocás en un dato de un ítem ya agregado (al carrito de un cotizador, o ya cargado en el Presupuestador Manual), la única opción es borrarlo y cargarlo de nuevo desde cero. Se pidió: poder clickear un ítem en cualquiera de las 2 listas y volver al formulario con los datos precargados para corregir solo lo necesario, en vez de recrearlo entero. Requiere diseño previo: cada cotizador tiene campos distintos, así que "recargar" un ítem viejo en el formulario no es trivial — no es un bug chico, es una funcionalidad nueva a diseñar con calma.
 - **Estado:** 🔵 Pendiente — sesión propia, con diseño previo antes de código.
 
+### [MEJ-022] Sincronización de aviso con Google Sheets (respaldo contable)
+- **Sección:** Finanzas
+- **Descripción:** El equipo usa una planilla de Google Sheets online
+  (compartida entre Renzo, Rodri y Agus) como respaldo prolijo de
+  todos los movimientos de caja, en paralelo al sistema. La idea es
+  que GeckoApp se conecte en modo solo lectura a esa planilla (vía API
+  de Google Sheets) y compare periódicamente sus filas contra los
+  movimientos ya cargados en MySQL. Si encuentra un movimiento en el
+  Sheets que no tiene equivalente en el sistema (o viceversa), debe
+  avisar al usuario para que lo revise y cargue lo que falte.
+- **Motivo de por qué se pospone:** el equipo sigue usando el Sheets
+  como respaldo porque van surgiendo bugs de uso diario en el sistema
+  y todavía no confían en dejarlo como única fuente de verdad. Tiene
+  más sentido resolver esos bugs primero y encarar esto más adelante,
+  con tiempo y dedicación.
+- **Complejidad a tener en cuenta para cuando se encare:** el punto
+  más delicado es el "matching" — decidir cuándo dos movimientos
+  (uno del Sheets y uno del sistema) son el mismo. Hay riesgo real de
+  falsos positivos por diferencias de formato de fecha o pequeños
+  redondeos en el monto. Definir bien los campos de comparación
+  (fecha, monto, concepto/cliente) antes de programar nada. Conexión
+  siempre de SOLO LECTURA hacia el Sheets — nunca escribir en la
+  planilla desde el sistema.
+- **Estado:** 🔵 Pendiente (mejora a futuro, sin fecha estimada)
+
 ---
 
 ## ✅ RESUELTOS — historial (no borrar, sirve de referencia)
