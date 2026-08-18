@@ -9354,6 +9354,9 @@ window.addEventListener('load', function () {
 window._lpTabActual = 'configurar';
 window._lpSubTabActual = 'material';
 window._lpConfigCache = null;
+window._lpModoPrecio = 'publico';
+window._lpSeleccionActual = [];
+window._lpAclaraciones = '';
 
 window.mostrarListaPrecios = function () {
     const panel = document.getElementById('panelConfigurador');
@@ -9374,8 +9377,8 @@ window.mostrarListaPrecios = function () {
                 <button id="lpTabBtn_configurar" onclick="window._lpSwitchTab('configurar')" style="${tabBtnStyle(true)}">Configurar</button>
             </div>
 
-            <div id="lpContentGenerar" style="display:none;padding: 40px; text-align: center; color: #71717a;">
-                <p>Esta pantalla se termina de construir en las próximas fases.</p>
+            <div id="lpContentGenerar" style="display:none;">
+                <div id="lpGenerarContent">${window._lpRenderPaso1()}</div>
             </div>
 
             <div id="lpContentConfigurar" style="display:block;">
@@ -9559,4 +9562,214 @@ window._lpGuardarConfig = function (tipo) {
         .catch(() => {
             alert('Error al guardar los cambios.');
         });
+};
+
+// ── FASE 3: pestaña "Generar" — Paso 1 (selector) y Paso 2 (repaso editable) ──
+
+window._lpRenderPaso1 = function () {
+    if (window._lpConfigCache === null) {
+        fetch('/app/api.php?endpoint=lista_precios_config')
+            .then(r => r.json())
+            .then(data => {
+                window._lpConfigCache = data || [];
+                const cont = document.getElementById('lpGenerarContent');
+                if (cont) cont.innerHTML = window._lpRenderPaso1();
+            })
+            .catch(() => {
+                window._lpConfigCache = [];
+                const cont = document.getElementById('lpGenerarContent');
+                if (cont) cont.innerHTML = window._lpRenderPaso1();
+            });
+        return `<div style="padding:40px;text-align:center;color:#71717a;">Cargando...</div>`;
+    }
+
+    const esc = (s) => String(s === null || s === undefined ? '' : s).replace(/"/g, '&quot;');
+
+    const materiales = (window.materiales && window.materiales.length) ? window.materiales : JSON.parse(localStorage.getItem('gecko_materiales') || '[]');
+    const servicios = JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+
+    const seleccionadosKeys = new Set((window._lpSeleccionActual || []).map(it => `${it.tipo}_${it.item_id}`));
+
+    const grupos = {};
+    window._lpConfigCache.filter(c => c.habilitado == 1 || c.habilitado === true).forEach(c => {
+        const origen = c.tipo === 'material'
+            ? materiales.find(m => String(m.id) === String(c.item_id))
+            : servicios.find(s => String(s.id) === String(c.item_id));
+        if (!origen) return; // ítem borrado del origen: se excluye sin romper nada
+
+        const nombre = origen.nombre || 'Sin nombre';
+        const ancho = (c.tipo === 'material' && origen.ancho) ? origen.ancho : null;
+        const precioPublico = c.tipo === 'material' ? (parseFloat(origen.precioVenta) || 0) : (parseFloat(origen.precio) || 0);
+        const precioGremio = c.tipo === 'material' ? (parseFloat(origen.precioGremio) || 0) : (parseFloat(origen.precio) || 0);
+        const grupoNombre = (c.grupo && String(c.grupo).trim()) ? c.grupo : 'Sin grupo';
+
+        if (!grupos[grupoNombre]) grupos[grupoNombre] = [];
+        grupos[grupoNombre].push({
+            tipo: c.tipo,
+            item_id: c.item_id,
+            nombre,
+            grupo: c.grupo || '',
+            detalle: c.detalle || '',
+            ancho,
+            precioPublico,
+            precioGremio
+        });
+    });
+
+    const gruposHTML = Object.keys(grupos).sort().map(nombreGrupo => {
+        const filasGrupo = grupos[nombreGrupo].map(it => {
+            const key = `${it.tipo}_${it.item_id}`;
+            const checked = seleccionadosKeys.has(key);
+            return `
+            <label style="display:flex;align-items:center;gap:10px;padding:8px 4px;cursor:pointer;">
+                <input type="checkbox" id="lpSelChk_${key}" ${checked ? 'checked' : ''}
+                    data-tipo="${it.tipo}" data-item-id="${esc(it.item_id)}" data-nombre="${esc(it.nombre)}"
+                    data-grupo="${esc(it.grupo)}" data-detalle="${esc(it.detalle)}" data-ancho="${esc(it.ancho)}"
+                    data-precio-publico="${it.precioPublico}" data-precio-gremio="${it.precioGremio}"
+                    style="accent-color:#F15A24;width:16px;height:16px;">
+                <span style="color:#fff;font-size:13px;">${esc(it.nombre)}</span>
+            </label>`;
+        }).join('');
+        return `
+        <div style="margin-bottom:18px;">
+            <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 8px;">${esc(nombreGrupo)}</p>
+            <div>${filasGrupo}</div>
+        </div>`;
+    }).join('');
+
+    const modo = window._lpModoPrecio || 'publico';
+    const activo = 'border:1.5px solid #F15A24;background:#F15A24;color:#1a1a1a;';
+    const inactivo = 'border:1.5px solid #2a2a2a;background:transparent;color:#a1a1aa;';
+    const baseBtn = 'padding:10px 22px;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;';
+
+    return `
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+            <button id="lpModoBtn_publico" onclick="window._lpSetModoPrecio('publico')" style="${baseBtn}${modo === 'publico' ? activo : inactivo}">Público</button>
+            <button id="lpModoBtn_gremio" onclick="window._lpSetModoPrecio('gremio')" style="${baseBtn}${modo === 'gremio' ? activo : inactivo}">Gremio</button>
+        </div>
+        <div id="lpSeleccionLista">
+            ${gruposHTML || `<p style="color:#71717a;text-align:center;padding:20px;">No hay ítems habilitados en la configuración.</p>`}
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+            <button class="gecko-btn-primary" style="flex:none;width:auto;padding:12px 28px;" onclick="window._lpContinuarPaso1()">Continuar</button>
+        </div>
+    `;
+};
+
+window._lpSetModoPrecio = function (modo) {
+    window._lpModoPrecio = modo;
+    const btnPublico = document.getElementById('lpModoBtn_publico');
+    const btnGremio = document.getElementById('lpModoBtn_gremio');
+    if (!btnPublico || !btnGremio) return;
+    const activo = 'border:1.5px solid #F15A24;background:#F15A24;color:#1a1a1a;';
+    const inactivo = 'border:1.5px solid #2a2a2a;background:transparent;color:#a1a1aa;';
+    const baseBtn = 'padding:10px 22px;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;';
+    btnPublico.style.cssText = baseBtn + (modo === 'publico' ? activo : inactivo);
+    btnGremio.style.cssText = baseBtn + (modo === 'gremio' ? activo : inactivo);
+};
+
+window._lpContinuarPaso1 = function () {
+    const contSel = document.getElementById('lpSeleccionLista');
+    if (!contSel) return;
+
+    const checks = contSel.querySelectorAll('input[type="checkbox"]:checked');
+    if (!checks.length) {
+        alert('Seleccioná al menos un ítem para continuar.');
+        return;
+    }
+
+    window._lpSeleccionActual = Array.from(checks).map(chk => {
+        const precioPublico = parseFloat(chk.dataset.precioPublico) || 0;
+        const precioGremio = parseFloat(chk.dataset.precioGremio) || 0;
+        return {
+            tipo: chk.dataset.tipo,
+            item_id: chk.dataset.itemId,
+            nombre: chk.dataset.nombre,
+            grupo: chk.dataset.grupo,
+            detalle: chk.dataset.detalle,
+            ancho: chk.dataset.ancho || null,
+            precioBase: window._lpModoPrecio === 'gremio' ? precioGremio : precioPublico
+        };
+    });
+
+    window._lpRenderPaso2();
+};
+
+window._lpRenderPaso2 = function () {
+    const cont = document.getElementById('lpGenerarContent');
+    if (!cont) return;
+
+    const esc = (s) => String(s === null || s === undefined ? '' : s).replace(/"/g, '&quot;');
+
+    const filasHTML = window._lpSeleccionActual.map(item => {
+        const key = `${item.tipo}_${item.item_id}`;
+        const precioNum = Math.round(parseFloat(item.precioBase) || 0);
+        const precioFmt = precioNum ? precioNum.toLocaleString('es-AR') : '';
+        return `
+        <tr>
+            <td style="padding:8px;color:#fff;font-size:12px;">${esc(item.nombre)}</td>
+            <td style="padding:8px;">
+                <input type="text" id="lpP2Detalle_${key}" class="gecko-input-line" value="${esc(item.detalle)}">
+            </td>
+            <td style="padding:8px;color:#a1a1aa;font-size:12px;text-align:center;">${item.ancho ? esc(item.ancho) : '-'}</td>
+            <td style="padding:8px;">
+                <div class="gecko-money-wrap" id="lpP2Wrap_${key}">
+                    <span class="gecko-money-prefix">$</span>
+                    <input type="text" inputmode="numeric" id="lpP2Precio_${key}"
+                        value="${precioFmt}" data-raw="${precioNum}"
+                        oninput="window._formatearInputDinero(this)">
+                </div>
+            </td>
+            <td style="padding:8px;text-align:center;">
+                <label style="display:flex;align-items:center;gap:6px;justify-content:center;color:#a1a1aa;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;">
+                    <input type="checkbox" onchange="window._lpToggleConsultar(this, '${key}')" style="accent-color:#F15A24;width:16px;height:16px;">
+                    Consultar valor
+                </label>
+            </td>
+        </tr>`;
+    }).join('');
+
+    cont.innerHTML = `
+        <div style="overflow-x:auto;border:1px solid #2a2a2a;border-radius:12px;margin-bottom:20px;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="border-bottom:1px solid #2a2a2a;">
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Ancho</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Precio</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Consultar</th>
+                    </tr>
+                </thead>
+                <tbody>${filasHTML}</tbody>
+            </table>
+        </div>
+        <div style="margin-bottom:20px;">
+            <label class="gecko-label">Aclaraciones para el cliente</label>
+            <textarea id="lpAclaracionesInput" rows="4" oninput="window._lpAclaraciones = this.value"
+                placeholder="Ej: Pagos en efectivo 10% de descuento. Trabajos con urgencia tienen recargo."
+                style="width:100%;background:rgba(24,24,27,0.5);border:1px solid #333333;border-radius:12px;color:#fff;font-size:13px;padding:12px 14px;font-family:inherit;resize:vertical;">${esc(window._lpAclaraciones || '')}</textarea>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+            <button class="gecko-btn-cancel" style="flex:none;width:auto;padding:12px 28px;" onclick="window._lpVolverPaso1()">Volver</button>
+            <button class="gecko-btn-primary" style="flex:none;width:auto;padding:12px 28px;" onclick="window._lpGenerarPDF()">Generar PDF</button>
+        </div>
+    `;
+};
+
+window._lpToggleConsultar = function (chk, key) {
+    const inp = document.getElementById(`lpP2Precio_${key}`);
+    const wrap = document.getElementById(`lpP2Wrap_${key}`);
+    if (!inp) return;
+    inp.disabled = chk.checked;
+    if (wrap) wrap.style.opacity = chk.checked ? '0.45' : '1';
+};
+
+window._lpVolverPaso1 = function () {
+    const cont = document.getElementById('lpGenerarContent');
+    if (cont) cont.innerHTML = window._lpRenderPaso1();
+};
+
+window._lpGenerarPDF = function () {
+    alert('La generación del PDF se termina de construir en la próxima fase.');
 };
