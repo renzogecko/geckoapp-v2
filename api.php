@@ -728,15 +728,28 @@ try {
         }
 
         if ($method === 'PUT') {
-            $d = $body;
             $stmt = $pdo->prepare("REPLACE INTO lista_precios_config
                 (tipo, item_id, habilitado, grupo, detalle, orden)
                 VALUES (?,?,?,?,?,?)");
-            $stmt->execute([
-                $d['tipo'], $d['item_id'], $d['habilitado'] ?? 0,
-                $d['grupo'] ?? null, $d['detalle'] ?? null, $d['orden'] ?? 0
-            ]);
-            responder(["success" => true, "message" => "Configuración actualizada."]);
+
+            if (isset($body[0]) && is_array($body[0])) {
+                $count = 0;
+                foreach ($body as $d) {
+                    $stmt->execute([
+                        $d['tipo'], $d['item_id'], $d['habilitado'] ?? 0,
+                        $d['grupo'] ?? null, $d['detalle'] ?? null, $d['orden'] ?? 0
+                    ]);
+                    $count++;
+                }
+                responder(["success" => true, "message" => "$count filas guardadas"]);
+            } else {
+                $d = $body;
+                $stmt->execute([
+                    $d['tipo'], $d['item_id'], $d['habilitado'] ?? 0,
+                    $d['grupo'] ?? null, $d['detalle'] ?? null, $d['orden'] ?? 0
+                ]);
+                responder(["success" => true, "message" => "Configuración actualizada."]);
+            }
         }
 
         if ($method === 'DELETE') {

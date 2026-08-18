@@ -9351,19 +9351,39 @@ window.addEventListener('load', function () {
     }, 3000);
 });
 
+window._lpTabActual = 'configurar';
+window._lpSubTabActual = 'material';
+
 window.mostrarListaPrecios = function () {
     const panel = document.getElementById('panelConfigurador');
     if (!panel) {
         console.error('No se encontró el contenedor panelConfigurador');
         return;
     }
+    window._lpTabActual = 'configurar';
+    window._lpSubTabActual = 'material';
+
+    const tabBtnStyle = (activo) => `padding:10px 22px;border-radius:12px;border:1.5px solid ${activo ? '#F15A24' : '#2a2a2a'};background:${activo ? '#F15A24' : 'transparent'};color:${activo ? '#1a1a1a' : '#a1a1aa'};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;`;
+
     const html = `
-        <div style="padding: 40px; text-align: center; color: #71717a;">
-            <h2 style="color: white; font-size: 20px; margin-bottom: 8px;">
-                Lista de Precios
-            </h2>
-            <p>Fase 1 completada — esta pantalla se termina de construir
-            en las próximas fases.</p>
+        <div style="padding: 24px;">
+            <h2 style="color: white; font-size: 20px; margin-bottom: 18px;">Lista de Precios</h2>
+            <div style="display:flex;gap:10px;margin-bottom:20px;">
+                <button id="lpTabBtn_generar" onclick="window._lpSwitchTab('generar')" style="${tabBtnStyle(false)}">Generar</button>
+                <button id="lpTabBtn_configurar" onclick="window._lpSwitchTab('configurar')" style="${tabBtnStyle(true)}">Configurar</button>
+            </div>
+
+            <div id="lpContentGenerar" style="display:none;padding: 40px; text-align: center; color: #71717a;">
+                <p>Esta pantalla se termina de construir en las próximas fases.</p>
+            </div>
+
+            <div id="lpContentConfigurar" style="display:block;">
+                <div style="display:flex;gap:8px;margin-bottom:16px;">
+                    <button id="lpSubTabBtn_material" onclick="window._lpSwitchSubTab('material')" style="${tabBtnStyle(true)}">Materiales</button>
+                    <button id="lpSubTabBtn_servicio" onclick="window._lpSwitchSubTab('servicio')" style="${tabBtnStyle(false)}">Servicios</button>
+                </div>
+                <div id="lpSubTabContent">${window._renderConfigListaPrecios('material')}</div>
+            </div>
         </div>
     `;
     panel.innerHTML = html;
@@ -9371,4 +9391,153 @@ window.mostrarListaPrecios = function () {
         const panelActual = document.getElementById('panelConfigurador');
         if (panelActual) panelActual.innerHTML = html;
     }, 150);
+};
+
+window._lpSwitchTab = function (tab) {
+    window._lpTabActual = tab;
+    const contGenerar = document.getElementById('lpContentGenerar');
+    const contConfigurar = document.getElementById('lpContentConfigurar');
+    const btnGenerar = document.getElementById('lpTabBtn_generar');
+    const btnConfigurar = document.getElementById('lpTabBtn_configurar');
+    if (!contGenerar || !contConfigurar || !btnGenerar || !btnConfigurar) return;
+
+    const activo = 'border:1.5px solid #F15A24;background:#F15A24;color:#1a1a1a;';
+    const inactivo = 'border:1.5px solid #2a2a2a;background:transparent;color:#a1a1aa;';
+    const baseBtn = 'padding:10px 22px;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;';
+
+    if (tab === 'generar') {
+        contGenerar.style.display = 'block';
+        contConfigurar.style.display = 'none';
+        btnGenerar.style.cssText = baseBtn + activo;
+        btnConfigurar.style.cssText = baseBtn + inactivo;
+    } else {
+        contGenerar.style.display = 'none';
+        contConfigurar.style.display = 'block';
+        btnGenerar.style.cssText = baseBtn + inactivo;
+        btnConfigurar.style.cssText = baseBtn + activo;
+    }
+};
+
+window._lpSwitchSubTab = function (tipo) {
+    window._lpSubTabActual = tipo;
+    const btnMaterial = document.getElementById('lpSubTabBtn_material');
+    const btnServicio = document.getElementById('lpSubTabBtn_servicio');
+    const cont = document.getElementById('lpSubTabContent');
+    if (!btnMaterial || !btnServicio || !cont) return;
+
+    const activo = 'border:1.5px solid #F15A24;background:#F15A24;color:#1a1a1a;';
+    const inactivo = 'border:1.5px solid #2a2a2a;background:transparent;color:#a1a1aa;';
+    const baseBtn = 'padding:10px 22px;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;';
+
+    btnMaterial.style.cssText = baseBtn + (tipo === 'material' ? activo : inactivo);
+    btnServicio.style.cssText = baseBtn + (tipo === 'servicio' ? activo : inactivo);
+    cont.innerHTML = window._renderConfigListaPrecios(tipo);
+};
+
+window._renderConfigListaPrecios = function (tipo) {
+    const itemsOrigen = tipo === 'material'
+        ? ((window.materiales && window.materiales.length) ? window.materiales : JSON.parse(localStorage.getItem('gecko_materiales') || '[]'))
+        : JSON.parse(localStorage.getItem('geckoServicios') || '[]');
+
+    const configGuardada = JSON.parse(localStorage.getItem('gecko_lista_precios_config') || '[]');
+    const configMap = {};
+    configGuardada.forEach(c => {
+        configMap[`${c.tipo}_${c.item_id}`] = c;
+    });
+
+    const filasHTML = itemsOrigen.map(item => {
+        const key = `${tipo}_${item.id}`;
+        const cfg = configMap[key] || {};
+        const nombre = item.nombre || 'Sin nombre';
+        const nombreEscapado = String(nombre).replace(/"/g, '&quot;');
+        return `
+        <tr data-item-id="${item.id}" data-nombre="${nombreEscapado.toLowerCase()}">
+            <td style="padding:8px;text-align:center;">
+                <input type="checkbox" id="chk_${tipo}_${item.id}" ${cfg.habilitado ? 'checked' : ''} style="accent-color:#F15A24;width:16px;height:16px;">
+            </td>
+            <td style="padding:8px;color:#fff;font-size:12px;">${nombreEscapado}</td>
+            <td style="padding:8px;">
+                <input type="text" id="grp_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.grupo || '').replace(/"/g, '&quot;')}" placeholder="Grupo">
+            </td>
+            <td style="padding:8px;">
+                <input type="text" id="det_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.detalle || '').replace(/"/g, '&quot;')}" placeholder="Detalle">
+            </td>
+        </tr>`;
+    }).join('');
+
+    return `
+        <div class="relative w-full" style="margin-bottom:14px;">
+            <input type="search" id="lpBuscar_${tipo}" oninput="window._lpFiltrarTabla('${tipo}')"
+                placeholder="Buscar por nombre..."
+                class="w-full px-5 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-sm font-bold shadow-sm focus:ring-2 focus:ring-gecko/20 transition-all dark:text-zinc-100">
+        </div>
+        <div style="overflow-x:auto;border:1px solid #2a2a2a;border-radius:12px;">
+            <table id="lpTabla_${tipo}" style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="border-bottom:1px solid #2a2a2a;">
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Habilitado</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Grupo</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filasHTML || `<tr><td colspan="4" style="padding:20px;text-align:center;color:#71717a;">Sin ítems para mostrar</td></tr>`}
+                </tbody>
+            </table>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+            <button class="gecko-btn-primary" style="flex:none;width:auto;padding:12px 28px;" onclick="window._lpGuardarConfig('${tipo}')">Guardar cambios</button>
+        </div>
+    `;
+};
+
+window._lpFiltrarTabla = function (tipo) {
+    const input = document.getElementById(`lpBuscar_${tipo}`);
+    const tabla = document.getElementById(`lpTabla_${tipo}`);
+    if (!input || !tabla) return;
+    const query = input.value.toLowerCase().trim();
+    tabla.querySelectorAll('tr[data-item-id]').forEach(fila => {
+        const nombre = fila.getAttribute('data-nombre') || '';
+        fila.style.display = nombre.includes(query) ? '' : 'none';
+    });
+};
+
+window._lpGuardarConfig = function (tipo) {
+    const tabla = document.getElementById(`lpTabla_${tipo}`);
+    if (!tabla) return;
+
+    const filas = tabla.querySelectorAll('tr[data-item-id]');
+    const items = Array.from(filas).map(fila => {
+        const itemId = fila.getAttribute('data-item-id');
+        const chk = document.getElementById(`chk_${tipo}_${itemId}`);
+        const grp = document.getElementById(`grp_${tipo}_${itemId}`);
+        const det = document.getElementById(`det_${tipo}_${itemId}`);
+        return {
+            tipo: tipo,
+            item_id: itemId,
+            habilitado: chk && chk.checked ? 1 : 0,
+            grupo: grp ? grp.value : '',
+            detalle: det ? det.value : '',
+            orden: 0
+        };
+    });
+
+    fetch('/app/api.php?endpoint=lista_precios_config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items)
+    })
+        .then(r => r.json())
+        .then(res => {
+            alert(res.message || `${items.length} filas guardadas`);
+            let configGuardada = JSON.parse(localStorage.getItem('gecko_lista_precios_config') || '[]');
+            configGuardada = configGuardada.filter(c => c.tipo !== tipo).concat(items);
+            localStorage.setItem('gecko_lista_precios_config', JSON.stringify(configGuardada));
+            const cont = document.getElementById('lpSubTabContent');
+            if (cont) cont.innerHTML = window._renderConfigListaPrecios(tipo);
+        })
+        .catch(() => {
+            alert('Error al guardar los cambios.');
+        });
 };
