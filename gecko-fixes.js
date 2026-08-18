@@ -9357,7 +9357,7 @@ window.mostrarListaPrecios = function () {
         console.error('No se encontró el contenedor panelConfigurador');
         return;
     }
-    panel.innerHTML = `
+    const html = `
         <div style="padding: 40px; text-align: center; color: #71717a;">
             <h2 style="color: white; font-size: 20px; margin-bottom: 8px;">
                 Lista de Precios
@@ -9366,4 +9366,9 @@ window.mostrarListaPrecios = function () {
             en las próximas fases.</p>
         </div>
     `;
+    panel.innerHTML = html;
+    setTimeout(() => {
+        const panelActual = document.getElementById('panelConfigurador');
+        if (panelActual) panelActual.innerHTML = html;
+    }, 150);
 };
