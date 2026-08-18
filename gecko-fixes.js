@@ -9378,7 +9378,7 @@ window.mostrarListaPrecios = function () {
             </div>
 
             <div id="lpContentGenerar" style="display:none;">
-                <div id="lpGenerarContent">${window._lpRenderPaso1()}</div>
+                <div id="lpGenerarContent"></div>
             </div>
 
             <div id="lpContentConfigurar" style="display:block;">
@@ -9391,20 +9391,19 @@ window.mostrarListaPrecios = function () {
         </div>
     `;
     panel.innerHTML = html;
+    window._lpPintarGenerar();
     setTimeout(() => {
         const panelActual = document.getElementById('panelConfigurador');
-        if (!panelActual) return;
-        if (!panelActual.contains(document.getElementById('lpContentGenerar')) &&
-            !panelActual.contains(document.getElementById('lpTabContent'))) {
-            // El panel fue reemplazado por completo por otra pantalla
-            // (cotizador, etc.) mientras esperábamos - no pisar nada.
-            return;
-        }
-        const contGen = document.getElementById('lpGenerarContent');
-        if (contGen && contGen.textContent.trim() === 'Cargando...') {
-            contGen.innerHTML = window._lpRenderPaso1();
+        if (panelActual) {
+            panelActual.innerHTML = html;
+            window._lpPintarGenerar();
         }
     }, 150);
+};
+
+window._lpPintarGenerar = function () {
+    const cont = document.getElementById('lpGenerarContent');
+    if (cont) cont.innerHTML = window._lpRenderPaso1();
 };
 
 window._lpSwitchTab = function (tab) {
