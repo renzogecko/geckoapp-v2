@@ -9359,6 +9359,7 @@ window._lpSeleccionActual = [];
 window._lpAclaraciones = '';
 
 window.mostrarListaPrecios = function () {
+    localStorage.setItem('gecko_activeCategory', 'listaPrecios');
     const panel = document.getElementById('panelConfigurador');
     if (!panel) {
         console.error('No se encontró el contenedor panelConfigurador');
