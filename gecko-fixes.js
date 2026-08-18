@@ -9720,7 +9720,9 @@ window._lpRenderPaso2 = function () {
             <td style="padding:8px;">
                 <input type="text" id="lpP2Detalle_${key}" class="gecko-input-line" value="${esc(item.detalle)}">
             </td>
-            <td style="padding:8px;color:#a1a1aa;font-size:12px;text-align:center;">${item.ancho ? esc(item.ancho) : '-'}</td>
+            <td style="padding:8px;">
+                <input type="text" id="anc_${key}" class="gecko-input-line" value="${esc(item.ancho || '')}">
+            </td>
             <td style="padding:8px;">
                 <div class="gecko-money-wrap" id="lpP2Wrap_${key}">
                     <span class="gecko-money-prefix">$</span>
@@ -9745,8 +9747,8 @@ window._lpRenderPaso2 = function () {
                     <tr style="border-bottom:1px solid #2a2a2a;">
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Ancho</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Precio</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;width:20%;">Ancho</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;width:12%;">Precio</th>
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Consultar</th>
                     </tr>
                 </thead>
