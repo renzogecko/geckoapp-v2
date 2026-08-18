@@ -9779,5 +9779,48 @@ window._lpVolverPaso1 = function () {
 };
 
 window._lpGenerarPDF = function () {
-    alert('La generación del PDF se termina de construir en la próxima fase.');
+    const grupos = {};
+
+    window._lpSeleccionActual.forEach(item => {
+        const key = `${item.tipo}_${item.item_id}`;
+        const inpDetalle = document.getElementById(`lpP2Detalle_${key}`);
+        const detalle = inpDetalle?.value ?? item.detalle;
+        const ancho = document.getElementById(`anc_${key}`)?.value ?? item.ancho ?? '';
+
+        const fila = inpDetalle?.closest('tr');
+        const chkConsultar = fila?.querySelector('input[type="checkbox"]');
+
+        let precioTexto;
+        if (chkConsultar?.checked) {
+            precioTexto = 'Consultar valor';
+        } else {
+            const inpPrecio = document.getElementById(`lpP2Precio_${key}`);
+            const raw = window._getMoneyValue(inpPrecio);
+            precioTexto = '$ ' + raw.toLocaleString('es-AR');
+        }
+
+        const grupoKey = item.grupo && String(item.grupo).trim() ? item.grupo : 'Sin grupo';
+        grupos[grupoKey] = grupos[grupoKey] || [];
+        grupos[grupoKey].push({ nombre: item.nombre, detalle, ancho, precioTexto });
+    });
+
+    const aclaraciones = document.getElementById('lpAclaracionesInput')?.value || '';
+
+    const data = {
+        modo: window._lpModoPrecio || 'publico',
+        fecha: new Date().toLocaleDateString('es-AR'),
+        grupos,
+        aclaraciones
+    };
+
+    const html = window.generarDocListaPrecios(data);
+
+    const printWin = window.open('', '_blank', 'width=900,height=700');
+    if (!printWin) {
+        alert('No se pudo abrir la ventana de impresión. Revisá si el navegador bloqueó el pop-up.');
+        return;
+    }
+    printWin.document.open();
+    printWin.document.write(html);
+    printWin.document.close();
 };

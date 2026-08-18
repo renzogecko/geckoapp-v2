@@ -463,6 +463,85 @@ window.generarDocOT = async function (p) {
 };
 
 // ══════════════════════════════════════════════════════════════
+// GENERAR HTML LISTA DE PRECIOS
+// ══════════════════════════════════════════════════════════════
+window.generarDocListaPrecios = function (data) {
+    const modo = data.modo || 'publico';
+    const modoLabel = modo === 'gremio' ? 'Gremio' : 'Público';
+    const modoSlug = modo === 'gremio' ? 'Gremio' : 'Publico';
+    const fecha = data.fecha || new Date().toLocaleDateString('es-AR');
+    const grupos = data.grupos || {};
+    const aclaraciones = data.aclaraciones || '';
+
+    const gruposHTML = Object.keys(grupos).map(nombreGrupo => {
+        const filasHTML = (grupos[nombreGrupo] || []).map(it => `
+        <tr>
+            <td class="td-desc">
+                <strong>${it.nombre || ''}</strong>
+                ${it.detalle ? `<small>${it.detalle}</small>` : ''}
+            </td>
+            <td class="td-precio" style="text-align:center;">${it.ancho || ''}</td>
+            <td class="td-precio"${it.precioTexto === 'Consultar valor' ? ' style="color:#F15A24"' : ''}>${it.precioTexto || ''}</td>
+        </tr>`).join('');
+        return `
+        <div class="lp-grupo-titulo">${nombreGrupo}</div>
+        <table class="items-table">
+            <thead><tr>
+                <th>Producto / Detalle</th>
+                <th class="th-r" style="width:90px;">Ancho</th>
+                <th class="th-r">Precio</th>
+            </tr></thead>
+            <tbody>${filasHTML}</tbody>
+        </table>`;
+    }).join('');
+
+    const aclaracionesHTML = aclaraciones.trim() ? `
+    <div class="instrucciones-box">
+        <label>Aclaraciones</label>
+        <p>${aclaraciones}</p>
+    </div>` : '';
+
+    const nombreArchivoPDF = `LISTA_PRECIOS_${modoSlug}_${String(fecha).replace(/\//g, '-')}`;
+
+    return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>${nombreArchivoPDF}</title>
+<style>${GECKO_PRINT_STYLES}
+.lp-grupo-titulo { background: #F15A24; color: #fff; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 7px 10px; margin: 18px 0 0; }
+</style></head>
+<body>
+<div class="page">
+  <div class="page-content">
+    <div class="doc-header">
+        <div class="header-logo"><img src="${GECKO_LOGO_B64}" alt="Gecko"></div>
+        <div class="header-contacto">
+            <span>✉ ${GECKO_BRAND.mail}</span>
+            <span>◎ ${GECKO_BRAND.instagram}</span>
+            <span>● ${GECKO_BRAND.whatsapp}</span>
+            <span>⊕ ${GECKO_BRAND.web}</span>
+        </div>
+        <div class="header-tipo">
+            <div class="tipo-label">Lista de Precios</div>
+            <div class="tipo-numero">${fecha}</div>
+            <div class="tipo-label" style="color:#1A1A1A;margin-top:2px;">${modoLabel}</div>
+        </div>
+    </div>
+    <div class="doc-items">
+        ${gruposHTML}
+    </div>
+    ${aclaracionesHTML}
+  </div>
+  <div class="doc-footer">
+    <span>✉ ${GECKO_BRAND.mail}</span><span class="sep">|</span>
+    <span>◎ ${GECKO_BRAND.instagram}</span><span class="sep">|</span>
+    <span>⊕ ${GECKO_BRAND.web}</span>
+  </div>
+</div>
+<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>
+</body></html>`;
+};
+
+// ══════════════════════════════════════════════════════════════
 // VER DOCUMENTO GUARDADO (desde la lista de pedidos)
 // ══════════════════════════════════════════════════════════════
 window._otMostrarPreview = async function (p) {
