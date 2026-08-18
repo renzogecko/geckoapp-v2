@@ -9353,6 +9353,7 @@ window.addEventListener('load', function () {
 
 window._lpTabActual = 'configurar';
 window._lpSubTabActual = 'material';
+window._lpConfigCache = null;
 
 window.mostrarListaPrecios = function () {
     const panel = document.getElementById('panelConfigurador');
@@ -9435,11 +9436,27 @@ window._lpSwitchSubTab = function (tipo) {
 };
 
 window._renderConfigListaPrecios = function (tipo) {
+    if (window._lpConfigCache === null) {
+        fetch('/app/api.php?endpoint=lista_precios_config')
+            .then(r => r.json())
+            .then(data => {
+                window._lpConfigCache = data || [];
+                const cont = document.getElementById('lpSubTabContent');
+                if (cont) cont.innerHTML = window._renderConfigListaPrecios(tipo);
+            })
+            .catch(() => {
+                window._lpConfigCache = [];
+                const cont = document.getElementById('lpSubTabContent');
+                if (cont) cont.innerHTML = window._renderConfigListaPrecios(tipo);
+            });
+        return `<div style="padding:40px;text-align:center;color:#71717a;">Cargando...</div>`;
+    }
+
     const itemsOrigen = tipo === 'material'
         ? ((window.materiales && window.materiales.length) ? window.materiales : JSON.parse(localStorage.getItem('gecko_materiales') || '[]'))
         : JSON.parse(localStorage.getItem('geckoServicios') || '[]');
 
-    const configGuardada = JSON.parse(localStorage.getItem('gecko_lista_precios_config') || '[]');
+    const configGuardada = window._lpConfigCache;
     const configMap = {};
     configGuardada.forEach(c => {
         configMap[`${c.tipo}_${c.item_id}`] = c;
@@ -9531,9 +9548,11 @@ window._lpGuardarConfig = function (tipo) {
         .then(r => r.json())
         .then(res => {
             alert(res.message || `${items.length} filas guardadas`);
-            let configGuardada = JSON.parse(localStorage.getItem('gecko_lista_precios_config') || '[]');
-            configGuardada = configGuardada.filter(c => c.tipo !== tipo).concat(items);
-            localStorage.setItem('gecko_lista_precios_config', JSON.stringify(configGuardada));
+            if (window._lpConfigCache !== null) {
+                window._lpConfigCache = window._lpConfigCache.filter(c => c.tipo !== tipo).concat(items);
+            } else {
+                window._lpConfigCache = items;
+            }
             const cont = document.getElementById('lpSubTabContent');
             if (cont) cont.innerHTML = window._renderConfigListaPrecios(tipo);
         })
