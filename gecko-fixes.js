@@ -9393,7 +9393,17 @@ window.mostrarListaPrecios = function () {
     panel.innerHTML = html;
     setTimeout(() => {
         const panelActual = document.getElementById('panelConfigurador');
-        if (panelActual) panelActual.innerHTML = html;
+        if (!panelActual) return;
+        if (!panelActual.contains(document.getElementById('lpContentGenerar')) &&
+            !panelActual.contains(document.getElementById('lpTabContent'))) {
+            // El panel fue reemplazado por completo por otra pantalla
+            // (cotizador, etc.) mientras esperábamos - no pisar nada.
+            return;
+        }
+        const contGen = document.getElementById('lpGenerarContent');
+        if (contGen && contGen.textContent.trim() === 'Cargando...') {
+            contGen.innerHTML = window._lpRenderPaso1();
+        }
     }, 150);
 };
 
