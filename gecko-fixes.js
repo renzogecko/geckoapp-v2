@@ -9364,7 +9364,7 @@ window.mostrarListaPrecios = function () {
         console.error('No se encontró el contenedor panelConfigurador');
         return;
     }
-    window._lpTabActual = 'configurar';
+    window._lpTabActual = 'generar';
     window._lpSubTabActual = 'material';
 
     const tabBtnStyle = (activo) => `padding:10px 22px;border-radius:12px;border:1.5px solid ${activo ? '#F15A24' : '#2a2a2a'};background:${activo ? '#F15A24' : 'transparent'};color:${activo ? '#1a1a1a' : '#a1a1aa'};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;`;
@@ -9373,15 +9373,15 @@ window.mostrarListaPrecios = function () {
         <div style="padding: 24px;">
             <h2 style="color: white; font-size: 20px; margin-bottom: 18px;">Lista de Precios</h2>
             <div style="display:flex;gap:10px;margin-bottom:20px;">
-                <button id="lpTabBtn_generar" onclick="window._lpSwitchTab('generar')" style="${tabBtnStyle(false)}">Generar</button>
-                <button id="lpTabBtn_configurar" onclick="window._lpSwitchTab('configurar')" style="${tabBtnStyle(true)}">Configurar</button>
+                <button id="lpTabBtn_generar" onclick="window._lpSwitchTab('generar')" style="${tabBtnStyle(true)}">Generar</button>
+                <button id="lpTabBtn_configurar" onclick="window._lpSwitchTab('configurar')" style="${tabBtnStyle(false)}">Configurar</button>
             </div>
 
-            <div id="lpContentGenerar" style="display:none;">
+            <div id="lpContentGenerar" style="display:block;">
                 <div id="lpGenerarContent"></div>
             </div>
 
-            <div id="lpContentConfigurar" style="display:block;">
+            <div id="lpContentConfigurar" style="display:none;">
                 <div style="display:flex;gap:8px;margin-bottom:16px;">
                     <button id="lpSubTabBtn_material" onclick="window._lpSwitchSubTab('material')" style="${tabBtnStyle(true)}">Materiales</button>
                     <button id="lpSubTabBtn_servicio" onclick="window._lpSwitchSubTab('servicio')" style="${tabBtnStyle(false)}">Servicios</button>
