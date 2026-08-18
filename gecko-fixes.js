@@ -9397,6 +9397,10 @@ window.mostrarListaPrecios = function () {
         if (panelActual) {
             panelActual.innerHTML = html;
             window._lpPintarGenerar();
+            const contSubTab = document.getElementById('lpSubTabContent');
+            if (contSubTab) {
+                contSubTab.innerHTML = window._renderConfigListaPrecios(window._lpSubTabActual || 'material');
+            }
         }
     }, 150);
 };
