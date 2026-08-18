@@ -16,13 +16,14 @@ const GECKO_KEY_MAP = {
     'gecko_movimientos':         'movimientos',
     'gecko_gastos_fijos':        'gastos_fijos',
     'gecko_historico_cierres':   'historico_cierres',
-    'GECKO_SETTINGS':            'configuracion'
+    'GECKO_SETTINGS':            'configuracion',
+    'gecko_lista_precios_config': 'lista_precios_config'
 };
 
 const GECKO_ARRAY_KEYS = [
     'gecko_materiales', 'geckoServicios', 'clientes',
     'gecko_listaPresupuestos', 'gecko_cajas', 'gecko_movimientos',
-    'gecko_gastos_fijos', 'gecko_historico_cierres'
+    'gecko_gastos_fijos', 'gecko_historico_cierres', 'gecko_lista_precios_config'
 ];
 
 // Campos que MySQL devuelve como string pero deben ser números

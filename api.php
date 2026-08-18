@@ -705,6 +705,50 @@ try {
     }
 
     // ══════════════════════════════════════════
+    // LISTA DE PRECIOS - CONFIG
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'lista_precios_config') {
+
+        if ($method === 'GET') {
+            $stmt = $pdo->query("SELECT * FROM lista_precios_config");
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            responder($rows);
+        }
+
+        if ($method === 'POST') {
+            $d = $body;
+            $stmt = $pdo->prepare("INSERT INTO lista_precios_config
+                (tipo, item_id, habilitado, grupo, detalle, orden)
+                VALUES (?,?,?,?,?,?)");
+            $stmt->execute([
+                $d['tipo'], $d['item_id'], $d['habilitado'] ?? 0,
+                $d['grupo'] ?? null, $d['detalle'] ?? null, $d['orden'] ?? 0
+            ]);
+            responder(["success" => true, "message" => "Configuración creada."]);
+        }
+
+        if ($method === 'PUT') {
+            $d = $body;
+            $stmt = $pdo->prepare("REPLACE INTO lista_precios_config
+                (tipo, item_id, habilitado, grupo, detalle, orden)
+                VALUES (?,?,?,?,?,?)");
+            $stmt->execute([
+                $d['tipo'], $d['item_id'], $d['habilitado'] ?? 0,
+                $d['grupo'] ?? null, $d['detalle'] ?? null, $d['orden'] ?? 0
+            ]);
+            responder(["success" => true, "message" => "Configuración actualizada."]);
+        }
+
+        if ($method === 'DELETE') {
+            $id = $body['id'] ?? null;
+            if (!$id) error("ID requerido.");
+            $stmt = $pdo->prepare("DELETE FROM lista_precios_config WHERE id = ?");
+            $stmt->execute([$id]);
+            responder(["success" => true, "message" => "Configuración eliminada."]);
+        }
+    }
+
+    // ══════════════════════════════════════════
     // MIGRACIÓN TEMPORAL — BORRAR DESPUÉS DE CORRER UNA VEZ
     // Mueve 'imagenes' embebidas en metadata a la tabla presupuesto_imagenes
     // ══════════════════════════════════════════

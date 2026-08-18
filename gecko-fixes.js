@@ -9350,3 +9350,20 @@ window.addEventListener('load', function () {
         }
     }, 3000);
 });
+
+window.mostrarListaPrecios = function () {
+    const panel = document.getElementById('panelConfigurador');
+    if (!panel) {
+        console.error('No se encontró el contenedor panelConfigurador');
+        return;
+    }
+    panel.innerHTML = `
+        <div style="padding: 40px; text-align: center; color: #71717a;">
+            <h2 style="color: white; font-size: 20px; margin-bottom: 8px;">
+                Lista de Precios
+            </h2>
+            <p>Fase 1 completada — esta pantalla se termina de construir
+            en las próximas fases.</p>
+        </div>
+    `;
+};
