@@ -9403,6 +9403,12 @@ window.mostrarListaPrecios = function () {
             }
         }
     }, 150);
+    setTimeout(() => {
+        const panelActual = document.getElementById('panelConfigurador');
+        if (panelActual) {
+            panelActual.querySelectorAll('[id^="geckoAuditor"]').forEach(el => el.remove());
+        }
+    }, 300);
 };
 
 window._lpPintarGenerar = function () {
