@@ -9423,6 +9423,8 @@ window._lpSwitchTab = function (tab) {
         contConfigurar.style.display = 'none';
         btnGenerar.style.cssText = baseBtn + activo;
         btnConfigurar.style.cssText = baseBtn + inactivo;
+        window._lpConfigCache = null;
+        window._lpPintarGenerar();
     } else {
         contGenerar.style.display = 'none';
         contConfigurar.style.display = 'block';
@@ -9560,11 +9562,7 @@ window._lpGuardarConfig = function (tipo) {
         .then(r => r.json())
         .then(res => {
             alert(res.message || `${items.length} filas guardadas`);
-            if (window._lpConfigCache !== null) {
-                window._lpConfigCache = window._lpConfigCache.filter(c => c.tipo !== tipo).concat(items);
-            } else {
-                window._lpConfigCache = items;
-            }
+            window._lpConfigCache = null;
             const cont = document.getElementById('lpSubTabContent');
             if (cont) cont.innerHTML = window._renderConfigListaPrecios(tipo);
         })
