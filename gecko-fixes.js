@@ -9732,10 +9732,7 @@ window._lpRenderPaso2 = function () {
                 </div>
             </td>
             <td style="padding:8px;text-align:center;">
-                <label style="display:flex;align-items:center;gap:6px;justify-content:center;color:#a1a1aa;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;">
-                    <input type="checkbox" onchange="window._lpToggleConsultar(this, '${key}')" style="accent-color:#F15A24;width:16px;height:16px;">
-                    Consultar valor
-                </label>
+                <input type="checkbox" onchange="window._lpToggleConsultar(this, '${key}')" style="accent-color:#F15A24;width:16px;height:16px;">
             </td>
         </tr>`;
     }).join('');
@@ -9748,7 +9745,7 @@ window._lpRenderPaso2 = function () {
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;width:20%;">Ancho</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;width:12%;">Precio</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;width:18%;">Precio</th>
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Consultar</th>
                     </tr>
                 </thead>
