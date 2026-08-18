@@ -481,7 +481,7 @@ window.generarDocListaPrecios = function (data) {
                 ${it.detalle ? `<small>${it.detalle}</small>` : ''}
             </td>
             <td class="td-precio" style="text-align:center;">${it.ancho || ''}</td>
-            <td class="td-precio"${it.precioTexto === 'Consultar valor' ? ' style="color:#F15A24"' : ''}>${it.precioTexto || ''}</td>
+            <td class="td-precio"${it.precioTexto === 'Consultar valor' ? ' style="color:#F15A24"' : ''}>${it.precioTexto || ''}${it.unidad ? ` <span style="font-size:9px;color:#71717a;">/${it.unidad}</span>` : ''}</td>
         </tr>`).join('');
         return `
         <div class="lp-grupo-titulo">${nombreGrupo}</div>

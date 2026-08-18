@@ -718,26 +718,28 @@ try {
         if ($method === 'POST') {
             $d = $body;
             $stmt = $pdo->prepare("INSERT INTO lista_precios_config
-                (tipo, item_id, habilitado, grupo, detalle, orden)
-                VALUES (?,?,?,?,?,?)");
+                (tipo, item_id, habilitado, grupo, detalle, ancho, unidad, orden)
+                VALUES (?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['tipo'], $d['item_id'], $d['habilitado'] ?? 0,
-                $d['grupo'] ?? null, $d['detalle'] ?? null, $d['orden'] ?? 0
+                $d['grupo'] ?? null, $d['detalle'] ?? null,
+                $d['ancho'] ?? null, $d['unidad'] ?? null, $d['orden'] ?? 0
             ]);
             responder(["success" => true, "message" => "Configuración creada."]);
         }
 
         if ($method === 'PUT') {
             $stmt = $pdo->prepare("REPLACE INTO lista_precios_config
-                (tipo, item_id, habilitado, grupo, detalle, orden)
-                VALUES (?,?,?,?,?,?)");
+                (tipo, item_id, habilitado, grupo, detalle, ancho, unidad, orden)
+                VALUES (?,?,?,?,?,?,?,?)");
 
             if (isset($body[0]) && is_array($body[0])) {
                 $count = 0;
                 foreach ($body as $d) {
                     $stmt->execute([
                         $d['tipo'], $d['item_id'], $d['habilitado'] ?? 0,
-                        $d['grupo'] ?? null, $d['detalle'] ?? null, $d['orden'] ?? 0
+                        $d['grupo'] ?? null, $d['detalle'] ?? null,
+                        $d['ancho'] ?? null, $d['unidad'] ?? null, $d['orden'] ?? 0
                     ]);
                     $count++;
                 }
@@ -746,7 +748,8 @@ try {
                 $d = $body;
                 $stmt->execute([
                     $d['tipo'], $d['item_id'], $d['habilitado'] ?? 0,
-                    $d['grupo'] ?? null, $d['detalle'] ?? null, $d['orden'] ?? 0
+                    $d['grupo'] ?? null, $d['detalle'] ?? null,
+                    $d['ancho'] ?? null, $d['unidad'] ?? null, $d['orden'] ?? 0
                 ]);
                 responder(["success" => true, "message" => "Configuración actualizada."]);
             }

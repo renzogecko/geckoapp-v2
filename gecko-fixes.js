@@ -9493,6 +9493,13 @@ window._renderConfigListaPrecios = function (tipo) {
             <td style="padding:8px;">
                 <input type="text" id="det_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.detalle || '').replace(/"/g, '&quot;')}" placeholder="Detalle">
             </td>
+            <td style="padding:8px;">
+                <input type="text" id="anc_config_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.ancho || '').replace(/"/g, '&quot;')}" placeholder="Ancho">
+            </td>
+            <td style="padding:8px;">
+                <input type="text" id="uni_config_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.unidad || '').replace(/"/g, '&quot;')}" placeholder="Unidad">
+                <div style="font-size:10px;color:#71717a;margin-top:4px;">m2, ml, unidad</div>
+            </td>
         </tr>`;
     }).join('');
 
@@ -9510,10 +9517,12 @@ window._renderConfigListaPrecios = function (tipo) {
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Grupo</th>
                         <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Ancho</th>
+                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Unidad</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${filasHTML || `<tr><td colspan="4" style="padding:20px;text-align:center;color:#71717a;">Sin ítems para mostrar</td></tr>`}
+                    ${filasHTML || `<tr><td colspan="6" style="padding:20px;text-align:center;color:#71717a;">Sin ítems para mostrar</td></tr>`}
                 </tbody>
             </table>
         </div>
@@ -9544,12 +9553,16 @@ window._lpGuardarConfig = function (tipo) {
         const chk = document.getElementById(`chk_${tipo}_${itemId}`);
         const grp = document.getElementById(`grp_${tipo}_${itemId}`);
         const det = document.getElementById(`det_${tipo}_${itemId}`);
+        const anc = document.getElementById(`anc_config_${tipo}_${itemId}`);
+        const uni = document.getElementById(`uni_config_${tipo}_${itemId}`);
         return {
             tipo: tipo,
             item_id: itemId,
             habilitado: chk && chk.checked ? 1 : 0,
             grupo: grp ? grp.value : '',
             detalle: det ? det.value : '',
+            ancho: anc ? anc.value : '',
+            unidad: uni ? uni.value : '',
             orden: 0
         };
     });
@@ -9605,7 +9618,9 @@ window._lpRenderPaso1 = function () {
         if (!origen) return; // ítem borrado del origen: se excluye sin romper nada
 
         const nombre = origen.nombre || 'Sin nombre';
-        const ancho = (c.tipo === 'material' && origen.ancho) ? origen.ancho : null;
+        const ancho = (c.ancho && String(c.ancho).trim())
+            ? c.ancho
+            : ((c.tipo === 'material' && origen.ancho) ? origen.ancho : null);
         const precioPublico = c.tipo === 'material' ? (parseFloat(origen.precioVenta) || 0) : (parseFloat(origen.precio) || 0);
         const precioGremio = c.tipo === 'material' ? (parseFloat(origen.precioGremio) || 0) : (parseFloat(origen.precio) || 0);
         const grupoNombre = (c.grupo && String(c.grupo).trim()) ? c.grupo : 'Sin grupo';
@@ -9618,6 +9633,7 @@ window._lpRenderPaso1 = function () {
             grupo: c.grupo || '',
             detalle: c.detalle || '',
             ancho,
+            unidad: c.unidad || '',
             precioPublico,
             precioGremio
         });
@@ -9632,6 +9648,7 @@ window._lpRenderPaso1 = function () {
                 <input type="checkbox" id="lpSelChk_${key}" ${checked ? 'checked' : ''}
                     data-tipo="${it.tipo}" data-item-id="${esc(it.item_id)}" data-nombre="${esc(it.nombre)}"
                     data-grupo="${esc(it.grupo)}" data-detalle="${esc(it.detalle)}" data-ancho="${esc(it.ancho)}"
+                    data-unidad="${esc(it.unidad)}"
                     data-precio-publico="${it.precioPublico}" data-precio-gremio="${it.precioGremio}"
                     style="accent-color:#F15A24;width:16px;height:16px;">
                 <span style="color:#fff;font-size:13px;">${esc(it.nombre)}</span>
@@ -9695,6 +9712,7 @@ window._lpContinuarPaso1 = function () {
             grupo: chk.dataset.grupo,
             detalle: chk.dataset.detalle,
             ancho: chk.dataset.ancho || null,
+            unidad: chk.dataset.unidad || '',
             precioBase: window._lpModoPrecio === 'gremio' ? precioGremio : precioPublico
         };
     });
@@ -9728,6 +9746,7 @@ window._lpRenderPaso2 = function () {
                         value="${precioFmt}" data-raw="${precioNum}"
                         oninput="window._formatearInputDinero(this)">
                 </div>
+                ${item.unidad ? `<div style="color:#71717a;font-size:10px;margin-top:4px;">$/${esc(item.unidad)}</div>` : ''}
             </td>
             <td style="padding:8px;text-align:center;">
                 <input type="checkbox" onchange="window._lpToggleConsultar(this, '${key}')" style="accent-color:#F15A24;width:16px;height:16px;">
@@ -9799,7 +9818,7 @@ window._lpGenerarPDF = function () {
 
         const grupoKey = item.grupo && String(item.grupo).trim() ? item.grupo : 'Sin grupo';
         grupos[grupoKey] = grupos[grupoKey] || [];
-        grupos[grupoKey].push({ nombre: item.nombre, detalle, ancho, precioTexto });
+        grupos[grupoKey].push({ nombre: item.nombre, detalle, ancho, unidad: item.unidad || '', precioTexto });
     });
 
     const aclaraciones = document.getElementById('lpAclaracionesInput')?.value || '';
