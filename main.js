@@ -3148,7 +3148,11 @@ window.switchMenu = function (view) {
         setTimeout(() => {
             if (!document.querySelector('.btn-cat-active')) {
                 const savedCat = localStorage.getItem('gecko_activeCategory') || 'grafica';
-                cambiarCategoriaCotizador(savedCat);
+                if (savedCat === 'listaPrecios' && typeof window.mostrarListaPrecios === 'function') {
+                    window.mostrarListaPrecios();
+                } else {
+                    cambiarCategoriaCotizador(savedCat);
+                }
             }
         }, 10);
     } else if (view === 'presupuestoManual') {
