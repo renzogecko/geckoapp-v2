@@ -9371,21 +9371,25 @@ window.mostrarListaPrecios = function () {
     const tabBtnStyle = (activo) => `padding:10px 22px;border-radius:12px;border:1.5px solid ${activo ? '#F15A24' : '#2a2a2a'};background:${activo ? '#F15A24' : 'transparent'};color:${activo ? '#1a1a1a' : '#a1a1aa'};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;`;
 
     const html = `
-        <div style="padding: 24px;">
+        <div style="max-width:100%;">
             <h2 style="color: white; font-size: 20px; margin-bottom: 18px;">Lista de Precios</h2>
-            <div style="display:flex;gap:10px;margin-bottom:20px;">
-                <button id="lpTabBtn_generar" onclick="window._lpSwitchTab('generar')" style="${tabBtnStyle(true)}">Generar</button>
-                <button id="lpTabBtn_configurar" onclick="window._lpSwitchTab('configurar')" style="${tabBtnStyle(false)}">Configurar</button>
+            <div class="card-gecko">
+                <div style="display:flex;gap:10px;">
+                    <button id="lpTabBtn_generar" onclick="window._lpSwitchTab('generar')" style="${tabBtnStyle(true)}">Generar</button>
+                    <button id="lpTabBtn_configurar" onclick="window._lpSwitchTab('configurar')" style="${tabBtnStyle(false)}">Configurar</button>
+                </div>
             </div>
 
-            <div id="lpContentGenerar" style="display:block;">
+            <div id="lpContentGenerar" style="display:block; background:transparent !important; border:none !important; border-radius:0 !important; padding:0 !important;">
                 <div id="lpGenerarContent"></div>
             </div>
 
-            <div id="lpContentConfigurar" style="display:none;">
-                <div style="display:flex;gap:8px;margin-bottom:16px;">
-                    <button id="lpSubTabBtn_material" onclick="window._lpSwitchSubTab('material')" style="${tabBtnStyle(true)}">Materiales</button>
-                    <button id="lpSubTabBtn_servicio" onclick="window._lpSwitchSubTab('servicio')" style="${tabBtnStyle(false)}">Servicios</button>
+            <div id="lpContentConfigurar" style="display:none; background:transparent !important; border:none !important; border-radius:0 !important; padding:0 !important;">
+                <div class="card-gecko">
+                    <div style="display:flex;gap:8px;">
+                        <button id="lpSubTabBtn_material" onclick="window._lpSwitchSubTab('material')" style="${tabBtnStyle(true)}">Materiales</button>
+                        <button id="lpSubTabBtn_servicio" onclick="window._lpSwitchSubTab('servicio')" style="${tabBtnStyle(false)}">Servicios</button>
+                    </div>
                 </div>
                 <div id="lpSubTabContent">${window._renderConfigListaPrecios('material')}</div>
             </div>
@@ -9487,6 +9491,11 @@ window._renderConfigListaPrecios = function (tipo) {
         configMap[`${c.tipo}_${c.item_id}`] = c;
     });
 
+    const gruposExistentes = Array.from(new Set(
+        configGuardada.map(c => (c.grupo || '').trim()).filter(g => g)
+    )).sort();
+    const datalistGruposHTML = `<datalist id="lpGruposExistentes">${gruposExistentes.map(g => `<option value="${g.replace(/"/g, '&quot;')}">`).join('')}</datalist>`;
+
     const filasHTML = itemsOrigen.map(item => {
         const key = `${tipo}_${item.id}`;
         const cfg = configMap[key] || {};
@@ -9499,46 +9508,48 @@ window._renderConfigListaPrecios = function (tipo) {
             </td>
             <td style="padding:8px;color:#fff;font-size:12px;">${nombreEscapado}</td>
             <td style="padding:8px;">
-                <input type="text" id="grp_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.grupo || '').replace(/"/g, '&quot;')}" placeholder="Grupo">
+                <input type="text" id="grp_${tipo}_${item.id}" list="lpGruposExistentes" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${(cfg.grupo || '').replace(/"/g, '&quot;')}" placeholder="Grupo">
             </td>
             <td style="padding:8px;">
-                <input type="text" id="det_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.detalle || '').replace(/"/g, '&quot;')}" placeholder="Detalle">
+                <input type="text" id="det_${tipo}_${item.id}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${(cfg.detalle || '').replace(/"/g, '&quot;')}" placeholder="Detalle">
             </td>
             <td style="padding:8px;">
-                <input type="text" id="anc_config_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.ancho || '').replace(/"/g, '&quot;')}" placeholder="Ancho">
+                <input type="text" id="anc_config_${tipo}_${item.id}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${(cfg.ancho || '').replace(/"/g, '&quot;')}" placeholder="Ancho">
             </td>
             <td style="padding:8px;">
-                <input type="text" id="uni_config_${tipo}_${item.id}" class="gecko-input-line" value="${(cfg.unidad || '').replace(/"/g, '&quot;')}" placeholder="Unidad">
-                <div style="font-size:10px;color:#71717a;margin-top:4px;">m2, ml, unidad</div>
+                <input type="text" id="uni_config_${tipo}_${item.id}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${(cfg.unidad || '').replace(/"/g, '&quot;')}" placeholder="m2, ml, unidad">
             </td>
         </tr>`;
     }).join('');
 
     return `
-        <div class="relative w-full" style="margin-bottom:14px;">
-            <input type="search" id="lpBuscar_${tipo}" oninput="window._lpFiltrarTabla('${tipo}')"
-                placeholder="Buscar por nombre..."
-                class="w-full px-5 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-sm font-bold shadow-sm focus:ring-2 focus:ring-gecko/20 transition-all dark:text-zinc-100">
-        </div>
-        <div style="overflow-x:auto;border:1px solid #2a2a2a;border-radius:12px;">
-            <table id="lpTabla_${tipo}" style="width:100%;border-collapse:collapse;">
-                <thead>
-                    <tr style="border-bottom:1px solid #2a2a2a;">
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Habilitado</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Grupo</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Ancho</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Unidad</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${filasHTML || `<tr><td colspan="6" style="padding:20px;text-align:center;color:#71717a;">Sin ítems para mostrar</td></tr>`}
-                </tbody>
-            </table>
-        </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-            <button class="gecko-btn-primary" style="flex:none;width:auto;padding:12px 28px;" onclick="window._lpGuardarConfig('${tipo}')">Guardar cambios</button>
+        ${datalistGruposHTML}
+        <div class="card-gecko">
+            <div class="relative w-full" style="margin-bottom:14px;">
+                <input type="search" id="lpBuscar_${tipo}" oninput="window._lpFiltrarTabla('${tipo}')"
+                    placeholder="Buscar por nombre..."
+                    class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all">
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="lpTabla_${tipo}" style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #2a2a2a;">
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Habilitado</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Grupo</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Ancho</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Unidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filasHTML || `<tr><td colspan="6" style="padding:20px;text-align:center;color:#71717a;">Sin ítems para mostrar</td></tr>`}
+                    </tbody>
+                </table>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+                <button class="gecko-btn-primary" style="flex:none;width:auto;padding:12px 28px;" onclick="window._lpGuardarConfig('${tipo}')">Guardar cambios</button>
+            </div>
         </div>
     `;
 };
@@ -9666,21 +9677,34 @@ window._lpRenderPaso1 = function () {
             </label>`;
         }).join('');
         return `
-        <div style="margin-bottom:18px;">
-            <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 8px;">${esc(nombreGrupo)}</p>
+        <div class="card-gecko">
+            <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">${esc(nombreGrupo)}</p>
             <div>${filasGrupo}</div>
         </div>`;
     }).join('');
 
     const modo = window._lpModoPrecio || 'publico';
-    const activo = 'border:1.5px solid #F15A24;background:#F15A24;color:#1a1a1a;';
-    const inactivo = 'border:1.5px solid #2a2a2a;background:transparent;color:#a1a1aa;';
-    const baseBtn = 'padding:10px 22px;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;';
 
     return `
-        <div style="display:flex;gap:10px;margin-bottom:20px;">
-            <button id="lpModoBtn_publico" onclick="window._lpSetModoPrecio('publico')" style="${baseBtn}${modo === 'publico' ? activo : inactivo}">Público</button>
-            <button id="lpModoBtn_gremio" onclick="window._lpSetModoPrecio('gremio')" style="${baseBtn}${modo === 'gremio' ? activo : inactivo}">Gremio</button>
+        <div class="card-gecko">
+            <div class="flex items-center justify-between w-full mb-2">
+                <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">Modo de Precio</p>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:#a1a1aa;">Público</span>
+                    <label class="switch-gecko" onclick="event.stopPropagation()">
+                        <input type="checkbox" id="lpModoToggleGremio" ${modo === 'gremio' ? 'checked' : ''} onchange="window._lpSetModoPrecio(this.checked ? 'gremio' : 'publico')">
+                        <span class="slider-gecko"></span>
+                    </label>
+                    <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:#a1a1aa;">Gremio</span>
+                </div>
+            </div>
+            <div class="flex items-center justify-between w-full">
+                <label style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:#a1a1aa;">Seleccionar todos</label>
+                <label class="switch-gecko">
+                    <input type="checkbox" id="lpSeleccionarTodos" onchange="window._lpToggleSeleccionarTodos(this.checked)">
+                    <span class="slider-gecko"></span>
+                </label>
+            </div>
         </div>
         <div id="lpSeleccionLista">
             ${gruposHTML || `<p style="color:#71717a;text-align:center;padding:20px;">No hay ítems habilitados en la configuración.</p>`}
@@ -9701,6 +9725,12 @@ window._lpSetModoPrecio = function (modo) {
     const baseBtn = 'padding:10px 22px;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;';
     btnPublico.style.cssText = baseBtn + (modo === 'publico' ? activo : inactivo);
     btnGremio.style.cssText = baseBtn + (modo === 'gremio' ? activo : inactivo);
+};
+
+window._lpToggleSeleccionarTodos = function (marcar) {
+    document.querySelectorAll('input[id^="lpSelChk_"]').forEach(chk => {
+        chk.checked = marcar;
+    });
 };
 
 window._lpContinuarPaso1 = function () {
@@ -9728,6 +9758,8 @@ window._lpContinuarPaso1 = function () {
         };
     });
 
+    window._lpItemsManuales = [];
+
     window._lpRenderPaso2();
 };
 
@@ -9735,58 +9767,136 @@ window._lpRenderPaso2 = function () {
     const cont = document.getElementById('lpGenerarContent');
     if (!cont) return;
 
+    window._lpItemsManuales = window._lpItemsManuales || [];
+
     const esc = (s) => String(s === null || s === undefined ? '' : s).replace(/"/g, '&quot;');
+    const prevVal = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el ? el.value : fallback;
+    };
+    const prevRaw = (id, fallbackNum) => {
+        const el = document.getElementById(id);
+        return el ? (parseInt(el.dataset.raw, 10) || 0) : fallbackNum;
+    };
+    const prevChecked = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.checked : false;
+    };
 
     const filasHTML = window._lpSeleccionActual.map(item => {
         const key = `${item.tipo}_${item.item_id}`;
-        const precioNum = Math.round(parseFloat(item.precioBase) || 0);
+        const nombre = prevVal(`nom_${key}`, item.nombre);
+        const detalle = prevVal(`lpP2Detalle_${key}`, item.detalle);
+        const ancho = prevVal(`anc_${key}`, item.ancho || '');
+        const precioNum = prevRaw(`lpP2Precio_${key}`, Math.round(parseFloat(item.precioBase) || 0));
         const precioFmt = precioNum ? precioNum.toLocaleString('es-AR') : '';
+        const consultarChecked = prevChecked(`lpP2Chk_${key}`);
         return `
         <tr>
-            <td style="padding:8px;color:#fff;font-size:12px;">${esc(item.nombre)}</td>
             <td style="padding:8px;">
-                <input type="text" id="lpP2Detalle_${key}" class="gecko-input-line" value="${esc(item.detalle)}">
+                <input type="text" id="nom_${key}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${esc(nombre)}">
+            </td>
+            <td style="padding:8px;"></td>
+            <td style="padding:8px;">
+                <input type="text" id="lpP2Detalle_${key}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${esc(detalle)}">
             </td>
             <td style="padding:8px;">
-                <input type="text" id="anc_${key}" class="gecko-input-line" value="${esc(item.ancho || '')}">
+                <input type="text" id="anc_${key}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${esc(ancho)}">
             </td>
+            <td style="padding:8px;"></td>
             <td style="padding:8px;">
-                <div class="gecko-money-wrap" id="lpP2Wrap_${key}">
+                <div class="gecko-money-wrap" id="lpP2Wrap_${key}" style="${consultarChecked ? 'opacity:0.45;' : ''}">
                     <span class="gecko-money-prefix">$</span>
                     <input type="text" inputmode="numeric" id="lpP2Precio_${key}"
-                        value="${precioFmt}" data-raw="${precioNum}"
+                        value="${precioFmt}" data-raw="${precioNum}" ${consultarChecked ? 'disabled' : ''}
+                        style="padding:12px 14px 12px 4px !important;"
                         oninput="window._formatearInputDinero(this)">
                 </div>
                 ${item.unidad ? `<div style="color:#71717a;font-size:10px;margin-top:4px;">$/${esc(item.unidad)}</div>` : ''}
             </td>
             <td style="padding:8px;text-align:center;">
-                <input type="checkbox" onchange="window._lpToggleConsultar(this, '${key}')" style="accent-color:#F15A24;width:16px;height:16px;">
+                <input type="checkbox" id="lpP2Chk_${key}" ${consultarChecked ? 'checked' : ''} onchange="window._lpToggleConsultar(this, '${key}')" style="accent-color:#F15A24;width:16px;height:16px;">
+            </td>
+            <td style="padding:8px;"></td>
+        </tr>`;
+    }).join('');
+
+    const filasManualesHTML = window._lpItemsManuales.map(idManual => {
+        const nombre = prevVal(`nomManual_${idManual}`, '');
+        const grupo = prevVal(`grpManual_${idManual}`, '');
+        const detalle = prevVal(`detManual_${idManual}`, '');
+        const ancho = prevVal(`ancManual_${idManual}`, '');
+        const unidad = prevVal(`uniManual_${idManual}`, '');
+        const precioNum = prevRaw(`precManual_${idManual}`, 0);
+        const precioFmt = precioNum ? precioNum.toLocaleString('es-AR') : '';
+        const consultarChecked = prevChecked(`chkManual_${idManual}`);
+        return `
+        <tr>
+            <td style="padding:8px;">
+                <input type="text" id="nomManual_${idManual}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${esc(nombre)}" placeholder="Nombre">
+            </td>
+            <td style="padding:8px;">
+                <input type="text" id="grpManual_${idManual}" list="lpGruposExistentes" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${esc(grupo)}" placeholder="Grupo">
+            </td>
+            <td style="padding:8px;">
+                <input type="text" id="detManual_${idManual}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${esc(detalle)}" placeholder="Detalle">
+            </td>
+            <td style="padding:8px;">
+                <input type="text" id="ancManual_${idManual}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${esc(ancho)}" placeholder="Ancho">
+            </td>
+            <td style="padding:8px;">
+                <input type="text" id="uniManual_${idManual}" class="w-full bg-transparent border-b border-zinc-800 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gecko transition-all" value="${esc(unidad)}" placeholder="Unidad">
+            </td>
+            <td style="padding:8px;">
+                <div class="gecko-money-wrap" id="precManualWrap_${idManual}" style="${consultarChecked ? 'opacity:0.45;' : ''}">
+                    <span class="gecko-money-prefix">$</span>
+                    <input type="text" inputmode="numeric" id="precManual_${idManual}"
+                        value="${precioFmt}" data-raw="${precioNum}" ${consultarChecked ? 'disabled' : ''}
+                        style="padding:12px 14px 12px 4px !important;"
+                        oninput="window._formatearInputDinero(this)">
+                </div>
+            </td>
+            <td style="padding:8px;text-align:center;">
+                <input type="checkbox" id="chkManual_${idManual}" ${consultarChecked ? 'checked' : ''} onchange="window._lpToggleConsultarManual(this, '${idManual}')" style="accent-color:#F15A24;width:16px;height:16px;">
+            </td>
+            <td style="padding:8px;text-align:center;">
+                <button type="button" onclick="window._lpEliminarItemManual('${idManual}')" class="text-red-500/50 hover:text-red-500 p-2 transition-colors" title="Eliminar">✕</button>
             </td>
         </tr>`;
     }).join('');
 
     cont.innerHTML = `
-        <div style="overflow-x:auto;border:1px solid #2a2a2a;border-radius:12px;margin-bottom:20px;">
-            <table style="width:100%;border-collapse:collapse;">
-                <thead>
-                    <tr style="border-bottom:1px solid #2a2a2a;">
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;width:20%;">Ancho</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;width:18%;">Precio</th>
-                        <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Consultar</th>
-                    </tr>
-                </thead>
-                <tbody>${filasHTML}</tbody>
-            </table>
+        <div class="card-gecko">
+            <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">Repaso de Ítems</p>
+            <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #2a2a2a;">
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Nombre</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Grupo</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Detalle</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;width:14%;">Ancho</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;">Unidad</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;text-align:left;width:16%;">Precio</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;">Consultar</th>
+                            <th style="padding:8px;font-size:10px;color:#71717a;text-transform:uppercase;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>${filasHTML}${filasManualesHTML}</tbody>
+                </table>
+            </div>
+            <button type="button" onclick="window._lpAgregarItemManual()"
+                class="w-full py-2 mt-3 rounded-xl border border-dashed border-zinc-700 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-gecko hover:text-gecko transition-all">
+                + Agregar Ítem Manual
+            </button>
         </div>
-        <div style="margin-bottom:20px;">
-            <label class="gecko-label">Aclaraciones para el cliente</label>
+        <div class="card-gecko">
+            <p class="text-[12px] font-black text-gecko uppercase tracking-[0.2em] guia-naranja">Aclaraciones para el Cliente</p>
             <textarea id="lpAclaracionesInput" rows="4" oninput="window._lpAclaraciones = this.value"
                 placeholder="Ej: Pagos en efectivo 10% de descuento. Trabajos con urgencia tienen recargo."
-                style="width:100%;background:rgba(24,24,27,0.5);border:1px solid #333333;border-radius:12px;color:#fff;font-size:13px;padding:12px 14px;font-family:inherit;resize:vertical;">${esc(window._lpAclaraciones || '')}</textarea>
+                style="width:100%;background:rgba(24,24,27,0.5) !important;border:1px solid #333333 !important;border-radius:12px !important;padding:12px 14px !important;color:#fff;font-size:13px;font-family:inherit;resize:vertical;">${esc(window._lpAclaraciones || '')}</textarea>
         </div>
-        <div style="display:flex;justify-content:space-between;">
+        <div style="display:flex;justify-content:space-between;margin-top:20px;">
             <button class="gecko-btn-cancel" style="flex:none;width:auto;padding:12px 28px;" onclick="window._lpVolverPaso1()">Volver</button>
             <button class="gecko-btn-primary" style="flex:none;width:auto;padding:12px 28px;" onclick="window._lpGenerarPDF()">Generar PDF</button>
         </div>
@@ -9801,6 +9911,26 @@ window._lpToggleConsultar = function (chk, key) {
     if (wrap) wrap.style.opacity = chk.checked ? '0.45' : '1';
 };
 
+window._lpToggleConsultarManual = function (chk, idManual) {
+    const inp = document.getElementById(`precManual_${idManual}`);
+    const wrap = document.getElementById(`precManualWrap_${idManual}`);
+    if (!inp) return;
+    inp.disabled = chk.checked;
+    if (wrap) wrap.style.opacity = chk.checked ? '0.45' : '1';
+};
+
+window._lpAgregarItemManual = function () {
+    window._lpItemsManuales = window._lpItemsManuales || [];
+    window._lpManualSeq = (window._lpManualSeq || 0) + 1;
+    window._lpItemsManuales.push(`manual_${Date.now()}_${window._lpManualSeq}`);
+    window._lpRenderPaso2();
+};
+
+window._lpEliminarItemManual = function (idManual) {
+    window._lpItemsManuales = (window._lpItemsManuales || []).filter(id => id !== idManual);
+    window._lpRenderPaso2();
+};
+
 window._lpVolverPaso1 = function () {
     const cont = document.getElementById('lpGenerarContent');
     if (cont) cont.innerHTML = window._lpRenderPaso1();
@@ -9811,12 +9941,11 @@ window._lpGenerarPDF = function () {
 
     window._lpSeleccionActual.forEach(item => {
         const key = `${item.tipo}_${item.item_id}`;
-        const inpDetalle = document.getElementById(`lpP2Detalle_${key}`);
-        const detalle = inpDetalle?.value ?? item.detalle;
+        const nombre = document.getElementById(`nom_${key}`)?.value ?? item.nombre;
+        const detalle = document.getElementById(`lpP2Detalle_${key}`)?.value ?? item.detalle;
         const ancho = document.getElementById(`anc_${key}`)?.value ?? item.ancho ?? '';
 
-        const fila = inpDetalle?.closest('tr');
-        const chkConsultar = fila?.querySelector('input[type="checkbox"]');
+        const chkConsultar = document.getElementById(`lpP2Chk_${key}`);
 
         let precioTexto;
         if (chkConsultar?.checked) {
@@ -9829,7 +9958,32 @@ window._lpGenerarPDF = function () {
 
         const grupoKey = item.grupo && String(item.grupo).trim() ? item.grupo : 'Sin grupo';
         grupos[grupoKey] = grupos[grupoKey] || [];
-        grupos[grupoKey].push({ nombre: item.nombre, detalle, ancho, unidad: item.unidad || '', precioTexto });
+        grupos[grupoKey].push({ nombre, detalle, ancho, unidad: item.unidad || '', precioTexto });
+    });
+
+    (window._lpItemsManuales || []).forEach(idManual => {
+        const nombre = (document.getElementById(`nomManual_${idManual}`)?.value || '').trim();
+        if (!nombre) return;
+
+        const detalle = document.getElementById(`detManual_${idManual}`)?.value || '';
+        const ancho = document.getElementById(`ancManual_${idManual}`)?.value || '';
+        const unidad = document.getElementById(`uniManual_${idManual}`)?.value || '';
+        const grupo = document.getElementById(`grpManual_${idManual}`)?.value || '';
+
+        const chkConsultar = document.getElementById(`chkManual_${idManual}`);
+
+        let precioTexto;
+        if (chkConsultar?.checked) {
+            precioTexto = 'Consultar valor';
+        } else {
+            const inpPrecio = document.getElementById(`precManual_${idManual}`);
+            const raw = window._getMoneyValue(inpPrecio);
+            precioTexto = '$ ' + raw.toLocaleString('es-AR');
+        }
+
+        const grupoKey = grupo.trim() ? grupo.trim() : 'Ítems Manuales';
+        grupos[grupoKey] = grupos[grupoKey] || [];
+        grupos[grupoKey].push({ nombre, detalle, ancho, unidad, precioTexto });
     });
 
     const aclaraciones = document.getElementById('lpAclaracionesInput')?.value || '';
