@@ -7247,6 +7247,8 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
 
     // Mostrar previews de imágenes si hay imágenes cargadas (modo edición)
     window._gpmRenderPreviewImagenes();
+
+    window._gpmInitSortable();
 };
 
 // ── Renderizar previews de imágenes de referencia (llamado al abrir el
@@ -7655,7 +7657,7 @@ window._gpmAgregarItem = function (datos = null) {
     if (datos?.tipo) div.dataset.tipoOrigen = datos.tipo;
     if (datos?.origenCotizador) div.dataset.origenCotizador = datos.origenCotizador;
     if (datos?.parametrosOriginales) div.dataset.paramsOriginales = JSON.stringify(datos.parametrosOriginales);
-    div.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #333333;border-radius:0;margin-bottom:0;overflow:hidden;';
+    div.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #333333;border-radius:0;margin-bottom:0;overflow:hidden;cursor:grab;';
     div.innerHTML = `
       <div style="display:grid;grid-template-columns:28px minmax(0,1fr) 36px 72px 130px 100px 36px;align-items:stretch;">
 
@@ -7720,6 +7722,22 @@ window._gpmAgregarItem = function (datos = null) {
 window._gpmRenumerar = function () {
     document.querySelectorAll('#gpm-items-list .gpm-item').forEach((c, i) => {
         c.querySelector('div[style*="color:#F15A24"]').textContent = String(i + 1).padStart(2, '0');
+    });
+};
+
+// ── Sortable (drag and drop para reordenar ítems) ──
+window._gpmInitSortable = function () {
+    const el = document.getElementById('gpm-items-list');
+    if (!el) return;
+    if (el._sortableInstance) return; // evitar inicializar 2 veces sobre el mismo modal
+    el._sortableInstance = Sortable.create(el, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        handle: undefined,
+        onEnd: function () {
+            window._gpmRenumerar();
+            window._gpmCalc();
+        }
     });
 };
 
