@@ -1543,3 +1543,48 @@ pendiente, sesión de diseño aparte.
     ya usado en otros 3 lugares de ese archivo.
 
 **Estado:** ✅ Todo lo de esta sesión probado y confirmado por Renzo.
+
+---
+
+### Sesión 19/08/2026 — Lista de Precios (Fases 1-5) y drag-and-drop en Presupuestador Manual
+
+## Resuelto en esta sesión
+
+### [MEJ-033] Lista de Precios — Herramienta completa (Fases 1-5)
+- **Sección:** Cotizadores → Lista de Precios
+- **Descripción:** Nueva herramienta para generar PDFs de lista de
+  precios personalizados por pedido de cliente, con diseño de marca
+  Gecko. Incluye:
+  - Pestaña "Configurar": habilitar/deshabilitar materiales y
+    servicios del catálogo para que aparezcan en el selector, con
+    Grupo (rubro), Detalle, Ancho y Unidad editables por ítem.
+    Autocompletado (datalist) de grupos ya usados para evitar
+    duplicados por error de tipeo.
+  - Pestaña "Generar" (Paso 1 - selector): checkboxes agrupados por
+    rubro, con switch Público/Gremio y switch "Seleccionar todos".
+  - Paso 2 (repaso editable): tabla con Nombre, Detalle, Ancho, Precio
+    y "Consultar valor" por ítem, todos editables sin afectar los
+    datos reales del catálogo. Textarea de "Aclaraciones para el
+    cliente". Botón "+ Agregar Ítem Manual" para cargar productos que
+    no están en el catálogo (materiales que trae el cliente o se
+    compran puntualmente para un trabajo), con nombre, grupo, detalle,
+    ancho, unidad y precio propios.
+  - Generación de PDF con diseño de marca Gecko (header, footer,
+    secciones agrupadas con franja naranja), reusando el mismo motor
+    de impresión que Presupuestos y OTs.
+- **Tabla nueva en MySQL:** lista_precios_config (columnas: id, tipo,
+  item_id, habilitado, grupo, detalle, ancho, unidad, orden).
+- **Endpoint nuevo:** lista_precios_config en api.php (GET/POST/PUT
+  con soporte batch/DELETE).
+- **Estado:** ✅ Resuelto/Completado - en producción.
+
+### [MEJ-034] Drag-and-drop en Presupuestador Manual
+- **Sección:** Presupuesto Manual
+- **Descripción:** Los ítems cargados en el cuerpo del presupuesto
+  ahora se pueden reordenar arrastrando y soltando cada fila
+  (Sortable.js, ya usado antes en Materiales/Servicios). El orden
+  final se refleja automáticamente en el total, en el guardado y en
+  el PDF generado, sin pasos adicionales.
+- **Estado:** ✅ Resuelto/Completado - en producción.
+
+**Estado:** ✅ Todo lo de esta sesión probado y confirmado por Renzo.
