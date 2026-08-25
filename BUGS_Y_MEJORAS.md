@@ -1588,3 +1588,50 @@ pendiente, sesión de diseño aparte.
 - **Estado:** ✅ Resuelto/Completado - en producción.
 
 **Estado:** ✅ Todo lo de esta sesión probado y confirmado por Renzo.
+
+---
+
+### Sesión 24/08/2026 — Fix crítico: colisión de IDs en presupuestos/OTs
+
+## Resuelto en esta sesión
+
+### Fix crítico: colisión de IDs en presupuestos/OTs nuevos
+- **Sección:** Presupuestador Manual / Cotizadores (guardado de
+  presupuestos y OTs)
+- **Problema detectado:** dos presupuestos/OTs creados desde
+  computadoras distintas (Renzo trabaja desde casa y desde el taller)
+  podían terminar con el mismo número (id), y el segundo guardado
+  sobrescribía al primero en la base de datos sin ningún aviso visible
+  - el registro original se perdía silenciosamente. Causa raíz: el
+  número de cada presupuesto nuevo se calculaba únicamente con datos
+  locales de cada navegador (localStorage), sin consultar nunca la
+  base de datos en el momento de guardar - dos navegadores con
+  contadores desalineados podían calcular el mismo "próximo número" de
+  forma independiente.
+- **Solución aplicada:**
+  - Antes de asignar un número nuevo, el sistema ahora consulta a la
+    base de datos cuál es el número más alto real existente en ese
+    momento, y lo combina con los datos locales para calcular el
+    siguiente número con la información más fresca posible.
+  - El guardado de un presupuesto/OT nuevo ahora se confirma
+    directamente contra el servidor antes de mostrar "Guardado" al
+    usuario. Si el guardado falla (por ejemplo, por una colisión
+    residual de número), se muestra un aviso claro y los ítems
+    cargados en pantalla NO se pierden, permitiendo reintentar.
+  - Se amplió de 1200ms a 2500ms el tiempo de espera de la
+    sincronización de imágenes de referencia posterior al guardado,
+    para dar margen a las nuevas verificaciones contra el servidor.
+- **Alcance:** el cambio afecta solo la creación de presupuestos/OTs
+  NUEVOS. La edición de presupuestos existentes no fue modificada.
+- **Pendiente relacionado, fuera de alcance de este fix:** el flujo de
+  "Generar Presupuesto" desde un cotizador (Gráfica, Corte, etc.)
+  hacia el Presupuestador Manual a veces puede continuar en modo
+  edición de un presupuesto viejo en lugar de arrancar en blanco. No
+  se corrigió porque Renzo a veces usa esa combinación a propósito
+  (para sumar ítems de un cotizador a un presupuesto que ya estaba
+  editando) - necesita una solución más cuidadosa (por ejemplo, un
+  aviso visual de "estás editando el presupuesto #X") en una sesión
+  dedicada aparte, en vez de un reseteo automático que podría
+  interferir con ese uso legítimo.
+- **Estado:** ✅ Resuelto (colisión de IDs) / 🔵 Pendiente (arrastre de
+  modo edición al generar desde cotizador) - en producción.

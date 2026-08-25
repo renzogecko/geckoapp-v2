@@ -181,7 +181,7 @@ window._geckoSanearRegistroParaStorage = function (registro) {
     return copia;
 };
 
-window.procesarGuardado = function (status) {
+window.procesarGuardado = async function (status) {
     const cliente = document.getElementById('clienteNombre')?.value?.trim() || 'Cliente Genérico';
     const total = parseFloat(document.getElementById('precioTotal')?.value) ||
         parseFloat(document.getElementById('labelTotalPresupuesto')?.innerText?.replace(/[$.\\s]/g, '').replace(',', '.')) || 0;
@@ -240,7 +240,17 @@ window.procesarGuardado = function (status) {
     // INSERT new
     const _listaActual2 = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const _maxId2 = _listaActual2.length > 0 ? Math.max(..._listaActual2.map(p => parseInt(p.id) || 0)) : 1000;
-    const id = Math.max(window.nextBudgetId || 0, parseInt(localStorage.getItem('gecko_nextId')) || 0, _maxId2) + 1;
+    let _maxIdServidor = 0;
+    try {
+        const _respFresco = await fetch('/app/api.php?endpoint=presupuestos');
+        const _dataFresco = await _respFresco.json();
+        if (Array.isArray(_dataFresco)) {
+            _maxIdServidor = _dataFresco.reduce((max, p) => Math.max(max, parseInt(p.id) || 0), 0);
+        }
+    } catch (e) {
+        console.warn('🦎 GECKO: No se pudo verificar el último número contra el servidor, se usará la copia local.', e);
+    }
+    const id = Math.max(window.nextBudgetId || 0, parseInt(localStorage.getItem('gecko_nextId')) || 0, _maxId2, _maxIdServidor) + 1;
     const nuevo = {
         id, cliente, categoria,
         fecha: new Date().toLocaleDateString('es-AR'),
@@ -251,6 +261,29 @@ window.procesarGuardado = function (status) {
         metodo_pago: '',
         creado_por: window.GECKO_USER?.nombre || null
     };
+
+    let _guardadoOk = false;
+    try {
+        const _respGuardar = await fetch('/app/api.php?endpoint=presupuestos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevo)
+        });
+        let _dataGuardar = null;
+        try { _dataGuardar = await _respGuardar.json(); } catch (_) {}
+        _guardadoOk = _respGuardar.ok && _dataGuardar && _dataGuardar.success === true;
+        if (!_guardadoOk) {
+            console.error('🦎 GECKO: Fallo al guardar en el servidor.', _respGuardar.status, _dataGuardar);
+        }
+    } catch (e) {
+        console.error('🦎 GECKO: Error de red al guardar.', e);
+        _guardadoOk = false;
+    }
+
+    if (!_guardadoOk) {
+        alert('⚠️ No se pudo guardar el ' + (status === 'OT' ? 'OT' : 'presupuesto') + ' en el servidor. Es posible que el número ya esté en uso (por ejemplo, si se guardó algo casi al mismo tiempo desde otra computadora).\n\nTus datos NO se perdieron: quedaron cargados en pantalla. Por favor, intentá guardar de nuevo.');
+        return;
+    }
 
     lista.push(nuevo);
     // Fix A: Guardar en localStorage SIN imágenes para evitar QuotaExceededError
@@ -7972,15 +8005,15 @@ window._gpmGuardar = function (status) {
         if (typeof window._imprimirDocumento === 'function') {
             window._imprimirDocumento(String(docTarget.id));
         }
-    }, 1200);
+    }, 2500);
 };
 
 // ── Hook procesarGuardado para inyectar metadatos extra ──
 const _procesarGuardadoOrigGPM = window.procesarGuardado;
-window.procesarGuardado = function (status) {
+window.procesarGuardado = async function (status) {
     const _editIdAntes = window._editandoPresupuestoId;
     const _nextIdAntes = window.nextBudgetId || (parseInt(localStorage.getItem('gecko_nextId')) || 1001);
-    _procesarGuardadoOrigGPM(status);
+    await _procesarGuardadoOrigGPM(status);
     if (window._gpmMetadataPendiente) {
         setTimeout(() => {
             const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
