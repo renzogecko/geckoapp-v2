@@ -6954,6 +6954,30 @@ window.guardarCliente = function () {
 // Estilo 100% consistente con el sistema Gecko
 // ══════════════════════════════════════════════════════════════════════
 
+// ── Reconstruir filas agrupadas por grupoId (usado al editar/restaurar) ──
+window._gpmReconstruirFilasAgrupadas = function (itemsArray, mapper) {
+    const gruposCount = {};
+    (itemsArray || []).forEach(it => {
+        if (it.grupoId) gruposCount[it.grupoId] = (gruposCount[it.grupoId] || 0) + 1;
+    });
+    let filaAnterior = null;
+    (itemsArray || []).forEach(it => {
+        const gid = it.grupoId || null;
+        const esGrupo = gid && gruposCount[gid] >= 2;
+        const datos = mapper(it);
+        if (!esGrupo) {
+            window._gpmAgregarItem(datos, gid ? { grupoId: gid } : {});
+            filaAnterior = null;
+            return;
+        }
+        if (!filaAnterior || filaAnterior.dataset.grupoId !== gid) {
+            filaAnterior = window._gpmAgregarItem(datos, { grupoId: gid });
+        } else {
+            filaAnterior = window._gpmAgregarItem(datos, { grupoId: gid, esSublinea: true, insertAfter: filaAnterior });
+        }
+    });
+};
+
 window._gpmAbrirManualReal = function (presupuestoEditId = null) {
     window._gpmYaGuardado = false;
     const container = document.getElementById('presupuestoManualContainer');
@@ -7240,7 +7264,7 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
 
     // Cargar ítems
     if (itemsIniciales.length > 0) {
-        itemsIniciales.forEach(it => window._gpmAgregarItem({
+        window._gpmReconstruirFilasAgrupadas(itemsIniciales, it => ({
             titulo: it.nombre || it.textoOpciones || '',
             descripcion: it.descripcion || (it.otDetalle !== it.nombre ? it.otDetalle : '') || '',
             cantidad: it.cantidad || 1,
@@ -7518,7 +7542,8 @@ window._gpmEditarItemGrafica = function (btn) {
             precio: it.querySelector('.gpm-price')?.value || '',
             tipo: it.dataset.tipoOrigen || '',
             origenCotizador: it.dataset.origenCotizador || '',
-            parametrosOriginales: it.dataset.paramsOriginales ? JSON.parse(it.dataset.paramsOriginales) : null
+            parametrosOriginales: it.dataset.paramsOriginales ? JSON.parse(it.dataset.paramsOriginales) : null,
+            grupoId: it.dataset.grupoId || null
         });
     });
 
@@ -7652,7 +7677,7 @@ window._gpmRestaurarBackup = function () {
         setVal('gpmEntrega', b.fechaEntrega);
         const listaItems = document.getElementById('gpm-items-list');
         if (listaItems) listaItems.innerHTML = '';
-        b.items.forEach(it => window._gpmAgregarItem(it));
+        window._gpmReconstruirFilasAgrupadas(b.items, it => it);
         if (b.conIva) {
             document.getElementById('gpmTogIva').checked = true;
             window._gpmSyncToggle('gpmTogIva', 'gpmTogIvaSlider', 'gpmTogIvaThumb');
@@ -7671,9 +7696,10 @@ window._gpmRestaurarBackup = function () {
     }, 150);
 };
 
-window._gpmAgregarItem = function (datos = null) {
+window._gpmAgregarItem = function (datos = null, opciones = null) {
     const lista = document.getElementById('gpm-items-list');
     if (!lista) return;
+    const { grupoId = null, esSublinea = false, insertAfter = null } = opciones || {};
     const n = lista.querySelectorAll('.gpm-item').length + 1;
     const titulo = (datos?.titulo || '').replace(/"/g, '&quot;');
     const desc = datos?.descripcion || '';
@@ -7686,7 +7712,8 @@ window._gpmAgregarItem = function (datos = null) {
     const _muestraEditar = !!(window._gpmConfigOrigenes && window._gpmConfigOrigenes[_origenItem]) && _tieneParamsItem;
 
     const div = document.createElement('div');
-    div.className = 'gpm-item';
+    div.className = 'gpm-item' + (esSublinea ? ' gpm-item-sublinea' : '');
+    if (grupoId) div.dataset.grupoId = grupoId;
     if (datos?.tipo) div.dataset.tipoOrigen = datos.tipo;
     if (datos?.origenCotizador) div.dataset.origenCotizador = datos.origenCotizador;
     if (datos?.parametrosOriginales) div.dataset.paramsOriginales = JSON.stringify(datos.parametrosOriginales);
@@ -7699,13 +7726,16 @@ window._gpmAgregarItem = function (datos = null) {
         <div style="padding:12px 10px;display:flex;flex-direction:column;gap:6px;border-left:1px solid #333333;">
           <input class="gpm-item-title" type="text" value="${titulo}" placeholder="Título del trabajo"
             oninput="window._gpmCalc()"
-            style="background:transparent;border:none !important;border-bottom:none !important;outline:none;font-size:14px;font-weight:700;color:#e0e0e0;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;"
+            style="background:transparent;border:none !important;border-bottom:none !important;outline:none;font-size:14px;font-weight:700;color:#e0e0e0;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;${esSublinea ? 'display:none;' : ''}"
             onfocus="this.closest('.gpm-item').style.borderColor='#333333'"
             placeholder="Título del trabajo" />
-          <input type="text" class="gpm-item-desc" value="${desc}"
-            placeholder="Descripción detallada (dimensiones, material, acabado...)"
-            oninput="window._gpmCalc()"
-            style="background:transparent !important;border:none !important;border-bottom:none !important;outline:none !important;font-size:12px !important;font-weight:400 !important;color:#71717a !important;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;" />
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${esSublinea ? '<span style="color:#71717a;font-size:12px;flex-shrink:0;">•</span>' : ''}
+            <input type="text" class="gpm-item-desc" value="${desc}"
+              placeholder="Descripción detallada (dimensiones, material, acabado...)"
+              oninput="window._gpmCalc()"
+              style="background:transparent !important;border:none !important;border-bottom:none !important;outline:none !important;font-size:12px !important;font-weight:400 !important;color:#71717a !important;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;" />
+          </div>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:center;border-left:1px solid #333333;">
@@ -7733,28 +7763,92 @@ window._gpmAgregarItem = function (datos = null) {
           <span class="gpm-sv">$0</span>
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:center;border-left:1px solid #333333;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-left:1px solid #333333;">
+          <button onclick="window._gpmAgregarLinea(this)" title="Agregar línea a este trabajo"
+            style="background:transparent;border:none;color:#3f3f46;cursor:pointer;padding:4px;margin:0;border-radius:6px;display:flex;align-items:center;justify-content:center;line-height:0;"
+            onmouseover="this.style.color='#F15A24';this.style.background='rgba(241,90,36,0.1)'"
+            onmouseout="this.style.color='#3f3f46';this.style.background='transparent'"
+            aria-label="Agregar línea">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+          </button>
           <button onclick="window._gpmRemoverItem(this)"
-            style="background:transparent;border:none;color:#3f3f46;cursor:pointer;padding:8px;border-radius:8px;display:flex;align-items:center;"
+            style="background:transparent;border:none;color:#3f3f46;cursor:pointer;padding:4px;margin:0;border-radius:6px;display:flex;align-items:center;justify-content:center;line-height:0;"
             onmouseover="this.style.color='#ef4444';this.style.background='#1f0a0a'"
             onmouseout="this.style.color='#3f3f46';this.style.background='transparent'"
             aria-label="Eliminar ítem">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/>
             </svg>
           </button>
         </div>
 
       </div>`;
-    lista.appendChild(div);
+    if (insertAfter && insertAfter.insertAdjacentElement) {
+        insertAfter.insertAdjacentElement('afterend', div);
+    } else {
+        lista.appendChild(div);
+    }
+    if (grupoId && !esSublinea) {
+        const inputTituloMaster = div.querySelector('.gpm-item-title');
+        if (inputTituloMaster && !inputTituloMaster.dataset.syncBound) {
+            inputTituloMaster.dataset.syncBound = '1';
+            inputTituloMaster.addEventListener('input', () => window._gpmSincronizarTituloGrupo(inputTituloMaster));
+        }
+    }
     if (!datos) div.querySelector('.gpm-item-title').focus();
+    else if (esSublinea && !datos?.descripcion) div.querySelector('.gpm-item-desc')?.focus();
+    window._gpmRenumerar();
     window._gpmCalc();
+    return div;
+};
+
+// ── Agregar línea a un grupo (sub-ítem bajo el mismo título) ──
+window._gpmAgregarLinea = function (btn) {
+    const filaActual = btn.closest('.gpm-item');
+    if (!filaActual) return;
+    let grupoId = filaActual.dataset.grupoId;
+    if (!grupoId) {
+        grupoId = 'g_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        filaActual.dataset.grupoId = grupoId;
+        // Vincular el sync de título ahora que esta fila pasa a ser "master"
+        const inputTitulo = filaActual.querySelector('.gpm-item-title');
+        if (inputTitulo && !inputTitulo.dataset.syncBound) {
+            inputTitulo.dataset.syncBound = '1';
+            inputTitulo.addEventListener('input', () => window._gpmSincronizarTituloGrupo(inputTitulo));
+        }
+    }
+    const tituloCompartido = filaActual.querySelector('.gpm-item-title')?.value || '';
+    window._gpmAgregarItem(
+        { titulo: tituloCompartido, descripcion: '', cantidad: 1, precio: '' },
+        { grupoId, esSublinea: true, insertAfter: filaActual }
+    );
+    window._gpmRenumerar();
+    window._gpmCalc();
+};
+
+// ── Sincronizar título compartido entre las líneas de un grupo ──
+window._gpmSincronizarTituloGrupo = function (inputMaster) {
+    const fila = inputMaster.closest('.gpm-item');
+    const grupoId = fila?.dataset.grupoId;
+    if (!grupoId) return;
+    document.querySelectorAll(`.gpm-item[data-grupo-id="${grupoId}"].gpm-item-sublinea`).forEach(sub => {
+        const inputSub = sub.querySelector('.gpm-item-title');
+        if (inputSub) inputSub.value = inputMaster.value;
+    });
 };
 
 // ── Renumerar ──
 window._gpmRenumerar = function () {
-    document.querySelectorAll('#gpm-items-list .gpm-item').forEach((c, i) => {
-        c.querySelector('div[style*="color:#F15A24"]').textContent = String(i + 1).padStart(2, '0');
+    let n = 0;
+    document.querySelectorAll('#gpm-items-list .gpm-item').forEach(c => {
+        const badge = c.querySelector('div[style*="color:#F15A24"]');
+        if (!badge) return;
+        if (c.classList.contains('gpm-item-sublinea')) {
+            badge.textContent = '';
+        } else {
+            n++;
+            badge.textContent = String(n).padStart(2, '0');
+        }
     });
 };
 
@@ -7889,7 +7983,8 @@ window._gpmGuardar = function (status) {
                 costo: precio * qty,
                 cantidad: qty,
                 precioUnitario: precio,
-                parametrosOriginales: item.dataset.paramsOriginales ? JSON.parse(item.dataset.paramsOriginales) : null
+                parametrosOriginales: item.dataset.paramsOriginales ? JSON.parse(item.dataset.paramsOriginales) : null,
+                grupoId: item.dataset.grupoId || null
             });
         }
     });
@@ -8119,7 +8214,7 @@ window._gpmRecuperarBorrador = function () {
             setVal('gpmNotasInternas', draft.notasInternas);
             setVal('gpmCondiciones', draft.condiciones);
             setVal('gpmEntrega', draft.fechaEntrega);
-            (draft.items || []).forEach(it => window._gpmAgregarItem(it));
+            window._gpmReconstruirFilasAgrupadas(draft.items || [], it => it);
             if (draft.conIva) {
                 document.getElementById('gpmTogIva').checked = true;
                 window._gpmSyncToggle('gpmTogIva', 'gpmTogIvaSlider', 'gpmTogIvaThumb');
@@ -8149,7 +8244,7 @@ window._gpmGuardarBorradorAuto = function () {
         const it_desc = item.querySelector('.gpm-item-desc')?.value?.trim();
         const it_cant = item.querySelector('.gpm-qty')?.value;
         const it_precio = item.querySelector('.gpm-price')?.value;
-        if (it_titulo || it_precio) items.push({ titulo: it_titulo, descripcion: it_desc, cantidad: it_cant, precio: it_precio });
+        if (it_titulo || it_precio) items.push({ titulo: it_titulo, descripcion: it_desc, cantidad: it_cant, precio: it_precio, grupoId: item.dataset.grupoId || null });
     });
     if (!cliente && !titulo && items.length === 0) return;
     const draft = {
