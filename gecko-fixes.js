@@ -7730,7 +7730,6 @@ window._gpmAgregarItem = function (datos = null, opciones = null) {
             onfocus="this.closest('.gpm-item').style.borderColor='#333333'"
             placeholder="Título del trabajo" />
           <div style="display:flex;align-items:center;gap:6px;">
-            ${esSublinea ? '<span style="color:#71717a;font-size:12px;flex-shrink:0;">•</span>' : ''}
             <input type="text" class="gpm-item-desc" value="${desc}"
               placeholder="Descripción detallada (dimensiones, material, acabado...)"
               oninput="window._gpmCalc()"
