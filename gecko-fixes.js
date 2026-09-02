@@ -4547,8 +4547,16 @@ window.addEventListener('load', function () {
         // Asegurar que registrarMovimiento SIEMPRE asigne un id con
         // timestamp, sin importar desde qué parte del código se llame
         window.registrarMovimiento = function (detalle, cajaNombre, monto, tipo, categoria = 'Varios', otsAfectadas = null) {
-            const caja = LISTA_CAJAS.find(c => c.nombre === cajaNombre);
-            if (!caja) return;
+            // Leer SIEMPRE la copia más fresca de cajas y movimientos antes de
+            // modificar - nunca confiar en la variable en memoria LISTA_CAJAS,
+            // que puede estar desactualizada si otra computadora modificó algo
+            // sin que esta pestaña haya recargado la página.
+            const cajasFrescas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            const caja = cajasFrescas.find(c => c.nombre === cajaNombre);
+            if (!caja) {
+                console.error('🦎 GECKO: No se encontró la caja "' + cajaNombre + '" al intentar registrar un movimiento.');
+                return null;
+            }
 
             if (tipo === 'Ingreso') caja.saldo += monto;
             else caja.saldo -= monto;
@@ -4567,9 +4575,22 @@ window.addEventListener('load', function () {
                 mov.otsAfectadas = otsAfectadas;
             }
 
-            LISTA_MOVIMIENTOS.push(mov);
-            localStorage.setItem('gecko_cajas', JSON.stringify(LISTA_CAJAS));
-            localStorage.setItem('gecko_movimientos', JSON.stringify(LISTA_MOVIMIENTOS));
+            const movimientosFrescos = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+            movimientosFrescos.push(mov);
+
+            // Actualizar también las variables globales en memoria, para que el
+            // resto de la sesión (pantallas ya abiertas) reflejen el estado
+            // real recién guardado, no la foto vieja.
+            try {
+                LISTA_CAJAS = cajasFrescas;
+                LISTA_MOVIMIENTOS = movimientosFrescos;
+            } catch (e) {
+                window.LISTA_CAJAS = cajasFrescas;
+                window.LISTA_MOVIMIENTOS = movimientosFrescos;
+            }
+
+            localStorage.setItem('gecko_cajas', JSON.stringify(cajasFrescas));
+            localStorage.setItem('gecko_movimientos', JSON.stringify(movimientosFrescos));
 
             if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
             if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
@@ -5998,31 +6019,46 @@ window.addEventListener('load', function () {
 
             let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
 
+            // Simular los cambios de sena en copias temporales de las OTs, SIN
+            // tocar todavía "lista" ni localStorage - solo se aplican más abajo
+            // si registrarMovimiento confirma que el pago entró a la caja.
             let montoRestante = montoOriginal;
             const otsAfectadas = [];
             const otsSaldadas = [];
+            const cambiosPendientes = []; // { idx, senaNueva }
             pends.forEach(pTildada => {
                 if (!pTildada._geckoTildada || montoRestante <= 0) return;
                 const idx = lista.findIndex(x => String(x.id) === String(pTildada.id));
                 if (idx === -1) return;
-                const p = lista[idx];
-                const saldo = window.calcularSaldoOT(p);
+                const pOriginal = lista[idx];
+                const saldo = window.calcularSaldoOT(pOriginal);
                 const pago = Math.min(saldo, montoRestante);
                 if (pago <= 0) return;
-                p.sena = (p.sena || 0) + pago;
+                const pSimulada = { ...pOriginal, sena: (pOriginal.sena || 0) + pago };
+                cambiosPendientes.push({ idx, senaNueva: pSimulada.sena });
                 montoRestante -= pago;
-                otsAfectadas.push({ id: p.id, monto: pago });
-                if (window.calcularSaldoOT(p) === 0) otsSaldadas.push(p);
+                otsAfectadas.push({ id: pOriginal.id, monto: pago });
+                if (window.calcularSaldoOT(pSimulada) === 0) otsSaldadas.push(pSimulada);
             });
 
-            let movCreado = null;
-            if (typeof window.registrarMovimiento === 'function') {
-                movCreado = window.registrarMovimiento(`Pago Cta. Cte. - ${cliente}`, cajaNombre, montoOriginal, 'Ingreso', 'Cobro Cliente', otsAfectadas);
+            const movCreado = (typeof window.registrarMovimiento === 'function')
+                ? window.registrarMovimiento(`Pago Cta. Cte. - ${cliente}`, cajaNombre, montoOriginal, 'Ingreso', 'Cobro Cliente', otsAfectadas)
+                : null;
+
+            if (!movCreado) {
+                alert('No se pudo registrar el pago en la caja "' + cajaNombre + '". No se descontó nada de la deuda del cliente. Revisá que la caja exista y volvé a intentar (puede ayudar recargar la página con F5 si hace poco se creó/editó una caja).');
+                document.getElementById('_geckoModalAsignacionPago')?.remove();
+                window._geckoAsignacion = null;
+                return;
             }
+
+            // El movimiento se registró con éxito en la caja - recién ahora se
+            // aplican los cambios de sena sobre "lista" y se persiste.
+            cambiosPendientes.forEach(({ idx, senaNueva }) => { lista[idx].sena = senaNueva; });
 
             let creditoGenerado = 0;
             if (montoRestante > 0 && typeof window.registrarExcedenteComoCredito === 'function') {
-                window.registrarExcedenteComoCredito(cliente, montoRestante, `Excedente de cobro (caja ${cajaNombre})`, movCreado ? movCreado.id : null);
+                window.registrarExcedenteComoCredito(cliente, montoRestante, `Excedente de cobro (caja ${cajaNombre})`, movCreado.id);
                 creditoGenerado = montoRestante;
             }
 
