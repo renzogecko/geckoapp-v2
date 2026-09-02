@@ -925,6 +925,43 @@ cajas generales
   efectivo/flujo del día a día con este ahorro).
 - **Estado:** 🔵 Pendiente
 
+### Revisión financiera de fondo (sesión dedicada pendiente)
+Se identificaron 4 temas grandes durante una investigación de
+integridad financiera, todos relacionados entre sí, que requieren una
+sesión propia con tiempo dedicado (no apurados al final de otra
+sesión):
+
+1. **Unificar el criterio de "deuda pendiente" en todo el sistema:**
+   hoy, 5 lugares distintos (ficha de cliente, columna "Saldo
+   Pendiente" de Clientes, "Por Cobrar" del Dashboard, "Cuellos de
+   Botella", PDF de Cierre de Mes) calculan si un trabajo "debe plata"
+   mirando el ESTADO DE PRODUCCIÓN (excluyen los que están
+   "Finalizado"), mientras que solo el modal de pago mira el SALDO
+   REAL. Esto puede esconder deuda real de los reportes si un trabajo
+   se marca "Finalizado" sin estar cobrado del todo. Decisión ya
+   tomada por Renzo: el estado de producción y el estado financiero
+   deben tratarse como cosas independientes - un trabajo puede estar
+   entregado sin cobrar, o cobrado sin haberse hecho aún.
+2. **Reporte global de OTs impagas:** una sección nueva que muestre de
+   un vistazo todas las órdenes de trabajo sin cobrar, tanto por
+   trabajo individual como agrupado por cliente - para saber
+   rápidamente quién debe plata y de qué.
+3. **Estado de Cuenta en PDF por cliente:** poder generar, desde la
+   ficha/Cuenta Corriente de cada cliente, un PDF con una "radiografía"
+   completa: OTs activas, últimos pagos, saldo pendiente - para poder
+   responderle a un cliente al instante cuánto debe, con un documento
+   formal.
+4. **Riesgo de fondo de concurrencia entre computadoras:** se confirmó
+   que si dos computadoras modifican EXACTAMENTE el mismo registro
+   (la misma caja, la misma OT) casi al mismo tiempo sin recargar la
+   página, la que guarda último pisa silenciosamente el cambio de la
+   que guardó primero - el sistema no tiene ninguna protección contra
+   esto hoy. Es un riesgo más amplio que el bug puntual ya resuelto en
+   esta sesión (que era sobre datos desactualizados, no sobre pisado
+   simultáneo) y afecta potencialmente a los 12 caminos que mueven
+   plata en el sistema, no solo a uno.
+- **Estado:** 🔵 Pendiente — sesión dedicada
+
 ---
 
 ### Sesión 20/07/2026 — MEJ-021 Etapa 2 completada (5 de 6 cotizadores)
@@ -1635,3 +1672,39 @@ pendiente, sesión de diseño aparte.
   interferir con ese uso legítimo.
 - **Estado:** ✅ Resuelto (colisión de IDs) / 🔵 Pendiente (arrastre de
   modo edición al generar desde cotizador) - en producción.
+
+---
+
+### Sesión 02/09/2026 — Fix crítico: pagos de Cuenta Corriente sin impacto en caja
+
+## Resuelto en esta sesión
+
+### Fix crítico: pagos de Cuenta Corriente que no impactaban en caja
+- **Sección:** Finanzas / Cuenta Corriente de clientes
+- **Problema detectado:** al registrar un pago desde la Cuenta
+  Corriente de un cliente, en ciertas condiciones (si durante la
+  misma sesión de navegador se había creado, editado o eliminado una
+  caja sin recargar la página) el pago se aplicaba correctamente al
+  saldo de la OT del cliente, PERO la plata nunca se sumaba a ninguna
+  caja - el sistema mostraba "¡Cobro Exitoso!" de todas formas, sin
+  ningún aviso de error. Causa raíz: la función registrarMovimiento
+  buscaba la caja en una variable en memoria (LISTA_CAJAS) que podía
+  estar desactualizada, en vez de leer siempre la copia más fresca
+  guardada en el sistema.
+- **Solución aplicada:**
+  - registrarMovimiento ahora siempre lee la información más
+    actualizada de cajas y movimientos antes de registrar cualquier
+    pago, en vez de confiar en una copia en memoria que podía estar
+    vieja.
+  - El pago de Cuenta Corriente ahora se aplica en este orden: primero
+    se confirma que la plata efectivamente entró a la caja, y RECIÉN
+    DESPUÉS se descuenta de la deuda del cliente. Si el registro en
+    caja falla por algún motivo, se muestra un aviso claro explicando
+    qué pasó y qué hacer, y NO se descuenta nada de la deuda - se
+    puede reintentar sin haber perdido ni duplicado nada.
+  - Se auditaron los otros 11 caminos que mueven plata en el sistema
+    (Seña/Saldo Final, Gastos Fijos, Transferencias entre cajas,
+    movimientos manuales, edición de caja, etc.) y se confirmó que
+    todos ya funcionaban correctamente - este era el único con el
+    problema.
+- **Estado:** ✅ Resuelto - en producción.
