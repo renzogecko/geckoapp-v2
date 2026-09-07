@@ -5095,6 +5095,10 @@ window.addEventListener('load', function () {
                         <select id="filtroMovCategoria" onchange="window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}"></select>
                         <input type="number" id="filtroMovMontoExacto" oninput="window._geckoFiltrarMovimientosTabla()" placeholder="Monto exacto..." style="${estiloInput}">
                         <input type="text" id="filtroMovBusqueda" oninput="window._geckoFiltrarMovimientosTabla()" placeholder="Buscar por palabra (ej: Laura, Sueldo, OT#1234)..." style="${estiloInput}flex:2;min-width:220px;">
+                        <button onclick="window.limpiarFiltrosMovimientos()"
+                            class="shrink-0 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500 border border-zinc-800 hover:text-white hover:border-zinc-600 transition-all">
+                            Limpiar
+                        </button>
                     `;
                     wrapperEl.parentElement.insertBefore(filtrosMovRow, wrapperEl);
                 }
