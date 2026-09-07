@@ -6544,9 +6544,14 @@ window.filtrarMovimientos = function () {
 
 // ── limpiarFiltrosMovimientos: resetea el filtro de categoría y re-renderiza ──
 window.limpiarFiltrosMovimientos = function () {
-    const cat = document.getElementById('filterCategoriaMov');
-    if (cat) cat.value = '';
-    if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+    const ids = ['filtroMovCaja', 'filtroMovTipo', 'filtroMovCategoria', 'filtroMovMontoExacto', 'filtroMovBusqueda'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    if (typeof window._geckoFiltrarMovimientosTabla === 'function') {
+        window._geckoFiltrarMovimientosTabla();
+    }
 };
 
 // ── cerrarModalMovimiento: cierra sin disparar el aviso de "cambios pendientes" ──
