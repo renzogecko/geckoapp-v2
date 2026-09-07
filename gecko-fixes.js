@@ -5074,6 +5074,42 @@ window.addEventListener('load', function () {
             window.LISTA_MOVIMIENTOS = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
             let movs = [...window.LISTA_MOVIMIENTOS];
 
+            // ── Filtros de búsqueda (aditivo, solo oculta/muestra filas ya renderizadas) ──
+            const cajasFiltro = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+            let filtrosMovRow = document.getElementById('geckoFiltrosMovRow');
+            if (!filtrosMovRow) {
+                const tablaEl = tbody.closest('table');
+                const wrapperEl = tablaEl ? tablaEl.parentElement : null;
+                if (wrapperEl && wrapperEl.parentElement) {
+                    filtrosMovRow = document.createElement('div');
+                    filtrosMovRow.id = 'geckoFiltrosMovRow';
+                    filtrosMovRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;';
+                    const estiloInput = 'flex:1;min-width:140px;padding:10px 14px;font-size:12px;font-weight:700;color:white;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;';
+                    filtrosMovRow.innerHTML = `
+                        <select id="filtroMovCaja" onchange="window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}"></select>
+                        <select id="filtroMovTipo" onchange="window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}">
+                            <option value="">Todos</option>
+                            <option value="Ingreso">Ingreso</option>
+                            <option value="Egreso">Egreso</option>
+                        </select>
+                        <select id="filtroMovCategoria" onchange="window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}"></select>
+                        <input type="number" id="filtroMovMontoExacto" oninput="window._geckoFiltrarMovimientosTabla()" placeholder="Monto exacto..." style="${estiloInput}">
+                        <input type="text" id="filtroMovBusqueda" oninput="window._geckoFiltrarMovimientosTabla()" placeholder="Buscar por palabra (ej: Laura, Sueldo, OT#1234)..." style="${estiloInput}flex:2;min-width:220px;">
+                    `;
+                    wrapperEl.parentElement.insertBefore(filtrosMovRow, wrapperEl);
+                }
+            }
+            if (filtrosMovRow) {
+                const _geckoPoblarSelectFiltro = (select, valores, defaultLabel) => {
+                    if (!select) return;
+                    const valorPrevio = select.value;
+                    select.innerHTML = `<option value="">${defaultLabel}</option>` + valores.map(v => `<option value="${v}">${v}</option>`).join('');
+                    if (valores.includes(valorPrevio)) select.value = valorPrevio;
+                };
+                _geckoPoblarSelectFiltro(document.getElementById('filtroMovCaja'), cajasFiltro.map(c => c.nombre), 'Todas las cajas');
+                _geckoPoblarSelectFiltro(document.getElementById('filtroMovCategoria'), [...new Set(window.LISTA_MOVIMIENTOS.map(m => m.categoria || 'Varios'))].sort(), 'Todas las categorías');
+            }
+
             // Filtro por categoría
             const catEl = document.getElementById('filterCategoriaMov');
             const catFilt = catEl?.value || '';
@@ -5162,6 +5198,37 @@ window.addEventListener('load', function () {
                     window.renderizarMovimientos();
                 });
             }
+
+            window._geckoFiltrarMovimientosTabla();
+        };
+
+        // ── Filtros de búsqueda sobre la tabla de movimientos ya renderizada (no reordena ni elimina filas) ──
+        window._geckoFiltrarMovimientosTabla = function () {
+            const tbody = document.getElementById('tbodyMovimientos');
+            if (!tbody) return;
+            const movs = window._geckoMovsDisplayed || [];
+            const caja = document.getElementById('filtroMovCaja')?.value || '';
+            const tipo = document.getElementById('filtroMovTipo')?.value || '';
+            const categoria = document.getElementById('filtroMovCategoria')?.value || '';
+            const montoRaw = document.getElementById('filtroMovMontoExacto')?.value;
+            const montoExacto = montoRaw !== '' && montoRaw !== undefined ? Number(montoRaw) : null;
+            const busqueda = (document.getElementById('filtroMovBusqueda')?.value || '').trim().toLowerCase();
+
+            tbody.querySelectorAll('tr[data-drag-key]').forEach(row => {
+                const idx = parseInt(row.getAttribute('data-drag-key'), 10);
+                const m = movs[idx];
+                if (!m) return;
+                let visible = true;
+                if (caja && m.caja !== caja) visible = false;
+                if (visible && tipo && m.tipo !== tipo) visible = false;
+                if (visible && categoria && (m.categoria || 'Varios') !== categoria) visible = false;
+                if (visible && montoExacto !== null && !isNaN(montoExacto) && Number(m.monto) !== montoExacto) visible = false;
+                if (visible && busqueda) {
+                    const detalle = (m.otDetalle || m.detalle || m.concepto || '').toLowerCase();
+                    if (!detalle.includes(busqueda)) visible = false;
+                }
+                row.style.display = visible ? '' : 'none';
+            });
         };
 
         // ── Poblar selects de cajas al abrir modales ──
@@ -10187,3 +10254,15 @@ window._lpGenerarPDF = function () {
     printWin.document.write(html);
     printWin.document.close();
 };
+
+// ── Re-renderizar Movimientos cuando termina la sync con el servidor ──
+// gecko-api.js dispara 'geckoDB_ready' al terminar de sincronizar MySQL,
+// pero eso solo escribe en localStorage — no repinta la tabla ni repuebla
+// el filtro de categorías. Si la pantalla de Movimientos ya está en el DOM,
+// la volvemos a renderizar para traer los datos frescos.
+document.addEventListener('geckoDB_ready', function () {
+    const tbody = document.getElementById('tbodyMovimientos');
+    if (tbody && typeof window.renderizarMovimientos === 'function') {
+        window.renderizarMovimientos();
+    }
+});
