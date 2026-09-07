@@ -962,6 +962,41 @@ sesión):
    plata en el sistema, no solo a uno.
 - **Estado:** 🔵 Pendiente — sesión dedicada
 
+- **Auditoría parcial realizada (7/9/2026):** se detectó un desfase
+  entre la caja Efectivo del sistema y el control paralelo en Excel.
+  Se encontraron varias causas menores (movimientos sin anotar en el
+  Excel, un pago de sueldo duplicado, diferencias de monto en algunos
+  registros) que explican solo una fracción chica del desfase total.
+  La mayor parte de la diferencia queda sin explicar y requiere
+  seguir auditando con los filtros nuevos de Movimientos ya
+  disponibles. No se forzó ningún ajuste de saldo hoy para no afectar
+  la Foto real del Cierre de Mes.
+
+### [Nuevo] Bug: el botón de eliminar movimiento puede borrar el duplicado equivocado
+- **Sección:** Finanzas → Movimientos
+- **Descripción:** cuando existen 2 movimientos idénticos (misma
+  fecha, mismo monto, mismo detalle - ej: un sueldo cargado por error
+  dos veces), la función window.eliminarMovimiento identifica
+  correctamente CUÁL mostrarle al usuario al hacer click, pero al
+  momento de borrar el registro real de la base usa una búsqueda de
+  respaldo por fecha+monto+detalle que puede terminar borrando el
+  OTRO duplicado, no el que el usuario clickeó. No afecta el cálculo
+  de plata en la caja (ambos duplicados descuentan lo mismo), pero
+  puede dejar en la base el registro equivocado si los duplicados
+  tuvieran algún dato distinto por dentro (por ejemplo, un
+  otsAfectadas vinculado a una OT específica).
+- **Estado:** 🔵 Pendiente (sesión financiera dedicada)
+
+### [Nuevo] Falta: registro de auditoría de eliminaciones
+- **Sección:** Finanzas
+- **Descripción:** hoy, cuando se elimina un movimiento (desde la
+  tabla de Finanzas o borrando directo por SQL), no queda ningún
+  rastro de quién lo borró, cuándo, de qué caja, ni por qué monto -
+  esto complicó mucho una auditoría de desfase de caja realizada hoy.
+  Se necesita algo similar a la tabla cajas_historial (que ya audita
+  ediciones manuales de saldo) pero para eliminaciones de movimientos.
+- **Estado:** 🔵 Pendiente (sesión financiera dedicada, prioridad alta)
+
 ---
 
 ### Sesión 20/07/2026 — MEJ-021 Etapa 2 completada (5 de 6 cotizadores)
@@ -1707,4 +1742,27 @@ pendiente, sesión de diseño aparte.
     movimientos manuales, edición de caja, etc.) y se confirmó que
     todos ya funcionaban correctamente - este era el único con el
     problema.
+- **Estado:** ✅ Resuelto - en producción.
+
+---
+
+### Sesión 07/09/2026 — Filtros de Movimientos, botón Limpiar y auditoría financiera parcial
+
+## Resuelto en esta sesión
+
+### Filtros de búsqueda en Movimientos (Finanzas)
+- **Sección:** Finanzas → Movimientos
+- **Descripción:** se agregaron 5 filtros nuevos arriba de la tabla
+  de movimientos: por Caja, por Tipo (Ingreso/Egreso), por Categoría
+  (poblada dinámicamente desde los datos reales, ya no una lista fija
+  desactualizada), por Monto exacto, y un buscador de texto libre en
+  tiempo real (útil para rastrear todos los movimientos relacionados
+  a una palabra, ej: un cliente o un proveedor). Se eliminó el select
+  de categoría viejo (#filterCategoriaMov), que tenía una lista
+  hardcodeada que no coincidía con las categorías reales del sistema.
+  El botón "Limpiar" ahora resetea los 5 filtros nuevos correctamente
+  (antes apuntaba al select eliminado y no hacía nada). Se agregó
+  también un repintado automático de la tabla cuando termina la
+  sincronización con el servidor, para que el filtro de categorías no
+  quede incompleto si se abre la pantalla apenas carga la página.
 - **Estado:** ✅ Resuelto - en producción.
