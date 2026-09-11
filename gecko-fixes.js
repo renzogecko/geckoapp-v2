@@ -3437,6 +3437,59 @@ window._recalcularMonto2Gf = function () {
     if (m2El) window._setMoneyValue(m2El, Math.max(0, total - m1));
 };
 
+// Modal de confirmación con estilo del sistema — reemplaza confirm() nativo.
+// Devuelve una Promise<boolean>.
+window._geckoConfirmModal = function (titulo, mensaje, textoConfirmar) {
+    textoConfirmar = textoConfirmar || 'Confirmar';
+    return new Promise(function (resolve) {
+        document.getElementById('_geckoConfirmGenerico')?.remove();
+        const modal = document.createElement('div');
+        modal.id = '_geckoConfirmGenerico';
+        modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+        modal.innerHTML = `
+            <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+                <div style="width:56px;height:56px;background:rgba(241,90,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#F15A24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">${titulo}</h3>
+                <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;white-space:pre-line;">${mensaje}</p>
+                <div style="display:flex;gap:10px;">
+                    <button id="_geckoConfirmGenericoCancelar"
+                        style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+                    <button id="_geckoConfirmGenericoOk"
+                        style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">${textoConfirmar}</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function (e) { if (e.target === modal) { modal.remove(); resolve(false); } });
+        document.getElementById('_geckoConfirmGenericoCancelar').onclick = function () { modal.remove(); resolve(false); };
+        document.getElementById('_geckoConfirmGenericoOk').onclick = function () { modal.remove(); resolve(true); };
+    });
+};
+
+// Aviso simple con estilo del sistema — reemplaza alert() nativo.
+window._geckoAvisoModal = function (mensaje, titulo, esError) {
+    titulo = titulo || 'Atención';
+    document.getElementById('_geckoAvisoGenerico')?.remove();
+    const color = esError ? '#ef4444' : '#F15A24';
+    const modal = document.createElement('div');
+    modal.id = '_geckoAvisoGenerico';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+            <div style="width:56px;height:56px;background:${color}1a;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="${color}" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">${titulo}</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;white-space:pre-line;">${mensaje}</p>
+            <button id="_geckoAvisoGenericoOk"
+                style="width:100%;padding:13px;background:${color};border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Entendido</button>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
+    document.getElementById('_geckoAvisoGenericoOk').onclick = function () { modal.remove(); };
+};
+
 window.confirmarPagoGastoFijo = async function () {
     const idx = window._gastoFijoAPagarIdx;
     if (idx === undefined || idx === null) return;
@@ -3446,7 +3499,7 @@ window.confirmarPagoGastoFijo = async function () {
     if (!g) return;
 
     const cajaNombre = document.getElementById('pagoGfCaja').value;
-    if (!cajaNombre) { alert("Seleccioná la caja desde donde se pagará."); return; }
+    if (!cajaNombre) { window._geckoAvisoModal("Seleccioná la caja desde donde se pagará.", "Falta un dato"); return; }
 
     const bloque2 = document.getElementById('bloqueSegundaCajaGf');
     const usaSegundaCaja = bloque2 && bloque2.style.display !== 'none';
@@ -3456,10 +3509,10 @@ window.confirmarPagoGastoFijo = async function () {
         caja2Nombre = document.getElementById('pagoGfCaja2')?.value || '';
         monto1 = window._getMoneyValue(document.getElementById('pagoGfMonto1'));
         monto2 = window._getMoneyValue(document.getElementById('pagoGfMonto2'));
-        if (!caja2Nombre) { alert("Seleccioná la segunda caja."); return; }
-        if (caja2Nombre === cajaNombre) { alert("Elegí dos cajas distintas."); return; }
-        if (monto1 <= 0 || monto2 <= 0) { alert("Ambos montos deben ser mayores a 0."); return; }
-        if (Math.round(monto1 + monto2) !== Math.round(g.monto)) { alert("La suma de ambos montos debe ser igual al total a pagar."); return; }
+        if (!caja2Nombre) { window._geckoAvisoModal("Seleccioná la segunda caja.", "Falta un dato"); return; }
+        if (caja2Nombre === cajaNombre) { window._geckoAvisoModal("Elegí dos cajas distintas.", "Dato inválido"); return; }
+        if (monto1 <= 0 || monto2 <= 0) { window._geckoAvisoModal("Ambos montos deben ser mayores a 0.", "Dato inválido"); return; }
+        if (Math.round(monto1 + monto2) !== Math.round(g.monto)) { window._geckoAvisoModal("La suma de ambos montos debe ser igual al total a pagar.", "Dato inválido"); return; }
     }
 
     const fecha = new Date().toLocaleDateString('es-AR');
@@ -3504,8 +3557,13 @@ window.confirmarPagoGastoFijo = async function () {
         : [{ id: mov1.id, caja: cajaNombre, monto: monto1 }];
     g.periodoPagado = (periodoEl && periodoEl.value) ? periodoEl.value : `${ahoraFallback.getFullYear()}-${mesFallback}`;
 
-    if (g.estado !== 'Pagado' && confirm(`El pago de "${g.concepto}" ya quedó registrado en Finanzas.\n\n¿Pasamos también el estado a "Pagado"?`)) {
-        g.estado = 'Pagado';
+    if (g.estado !== 'Pagado') {
+        const pasarAPagado = await window._geckoConfirmModal(
+            'Registrar pago',
+            `El pago de "${g.concepto}" ya quedó registrado en Finanzas.\n\n¿Pasamos también el estado a "Pagado"?`,
+            'Sí, pasar a Pagado'
+        );
+        if (pasarAPagado) g.estado = 'Pagado';
     }
 
     try {
@@ -3517,7 +3575,7 @@ window.confirmarPagoGastoFijo = async function () {
         const data = await res.json();
         if (!data.success) throw new Error(data.message || 'Error desconocido');
     } catch (e) {
-        alert('⚠️ El pago se guardó en la caja y el movimiento, pero no se pudo guardar el detalle en Gastos Fijos.\n\nRevisalo manualmente.\n\nDetalle: ' + e.message);
+        window._geckoAvisoModal('El pago se guardó en la caja y el movimiento, pero no se pudo guardar el detalle en Gastos Fijos.\n\nRevisalo manualmente.\n\nDetalle: ' + e.message, 'Atención', true);
     }
 
     document.getElementById('modalPagoGastoFijo').style.display = 'none';
@@ -5670,21 +5728,16 @@ window.addEventListener('load', function () {
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
             // 2. Ejecutar la lógica de eliminación real si confirma
-            document.getElementById('_geckoElimMovOk').onclick = function () {
+            document.getElementById('_geckoElimMovOk').onclick = async function () {
                 modal.remove();
 
-                const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-                const cajaObj = cajas.find(c => c.nombre === mov.caja);
-
-                // Revertir el saldo en la caja
-                if (cajaObj) {
-                    if (mov.tipo === 'Ingreso') {
-                        cajaObj.saldo -= mov.monto;
-                    } else {
-                        cajaObj.saldo += mov.monto;
-                    }
-                    localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
-                }
+                // Devolver la plata a la caja y borrar el movimiento: una
+                // sola operación atómica contra la base de datos.
+                const ok = await window._geckoLlamarMovimientoAtomico(
+                    [{ nombre: mov.caja, delta: mov.tipo === 'Ingreso' ? -mov.monto : mov.monto }],
+                    [{ accion: 'delete', id: mov.id }]
+                );
+                if (!ok) return;
 
                 // Devolver la deuda a la(s) OT(s) que recibieron este pago (si el
                 // movimiento tiene el detalle guardado)
@@ -5696,7 +5749,6 @@ window.addEventListener('load', function () {
                     });
                     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaOts));
                     try { listaPresupuestos = listaOts; } catch (e) { window.listaPresupuestos = listaOts; }
-                    if (typeof window.renderOts === 'function') window.renderOts();
                 }
 
                 // Revertir crédito generado por este movimiento, si corresponde
@@ -5711,24 +5763,26 @@ window.addEventListener('load', function () {
                     window.LISTA_CLIENTES = bdClientesRevertir;
                 }
 
-                // Eliminar de la base de datos principal
-                const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-                const dbIndex = dbMovs.findIndex(m => m.id === mov.id || (m.fecha === mov.fecha && m.monto === mov.monto && m.detalle === mov.detalle));
-                if (dbIndex !== -1) {
-                    dbMovs.splice(dbIndex, 1);
-                    localStorage.setItem('gecko_movimientos', JSON.stringify(dbMovs));
-                    window.LISTA_MOVIMIENTOS = dbMovs;
+                // Detectar si este movimiento corresponde a un Gasto Fijo pagado,
+                // y si es así, preguntar si volvemos su estado a Pendiente.
+                const listaGf = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+                const idxGf = listaGf.findIndex(function (g) {
+                    return g.movimientoId === mov.id || (Array.isArray(g.movimientosPago) && g.movimientosPago.some(function (p) { return p.id === mov.id; }));
+                });
+                if (idxGf !== -1) {
+                    const gastoAfectado = listaGf[idxGf];
+                    const volverAPendiente = await window._geckoConfirmModal(
+                        'Gasto Fijo afectado',
+                        `Este movimiento corresponde al pago de "${gastoAfectado.concepto}" en Gastos Fijos.\n\n¿Volvemos su estado a "Pendiente"?`,
+                        'Sí, volver a Pendiente'
+                    );
+                    if (volverAPendiente) {
+                        window.cambiarEstadoManualGastoFijo(idxGf, 'Pendiente');
+                    }
                 }
 
-                if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
-                if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
-
-                const esPagoSinDetalle = ['Cobro Cliente', 'Seña', 'Cobro Final'].includes(mov.categoria) && !(mov.otsAfectadas && mov.otsAfectadas.length > 0);
-                if (esPagoSinDetalle && typeof window.mostrarExito === 'function') {
-                    window.mostrarExito('Movimiento eliminado. Este pago es anterior a la mejora de reversión automática — revisá manualmente el saldo del cliente si corresponde.', 'Atención');
-                } else if (typeof window.mostrarExito === 'function') {
-                    window.mostrarExito('Movimiento eliminado', '¡Listo!');
-                }
+                if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado', '¡Listo!');
+                window.location.reload();
             };
         };
 
