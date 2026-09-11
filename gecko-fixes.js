@@ -2237,7 +2237,7 @@ window.aplicarCreditoAOT = function (nombreCliente, otId, montoAAplicar) {
     return monto;
 };
 
-window._registrarSena = function (id) {
+window._registrarSena = async function (id) {
     const monto1 = window._parseMontoValor(document.getElementById('sena1Monto')?.value);
     const forma1 = document.getElementById('sena1Forma')?.value || 'Efectivo';
     const caja1 = document.getElementById('sena1Caja')?.value || '';
@@ -2247,12 +2247,8 @@ window._registrarSena = function (id) {
     const nota = document.getElementById('senaNota')?.value || '';
     const tipo = window._tipoPagoActual || 'seña';
 
-    if (monto1 <= 0) { alert('Ingresá un monto válido.'); return; }
+    if (monto1 <= 0) { window._geckoAvisoModal('Ingresá un monto válido.', 'Dato inválido'); return; }
 
-    // ── Descuento por pago (MEJ: pagos combinados con descuento en efectivo) ──
-    // El monto1/monto2 es la plata REAL que el cliente entrega. Si hay
-    // descuento activado, se calcula hacia arriba cuánta deuda del
-    // presupuesto (nominal) cubre ese pago real.
     const desc1Chk = document.getElementById('sena1DescChk')?.checked || false;
     const desc1Tipo = document.getElementById('sena1DescTipo')?.value || 'pct';
     const desc1Valor = parseFloat(document.getElementById('sena1DescValor')?.value) || 0;
@@ -2284,27 +2280,15 @@ window._registrarSena = function (id) {
     const totalPago = montoNominal1 + montoNominal2;
     const fecha = new Date().toLocaleDateString('es-AR');
 
-    // Actualizar OT
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const idx = lista.findIndex(x => String(x.id) === String(id));
     if (idx === -1) return;
 
-    lista[idx].sena = (lista[idx].sena || 0) + totalPago;
-    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
-
-    try {
-        listaPresupuestos = lista;
-    } catch (e) {
-        window.listaPresupuestos = lista;
-    }
-
-    // Registrar movimientos en finanzas
-    const _ls = window._localStorage_original || localStorage;
-    const movimientos = JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
     const desc = tipo === 'saldo' ? 'Saldo final' : 'Seña';
     const cliente = lista[idx].cliente || 'Cliente';
 
     const mov1 = {
+        accion: 'insert',
         id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
         fecha, caja: caja1, tipo: 'Ingreso', monto: monto1,
         detalle: `${desc} OT#${id} - ${cliente}${descMonto1 > 0 ? ` (Cubre $${Math.round(montoNominal1).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
@@ -2312,23 +2296,23 @@ window._registrarSena = function (id) {
         otsAfectadas: [{ id: id, monto: montoNominal1 }],
         creado_por: window.GECKO_USER?.nombre || null
     };
-    movimientos.push(mov1);
 
     let descMov1 = null;
     if (descMonto1 > 0) {
         descMov1 = {
+            accion: 'insert',
             id: 'mov_' + (Date.now() + 10),
             fecha, caja: caja1, tipo: 'Descuento', monto: descMonto1,
             detalle: `Descuento otorgado - OT#${id} - ${cliente}${nota ? ' · ' + nota : ''}`,
             categoria: 'Descuento Otorgado',
             creado_por: window.GECKO_USER?.nombre || null
         };
-        movimientos.push(descMov1);
     }
 
     let mov2 = null;
     if (monto2 > 0) {
         mov2 = {
+            accion: 'insert',
             id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
             fecha, caja: caja2, tipo: 'Ingreso', monto: monto2,
             detalle: `${desc} OT#${id} - ${cliente} (${caja2})${descMonto2 > 0 ? ` (Cubre $${Math.round(montoNominal2).toLocaleString('es-AR')} de deuda, con descuento)` : ''}${nota ? ' · ' + nota : ''}`,
@@ -2336,60 +2320,61 @@ window._registrarSena = function (id) {
             otsAfectadas: [{ id: id, monto: montoNominal2 }],
             creado_por: window.GECKO_USER?.nombre || null
         };
-        movimientos.push(mov2);
     }
 
     let descMov2 = null;
     if (descMonto2 > 0) {
         descMov2 = {
+            accion: 'insert',
             id: 'mov_' + (Date.now() + 11),
             fecha, caja: caja2, tipo: 'Descuento', monto: descMonto2,
             detalle: `Descuento otorgado - OT#${id} - ${cliente} (${forma2})${nota ? ' · ' + nota : ''}`,
             categoria: 'Descuento Otorgado',
             creado_por: window.GECKO_USER?.nombre || null
         };
-        movimientos.push(descMov2);
     }
 
-    // Actualizar saldo de cajas
-    const cajas = JSON.parse(_ls.getItem('gecko_cajas') || '[]');
-    const actualizarCaja = (nombre, monto) => {
-        const c = cajas.find(x => x.nombre === nombre);
-        if (c) {
-            c.saldo = (parseFloat(c.saldo) || 0) + monto;
-            fetch('/app/api.php?endpoint=cajas', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(c)
-            }).catch(() => { });
-        }
-    };
-    if (caja1) actualizarCaja(caja1, monto1);
-    if (caja2 && monto2 > 0) actualizarCaja(caja2, monto2);
+    const cajasDelta = [];
+    if (caja1) cajasDelta.push({ nombre: caja1, delta: monto1 });
+    if (caja2 && monto2 > 0) cajasDelta.push({ nombre: caja2, delta: monto2 });
 
-    // Guardar todo
-    const movsStr = JSON.stringify(movimientos);
-    const cajasStr = JSON.stringify(cajas);
-    _ls.setItem('gecko_movimientos', movsStr);
-    _ls.setItem('gecko_cajas', cajasStr);
-    window.LISTA_MOVIMIENTOS = movimientos;
+    const movimientosInsert = [mov1, descMov1, mov2, descMov2].filter(Boolean);
+
+    // La plata: una sola operación atómica. O se guarda todo, o no se
+    // guarda nada — nunca a mitad de camino.
+    const ok = await window._geckoLlamarMovimientoAtomico(cajasDelta, movimientosInsert);
+    if (!ok) return;
+
+    // La deuda de la OT es un dato aparte (no vive en cajas/movimientos).
+    // La plata ya quedó a salvo pase lo que pase acá.
+    lista[idx].sena = (lista[idx].sena || 0) + totalPago;
+    try {
+        const res = await fetch('/app/api.php?endpoint=presupuestos', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(lista[idx])
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Error desconocido');
+    } catch (e) {
+        window._geckoAvisoModal('El pago se guardó en la caja y el movimiento, pero no se pudo actualizar la deuda de la OT#' + id + '.\n\nRevisala manualmente.\n\nDetalle: ' + e.message, 'Atención', true);
+    }
+    localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+    try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
+
+    // Reflejar en memoria lo que ya sabemos que quedó guardado en MySQL
+    const cajas = window.LISTA_CAJAS || JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+    cajasDelta.forEach(function (cd) {
+        const c = cajas.find(function (x) { return x.nombre === cd.nombre; });
+        if (c) c.saldo = (parseFloat(c.saldo) || 0) + cd.delta;
+    });
+    localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
     window.LISTA_CAJAS = cajas;
 
-    // Sincronizar con API
-    [mov1, mov2, descMov1, descMov2].filter(Boolean).forEach(mov => {
-        fetch('/app/api.php?endpoint=movimientos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(mov)
-        }).catch(() => { });
-    });
-
-    // Actualizar el caché interno de gecko-api.js para evitar
-    // que se vuelvan a sincronizar (y choquen) más adelante
-    if (window._geckoUpdateCache) {
-        window._geckoUpdateCache('gecko_movimientos', movimientos);
-        window._geckoUpdateCache('gecko_cajas', cajas);
-    }
+    const movimientos = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+    movimientosInsert.forEach(function (m) { movimientos.push(m); });
+    localStorage.setItem('gecko_movimientos', JSON.stringify(movimientos));
+    window.LISTA_MOVIMIENTOS = movimientos;
 
     document.getElementById('modalSena')?.remove();
 
@@ -2409,7 +2394,6 @@ window._registrarSena = function (id) {
         window.renderClientes();
     }
 
-    // Auto-archivar si el pago vino desde el modal de archivo
     if (window._archivarDespuesDePago) {
         const _idParaArchivar = window._archivarDespuesDePago;
         window._archivarDespuesDePago = null;
