@@ -572,9 +572,11 @@ try {
                 $stmtUpdate = $pdo->prepare("UPDATE movimientos
                     SET fecha=?, detalle=?, caja=?, tipo=?, monto=?, categoria=?, creado_por=?
                     WHERE id=?");
+                $stmtDelete = $pdo->prepare("DELETE FROM movimientos WHERE id=?");
 
                 foreach ($movs as $m) {
-                    if (($m['accion'] ?? 'insert') === 'update') {
+                    $accion = $m['accion'] ?? 'insert';
+                    if ($accion === 'update') {
                         if (empty($m['id'])) throw new Exception("Falta id para actualizar movimiento.");
                         $stmtUpdate->execute([
                             $m['fecha'] ?? date('d/m/Y'), $m['detalle'] ?? '', $m['caja'] ?? '',
@@ -582,6 +584,9 @@ try {
                             $m['categoria'] ?? 'Varios', $m['creado_por'] ?? null,
                             $m['id']
                         ]);
+                    } elseif ($accion === 'delete') {
+                        if (empty($m['id'])) throw new Exception("Falta id para eliminar movimiento.");
+                        $stmtDelete->execute([$m['id']]);
                     } else {
                         $stmtInsert->execute([
                             $m['id'] ?? uniqid(), $m['fecha'] ?? date('d/m/Y'),
