@@ -542,6 +542,66 @@ try {
     }
 
     // ══════════════════════════════════════════
+    // MOVIMIENTO ATÓMICO — actualiza caja(s) y crea/edita movimiento(s)
+    // en una sola operación indivisible. O se guardan las dos cosas
+    // juntas, o no se guarda ninguna (nunca queda a mitad de camino).
+    // Reemplaza el patrón viejo de "dos avisos separados" por UNO solo.
+    // ══════════════════════════════════════════
+    elseif ($endpoint === 'movimiento_atomico') {
+
+        if ($method === 'POST') {
+            $cajas = $body['cajas'] ?? [];
+            $movs  = $body['movimientos'] ?? [];
+
+            if (empty($movs)) {
+                error("Se requiere al menos un movimiento.", 400);
+            }
+
+            try {
+                $pdo->beginTransaction();
+
+                $stmtCaja = $pdo->prepare("UPDATE cajas SET saldo = saldo + ? WHERE nombre = ?");
+                foreach ($cajas as $c) {
+                    if (!isset($c['nombre']) || !isset($c['delta'])) continue;
+                    $stmtCaja->execute([$c['delta'], $c['nombre']]);
+                }
+
+                $stmtInsert = $pdo->prepare("INSERT INTO movimientos
+                    (id, fecha, detalle, caja, tipo, monto, categoria, creado_por)
+                    VALUES (?,?,?,?,?,?,?,?)");
+                $stmtUpdate = $pdo->prepare("UPDATE movimientos
+                    SET fecha=?, detalle=?, caja=?, tipo=?, monto=?, categoria=?, creado_por=?
+                    WHERE id=?");
+
+                foreach ($movs as $m) {
+                    if (($m['accion'] ?? 'insert') === 'update') {
+                        if (empty($m['id'])) throw new Exception("Falta id para actualizar movimiento.");
+                        $stmtUpdate->execute([
+                            $m['fecha'] ?? date('d/m/Y'), $m['detalle'] ?? '', $m['caja'] ?? '',
+                            $m['tipo'] ?? 'Ingreso', $m['monto'] ?? 0,
+                            $m['categoria'] ?? 'Varios', $m['creado_por'] ?? null,
+                            $m['id']
+                        ]);
+                    } else {
+                        $stmtInsert->execute([
+                            $m['id'] ?? uniqid(), $m['fecha'] ?? date('d/m/Y'),
+                            $m['detalle'] ?? '', $m['caja'] ?? '',
+                            $m['tipo'] ?? 'Ingreso', $m['monto'] ?? 0,
+                            $m['categoria'] ?? 'Varios', $m['creado_por'] ?? null
+                        ]);
+                    }
+                }
+
+                $pdo->commit();
+                responder(["success" => true, "message" => "Movimiento(s) registrado(s) correctamente."]);
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                error("No se pudo guardar. No se aplicó ningún cambio. Detalle: " . $e->getMessage(), 500);
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════
     // LASER PARAMS
     // ══════════════════════════════════════════
     elseif ($endpoint === 'laser_params') {
