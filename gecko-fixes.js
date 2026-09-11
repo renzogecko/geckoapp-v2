@@ -3425,7 +3425,7 @@ window._recalcularMonto2Gf = function () {
     if (m2El) window._setMoneyValue(m2El, Math.max(0, total - m1));
 };
 
-window.confirmarPagoGastoFijo = function () {
+window.confirmarPagoGastoFijo = async function () {
     const idx = window._gastoFijoAPagarIdx;
     if (idx === undefined || idx === null) return;
 
@@ -3450,46 +3450,37 @@ window.confirmarPagoGastoFijo = function () {
         if (Math.round(monto1 + monto2) !== Math.round(g.monto)) { alert("La suma de ambos montos debe ser igual al total a pagar."); return; }
     }
 
-    const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-    const cajaObj = cajas.find(c => c.nombre === cajaNombre);
-    if (!cajaObj) { alert("Caja no válida."); return; }
-    let caja2Obj = null;
-    if (usaSegundaCaja) {
-        caja2Obj = cajas.find(c => c.nombre === caja2Nombre);
-        if (!caja2Obj) { alert("Caja 2 no válida."); return; }
-    }
-
-    // 1. Restar saldo de la(s) caja(s)
-    cajaObj.saldo -= monto1;
-    if (usaSegundaCaja) caja2Obj.saldo -= monto2;
-    localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
-
-    // 2. Crear el/los movimiento(s)
     const fecha = new Date().toLocaleDateString('es-AR');
     const mov1 = {
+        accion: 'insert',
         id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
         fecha, caja: cajaNombre, tipo: 'Egreso', monto: monto1,
         detalle: g.concepto,
         categoria: g.categoria || 'Gastos Fijos',
         creado_por: window.GECKO_USER?.nombre || null
     };
-    const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-    movs.push(mov1);
+
+    const cajasDelta = [{ nombre: cajaNombre, delta: -monto1 }];
+    const movimientos = [mov1];
     let mov2 = null;
     if (usaSegundaCaja) {
         mov2 = {
+            accion: 'insert',
             id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
             fecha, caja: caja2Nombre, tipo: 'Egreso', monto: monto2,
             detalle: g.concepto,
             categoria: g.categoria || 'Gastos Fijos',
             creado_por: window.GECKO_USER?.nombre || null
         };
-        movs.push(mov2);
+        cajasDelta.push({ nombre: caja2Nombre, delta: -monto2 });
+        movimientos.push(mov2);
     }
-    localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
-    window.LISTA_MOVIMIENTOS = movs;
 
-    // 3. Actualizar estado del Gasto
+    const ok = await window._geckoLlamarMovimientoAtomico(cajasDelta, movimientos);
+    if (!ok) return;
+
+    // Marcar el gasto como pagado (aviso visible si esto puntual falla,
+    // aunque la plata y el movimiento ya quedaron guardados bien)
     const periodoEl = document.getElementById('pagoGfPeriodo');
     const ahoraFallback = new Date();
     const mesFallback = String(ahoraFallback.getMonth() + 1).padStart(2, '0');
@@ -3500,16 +3491,22 @@ window.confirmarPagoGastoFijo = function () {
         ? [{ id: mov1.id, caja: cajaNombre, monto: monto1 }, { id: mov2.id, caja: caja2Nombre, monto: monto2 }]
         : [{ id: mov1.id, caja: cajaNombre, monto: monto1 }];
     g.periodoPagado = (periodoEl && periodoEl.value) ? periodoEl.value : `${ahoraFallback.getFullYear()}-${mesFallback}`;
-    localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
-    window.LISTA_GASTOS_FIJOS = lista;
 
-    // 4. Cerrar y Notificar
+    try {
+        const res = await fetch('/app/api.php?endpoint=gastos_fijos', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(g)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Error desconocido');
+    } catch (e) {
+        alert('⚠️ El pago se guardó en la caja y el movimiento, pero no se pudo marcar "' + g.concepto + '" como pagado en Gastos Fijos.\n\nRevisalo manualmente.\n\nDetalle: ' + e.message);
+    }
+
     document.getElementById('modalPagoGastoFijo').style.display = 'none';
-
-    window.renderGastosFijos();
-    if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
-    if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
     if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${g.cajaPago}.`, '¡Abonado!');
+    window.location.reload();
 };
 
 window.revertirPagoGastoFijo = function (idx) {
@@ -5541,7 +5538,7 @@ window.addEventListener('load', function () {
 
 
         // ── SOBREESCRITURA DEFINITIVA DE MOVIMIENTOS Y TRANSFERENCIAS ──
-        window.guardarNuevoMovimiento = function () {
+        window.guardarNuevoMovimiento = async function () {
             const tipo = document.getElementById('nuevoMovTipo')?.value || 'ingreso';
             const desc = document.getElementById('nuevoMovDesc')?.value?.trim();
             const monto = parseFloat(document.getElementById('nuevoMovMonto')?.value) || 0;
@@ -5550,28 +5547,24 @@ window.addEventListener('load', function () {
             if (!caja) { alert('Seleccioná una caja.'); return; }
 
             const tipoCapital = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+            const delta = tipoCapital === 'Ingreso' ? monto : -monto;
 
-            // Bypass de variables léxicas de main.js -> lectura directa a Base de Datos Local
-            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-            const cajObj = cajas.find(c => c.nombre === caja);
-            if (cajObj) {
-                tipoCapital === 'Ingreso' ? (cajObj.saldo += monto) : (cajObj.saldo -= monto);
-                localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
-            } else {
-                alert('Caja no encontrada en la base de datos.'); return;
-            }
+            const ok = await window._geckoLlamarMovimientoAtomico(
+                [{ nombre: caja, delta: delta }],
+                [{
+                    accion: 'insert',
+                    id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
+                    fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja: caja,
+                    tipo: tipoCapital, monto: monto, categoria: 'Varios',
+                    creado_por: window.GECKO_USER?.nombre || null
+                }]
+            );
 
-            const mov = { id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja: caja, tipo: tipoCapital, monto: monto, categoria: 'Varios', creado_por: window.GECKO_USER?.nombre || null };
-            const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-            movs.push(mov);
-            localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+            if (!ok) return;
 
             document.getElementById('modalNuevoMovimiento').style.display = 'none';
-
             if (typeof window.mostrarExito === 'function') window.mostrarExito(`${tipoCapital} de $${monto.toLocaleString('es-AR')} registrado.`, '¡Hecho!');
-
-            if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
-            if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+            window.location.reload();
         };
 
         window.eliminarMovimiento = function (index) {
@@ -6746,38 +6739,6 @@ window._geckoSelectTipoMov = function (tipo) {
     });
 };
 
-// ── guardarNuevoMovimiento: registra movimiento desde modalNuevoMovimiento (IDs nuevos)
-window.guardarNuevoMovimiento = function () {
-    try {
-        const tipo = document.getElementById('nuevoMovTipo')?.value || 'ingreso';
-        const desc = document.getElementById('nuevoMovDesc')?.value?.trim();
-        const monto = parseFloat(document.getElementById('nuevoMovMonto')?.value) || 0;
-        const caja = document.getElementById('nuevoMovCaja')?.value;
-        if (!desc || monto <= 0) { alert('Completá descripción y monto.'); return; }
-        if (!caja) { alert('Seleccioná una caja.'); return; }
-        const tipoCapital = tipo.charAt(0).toUpperCase() + tipo.slice(1);
-        if (typeof registrarMovimiento === 'function') {
-            registrarMovimiento(desc, caja, monto, tipoCapital, 'Varios');
-        } else {
-            const _ls = window._localStorage_original || localStorage;
-            const cajas = window.LISTA_CAJAS || JSON.parse(_ls.getItem('gecko_cajas') || '[]');
-            const cajObj = cajas.find(function (c) { return c.nombre === caja; });
-            if (cajObj) { tipoCapital === 'Ingreso' ? (cajObj.saldo += monto) : (cajObj.saldo -= monto); }
-            _ls.setItem('gecko_cajas', JSON.stringify(cajas));
-            window.LISTA_CAJAS = cajas;
-            const mov = { id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4), fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja, tipo: tipoCapital, monto, categoria: 'Varios', creado_por: window.GECKO_USER?.nombre || null };
-            const movs = window.LISTA_MOVIMIENTOS || JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
-            movs.push(mov);
-            _ls.setItem('gecko_movimientos', JSON.stringify(movs));
-            window.LISTA_MOVIMIENTOS = movs;
-        }
-        document.getElementById('modalNuevoMovimiento').style.display = 'none';
-        ['nuevoMovDesc', 'nuevoMovMonto'].forEach(function (id) { const el = document.getElementById(id); if (el) el.value = ''; });
-        if (typeof window.mostrarExito === 'function') window.mostrarExito(`${tipoCapital} de $${monto.toLocaleString('es-AR')} registrado.`, '¡Hecho!');
-        if (typeof window.renderizarFinanzas === 'function') setTimeout(window.renderizarFinanzas, 150);
-        if (typeof window.renderizarMovimientos === 'function') setTimeout(window.renderizarMovimientos, 150);
-    } catch (e) { console.error('Error registrando movimiento:', e); }
-};
 
 // ── updateCajaSelectors: override — también puebla selects de nuevos modales
 (function () {
