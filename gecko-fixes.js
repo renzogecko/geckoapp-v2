@@ -736,6 +736,7 @@ window._desarchivarOT = function (id) {
 // Cerrar dropdowns al hacer clic fuera
 document.addEventListener('click', function () {
     document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => d.style.display = 'none');
+    document.querySelectorAll('[id^="estado-gf-dropdown-"]').forEach(d => d.style.display = 'none');
     ['sena1Forma-dropdown', 'sena1Caja-dropdown', 'sena2Forma-dropdown', 'sena2Caja-dropdown'].forEach(function (did) {
         const d = document.getElementById(did);
         if (d) d.style.display = 'none';
@@ -3281,12 +3282,21 @@ window.renderGastosFijos = function () {
                 <span style="color:#a1a1aa;font-size:12px;font-weight:700;">Día ${g.vencimiento} de cada mes</span>
             </td>
             <td class="py-4 px-6">
-                <select onchange="window.cambiarEstadoManualGastoFijo(${idx}, this.value)"
-                    style="padding:4px 10px;border-radius:20px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;
-                    ${pagado ? 'background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#22c55e;' : 'background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;'}">
-                    <option value="Pendiente" ${!pagado ? 'selected' : ''} style="background:#141417;color:#f59e0b;">Pendiente</option>
-                    <option value="Pagado" ${pagado ? 'selected' : ''} style="background:#141417;color:#22c55e;">Pagado</option>
-                </select>
+                <div id="estado-gf-${idx}" style="position:relative;display:inline-block;">
+                    <div onclick="window._toggleEstadoGfDropdown(${idx},event)"
+                         style="display:flex;align-items:center;gap:8px;background:${pagado ? '#22c55e' : '#f59e0b'}22;border:1.5px solid ${pagado ? '#22c55e' : '#f59e0b'}55;border-radius:20px;padding:6px 10px 6px 12px;cursor:pointer;min-width:100px;">
+                        <span id="estado-gf-label-${idx}" style="color:${pagado ? '#22c55e' : '#f59e0b'};font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;flex:1;">${pagado ? 'Pagado' : 'Pendiente'}</span>
+                        <span style="color:${pagado ? '#22c55e' : '#f59e0b'};font-size:8px;flex-shrink:0;">▼</span>
+                    </div>
+                    <div id="estado-gf-dropdown-${idx}" style="display:none;background:#18181b;border:1px solid #27272a;border-radius:14px;padding:6px;min-width:140px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+                        <div onclick="window._seleccionarEstadoGf(${idx},'Pendiente');event.stopPropagation()"
+                             style="padding:8px 14px;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;color:#f59e0b;letter-spacing:0.5px;"
+                             onmouseover="this.style.background='#1f1f23'" onmouseout="this.style.background='transparent'">Pendiente</div>
+                        <div onclick="window._seleccionarEstadoGf(${idx},'Pagado');event.stopPropagation()"
+                             style="padding:8px 14px;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;color:#22c55e;letter-spacing:0.5px;"
+                             onmouseover="this.style.background='#1f1f23'" onmouseout="this.style.background='transparent'">Pagado</div>
+                    </div>
+                </div>
             </td>
             <td class="py-4 px-6 text-right">
                 <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;">
@@ -3513,6 +3523,39 @@ window.confirmarPagoGastoFijo = async function () {
     document.getElementById('modalPagoGastoFijo').style.display = 'none';
     if (typeof window.mostrarExito === 'function') window.mostrarExito(`Pago de ${g.concepto} registrado.`, '¡Listo!');
     window.location.reload();
+};
+
+// Mismo mecanismo de pastilla+menú flotante que usan los estados de OT,
+// pero acotado a Gastos Fijos (ids con prefijo "estado-gf-").
+window._toggleEstadoGfDropdown = function (idx, event) {
+    event.stopPropagation();
+    document.querySelectorAll('[id^="estado-gf-dropdown-"]').forEach(d => {
+        if (d.id !== 'estado-gf-dropdown-' + idx) d.style.display = 'none';
+    });
+    const dd = document.getElementById('estado-gf-dropdown-' + idx);
+    if (!dd) return;
+    const isOpen = dd.style.display === 'block';
+    if (isOpen) { dd.style.display = 'none'; return; }
+
+    const trigger = event.currentTarget;
+    const rect = trigger.getBoundingClientRect();
+    dd.style.position = 'fixed';
+    dd.style.top = (rect.bottom + 4) + 'px';
+    dd.style.left = rect.left + 'px';
+    dd.style.zIndex = '999999';
+    dd.style.display = 'block';
+
+    setTimeout(() => {
+        const ddRect = dd.getBoundingClientRect();
+        if (ddRect.right > window.innerWidth - 8) dd.style.left = (rect.right - ddRect.width) + 'px';
+        if (ddRect.bottom > window.innerHeight - 8) dd.style.top = (rect.top - ddRect.height - 4) + 'px';
+    }, 0);
+};
+
+window._seleccionarEstadoGf = function (idx, nuevoEstado) {
+    const dd = document.getElementById('estado-gf-dropdown-' + idx);
+    if (dd) dd.style.display = 'none';
+    window.cambiarEstadoManualGastoFijo(idx, nuevoEstado);
 };
 
 window.cambiarEstadoManualGastoFijo = function (idx, nuevoEstado) {
