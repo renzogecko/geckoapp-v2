@@ -5668,6 +5668,24 @@ window.addEventListener('load', function () {
             };
         };
 
+        // ── Helper compartido: llama al endpoint atómico y muestra error
+        // visible si algo falla (nunca falla en silencio). Devuelve true/false.
+        window._geckoLlamarMovimientoAtomico = async function (cajas, movimientos) {
+            try {
+                const res = await fetch('/app/api.php?endpoint=movimiento_atomico', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cajas, movimientos })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Error desconocido');
+                return true;
+            } catch (e) {
+                alert('⚠️ No se pudo guardar en la base de datos.\n\nNo se aplicó ningún cambio — podés reintentar.\n\nDetalle: ' + e.message);
+                return false;
+            }
+        };
+
         window.editarMovimiento = function (index) {
             const movs = window._geckoMovsDisplayed || window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
             const mov = movs[index];
@@ -5751,7 +5769,7 @@ window.addEventListener('load', function () {
             document.body.appendChild(modal);
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
-            document.getElementById('_geckoGuardarEditMov').onclick = function () {
+            document.getElementById('_geckoGuardarEditMov').onclick = async function () {
                 const nuevoDetalle = document.getElementById('editMovDetalle').value.trim();
                 const nuevoMonto = parseFloat(document.getElementById('editMovMonto').value) || 0;
                 const nuevoTipo = document.getElementById('editMovTipo').value;
@@ -5763,38 +5781,30 @@ window.addEventListener('load', function () {
                     return;
                 }
 
-                const cajasDb = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
+                // Revertir el efecto del monto viejo y aplicar el nuevo — todo
+                // en una sola operación atómica contra la base de datos.
+                const deltaCajaVieja = (mov.tipo === 'Ingreso') ? -mov.monto : mov.monto;
+                const deltaCajaNueva = (nuevoTipo === 'Ingreso') ? nuevoMonto : -nuevoMonto;
+                const cajasDelta = (mov.caja === nuevaCaja)
+                    ? [{ nombre: mov.caja, delta: deltaCajaVieja + deltaCajaNueva }]
+                    : [{ nombre: mov.caja, delta: deltaCajaVieja }, { nombre: nuevaCaja, delta: deltaCajaNueva }];
 
-                const cajaVieja = cajasDb.find(c => c.nombre === mov.caja);
-                if (cajaVieja) {
-                    if (mov.tipo === 'Ingreso') cajaVieja.saldo -= mov.monto;
-                    else cajaVieja.saldo += mov.monto;
-                }
+                const ok = await window._geckoLlamarMovimientoAtomico(cajasDelta, [{
+                    accion: 'update', id: mov.id,
+                    fecha: mov.fecha, detalle: nuevoDetalle, caja: nuevaCaja,
+                    tipo: nuevoTipo, monto: nuevoMonto, categoria: nuevaCategoria,
+                    creado_por: window.GECKO_USER?.nombre || null
+                }]);
 
-                const cajaNueva = cajasDb.find(c => c.nombre === nuevaCaja);
-                if (cajaNueva) {
-                    if (nuevoTipo === 'Ingreso') cajaNueva.saldo += nuevoMonto;
-                    else cajaNueva.saldo -= nuevoMonto;
-                }
-                localStorage.setItem('gecko_cajas', JSON.stringify(cajasDb));
-                window.LISTA_CAJAS = cajasDb;
-
-                const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-                const dbIndex = dbMovs.findIndex(m => m.id === mov.id);
-                if (dbIndex !== -1) {
-                    dbMovs[dbIndex] = { ...dbMovs[dbIndex], detalle: nuevoDetalle, monto: nuevoMonto, tipo: nuevoTipo, categoria: nuevaCategoria, caja: nuevaCaja };
-                    localStorage.setItem('gecko_movimientos', JSON.stringify(dbMovs));
-                    window.LISTA_MOVIMIENTOS = dbMovs;
-                }
+                if (!ok) return;
 
                 modal.remove();
-                if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
-                if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
                 if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento actualizado', '¡Listo!');
+                window.location.reload();
             };
         };
 
-        window.ejecutarTransferencia = function () {
+        window.ejecutarTransferencia = async function () {
             const origen = document.getElementById('transferenciaOrigen')?.value;
             const destino = document.getElementById('transferenciaDestino')?.value;
             const monto = parseFloat(document.getElementById('transferenciaMonto')?.value) || 0;
@@ -5804,29 +5814,23 @@ window.addEventListener('load', function () {
             if (origen === destino) { alert('Las cajas deben ser distintas.'); return; }
             if (monto <= 0) { alert('Monto inválido.'); return; }
 
-            const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-            const cajO = cajas.find(c => c.nombre === origen);
-            const cajD = cajas.find(c => c.nombre === destino);
-
-            if (!cajO || !cajD) { alert('Caja no encontrada.'); return; }
-
-            cajO.saldo -= monto;
-            cajD.saldo += monto;
-            localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
-
             const ts = Date.now();
-            const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-            movs.push({ id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}${desc ? ' - ' + desc : ''}`, caja: origen, tipo: 'Egreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null });
-            movs.push({ id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}${desc ? ' - ' + desc : ''}`, caja: destino, tipo: 'Ingreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null });
+            const ok = await window._geckoLlamarMovimientoAtomico(
+                [
+                    { nombre: origen, delta: -monto },
+                    { nombre: destino, delta: monto }
+                ],
+                [
+                    { accion: 'insert', id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}${desc ? ' - ' + desc : ''}`, caja: origen, tipo: 'Egreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null },
+                    { accion: 'insert', id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}${desc ? ' - ' + desc : ''}`, caja: destino, tipo: 'Ingreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null }
+                ]
+            );
 
-            localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
+            if (!ok) return;
 
             document.getElementById('modalTransferencia').style.display = 'none';
-
             if (typeof window.mostrarExito === 'function') window.mostrarExito(`Transferencia de $${monto.toLocaleString('es-AR')} realizada.`, '¡Listo!');
-
-            if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
-            if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+            window.location.reload();
         };
 
         // ── SOBREESCRITURA DEFINITIVA: Múltiples CUITs y Mails ──
@@ -6773,36 +6777,6 @@ window.guardarNuevoMovimiento = function () {
         if (typeof window.renderizarFinanzas === 'function') setTimeout(window.renderizarFinanzas, 150);
         if (typeof window.renderizarMovimientos === 'function') setTimeout(window.renderizarMovimientos, 150);
     } catch (e) { console.error('Error registrando movimiento:', e); }
-};
-
-// ── ejecutarTransferencia: override — lee IDs nuevos del modal rediseñado
-window.ejecutarTransferencia = function () {
-    const origen = document.getElementById('transferenciaOrigen')?.value;
-    const destino = document.getElementById('transferenciaDestino')?.value;
-    const monto = parseFloat(document.getElementById('transferenciaMonto')?.value) || 0;
-    if (!origen || !destino) { alert('Seleccioná cajas de origen y destino.'); return; }
-    if (origen === destino) { alert('Las cajas deben ser distintas.'); return; }
-    if (monto <= 0) { alert('Monto inválido.'); return; }
-    const _ls = window._localStorage_original || localStorage;
-    const cajas = window.LISTA_CAJAS || JSON.parse(_ls.getItem('gecko_cajas') || '[]');
-    const cajO = cajas.find(function (c) { return c.nombre === origen; });
-    const cajD = cajas.find(function (c) { return c.nombre === destino; });
-    if (!cajO || !cajD) { alert('Caja no encontrada.'); return; }
-    cajO.saldo -= monto;
-    cajD.saldo += monto;
-    _ls.setItem('gecko_cajas', JSON.stringify(cajas));
-    window.LISTA_CAJAS = cajas;
-    const ts = Date.now();
-    const movs = window.LISTA_MOVIMIENTOS || JSON.parse(_ls.getItem('gecko_movimientos') || '[]');
-    movs.push({ id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}`, caja: origen, tipo: 'Egreso', monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null });
-    movs.push({ id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}`, caja: destino, tipo: 'Ingreso', monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null });
-    _ls.setItem('gecko_movimientos', JSON.stringify(movs));
-    window.LISTA_MOVIMIENTOS = movs;
-    document.getElementById('modalTransferencia').style.display = 'none';
-    const mEl = document.getElementById('transferenciaMonto'); if (mEl) mEl.value = '';
-    if (typeof window.mostrarExito === 'function') window.mostrarExito(`Transferencia de $${monto.toLocaleString('es-AR')} realizada.`, '¡Listo!');
-    if (typeof window.renderizarFinanzas === 'function') setTimeout(window.renderizarFinanzas, 150);
-    if (typeof window.renderizarMovimientos === 'function') setTimeout(window.renderizarMovimientos, 150);
 };
 
 // ── updateCajaSelectors: override — también puebla selects de nuevos modales
