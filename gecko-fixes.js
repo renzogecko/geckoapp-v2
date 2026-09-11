@@ -3607,47 +3607,45 @@ window.revertirPagoGastoFijo = function (idx) {
     document.body.appendChild(modal);
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
-    document.getElementById('_geckoRevertirOk').onclick = function () {
+    document.getElementById('_geckoRevertirOk').onclick = async function () {
         modal.remove();
-        const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-        const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
 
-        // Revertir un pago individual (id o detalle+monto como fallback) y devolver su saldo a su caja
-        const revertirUnPago = (movId, cajaNombre, monto) => {
-            let movIdx = movId ? movs.findIndex(m => m.id === movId) : -1;
-            if (movIdx === -1) movIdx = movs.findIndex(m => m.tipo === 'Egreso' && m.detalle === g.concepto && m.monto === monto);
-            let cajaNombreRevertir = cajaNombre;
-            if (movIdx !== -1) {
-                cajaNombreRevertir = cajaNombreRevertir || movs[movIdx].caja;
-                movs.splice(movIdx, 1);
-            }
-            if (cajaNombreRevertir) {
-                const cajaObj = cajas.find(c => c.nombre === cajaNombreRevertir);
-                if (cajaObj) cajaObj.saldo += monto;
-            }
-        };
+        // Siempre por ID exacto — nunca "adivinando" por descripción/monto.
+        const pagos = (Array.isArray(g.movimientosPago) && g.movimientosPago.length)
+            ? g.movimientosPago
+            : (g.movimientoId ? [{ id: g.movimientoId, caja: g.cajaPago, monto: g.monto }] : []);
 
-        if (Array.isArray(g.movimientosPago) && g.movimientosPago.length) {
-            g.movimientosPago.forEach(pago => revertirUnPago(pago.id, pago.caja, pago.monto));
-        } else {
-            // Compatibilidad: gastos pagados antes de esta mejora (un solo pago)
-            revertirUnPago(g.movimientoId, g.cajaPago, g.monto);
+        if (!pagos.length) {
+            alert('No se encontró el registro exacto del pago original de "' + g.concepto + '". No se puede revertir automáticamente — revisalo a mano en Movimientos y Finanzas.');
+            return;
         }
 
-        localStorage.setItem('gecko_movimientos', JSON.stringify(movs));
-        window.LISTA_MOVIMIENTOS = movs;
-        localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
+        const cajasDelta = pagos.map(p => ({ nombre: p.caja, delta: p.monto }));
+        const movimientosDelete = pagos.map(p => ({ accion: 'delete', id: p.id }));
+
+        const ok = await window._geckoLlamarMovimientoAtomico(cajasDelta, movimientosDelete);
+        if (!ok) return;
 
         g.estado = 'Pendiente';
         delete g.movimientoId;
         delete g.cajaPago;
         delete g.movimientosPago;
-        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
-        window.LISTA_GASTOS_FIJOS = lista;
-        window.renderGastosFijos();
-        if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
-        if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
+        delete g.periodoPagado;
+
+        try {
+            const res = await fetch('/app/api.php?endpoint=gastos_fijos', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(g)
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || 'Error desconocido');
+        } catch (e) {
+            alert('⚠️ Se devolvió la plata a la caja y se borró el movimiento, pero no se pudo volver a marcar "' + g.concepto + '" como Pendiente.\n\nRevisalo manualmente.\n\nDetalle: ' + e.message);
+        }
+
         if (typeof window.mostrarExito === 'function') window.mostrarExito(`Pago de ${g.concepto} revertido.`, '¡Revertido!');
+        window.location.reload();
     };
 };
 
