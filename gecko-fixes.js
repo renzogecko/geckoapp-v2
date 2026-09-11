@@ -3281,10 +3281,12 @@ window.renderGastosFijos = function () {
                 <span style="color:#a1a1aa;font-size:12px;font-weight:700;">Día ${g.vencimiento} de cada mes</span>
             </td>
             <td class="py-4 px-6">
-                <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;
+                <select onchange="window.cambiarEstadoManualGastoFijo(${idx}, this.value)"
+                    style="padding:4px 10px;border-radius:20px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;
                     ${pagado ? 'background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#22c55e;' : 'background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;'}">
-                    ${pagado ? 'Pagado' : 'Pendiente'}
-                </span>
+                    <option value="Pendiente" ${!pagado ? 'selected' : ''} style="background:#141417;color:#f59e0b;">Pendiente</option>
+                    <option value="Pagado" ${pagado ? 'selected' : ''} style="background:#141417;color:#22c55e;">Pagado</option>
+                </select>
             </td>
             <td class="py-4 px-6 text-right">
                 <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;">
@@ -3479,18 +3481,22 @@ window.confirmarPagoGastoFijo = async function () {
     const ok = await window._geckoLlamarMovimientoAtomico(cajasDelta, movimientos);
     if (!ok) return;
 
-    // Marcar el gasto como pagado (aviso visible si esto puntual falla,
-    // aunque la plata y el movimiento ya quedaron guardados bien)
+    // El pago en Finanzas ya quedó registrado (plata + movimiento). Guardamos
+    // el detalle del pago siempre, pero el ESTADO es aparte y manual: si ya
+    // estaba en Pendiente, preguntamos si también lo pasamos a Pagado.
     const periodoEl = document.getElementById('pagoGfPeriodo');
     const ahoraFallback = new Date();
     const mesFallback = String(ahoraFallback.getMonth() + 1).padStart(2, '0');
-    g.estado = 'Pagado';
     g.movimientoId = mov1.id;
     g.cajaPago = usaSegundaCaja ? `${cajaNombre} + ${caja2Nombre}` : cajaNombre;
     g.movimientosPago = usaSegundaCaja
         ? [{ id: mov1.id, caja: cajaNombre, monto: monto1 }, { id: mov2.id, caja: caja2Nombre, monto: monto2 }]
         : [{ id: mov1.id, caja: cajaNombre, monto: monto1 }];
     g.periodoPagado = (periodoEl && periodoEl.value) ? periodoEl.value : `${ahoraFallback.getFullYear()}-${mesFallback}`;
+
+    if (g.estado !== 'Pagado' && confirm(`El pago de "${g.concepto}" ya quedó registrado en Finanzas.\n\n¿Pasamos también el estado a "Pagado"?`)) {
+        g.estado = 'Pagado';
+    }
 
     try {
         const res = await fetch('/app/api.php?endpoint=gastos_fijos', {
@@ -3501,12 +3507,36 @@ window.confirmarPagoGastoFijo = async function () {
         const data = await res.json();
         if (!data.success) throw new Error(data.message || 'Error desconocido');
     } catch (e) {
-        alert('⚠️ El pago se guardó en la caja y el movimiento, pero no se pudo marcar "' + g.concepto + '" como pagado en Gastos Fijos.\n\nRevisalo manualmente.\n\nDetalle: ' + e.message);
+        alert('⚠️ El pago se guardó en la caja y el movimiento, pero no se pudo guardar el detalle en Gastos Fijos.\n\nRevisalo manualmente.\n\nDetalle: ' + e.message);
     }
 
     document.getElementById('modalPagoGastoFijo').style.display = 'none';
-    if (typeof window.mostrarExito === 'function') window.mostrarExito(`${g.concepto} pagado desde ${g.cajaPago}.`, '¡Abonado!');
+    if (typeof window.mostrarExito === 'function') window.mostrarExito(`Pago de ${g.concepto} registrado.`, '¡Listo!');
     window.location.reload();
+};
+
+window.cambiarEstadoManualGastoFijo = function (idx, nuevoEstado) {
+    const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
+    const g = lista[idx];
+    if (!g || g.estado === nuevoEstado) return;
+
+    const estadoAnterior = g.estado;
+    const cambios = { ...g, estado: nuevoEstado };
+
+    fetch('/app/api.php?endpoint=gastos_fijos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cambios)
+    }).then(function (res) { return res.json(); }).then(function (data) {
+        if (!data.success) throw new Error(data.message || 'Error desconocido');
+        lista[idx] = cambios;
+        window.LISTA_GASTOS_FIJOS = lista;
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`Estado cambiado a ${nuevoEstado}.`, '¡Listo!');
+        window.renderGastosFijos();
+    }).catch(function (e) {
+        alert('⚠️ No se pudo guardar el cambio de estado. Sigue en "' + estadoAnterior + '".\n\nDetalle: ' + e.message);
+        window.renderGastosFijos();
+    });
 };
 
 window.revertirPagoGastoFijo = function (idx) {
