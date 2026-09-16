@@ -4309,7 +4309,11 @@ window.obtenerFechaInicioPeriodoActual = function () {
     if (hist.length > 0) {
         const ultimo = hist[hist.length - 1];
         const [d, m, y] = (ultimo.fecha_cierre || '').split('/');
-        if (d && m && y) return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+        if (d && m && y) {
+            const fecha = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+            fecha.setDate(fecha.getDate() + 1); // el día siguiente al cierre anterior
+            return fecha;
+        }
     }
     return new Date(2026, 6, 1); // 01/07/2026 fijo (mes 6 = Julio, 0-indexed)
 };
@@ -4318,46 +4322,69 @@ window.obtenerFechaInicioPeriodoActual = function () {
 window._ejecutarCierreMensualGecko = function () {
     window.ejecutarCierreMensual = window._ejecutarCierreMensualGecko;
     const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    const ahoraValidacion = new Date();
 
-    // Anti-doble-cierre: bloquea si el mes calendario actual ya fue cerrado
-    const histValidacion = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
-    const ultimoCierreValidacion = histValidacion.length > 0 ? histValidacion[histValidacion.length - 1] : null;
-    if (ultimoCierreValidacion && ultimoCierreValidacion.mes === ahoraValidacion.getMonth() && ultimoCierreValidacion.anio === ahoraValidacion.getFullYear()) {
-        window.mostrarAdvertencia(`El mes de ${meses[ahoraValidacion.getMonth()]} ${ahoraValidacion.getFullYear()} ya fue cerrado el ${ultimoCierreValidacion.fecha_cierre}.`, 'CIERRE YA REALIZADO');
-        return;
-    }
+    const hist0 = window.HISTORICO_CIERRES || JSON.parse(localStorage.getItem('gecko_historico_cierres') || '[]');
+    const ultimoCierre0 = hist0.length > 0 ? hist0[hist0.length - 1] : null;
+
+    const desdeDefault = window.obtenerFechaInicioPeriodoActual();
+    const desdeDefaultISO = desdeDefault.toLocaleDateString('en-CA');
+    const hastaDefaultISO = new Date().toLocaleDateString('en-CA');
 
     document.getElementById('_geckoConfirmCierre')?.remove();
     const modal = document.createElement('div');
     modal.id = '_geckoConfirmCierre';
     modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
-    const mesNom = meses[new Date().getMonth()];
     modal.innerHTML = `
-        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
+        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:420px;padding:32px;text-align:center;">
             <div style="width:56px;height:56px;background:rgba(241,90,36,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
                 <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#F15A24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             </div>
-            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Cerrar mes de ${mesNom}</h3>
-            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se archivará el balance actual y todos los gastos fijos volverán a estado <strong style="color:white;">Pendiente</strong>.</p>
+            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Cerrar período</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 20px 0;">Se archivará el balance del período elegido y los gastos fijos correspondientes volverán a estado <strong style="color:white;">Pendiente</strong>.</p>
+            <div style="text-align:left;margin-bottom:24px;">
+                <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Desde</label>
+                <input id="_geckoCierreDesde" type="date" value="${desdeDefaultISO}" onclick="this.showPicker()" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;margin-bottom:14px;box-sizing:border-box;color-scheme:dark;">
+                <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Hasta (día de cierre)</label>
+                <input id="_geckoCierreHasta" type="date" value="${hastaDefaultISO}" onclick="this.showPicker()" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;color-scheme:dark;">
+            </div>
             <div style="display:flex;gap:10px;">
                 <button onclick="document.getElementById('_geckoConfirmCierre').remove()"
                     style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='#3f3f46';this.style.color='#a1a1aa'" onmouseout="this.style.borderColor='#27272a';this.style.color='#71717a'">Cancelar</button>
                 <button id="_geckoCierreOk"
-                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#ff6b32'" onmouseout="this.style.background='#F15A24'">Cerrar mes</button>
+                    style="flex:1;padding:13px;background:#F15A24;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.background='#ff6b32'" onmouseout="this.style.background='#F15A24'">Cerrar período</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.getElementById('_geckoCierreOk').onclick = function () {
+        const desdeVal = document.getElementById('_geckoCierreDesde').value;
+        const hastaVal = document.getElementById('_geckoCierreHasta').value;
+        if (!desdeVal || !hastaVal) { window._geckoAvisoModal('Elegí las dos fechas del período.', 'Falta un dato'); return; }
+
+        const [dy, dm, dd] = desdeVal.split('-');
+        const [hy, hm, hd] = hastaVal.split('-');
+        const inicioPeriodo = new Date(parseInt(dy), parseInt(dm) - 1, parseInt(dd));
+        const finPeriodo = new Date(parseInt(hy), parseInt(hm) - 1, parseInt(hd));
+
+        if (finPeriodo < inicioPeriodo) { window._geckoAvisoModal('La fecha "Hasta" no puede ser anterior a "Desde".', 'Rango inválido'); return; }
+
+        if (ultimoCierre0) {
+            const [ud, um, uy] = (ultimoCierre0.fecha_cierre || '').split('/');
+            const fechaUltimoCierre = new Date(parseInt(uy), parseInt(um) - 1, parseInt(ud));
+            if (inicioPeriodo <= fechaUltimoCierre) {
+                window._geckoAvisoModal(`El período elegido se superpone con el último cierre (${ultimoCierre0.fecha_cierre}). Elegí un "Desde" posterior a esa fecha.`, 'Rango inválido');
+                return;
+            }
+        }
+
         modal.remove();
-        const ahora = new Date();
-        const inicioPeriodo = window.obtenerFechaInicioPeriodoActual();
+
         const movs = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
         const movsPeriodo = movs.filter(m => {
             const pts = (m.fecha || '').split('/');
             if (pts.length < 3) return false;
-            return new Date(parseInt(pts[2]), parseInt(pts[1]) - 1, parseInt(pts[0])) >= inicioPeriodo;
+            const fechaMov = new Date(parseInt(pts[2]), parseInt(pts[1]) - 1, parseInt(pts[0]));
+            return fechaMov >= inicioPeriodo && fechaMov <= finPeriodo;
         });
         const ing = movsPeriodo.filter(m => m.tipo === 'Ingreso').reduce((a, m) => a + m.monto, 0);
         const egr = movsPeriodo.filter(m => m.tipo === 'Egreso').reduce((a, m) => a + m.monto, 0);
@@ -4370,11 +4397,13 @@ window._ejecutarCierreMensualGecko = function () {
         const porCobrarParaPDF = listaParaCobrar.filter(p => p.status === 'OT' && p.estado_ot !== 'Finalizado')
             .reduce((a, p) => a + Math.max(0, (p.total || 0) - (p.sena || 0)), 0);
 
-        // Guardar en historial — mes/anio quedan como metadata calendario (validación anti-doble-cierre);
-        // ingresos/egresos/balance/periodo reflejan TODO el período desde el cierre anterior
         const inicioPeriodoStr = inicioPeriodo.toLocaleDateString('es-AR');
-        const finPeriodoStr = ahora.toLocaleDateString('es-AR');
-        const pdfHtmlSnapshot = window._construirHTMLCierreMes(meses[ahora.getMonth()], ahora.getFullYear(), ing, egr, movsPeriodo, gastosFijos, {
+        const finPeriodoStr = finPeriodo.toLocaleDateString('es-AR');
+        const nombrePeriodo = (meses[inicioPeriodo.getMonth()] === meses[finPeriodo.getMonth()] && inicioPeriodo.getFullYear() === finPeriodo.getFullYear())
+            ? `${meses[finPeriodo.getMonth()]} ${finPeriodo.getFullYear()}`
+            : `${meses[inicioPeriodo.getMonth()]} - ${meses[finPeriodo.getMonth()]} ${finPeriodo.getFullYear()}`;
+
+        const pdfHtmlSnapshot = window._construirHTMLCierreMes(meses[finPeriodo.getMonth()], finPeriodo.getFullYear(), ing, egr, movsPeriodo, gastosFijos, {
             periodoDesde: inicioPeriodoStr,
             periodoHasta: finPeriodoStr,
             cierreAnterior: cierreAnteriorParaPDF,
@@ -4382,13 +4411,13 @@ window._ejecutarCierreMensualGecko = function () {
         });
         const cierre = {
             id: 'cierre_' + Date.now(),
-            periodo: `${meses[ahora.getMonth()]} ${ahora.getFullYear()} (${inicioPeriodoStr} al ${finPeriodoStr})`,
-            mes: ahora.getMonth(),
-            anio: ahora.getFullYear(),
+            periodo: `${nombrePeriodo} (${inicioPeriodoStr} al ${finPeriodoStr})`,
+            mes: finPeriodo.getMonth(),
+            anio: finPeriodo.getFullYear(),
             ingresos: ing,
             gastos: egr,
             balance: ing - egr,
-            fecha_cierre: ahora.toLocaleDateString('es-AR'),
+            fecha_cierre: finPeriodoStr,
             movimientos: movsPeriodo.length,
             gastos_fijos: gastosFijos.length,
             pdf_html: pdfHtmlSnapshot
@@ -4398,9 +4427,10 @@ window._ejecutarCierreMensualGecko = function () {
         window.HISTORICO_CIERRES = hist;
         localStorage.setItem('gecko_historico_cierres', JSON.stringify(hist));
 
-        // Reiniciar gastos fijos — SOLO si su período pagado ya pasó o es el mes que se cierra.
-        // Si fueron pagados por adelantado para un mes futuro, se respetan y no se tocan.
-        const periodoDelCierre = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+        // Reiniciar gastos fijos — SOLO si su período pagado ya pasó o es el mes cubierto por
+        // la fecha "Hasta" elegida. Si fueron pagados por adelantado para un mes posterior,
+        // se respetan y no se tocan.
+        const periodoDelCierre = `${finPeriodo.getFullYear()}-${String(finPeriodo.getMonth() + 1).padStart(2, '0')}`;
         gastosFijos.forEach(g => {
             const esFuturo = g.periodoPagado && g.periodoPagado > periodoDelCierre;
             if (!esFuturo) {
@@ -4433,7 +4463,7 @@ window._ejecutarCierreMensualGecko = function () {
                 <div style="width:64px;height:64px;background:rgba(34,197,94,0.1);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
                     <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 6px;">Mes cerrado</p>
+                <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#F15A24;margin:0 0 6px;">Período cerrado</p>
                 <h3 style="color:white;font-size:22px;font-weight:900;margin:0 0 4px;">${cierre.periodo}</h3>
                 <p style="color:#71717a;font-size:12px;margin:0 0 24px;">${finPeriodoStr} · ${movsPeriodo.length} movimientos</p>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;">
@@ -4464,7 +4494,7 @@ window._ejecutarCierreMensualGecko = function () {
             </div>`;
         document.body.appendChild(modalResult);
         document.getElementById('_geckoCierreDescargar').onclick = function () {
-            window._generarPDFCierreMes(meses[ahora.getMonth()], ahora.getFullYear(), ing, egr, movsPeriodo, gastosFijos, {
+            window._generarPDFCierreMes(meses[finPeriodo.getMonth()], finPeriodo.getFullYear(), ing, egr, movsPeriodo, gastosFijos, {
                 periodoDesde: inicioPeriodoStr,
                 periodoHasta: finPeriodoStr,
                 cierreAnterior: cierreAnteriorParaPDF,
