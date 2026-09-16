@@ -2024,6 +2024,13 @@ window.abrirModalSena = function (id) {
                     </div>
                 </div>
 
+                <!-- Fecha del pago -->
+                <div>
+                    <label style="${labelStyle}">Fecha del pago</label>
+                    <input type="date" id="senaFecha" onclick="this.showPicker()" value="${new Date().toLocaleDateString('en-CA')}"
+                        style="${inputStyle}color-scheme:dark;">
+                </div>
+
                 <!-- Nota opcional -->
                 <div>
                     <label style="${labelStyle}">Nota (opcional)</label>
@@ -2237,6 +2244,15 @@ window.aplicarCreditoAOT = function (nombreCliente, otId, montoAAplicar) {
     return monto;
 };
 
+// Lee un <input type="date"> (formato AAAA-MM-DD) y lo convierte al
+// formato d/m/AAAA que usa el resto del sistema. Si está vacío, usa hoy.
+window._geckoFechaInputAFormato = function (inputId) {
+    const val = document.getElementById(inputId)?.value;
+    if (!val) return new Date().toLocaleDateString('es-AR');
+    const partes = val.split('-');
+    return `${parseInt(partes[2], 10)}/${parseInt(partes[1], 10)}/${partes[0]}`;
+};
+
 window._registrarSena = async function (id) {
     const monto1 = window._parseMontoValor(document.getElementById('sena1Monto')?.value);
     const forma1 = document.getElementById('sena1Forma')?.value || 'Efectivo';
@@ -2278,7 +2294,7 @@ window._registrarSena = async function (id) {
     }
 
     const totalPago = montoNominal1 + montoNominal2;
-    const fecha = new Date().toLocaleDateString('es-AR');
+    const fecha = window._geckoFechaInputAFormato('senaFecha');
 
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const idx = lista.findIndex(x => String(x.id) === String(id));
@@ -3395,6 +3411,9 @@ window.pagarGastoFijo = function (idx) {
     if (m1) { window._setMoneyValue(m1, g.monto); m1.readOnly = true; }
     if (m2) window._setMoneyValue(m2, 0);
 
+    const fechaGfEl = document.getElementById('pagoGfFecha');
+    if (fechaGfEl) fechaGfEl.value = new Date().toLocaleDateString('en-CA');
+
     document.getElementById('modalPagoGastoFijo').style.display = 'flex';
 };
 
@@ -3499,7 +3518,7 @@ window.confirmarPagoGastoFijo = async function () {
         if (Math.round(monto1 + monto2) !== Math.round(g.monto)) { window._geckoAvisoModal("La suma de ambos montos debe ser igual al total a pagar.", "Dato inválido"); return; }
     }
 
-    const fecha = new Date().toLocaleDateString('es-AR');
+    const fecha = window._geckoFechaInputAFormato('pagoGfFecha');
     const mov1 = {
         accion: 'insert',
         id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
@@ -5372,6 +5391,8 @@ window.addEventListener('load', function () {
             if (m) { m.style.display = 'flex'; }
             const monto = document.getElementById('transferenciaMonto');
             if (monto) monto.value = '';
+            const fechaEl = document.getElementById('transferenciaFecha');
+            if (fechaEl) fechaEl.value = new Date().toLocaleDateString('en-CA');
         };
 
         // Poblar selects una vez más ahora que main.js ya corrió
@@ -5917,14 +5938,15 @@ window.addEventListener('load', function () {
             if (monto <= 0) { alert('Monto inválido.'); return; }
 
             const ts = Date.now();
+            const fechaTransf = window._geckoFechaInputAFormato('transferenciaFecha');
             const ok = await window._geckoLlamarMovimientoAtomico(
                 [
                     { nombre: origen, delta: -monto },
                     { nombre: destino, delta: monto }
                 ],
                 [
-                    { accion: 'insert', id: 'mov_' + ts, fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia a ${destino}${desc ? ' - ' + desc : ''}`, caja: origen, tipo: 'Egreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null },
-                    { accion: 'insert', id: 'mov_' + (ts + 1), fecha: new Date().toLocaleDateString('es-AR'), detalle: `Transferencia desde ${origen}${desc ? ' - ' + desc : ''}`, caja: destino, tipo: 'Ingreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null }
+                    { accion: 'insert', id: 'mov_' + ts, fecha: fechaTransf, detalle: `Transferencia a ${destino}${desc ? ' - ' + desc : ''}`, caja: origen, tipo: 'Egreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null },
+                    { accion: 'insert', id: 'mov_' + (ts + 1), fecha: fechaTransf, detalle: `Transferencia desde ${origen}${desc ? ' - ' + desc : ''}`, caja: destino, tipo: 'Ingreso', monto: monto, categoria: 'Transferencia', creado_por: window.GECKO_USER?.nombre || null }
                 ]
             );
 
