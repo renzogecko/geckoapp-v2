@@ -5842,6 +5842,11 @@ window.addEventListener('load', function () {
             const catOptsList = categoriasList.includes(mov.categoria) ? categoriasList : [mov.categoria, ...categoriasList];
             const catOpts = catOptsList.map(c => `<option value="${c}" ${c === mov.categoria ? 'selected' : ''}>${c}</option>`).join('');
 
+            const partesFechaEdit = (mov.fecha || '').split('/');
+            const fechaEditISO = partesFechaEdit.length === 3
+                ? `${partesFechaEdit[2]}-${String(partesFechaEdit[1]).padStart(2, '0')}-${String(partesFechaEdit[0]).padStart(2, '0')}`
+                : new Date().toLocaleDateString('en-CA');
+
             const modal = document.createElement('div');
             modal.id = '_geckoModalEditMov';
             modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10000;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
@@ -5853,10 +5858,16 @@ window.addEventListener('load', function () {
                     <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Detalle</label>
                     <input id="editMovDetalle" type="text" value="${(mov.detalle || '').replace(/"/g, '&quot;')}" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;margin-bottom:14px;box-sizing:border-box;">
 
+                    <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Fecha</label>
+                    <input id="editMovFecha" type="date" value="${fechaEditISO}" onclick="this.showPicker()" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;margin-bottom:14px;box-sizing:border-box;color-scheme:dark;">
+
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Monto</label>
-                            <input id="editMovMonto" type="number" value="${mov.monto || 0}" style="width:100%;background:#0f0f0f;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:white;font-size:14px;box-sizing:border-box;">
+                            <div class="gecko-money-wrap">
+                                <span class="gecko-money-prefix">$</span>
+                                <input type="text" inputmode="numeric" id="editMovMonto" oninput="window._formatearInputDinero(this)">
+                            </div>
                         </div>
                         <div>
                             <label style="display:block;color:#71717a;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Tipo</label>
@@ -5891,10 +5902,11 @@ window.addEventListener('load', function () {
                 </div>`;
             document.body.appendChild(modal);
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+            window._setMoneyValue(document.getElementById('editMovMonto'), mov.monto || 0);
 
             document.getElementById('_geckoGuardarEditMov').onclick = async function () {
                 const nuevoDetalle = document.getElementById('editMovDetalle').value.trim();
-                const nuevoMonto = parseFloat(document.getElementById('editMovMonto').value) || 0;
+                const nuevoMonto = window._getMoneyValue(document.getElementById('editMovMonto'));
                 const nuevoTipo = document.getElementById('editMovTipo').value;
                 const nuevaCategoria = document.getElementById('editMovCategoria').value;
                 const nuevaCaja = document.getElementById('editMovCaja').value;
@@ -5914,7 +5926,7 @@ window.addEventListener('load', function () {
 
                 const ok = await window._geckoLlamarMovimientoAtomico(cajasDelta, [{
                     accion: 'update', id: mov.id,
-                    fecha: mov.fecha, detalle: nuevoDetalle, caja: nuevaCaja,
+                    fecha: window._geckoFechaInputAFormato('editMovFecha'), detalle: nuevoDetalle, caja: nuevaCaja,
                     tipo: nuevoTipo, monto: nuevoMonto, categoria: nuevaCategoria,
                     creado_por: window.GECKO_USER?.nombre || null
                 }]);
