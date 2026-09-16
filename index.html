@@ -2827,6 +2827,11 @@
                 </div>
 
                 <div>
+                    <label class="gecko-label">Fecha</label>
+                    <input id="transferenciaFecha" class="gecko-input-line" type="date" onclick="this.showPicker()" style="color-scheme: dark;">
+                </div>
+
+                <div>
                     <label class="gecko-label">Descripción (opcional)</label>
                     <input id="transferenciaDesc" class="gecko-input-line" type="text"
                         placeholder="Motivo de la transferencia">
@@ -3385,6 +3390,11 @@
                 </div>
 
                 <div style="border-top:1px solid #27272a;margin-top:20px;padding-top:16px;">
+                    <label class="gecko-label">Fecha del pago</label>
+                    <input id="pagoGfFecha" class="gecko-input-line" type="date" onclick="this.showPicker()" style="color-scheme: dark;">
+                </div>
+
+                <div style="margin-top:16px;">
                     <label class="gecko-label">¿Hasta qué mes queda cubierto este pago?</label>
                     <input type="month" id="pagoGfPeriodo" class="gecko-select-pro" style="color-scheme: dark;">
                     <p style="color:#52525b;font-size:10px;margin-top:10px;line-height:1.5;font-style:italic;">Si pagás varios meses juntos (ej: alquiler adelantado), elegí el último mes que cubre.</p>
