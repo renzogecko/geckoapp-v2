@@ -3152,6 +3152,50 @@ window.filtroCajaActual = window.filtroCajaActual || 'todas';
 // ── Render Movimientos (5 columnas, filtro por categoría) ──
 // NOTA: main.js tiene 'defer' y sobreescribe esta función. El override definitivo
 // está en el window.addEventListener('load') al final del archivo.
+// Guarda/restaura los filtros de Movimientos para que sobrevivan a
+// cualquier recarga de página (edición, transferencia, etc.)
+window._geckoGuardarFiltrosMov = function () {
+    const datos = {};
+    ['filtroMovCaja', 'filtroMovTipo', 'filtroMovCategoria', 'filtroMovMontoExacto', 'filtroMovBusqueda'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) datos[id] = el.value;
+    });
+    localStorage.setItem('gecko_filtros_movimientos', JSON.stringify(datos));
+};
+
+window._geckoRestaurarFiltrosMov = function () {
+    const guardado = JSON.parse(localStorage.getItem('gecko_filtros_movimientos') || '{}');
+    ['filtroMovCaja', 'filtroMovTipo', 'filtroMovCategoria', 'filtroMovMontoExacto', 'filtroMovBusqueda'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el && guardado[id] !== undefined) el.value = guardado[id];
+    });
+};
+
+// Convierte "d/m/aaaa" a un número comparable para ordenar por fecha real
+window._geckoParsearFechaMov = function (f) {
+    const p = (f || '').split('/');
+    if (p.length !== 3) return 0;
+    return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])).getTime();
+};
+
+// Cambia el criterio de orden de la tabla (o invierte la dirección si
+// se vuelve a clickear la misma columna). Se guarda para persistir.
+window._geckoOrdenarMovimientos = function (campo) {
+    const actual = JSON.parse(localStorage.getItem('gecko_orden_movimientos') || '{"campo":"fecha","direccion":"desc"}');
+    const nuevaDireccion = (actual.campo === campo && actual.direccion === 'desc') ? 'asc' : 'desc';
+    localStorage.setItem('gecko_orden_movimientos', JSON.stringify({ campo: campo, direccion: nuevaDireccion }));
+    window.renderizarMovimientos();
+};
+
+window._geckoActualizarIconosOrdenMov = function () {
+    const actual = JSON.parse(localStorage.getItem('gecko_orden_movimientos') || '{"campo":"fecha","direccion":"desc"}');
+    ['fecha', 'detalle', 'categoria', 'caja', 'monto'].forEach(function (campo) {
+        const icon = document.getElementById('_geckoOrdenIcon_' + campo);
+        if (!icon) return;
+        icon.textContent = (actual.campo === campo) ? (actual.direccion === 'asc' ? '▲' : '▼') : '';
+    });
+};
+
 window.renderizarMovimientos = function () {
     const tbody = document.getElementById('tbodyMovimientos');
     if (!tbody) return;
@@ -5245,15 +5289,15 @@ window.addEventListener('load', function () {
                     filtrosMovRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;';
                     const estiloInput = 'flex:1;min-width:140px;padding:10px 14px;font-size:12px;font-weight:700;color:white;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;';
                     filtrosMovRow.innerHTML = `
-                        <select id="filtroMovCaja" onchange="window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}"></select>
-                        <select id="filtroMovTipo" onchange="window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}">
+                        <select id="filtroMovCaja" onchange="window._geckoGuardarFiltrosMov();window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}"></select>
+                        <select id="filtroMovTipo" onchange="window._geckoGuardarFiltrosMov();window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}">
                             <option value="">Todos</option>
                             <option value="Ingreso">Ingreso</option>
                             <option value="Egreso">Egreso</option>
                         </select>
-                        <select id="filtroMovCategoria" onchange="window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}"></select>
-                        <input type="number" id="filtroMovMontoExacto" oninput="window._geckoFiltrarMovimientosTabla()" placeholder="Monto exacto..." style="${estiloInput}">
-                        <input type="text" id="filtroMovBusqueda" oninput="window._geckoFiltrarMovimientosTabla()" placeholder="Buscar por palabra (ej: Laura, Sueldo, OT#1234)..." style="${estiloInput}flex:2;min-width:220px;">
+                        <select id="filtroMovCategoria" onchange="window._geckoGuardarFiltrosMov();window._geckoFiltrarMovimientosTabla()" class="gecko-select-pro" style="${estiloInput}"></select>
+                        <input type="number" id="filtroMovMontoExacto" oninput="window._geckoGuardarFiltrosMov();window._geckoFiltrarMovimientosTabla()" placeholder="Monto exacto..." style="${estiloInput}">
+                        <input type="text" id="filtroMovBusqueda" oninput="window._geckoGuardarFiltrosMov();window._geckoFiltrarMovimientosTabla()" placeholder="Buscar por palabra (ej: Laura, Sueldo, OT#1234)..." style="${estiloInput}flex:2;min-width:220px;">
                         <button onclick="window.limpiarFiltrosMovimientos()"
                             class="shrink-0 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500 border border-zinc-800 hover:text-white hover:border-zinc-600 transition-all">
                             Limpiar
@@ -5271,22 +5315,26 @@ window.addEventListener('load', function () {
                 };
                 _geckoPoblarSelectFiltro(document.getElementById('filtroMovCaja'), cajasFiltro.map(c => c.nombre), 'Todas las cajas');
                 _geckoPoblarSelectFiltro(document.getElementById('filtroMovCategoria'), [...new Set(window.LISTA_MOVIMIENTOS.map(m => m.categoria || 'Varios'))].sort(), 'Todas las categorías');
+                // Restaurar los valores de filtro guardados (sobreviven a un
+                // reload completo de la página, que antes los borraba).
+                window._geckoRestaurarFiltrosMov();
             }
 
-            // Filtro por categoría
-            const catEl = document.getElementById('filterCategoriaMov');
-            const catFilt = catEl?.value || '';
-            movs = movs.filter(m => {
-                if (catFilt && m.categoria !== catFilt) return false;
-                return true;
-            });
-
-            // Más recientes primero (orden real por timestamp del id, con
-            // fallback al orden del array si el id no tiene el formato esperado)
+            // Orden de la tabla según la columna elegida (por defecto: fecha,
+            // más reciente primero). Se guarda para persistir entre acciones.
+            const ordenActual = JSON.parse(localStorage.getItem('gecko_orden_movimientos') || '{"campo":"fecha","direccion":"desc"}');
             movs = movs.slice().sort((a, b) => {
-                const ta = parseInt(String(a.id).replace('mov_', '')) || 0;
-                const tb = parseInt(String(b.id).replace('mov_', '')) || 0;
-                return tb - ta;
+                let va, vb;
+                switch (ordenActual.campo) {
+                    case 'monto': va = a.monto || 0; vb = b.monto || 0; break;
+                    case 'categoria': va = (a.categoria || '').toLowerCase(); vb = (b.categoria || '').toLowerCase(); break;
+                    case 'caja': va = (a.caja || '').toLowerCase(); vb = (b.caja || '').toLowerCase(); break;
+                    case 'detalle': va = (a.otDetalle || a.detalle || a.concepto || '').toLowerCase(); vb = (b.otDetalle || b.detalle || b.concepto || '').toLowerCase(); break;
+                    default: va = window._geckoParsearFechaMov(a.fecha); vb = window._geckoParsearFechaMov(b.fecha);
+                }
+                if (va < vb) return ordenActual.direccion === 'asc' ? -1 : 1;
+                if (va > vb) return ordenActual.direccion === 'asc' ? 1 : -1;
+                return 0;
             });
 
             if (!movs.length) {
@@ -5363,6 +5411,7 @@ window.addEventListener('load', function () {
             }
 
             window._geckoFiltrarMovimientosTabla();
+            window._geckoActualizarIconosOrdenMov();
         };
 
         // ── Filtros de búsqueda sobre la tabla de movimientos ya renderizada (no reordena ni elimina filas) ──
