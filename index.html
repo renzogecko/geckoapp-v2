@@ -1069,20 +1069,21 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-50/50 dark:bg-darkBg/30 border-b border-gray-100 dark:border-darkBorder">
-                                <th
-                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black w-32">
-                                    Fecha</th>
-                                <th class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black">
-                                    Detalle / Concepto</th>
-                                <th
-                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black w-40">
-                                    Categoría</th>
-                                <th
-                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black w-32">
-                                    Caja</th>
-                                <th
-                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black text-right w-36">
-                                    Monto</th>
+                                <th onclick="window._geckoOrdenarMovimientos('fecha')"
+                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black w-32" style="cursor:pointer;user-select:none;">
+                                    Fecha <span id="_geckoOrdenIcon_fecha"></span></th>
+                                <th onclick="window._geckoOrdenarMovimientos('detalle')"
+                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black" style="cursor:pointer;user-select:none;">
+                                    Detalle / Concepto <span id="_geckoOrdenIcon_detalle"></span></th>
+                                <th onclick="window._geckoOrdenarMovimientos('categoria')"
+                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black w-40" style="cursor:pointer;user-select:none;">
+                                    Categoría <span id="_geckoOrdenIcon_categoria"></span></th>
+                                <th onclick="window._geckoOrdenarMovimientos('caja')"
+                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black w-32" style="cursor:pointer;user-select:none;">
+                                    Caja <span id="_geckoOrdenIcon_caja"></span></th>
+                                <th onclick="window._geckoOrdenarMovimientos('monto')"
+                                    class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black text-right w-36" style="cursor:pointer;user-select:none;">
+                                    Monto <span id="_geckoOrdenIcon_monto"></span></th>
                                 <th
                                     class="py-5 px-6 text-[10px] text-gray-400 uppercase tracking-widest font-black text-right w-24">
                                     Acciones</th>
