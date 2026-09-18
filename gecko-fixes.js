@@ -6201,10 +6201,14 @@ window.addEventListener('load', function () {
         window._abrirModalAsignacionPago = function (cliente, cajaNombre, montoOriginal, pends) {
             window._geckoAsignacion = { cliente, cajaNombre, montoOriginal, pends };
 
+            // Redondeado para evitar que un decimal de más (por cómo se
+            // parseó el monto ingresado) deje afuera al último trabajo
+            // aunque la plata alcance justo para cubrir todo.
+            const montoOriginalRedondeado = Math.round(montoOriginal);
             let acumulado = 0;
             pends.forEach(p => {
                 const saldo = window.calcularSaldoOT(p);
-                p._geckoTildada = acumulado < montoOriginal;
+                p._geckoTildada = acumulado < montoOriginalRedondeado;
                 acumulado += saldo;
             });
 
@@ -6285,7 +6289,7 @@ window.addEventListener('load', function () {
             window._recalcularAsignacionPago();
         };
 
-        window._aplicarAsignacionPago = function () {
+        window._aplicarAsignacionPago = async function () {
             const st = window._geckoAsignacion;
             if (!st) return;
             const { cliente, cajaNombre, montoOriginal, pends } = st;
@@ -6331,25 +6335,50 @@ window.addEventListener('load', function () {
                 if (window.calcularSaldoOT(pSimulada) === 0) otsSaldadas.push(pSimulada);
             });
 
-            const movCreado = (typeof window.registrarMovimiento === 'function')
-                ? window.registrarMovimiento(`Pago Cta. Cte. - ${cliente}`, cajaNombre, montoOriginal, 'Ingreso', 'Cobro Cliente', otsAfectadas)
-                : null;
+            const movId = 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4);
+            const ok = await window._geckoLlamarMovimientoAtomico(
+                [{ nombre: cajaNombre, delta: montoOriginal }],
+                [{
+                    accion: 'insert', id: movId,
+                    fecha: new Date().toLocaleDateString('es-AR'), detalle: `Pago Cta. Cte. - ${cliente}`,
+                    caja: cajaNombre, tipo: 'Ingreso', monto: montoOriginal, categoria: 'Cobro Cliente',
+                    otsAfectadas: otsAfectadas,
+                    creado_por: window.GECKO_USER?.nombre || null
+                }]
+            );
 
-            if (!movCreado) {
-                alert('No se pudo registrar el pago en la caja "' + cajaNombre + '". No se descontó nada de la deuda del cliente. Revisá que la caja exista y volvé a intentar (puede ayudar recargar la página con F5 si hace poco se creó/editó una caja).');
+            if (!ok) {
                 document.getElementById('_geckoModalAsignacionPago')?.remove();
                 window._geckoAsignacion = null;
                 return;
             }
 
-            // El movimiento se registró con éxito en la caja - recién ahora se
-            // aplican los cambios de sena sobre "lista" y se persiste.
+            // La plata ya quedó a salvo. Ahora actualizamos la deuda de cada
+            // OT afectada — aviso visible si alguna puntual falla.
             cambiosPendientes.forEach(({ idx, senaNueva }) => { lista[idx].sena = senaNueva; });
 
             let creditoGenerado = 0;
             if (montoRestante > 0 && typeof window.registrarExcedenteComoCredito === 'function') {
-                window.registrarExcedenteComoCredito(cliente, montoRestante, `Excedente de cobro (caja ${cajaNombre})`, movCreado.id);
+                window.registrarExcedenteComoCredito(cliente, montoRestante, `Excedente de cobro (caja ${cajaNombre})`, movId);
                 creditoGenerado = montoRestante;
+            }
+
+            const errores = [];
+            for (const { idx } of cambiosPendientes) {
+                try {
+                    const res = await fetch('/app/api.php?endpoint=presupuestos', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(lista[idx])
+                    });
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.message || 'Error desconocido');
+                } catch (e) {
+                    errores.push(`OT #${lista[idx].id}: ${e.message}`);
+                }
+            }
+            if (errores.length > 0) {
+                window._geckoAvisoModal('El pago se guardó en la caja, pero no se pudo actualizar la deuda de:\n\n' + errores.join('\n') + '\n\nRevisá esas OTs manualmente.', 'Atención', true);
             }
 
             localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
@@ -6358,16 +6387,13 @@ window.addEventListener('load', function () {
             document.getElementById('_geckoModalAsignacionPago')?.remove();
             window._geckoAsignacion = null;
 
-            if (typeof window.abrirFichaCliente === 'function') window.abrirFichaCliente(cliente);
-            if (typeof window.renderOts === 'function') window.renderOts();
-            if (typeof window._geckoRenderFijo === 'function') window._geckoRenderFijo();
-
             if (typeof window.mostrarExito === 'function') {
                 let msg = `Se aplicaron $${montoOriginal.toLocaleString('es-AR')} a la deuda de ${cliente}.`;
                 if (otsSaldadas.length > 0) msg += ` Se saldaron por completo ${otsSaldadas.length} OT${otsSaldadas.length > 1 ? 's' : ''}.`;
                 if (creditoGenerado > 0) msg += ` Se generaron $${creditoGenerado.toLocaleString('es-AR')} de crédito a favor.`;
                 window.mostrarExito(msg, '¡Cobro Exitoso!');
             }
+            window.location.reload();
         };
 
         window._mostrarAvisoClienteNoCargado = function (nombreCliente, montoExcedente) {
