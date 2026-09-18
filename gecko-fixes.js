@@ -5751,6 +5751,45 @@ window.addEventListener('load', function () {
 
 
         // ── SOBREESCRITURA DEFINITIVA DE MOVIMIENTOS Y TRANSFERENCIAS ──
+        // Compara el detalle y el monto de un Ingreso contra la deuda de
+        // los clientes con trabajos activos. Si coincide nombre + monto
+        // (con la deuda total o con el saldo de una OT puntual), devuelve
+        // los datos para ofrecer redirigir a Cobro en vez de guardar
+        // un movimiento suelto sin vínculo a ninguna OT.
+        window._geckoDetectarPagoCliente = function (desc, monto) {
+            const listaOts = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+            const activas = listaOts.filter(p => p.status === 'OT' && window.calcularSaldoOT(p) > 0);
+            if (!activas.length) return null;
+
+            const descNorm = (desc || '').toLowerCase();
+            const porCliente = {};
+            activas.forEach(p => {
+                const nombre = p.cliente || '';
+                if (!nombre) return;
+                if (!porCliente[nombre]) porCliente[nombre] = { nombre, total: 0, ots: [] };
+                porCliente[nombre].total += window.calcularSaldoOT(p);
+                porCliente[nombre].ots.push(p);
+            });
+
+            const montoRedondeado = Math.round(monto);
+            for (const nombre in porCliente) {
+                const nombreNorm = nombre.toLowerCase();
+                const partes = nombreNorm.split(/[\s-]+/).filter(w => w.length > 3);
+                const nombreCoincide = descNorm.includes(nombreNorm) || partes.some(w => descNorm.includes(w));
+                if (!nombreCoincide) continue;
+
+                const info = porCliente[nombre];
+                if (Math.abs(montoRedondeado - Math.round(info.total)) <= 1) {
+                    return { nombre, coincideTotal: true };
+                }
+                const otCoincide = info.ots.find(p => Math.abs(montoRedondeado - Math.round(window.calcularSaldoOT(p))) <= 1);
+                if (otCoincide) {
+                    return { nombre, coincideTotal: false, otId: otCoincide.id };
+                }
+            }
+            return null;
+        };
+
         window.guardarNuevoMovimiento = async function () {
             const tipo = document.getElementById('nuevoMovTipo')?.value || 'ingreso';
             const desc = document.getElementById('nuevoMovDesc')?.value?.trim();
@@ -5760,14 +5799,39 @@ window.addEventListener('load', function () {
             if (!caja) { alert('Seleccioná una caja.'); return; }
 
             const tipoCapital = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+
+            if (tipoCapital === 'Ingreso') {
+                const posible = window._geckoDetectarPagoCliente(desc, monto);
+                if (posible) {
+                    const irACobro = await window._geckoConfirmModal(
+                        'Esto parece un pago de cliente',
+                        `El detalle y el monto coinciden con ${posible.coincideTotal ? 'toda la deuda pendiente' : 'un trabajo pendiente'} de "${posible.nombre}".\n\n¿Querés aplicarlo a su Cuenta Corriente en vez de guardarlo como un movimiento suelto? Así queda vinculado a la OT correspondiente.`,
+                        'Sí, ir a Cobro'
+                    );
+                    if (irACobro) {
+                        document.getElementById('modalNuevoMovimiento').style.display = 'none';
+                        if (typeof window.abrirFichaCliente === 'function') window.abrirFichaCliente(posible.nombre);
+                        setTimeout(() => {
+                            if (typeof window.abrirModalCobro === 'function') window.abrirModalCobro();
+                            const montoEl = document.getElementById('cobroMonto');
+                            if (montoEl) montoEl.value = monto;
+                            const cajaEl = document.getElementById('cobroCaja');
+                            if (cajaEl) cajaEl.value = caja;
+                        }, 300);
+                        return;
+                    }
+                }
+            }
+
             const delta = tipoCapital === 'Ingreso' ? monto : -monto;
+            const fecha = window._geckoFechaInputAFormato('nuevoMovFecha');
 
             const ok = await window._geckoLlamarMovimientoAtomico(
                 [{ nombre: caja, delta: delta }],
                 [{
                     accion: 'insert',
                     id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
-                    fecha: new Date().toLocaleDateString('es-AR'), detalle: desc, caja: caja,
+                    fecha: fecha, detalle: desc, caja: caja,
                     tipo: tipoCapital, monto: monto, categoria: 'Varios',
                     creado_por: window.GECKO_USER?.nombre || null
                 }]
