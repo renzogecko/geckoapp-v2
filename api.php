@@ -538,19 +538,27 @@ try {
     elseif ($endpoint === 'movimientos') {
 
         if ($method === 'GET') {
+            $pdo->query("ALTER TABLE movimientos ADD COLUMN IF NOT EXISTS ots_afectadas TEXT DEFAULT NULL");
             $stmt = $pdo->query("SELECT * FROM movimientos ORDER BY id DESC");
-            responder($stmt->fetchAll(PDO::FETCH_ASSOC));
+            $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($filas as &$fila) {
+                $fila['otsAfectadas'] = $fila['ots_afectadas'] ? json_decode($fila['ots_afectadas'], true) : null;
+                unset($fila['ots_afectadas']);
+            }
+            unset($fila);
+            responder($filas);
         }
 
         if ($method === 'POST') {
             $d = $body;
-            $stmt = $pdo->prepare("INSERT INTO movimientos (id, fecha, detalle, caja, tipo, monto, categoria, creado_por)
-                VALUES (?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO movimientos (id, fecha, detalle, caja, tipo, monto, categoria, creado_por, ots_afectadas)
+                VALUES (?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $d['id'] ?? uniqid(), $d['fecha'] ?? date('d/m/Y'),
                 $d['detalle'] ?? '', $d['caja'] ?? '',
                 $d['tipo'] ?? 'Ingreso', $d['monto'] ?? 0,
-                $d['categoria'] ?? 'Varios', $d['creado_por'] ?? null
+                $d['categoria'] ?? 'Varios', $d['creado_por'] ?? null,
+                isset($d['otsAfectadas']) ? json_encode($d['otsAfectadas']) : null
             ]);
             responder(["success" => true, "message" => "Movimiento registrado."]);
         }
@@ -590,21 +598,22 @@ try {
                 }
 
                 $stmtInsert = $pdo->prepare("INSERT INTO movimientos
-                    (id, fecha, detalle, caja, tipo, monto, categoria, creado_por)
-                    VALUES (?,?,?,?,?,?,?,?)");
+                    (id, fecha, detalle, caja, tipo, monto, categoria, creado_por, ots_afectadas)
+                    VALUES (?,?,?,?,?,?,?,?,?)");
                 $stmtUpdate = $pdo->prepare("UPDATE movimientos
-                    SET fecha=?, detalle=?, caja=?, tipo=?, monto=?, categoria=?, creado_por=?
+                    SET fecha=?, detalle=?, caja=?, tipo=?, monto=?, categoria=?, creado_por=?, ots_afectadas=?
                     WHERE id=?");
                 $stmtDelete = $pdo->prepare("DELETE FROM movimientos WHERE id=?");
 
                 foreach ($movs as $m) {
                     $accion = $m['accion'] ?? 'insert';
+                    $otsJson = isset($m['otsAfectadas']) ? json_encode($m['otsAfectadas']) : null;
                     if ($accion === 'update') {
                         if (empty($m['id'])) throw new Exception("Falta id para actualizar movimiento.");
                         $stmtUpdate->execute([
                             $m['fecha'] ?? date('d/m/Y'), $m['detalle'] ?? '', $m['caja'] ?? '',
                             $m['tipo'] ?? 'Ingreso', $m['monto'] ?? 0,
-                            $m['categoria'] ?? 'Varios', $m['creado_por'] ?? null,
+                            $m['categoria'] ?? 'Varios', $m['creado_por'] ?? null, $otsJson,
                             $m['id']
                         ]);
                     } elseif ($accion === 'delete') {
@@ -615,7 +624,7 @@ try {
                             $m['id'] ?? uniqid(), $m['fecha'] ?? date('d/m/Y'),
                             $m['detalle'] ?? '', $m['caja'] ?? '',
                             $m['tipo'] ?? 'Ingreso', $m['monto'] ?? 0,
-                            $m['categoria'] ?? 'Varios', $m['creado_por'] ?? null
+                            $m['categoria'] ?? 'Varios', $m['creado_por'] ?? null, $otsJson
                         ]);
                     }
                 }
