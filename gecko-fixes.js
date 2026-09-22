@@ -3299,12 +3299,56 @@ window._geckoDragTable = function (tbody, onDrop) {
 };
 
 // ── Gastos Fijos ──
+// Revisa los gastos "Pagados" cuya fecha de cobertura ya pasó, y los
+// pasa solos a "Pendiente" (solo la etiqueta, no toca cajas/movimientos).
+window._geckoAutoResetGastosFijos = function (lista) {
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    let cambio = false;
+    lista.forEach(function (g) {
+        if (g.estado === 'Pagado' && g.fechaCobertura) {
+            const cobertura = new Date(g.fechaCobertura + 'T00:00:00');
+            if (hoy > cobertura) {
+                g.estado = 'Pendiente';
+                cambio = true;
+                fetch('/app/api.php?endpoint=gastos_fijos', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(g)
+                }).catch(function (e) { console.warn('No se pudo auto-resetear', g.concepto, e); });
+            }
+        }
+    });
+    if (cambio) localStorage.setItem('gecko_gastos_fijos', JSON.stringify(lista));
+    return cambio;
+};
+
+window._geckoFiltrarGastosFijosTabla = function () {
+    const cat = document.getElementById('filtroGfCategoria')?.value || '';
+    const texto = (document.getElementById('filtroGfBusqueda')?.value || '').toLowerCase().trim();
+    document.querySelectorAll('#tbodyGastosFijos tr[data-drag-key]').forEach(function (tr) {
+        const catRow = tr.getAttribute('data-categoria') || '';
+        const textoRow = (tr.getAttribute('data-concepto') || '').toLowerCase();
+        const pasaCat = !cat || catRow === cat;
+        const pasaTexto = !texto || textoRow.includes(texto);
+        tr.style.display = (pasaCat && pasaTexto) ? '' : 'none';
+    });
+};
+
 window.renderGastosFijos = function () {
     const tbody = document.getElementById('tbodyGastosFijos');
     if (!tbody) return;
 
     const lista = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
     if (!window.LISTA_GASTOS_FIJOS) window.LISTA_GASTOS_FIJOS = lista;
+    window._geckoAutoResetGastosFijos(lista);
+
+    const filtroCat = document.getElementById('filtroGfCategoria');
+    if (filtroCat) {
+        const valorPrevio = filtroCat.value;
+        const categorias = [...new Set(lista.map(g => g.categoria || 'Varios'))].sort();
+        filtroCat.innerHTML = '<option value="">Todas las categorías</option>' + categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+        if (categorias.includes(valorPrevio)) filtroCat.value = valorPrevio;
+    }
 
     if (!lista.length) {
         tbody.innerHTML = `<tr><td colspan="5" class="py-16 text-center text-zinc-500 font-bold italic text-[13px]">Sin gastos fijos registrados.</td></tr>`;
@@ -3314,7 +3358,7 @@ window.renderGastosFijos = function () {
     tbody.innerHTML = lista.map((g, idx) => {
         const pagado = g.estado === 'Pagado';
         return `
-        <tr draggable="true" data-drag-key="${idx}" style="border-bottom:1px solid rgba(39,39,42,0.5);cursor:grab;" class="hover:bg-zinc-900/20 transition-colors">
+        <tr draggable="true" data-drag-key="${idx}" data-categoria="${g.categoria || 'Varios'}" data-concepto="${(g.concepto || '').replace(/"/g, '&quot;')}" style="border-bottom:1px solid rgba(39,39,42,0.5);cursor:grab;" class="hover:bg-zinc-900/20 transition-colors">
             <td class="py-4 px-6">
                 <span style="color:white;font-size:13px;font-weight:800;text-transform:uppercase;">${g.concepto}</span>
                 ${g.categoria ? `<div style="font-size:9px;color:#71717a;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${g.categoria}</div>` : ''}
@@ -3388,6 +3432,7 @@ window.renderGastosFijos = function () {
             window.renderGastosFijos();
         });
     }
+    window._geckoFiltrarGastosFijosTabla();
 };
 
 // Formatea un input de dinero mientras el usuario escribe: muestra
@@ -3450,15 +3495,57 @@ window.pagarGastoFijo = function (idx) {
     const btnToggle2 = document.getElementById('btnToggleSegundaCajaGf');
     if (bloque2) bloque2.style.display = 'none';
     if (btnToggle2) btnToggle2.style.display = 'block';
+    const adelantos = Array.isArray(g.adelantos) ? g.adelantos : [];
+    const totalAdelantado = adelantos.reduce((s, a) => s + (a.monto || 0), 0);
+    window._gastoFijoAdelantadoTotal = totalAdelantado;
+    const restante = Math.max(0, g.monto - totalAdelantado);
+
+    const avisoEl = document.getElementById('pagoGfAvisoAdelanto');
+    if (avisoEl) {
+        if (totalAdelantado > 0) {
+            avisoEl.style.display = 'block';
+            avisoEl.innerText = `Ya se adelantaron $${Math.round(totalAdelantado).toLocaleString('es-AR')}. Resta pagar: $${Math.round(restante).toLocaleString('es-AR')}.`;
+        } else {
+            avisoEl.style.display = 'none';
+        }
+    }
+    const chkAdelanto = document.getElementById('pagoGfEsAdelanto');
+    if (chkAdelanto) chkAdelanto.checked = false;
+
     const m1 = document.getElementById('pagoGfMonto1');
     const m2 = document.getElementById('pagoGfMonto2');
-    if (m1) { window._setMoneyValue(m1, g.monto); m1.readOnly = true; }
+    if (m1) { window._setMoneyValue(m1, restante); m1.readOnly = true; }
     if (m2) window._setMoneyValue(m2, 0);
 
     const fechaGfEl = document.getElementById('pagoGfFecha');
     if (fechaGfEl) fechaGfEl.value = new Date().toLocaleDateString('en-CA');
+    const periodoGfEl = document.getElementById('pagoGfPeriodo');
+    if (periodoGfEl) {
+        const futuro = new Date(); futuro.setDate(futuro.getDate() + 30);
+        periodoGfEl.value = g.fechaCobertura || futuro.toLocaleDateString('en-CA');
+    }
 
     document.getElementById('modalPagoGastoFijo').style.display = 'flex';
+};
+
+window._toggleAdelantoGf = function () {
+    const chk = document.getElementById('pagoGfEsAdelanto');
+    const m1 = document.getElementById('pagoGfMonto1');
+    const btnSegunda = document.getElementById('btnToggleSegundaCajaGf');
+    const bloqueFecha = document.getElementById('bloqueFechaCoberturaGf');
+    if (!chk || !m1) return;
+    if (chk.checked) {
+        m1.readOnly = false;
+        window._setMoneyValue(m1, 0);
+        if (btnSegunda) btnSegunda.style.display = 'none';
+        if (bloqueFecha) bloqueFecha.style.display = 'none';
+    } else {
+        m1.readOnly = true;
+        const restante = Math.max(0, (window._gastoFijoAPagarTotal || 0) - (window._gastoFijoAdelantadoTotal || 0));
+        window._setMoneyValue(m1, restante);
+        if (btnSegunda) btnSegunda.style.display = 'block';
+        if (bloqueFecha) bloqueFecha.style.display = 'block';
+    }
 };
 
 window._toggleSegundaCajaGf = function () {
@@ -3591,18 +3678,48 @@ window.confirmarPagoGastoFijo = async function () {
     const ok = await window._geckoLlamarMovimientoAtomico(cajasDelta, movimientos);
     if (!ok) return;
 
+    const esAdelanto = document.getElementById('pagoGfEsAdelanto')?.checked || false;
+
+    if (esAdelanto) {
+        // Adelanto parcial: la plata ya quedó registrada, pero el gasto
+        // sigue Pendiente — solo anotamos que se adelantó una parte.
+        if (!Array.isArray(g.adelantos)) g.adelantos = [];
+        g.adelantos.push({ id: mov1.id, caja: cajaNombre, monto: monto1, fecha });
+
+        try {
+            const res = await fetch('/app/api.php?endpoint=gastos_fijos', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(g)
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || 'Error desconocido');
+        } catch (e) {
+            window._geckoAvisoModal('El adelanto se guardó en la caja y el movimiento, pero no se pudo anotar en Gastos Fijos.\n\nRevisalo manualmente.\n\nDetalle: ' + e.message, 'Atención', true);
+        }
+
+        document.getElementById('modalPagoGastoFijo').style.display = 'none';
+        if (typeof window.mostrarExito === 'function') window.mostrarExito(`Adelanto de $${monto1.toLocaleString('es-AR')} registrado para ${g.concepto}.`, '¡Listo!');
+        window.location.reload();
+        return;
+    }
+
     // El pago en Finanzas ya quedó registrado (plata + movimiento). Guardamos
     // el detalle del pago siempre, pero el ESTADO es aparte y manual: si ya
     // estaba en Pendiente, preguntamos si también lo pasamos a Pagado.
     const periodoEl = document.getElementById('pagoGfPeriodo');
-    const ahoraFallback = new Date();
-    const mesFallback = String(ahoraFallback.getMonth() + 1).padStart(2, '0');
     g.movimientoId = mov1.id;
     g.cajaPago = usaSegundaCaja ? `${cajaNombre} + ${caja2Nombre}` : cajaNombre;
-    g.movimientosPago = usaSegundaCaja
+    const pagosDeEsteMovimiento = usaSegundaCaja
         ? [{ id: mov1.id, caja: cajaNombre, monto: monto1 }, { id: mov2.id, caja: caja2Nombre, monto: monto2 }]
         : [{ id: mov1.id, caja: cajaNombre, monto: monto1 }];
-    g.periodoPagado = (periodoEl && periodoEl.value) ? periodoEl.value : `${ahoraFallback.getFullYear()}-${mesFallback}`;
+    // Si hubo adelantos previos, quedan sumados al historial de pagos de
+    // este ciclo (para que "Revertir Pago" los encuentre a todos).
+    const adelantosPrevios = Array.isArray(g.adelantos) ? g.adelantos : [];
+    g.movimientosPago = adelantosPrevios.concat(pagosDeEsteMovimiento);
+    g.adelantos = [];
+    g.fechaCobertura = (periodoEl && periodoEl.value) ? periodoEl.value : null;
+    if (g.fechaCobertura) g.periodoPagado = g.fechaCobertura.slice(0, 7);
 
     if (g.estado !== 'Pagado') {
         const pasarAPagado = await window._geckoConfirmModal(
@@ -3669,6 +3786,18 @@ window.cambiarEstadoManualGastoFijo = function (idx, nuevoEstado) {
     if (!g || g.estado === nuevoEstado) return;
 
     const estadoAnterior = g.estado;
+
+    // Optimista: se ve el cambio al instante, sin esperar al servidor.
+    const pagado = nuevoEstado === 'Pagado';
+    const label = document.getElementById('estado-gf-label-' + idx);
+    const pill = document.getElementById('estado-gf-' + idx)?.querySelector('div');
+    if (label) label.textContent = nuevoEstado;
+    if (label) label.style.color = pagado ? '#22c55e' : '#f59e0b';
+    if (pill) {
+        pill.style.background = (pagado ? '#22c55e' : '#f59e0b') + '22';
+        pill.style.borderColor = (pagado ? '#22c55e' : '#f59e0b') + '55';
+    }
+
     const cambios = { ...g, estado: nuevoEstado };
 
     fetch('/app/api.php?endpoint=gastos_fijos', {
@@ -3679,10 +3808,9 @@ window.cambiarEstadoManualGastoFijo = function (idx, nuevoEstado) {
         if (!data.success) throw new Error(data.message || 'Error desconocido');
         lista[idx] = cambios;
         window.LISTA_GASTOS_FIJOS = lista;
-        if (typeof window.mostrarExito === 'function') window.mostrarExito(`Estado cambiado a ${nuevoEstado}.`, '¡Listo!');
         window.renderGastosFijos();
     }).catch(function (e) {
-        alert('⚠️ No se pudo guardar el cambio de estado. Sigue en "' + estadoAnterior + '".\n\nDetalle: ' + e.message);
+        window._geckoAvisoModal('No se pudo guardar el cambio de estado. Sigue en "' + estadoAnterior + '".\n\nDetalle: ' + e.message, 'Atención', true);
         window.renderGastosFijos();
     });
 };
