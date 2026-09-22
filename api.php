@@ -487,13 +487,17 @@ try {
             $pdo->query("ALTER TABLE gastos_fijos ADD COLUMN IF NOT EXISTS movimiento_id VARCHAR(50) DEFAULT NULL");
             $pdo->query("ALTER TABLE gastos_fijos ADD COLUMN IF NOT EXISTS caja_pago VARCHAR(100) DEFAULT NULL");
             $pdo->query("ALTER TABLE gastos_fijos ADD COLUMN IF NOT EXISTS movimientos_pago TEXT DEFAULT NULL");
+            $pdo->query("ALTER TABLE gastos_fijos ADD COLUMN IF NOT EXISTS fecha_cobertura VARCHAR(10) DEFAULT NULL");
+            $pdo->query("ALTER TABLE gastos_fijos ADD COLUMN IF NOT EXISTS adelantos TEXT DEFAULT NULL");
             $stmt = $pdo->query("SELECT * FROM gastos_fijos ORDER BY concepto ASC");
             $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($filas as &$fila) {
                 $fila['movimientosPago'] = $fila['movimientos_pago'] ? json_decode($fila['movimientos_pago'], true) : null;
                 $fila['movimientoId'] = $fila['movimiento_id'] ?? null;
                 $fila['cajaPago'] = $fila['caja_pago'] ?? null;
-                unset($fila['movimientos_pago'], $fila['movimiento_id'], $fila['caja_pago']);
+                $fila['fechaCobertura'] = $fila['fecha_cobertura'] ?? null;
+                $fila['adelantos'] = $fila['adelantos'] ? json_decode($fila['adelantos'], true) : null;
+                unset($fila['movimientos_pago'], $fila['movimiento_id'], $fila['caja_pago'], $fila['fecha_cobertura']);
             }
             unset($fila);
             echo json_encode($filas); exit;
@@ -502,24 +506,28 @@ try {
         if ($method === 'POST') {
             $b = json_decode(file_get_contents('php://input'), true);
             $id = $b['id'] ?? uniqid('gf_');
-            $stmt = $pdo->prepare("INSERT INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria, periodo_pagado, movimiento_id, caja_pago, movimientos_pago) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria, periodo_pagado, movimiento_id, caja_pago, movimientos_pago, fecha_cobertura, adelantos) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $id, $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1',
                 $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null, $b['periodoPagado'] ?? null,
                 $b['movimientoId'] ?? null, $b['cajaPago'] ?? null,
-                isset($b['movimientosPago']) ? json_encode($b['movimientosPago']) : null
+                isset($b['movimientosPago']) ? json_encode($b['movimientosPago']) : null,
+                $b['fechaCobertura'] ?? null,
+                isset($b['adelantos']) ? json_encode($b['adelantos']) : null
             ]);
             echo json_encode(['success'=>true,'id'=>$id]); exit;
         }
 
         if ($method === 'PUT') {
             $b = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("REPLACE INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria, periodo_pagado, movimiento_id, caja_pago, movimientos_pago) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("REPLACE INTO gastos_fijos (id, concepto, monto, vencimiento, estado, categoria, periodo_pagado, movimiento_id, caja_pago, movimientos_pago, fecha_cobertura, adelantos) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $b['id'], $b['concepto'] ?? '', $b['monto'] ?? 0, $b['vencimiento'] ?? '1',
                 $b['estado'] ?? 'Pendiente', $b['categoria'] ?? null, $b['periodoPagado'] ?? null,
                 $b['movimientoId'] ?? null, $b['cajaPago'] ?? null,
-                isset($b['movimientosPago']) ? json_encode($b['movimientosPago']) : null
+                isset($b['movimientosPago']) ? json_encode($b['movimientosPago']) : null,
+                $b['fechaCobertura'] ?? null,
+                isset($b['adelantos']) ? json_encode($b['adelantos']) : null
             ]);
             echo json_encode(['success'=>true]); exit;
         }
