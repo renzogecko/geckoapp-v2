@@ -7792,6 +7792,14 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
     window._gpmInitToggles();
     window._gpmSyncToggle('gpmMostrarPrecios', 'gpmMostrarPreciosSlider', 'gpmMostrarPreciosThumb');
 
+    // Al abrir en blanco (no edición), forzar Cliente vacío pase lo que
+    // pase — corta de raíz cualquier resabio de un borrador automático
+    // viejo que se haya guardado de más.
+    if (!presupuestoEditId) {
+        const clienteElBlanco = document.getElementById('gpmCliente');
+        if (clienteElBlanco) clienteElBlanco.value = '';
+    }
+
     // Cargar ítems
     if (itemsIniciales.length > 0) {
         window._gpmReconstruirFilasAgrupadas(itemsIniciales, it => ({
@@ -8459,14 +8467,12 @@ window._gpmCerrar = function () {
 
 // ── Guardar ──
 window._gpmGuardar = function (status) {
-    // Fix B: Limpiar título guardado al confirmar guardado exitoso
-    localStorage.removeItem('gecko_gpm_titulo_draft');
-    localStorage.removeItem('gecko_gpm_draft_nuevo');
     const cliente = document.getElementById('gpmCliente')?.value?.trim();
     if (!cliente) { alert('Ingresá el nombre del cliente.'); document.getElementById('gpmCliente')?.focus(); return; }
 
-    const _tituloPresupuesto = document.getElementById('gpmTitulo')?.value?.trim() || '';
-    // Fix B: Guardar título en localStorage mientras el usuario escribe
+    let _tituloPresupuesto = document.getElementById('gpmTitulo')?.value?.trim() || '';
+    // Guardar título en localStorage mientras el usuario escribe, por si
+    // se pierde antes de guardar (recarga, error, etc.)
     const _inputTituloRef = document.getElementById('gpmTitulo');
     if (_inputTituloRef && !_inputTituloRef.dataset.persistBound) {
         _inputTituloRef.dataset.persistBound = '1';
@@ -8474,12 +8480,15 @@ window._gpmGuardar = function (status) {
             localStorage.setItem('gecko_gpm_titulo_draft', this.value);
         });
     }
-    // Fix B: Restaurar título si se recargó la página con un borrador guardado
+    // Restaurar título ANTES de decidir si falta completarlo — antes esta
+    // copia de seguridad se borraba antes de poder usarla, por eso nunca
+    // salvaba nada.
     if (!_tituloPresupuesto) {
         const _draft = localStorage.getItem('gecko_gpm_titulo_draft');
         const _inputTituloRestore = document.getElementById('gpmTitulo');
         if (_draft && _inputTituloRestore && !_inputTituloRestore.value.trim()) {
             _inputTituloRestore.value = _draft;
+            _tituloPresupuesto = _draft.trim();
         }
     }
     if (!_tituloPresupuesto) {
@@ -8492,6 +8501,11 @@ window._gpmGuardar = function (status) {
         alert('Falta completar el Título del presupuesto. Es un campo obligatorio para poder guardar.');
         return;
     }
+
+    // Recién ahora, con todo validado, limpiamos los borradores — un
+    // intento fallido (por ejemplo, sin cliente) ya no los destruye.
+    localStorage.removeItem('gecko_gpm_titulo_draft');
+    localStorage.removeItem('gecko_gpm_draft_nuevo');
 
     const items = [];
     let _tieneItemDeCotizadorReal = false;
