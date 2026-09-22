@@ -3664,7 +3664,7 @@ window.confirmarPagoGastoFijo = async function () {
         accion: 'insert',
         id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 4),
         fecha, caja: cajaNombre, tipo: 'Egreso', monto: monto1,
-        detalle: g.concepto,
+        detalle: g.concepto + (esAdelanto ? ' (Adelanto)' : ''),
         categoria: g.categoria || 'Gastos Fijos',
         creado_por: window.GECKO_USER?.nombre || null
     };
