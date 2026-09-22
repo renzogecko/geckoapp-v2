@@ -1097,6 +1097,10 @@
 
             <!-- CONTENIDO TAB: GASTOS FIJOS -->
             <div id="contentFin-gastos" class="hidden space-y-6 mt-6">
+                <div id="geckoFiltrosGastosFijosRow" style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <select id="filtroGfCategoria" onchange="window._geckoFiltrarGastosFijosTabla()" class="gecko-select-pro" style="max-width:220px;"></select>
+                    <input type="text" id="filtroGfBusqueda" oninput="window._geckoFiltrarGastosFijosTabla()" placeholder="Buscar por concepto..." class="gecko-input-line" style="flex:1;min-width:220px;max-width:360px;">
+                </div>
                 <!-- Botón Añadir Gasto Fijo -->
                 <div class="flex justify-end">
                     <button onclick="abrirModalNuevoGastoFijo()"
@@ -1128,7 +1132,7 @@
                                     Acción</th>
                             </tr>
                         </thead>
-                        <tbody id="tbodyGastosFijos"
+                        <tbody id="tbodyGastosFijos" data-drag-container="gastos-fijos"
                             class="divide-y divide-gray-100 dark:divide-gray-800/50 text-[13px]">
                             <!-- Inyectable con renderGastosFijos() -->
                         </tbody>
@@ -3391,15 +3395,21 @@
                     </div>
                 </div>
 
+                <label style="display:flex;align-items:center;gap:10px;background:#131314;border:1px solid #27272a;border-radius:14px;padding:12px 16px;cursor:pointer;margin-top:16px;">
+                    <input type="checkbox" id="pagoGfEsAdelanto" onchange="window._toggleAdelantoGf()" style="width:18px;height:18px;accent-color:#F15A24;">
+                    <span style="color:#a1a1aa;font-size:12px;font-weight:700;">Es un adelanto parcial (no paga el total ahora)</span>
+                </label>
+                <div id="pagoGfAvisoAdelanto" style="display:none;background:rgba(241,90,36,0.08);border:1px solid rgba(241,90,36,0.3);border-radius:12px;padding:12px 16px;color:#F15A24;font-size:12px;font-weight:700;margin-top:12px;"></div>
+
                 <div style="border-top:1px solid #27272a;margin-top:20px;padding-top:16px;">
                     <label class="gecko-label">Fecha del pago</label>
                     <input id="pagoGfFecha" class="gecko-input-line" type="date" onclick="this.showPicker()" style="color-scheme: dark;">
                 </div>
 
-                <div style="margin-top:16px;">
-                    <label class="gecko-label">¿Hasta qué mes queda cubierto este pago?</label>
-                    <input type="month" id="pagoGfPeriodo" class="gecko-select-pro" style="color-scheme: dark;">
-                    <p style="color:#52525b;font-size:10px;margin-top:10px;line-height:1.5;font-style:italic;">Si pagás varios meses juntos (ej: alquiler adelantado), elegí el último mes que cubre.</p>
+                <div style="margin-top:16px;" id="bloqueFechaCoberturaGf">
+                    <label class="gecko-label">¿Hasta qué fecha queda cubierto este pago?</label>
+                    <input type="date" id="pagoGfPeriodo" class="gecko-input-line" onclick="this.showPicker()" style="color-scheme: dark;">
+                    <p style="color:#52525b;font-size:10px;margin-top:10px;line-height:1.5;font-style:italic;">Pasada esta fecha, el sistema va a pasar el gasto a Pendiente solo, sin que tengas que hacerlo a mano.</p>
                 </div>
             </div>
 
