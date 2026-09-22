@@ -136,6 +136,12 @@ window.calcularCostoBastidores = function () {
                 const areaM2 = (anchoD * altoD) / 10000;
 
                 const matR = window.getGeckoItem(materialRevest);
+                if (!matR) {
+                    console.warn('GECKO: no se encontró el material de revestimiento "' + materialRevest + '" en Materiales — se está cobrando $0 para este ítem.');
+                    if (typeof window._geckoAvisoModal === 'function') {
+                        window._geckoAvisoModal('No se encontró "' + materialRevest + '" en tu lista de Materiales.\n\nEste revestimiento se está calculando en $0 — revisá que el material esté cargado con ese nombre exacto.', 'Material no encontrado', true);
+                    }
+                }
                 const costoBaseR = matR ? (matR.costo || matR.costoARS || 0) : 0;
                 const multR = matR ? (matR.multiplicador || 3) : 3;
                 const precioVentaRevest = matR ? (matR.precioVenta || Math.round(costoBaseR * multR)) : 0;
