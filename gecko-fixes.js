@@ -333,6 +333,7 @@ document.addEventListener('inventoryReady', () => {
         if (resultado) return resultado;
 
         const aliases = {
+            'LONA BACKLIGHT': ['Lona backligth', 'LONA BACKLIGTH'],
             'DTF TEXTIL': ['DTF - TEXTIL', 'DTF TEXTIL', 'DTF'],
             'ESTAMPADO': ['ESTAMPADO', 'ESTAMPADO '],
             'TERMOVINILO': ['TERMOVINILO', 'TERMO'],
