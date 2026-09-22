@@ -1464,9 +1464,7 @@ window.cambiarCategoriaCotizador = function (cat) {
                              <label class="${labelStyle} mb-2">Material de Revestimiento</label>
                              <select id="bastidorRevestimientoMaterial" onchange="window.calcularCostoBastidores()" class="${inputStyle} gecko-select py-3 bg-[#131314] cursor-pointer appearance-none">
                                 ${(window.materiales || []).filter(m => {
-                                    const n = (m.nombre || '').toLowerCase();
-                                    return (m.categoria === 'flexible' && (n.includes('lona') || n.includes('front') || n.includes('banner') || n.includes('mesh')))
-                                        || (m.categoria === 'rigido' && (n.includes('acm') || n.includes('chapa')));
+                                    return m.categoria === 'vinilos_lonas' || m.categoria === 'chapas';
                                 }).map(m => `<option value="${m.nombre}">${m.nombre}</option>`).join('') || '<option value="">Sin materiales de revestimiento cargados</option>'}
                              </select>
                              <p id="auditorRevestimiento" class="text-[11px] text-zinc-400 font-medium italic mt-2.5 ml-1 space-y-1"></p>
