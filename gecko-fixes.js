@@ -3635,13 +3635,23 @@ window.confirmarPagoGastoFijo = async function () {
     const cajaNombre = document.getElementById('pagoGfCaja').value;
     if (!cajaNombre) { window._geckoAvisoModal("Seleccioná la caja desde donde se pagará.", "Falta un dato"); return; }
 
+    const esAdelanto = document.getElementById('pagoGfEsAdelanto')?.checked || false;
     const bloque2 = document.getElementById('bloqueSegundaCajaGf');
-    const usaSegundaCaja = bloque2 && bloque2.style.display !== 'none';
+    const usaSegundaCaja = !esAdelanto && bloque2 && bloque2.style.display !== 'none';
 
-    let caja2Nombre = '', monto1 = g.monto, monto2 = 0;
+    // Siempre se lee del campo — antes, si no usabas segunda caja, se
+    // ignoraba lo que escribías y se usaba el total del gasto entero.
+    const monto1 = window._getMoneyValue(document.getElementById('pagoGfMonto1'));
+    let caja2Nombre = '', monto2 = 0;
+
+    if (esAdelanto) {
+        if (monto1 <= 0) { window._geckoAvisoModal("Ingresá el monto del adelanto.", "Falta un dato"); return; }
+        const restanteMax = Math.max(0, g.monto - (window._gastoFijoAdelantadoTotal || 0));
+        if (monto1 > restanteMax) { window._geckoAvisoModal(`El adelanto no puede ser mayor al saldo restante ($${Math.round(restanteMax).toLocaleString('es-AR')}).`, "Dato inválido"); return; }
+    }
+
     if (usaSegundaCaja) {
         caja2Nombre = document.getElementById('pagoGfCaja2')?.value || '';
-        monto1 = window._getMoneyValue(document.getElementById('pagoGfMonto1'));
         monto2 = window._getMoneyValue(document.getElementById('pagoGfMonto2'));
         if (!caja2Nombre) { window._geckoAvisoModal("Seleccioná la segunda caja.", "Falta un dato"); return; }
         if (caja2Nombre === cajaNombre) { window._geckoAvisoModal("Elegí dos cajas distintas.", "Dato inválido"); return; }
@@ -3677,8 +3687,6 @@ window.confirmarPagoGastoFijo = async function () {
 
     const ok = await window._geckoLlamarMovimientoAtomico(cajasDelta, movimientos);
     if (!ok) return;
-
-    const esAdelanto = document.getElementById('pagoGfEsAdelanto')?.checked || false;
 
     if (esAdelanto) {
         // Adelanto parcial: la plata ya quedó registrada, pero el gasto
@@ -6039,25 +6047,60 @@ window.addEventListener('load', function () {
                     window.LISTA_CLIENTES = bdClientesRevertir;
                 }
 
-                // Detectar si este movimiento corresponde a un Gasto Fijo pagado,
-                // y si es así, preguntar si volvemos su estado a Pendiente.
+                // Si este movimiento corresponde a un Gasto Fijo (pago completo
+                // o adelanto parcial), revertir automáticamente — como un
+                // Ctrl+Z: el gasto vuelve exactamente a como estaba antes.
                 const listaGf = window.LISTA_GASTOS_FIJOS || JSON.parse(localStorage.getItem('gecko_gastos_fijos') || '[]');
-                const idxGf = listaGf.findIndex(function (g) {
+                let gfMensajeExtra = '';
+
+                const idxGfPago = listaGf.findIndex(function (g) {
                     return g.movimientoId === mov.id || (Array.isArray(g.movimientosPago) && g.movimientosPago.some(function (p) { return p.id === mov.id; }));
                 });
-                if (idxGf !== -1) {
-                    const gastoAfectado = listaGf[idxGf];
-                    const volverAPendiente = await window._geckoConfirmModal(
-                        'Gasto Fijo afectado',
-                        `Este movimiento corresponde al pago de "${gastoAfectado.concepto}" en Gastos Fijos.\n\n¿Volvemos su estado a "Pendiente"?`,
-                        'Sí, volver a Pendiente'
-                    );
-                    if (volverAPendiente) {
-                        window.cambiarEstadoManualGastoFijo(idxGf, 'Pendiente');
+                const idxGfAdelanto = idxGfPago === -1 ? listaGf.findIndex(function (g) {
+                    return Array.isArray(g.adelantos) && g.adelantos.some(function (a) { return a.id === mov.id; });
+                }) : -1;
+
+                if (idxGfPago !== -1) {
+                    const gastoAfectado = listaGf[idxGfPago];
+                    gastoAfectado.estado = 'Pendiente';
+                    delete gastoAfectado.movimientoId;
+                    delete gastoAfectado.cajaPago;
+                    delete gastoAfectado.movimientosPago;
+                    delete gastoAfectado.fechaCobertura;
+                    try {
+                        const res = await fetch('/app/api.php?endpoint=gastos_fijos', {
+                            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(gastoAfectado)
+                        });
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.message || 'Error desconocido');
+                        listaGf[idxGfPago] = gastoAfectado;
+                        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(listaGf));
+                        window.LISTA_GASTOS_FIJOS = listaGf;
+                        gfMensajeExtra = ` "${gastoAfectado.concepto}" volvió a Pendiente.`;
+                    } catch (e) {
+                        window._geckoAvisoModal('Se borró el movimiento, pero no se pudo volver "' + gastoAfectado.concepto + '" a Pendiente.\n\nRevisalo manualmente.\n\nDetalle: ' + e.message, 'Atención', true);
+                    }
+                } else if (idxGfAdelanto !== -1) {
+                    const gastoAfectado = listaGf[idxGfAdelanto];
+                    gastoAfectado.adelantos = gastoAfectado.adelantos.filter(function (a) { return a.id !== mov.id; });
+                    try {
+                        const res = await fetch('/app/api.php?endpoint=gastos_fijos', {
+                            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(gastoAfectado)
+                        });
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.message || 'Error desconocido');
+                        listaGf[idxGfAdelanto] = gastoAfectado;
+                        localStorage.setItem('gecko_gastos_fijos', JSON.stringify(listaGf));
+                        window.LISTA_GASTOS_FIJOS = listaGf;
+                        gfMensajeExtra = ` Se quitó el adelanto de "${gastoAfectado.concepto}".`;
+                    } catch (e) {
+                        window._geckoAvisoModal('Se borró el movimiento, pero no se pudo quitar el adelanto de "' + gastoAfectado.concepto + '".\n\nRevisalo manualmente.\n\nDetalle: ' + e.message, 'Atención', true);
                     }
                 }
 
-                if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado', '¡Listo!');
+                if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado.' + gfMensajeExtra, '¡Listo!');
                 window.location.reload();
             };
         };
