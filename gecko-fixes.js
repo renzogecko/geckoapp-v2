@@ -883,6 +883,10 @@ window.renderPresupuestos = async function () {
                         class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
+                    <button onclick="window.duplicarPresupuestoManual(${p.id})" title="Duplicar (crea uno nuevo con los mismos datos)"
+                        class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 4h8a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-8a2 2 0 012-2z"/></svg>
+                    </button>
                     ${esOTEnHistorial ? '' : `<button onclick="window.convertirPresupuestoAOT(${p.id})" title="Convertir a OT"
                         class="p-2 rounded-xl bg-zinc-800/40 border border-zinc-700/30 text-zinc-400 transition-all duration-150 hover:scale-110 hover:text-white hover:border-zinc-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -1121,6 +1125,42 @@ window.editarPresupuesto = function (id) {
             window.cambiarCategoriaCotizador(activeCat);
         }
     }, 150);
+};
+
+// Duplica un presupuesto: abre el Presupuestador Manual con todos los
+// datos precargados, pero como uno NUEVO — el original no se toca, y
+// no queda "creado" hasta que se aprieta Guardar.
+window.duplicarPresupuestoManual = async function (id) {
+    const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+    const original = lista.find(function (p) { return String(p.id) === String(id); });
+    if (!original) { window._geckoAvisoModal('No se encontró el presupuesto a duplicar.', 'Atención', true); return; }
+
+    let imagenesOriginal = [];
+    try {
+        const res = await fetch('/app/api.php?endpoint=presupuesto_imagenes&presupuesto_id=' + encodeURIComponent(id));
+        const rows = await res.json();
+        imagenesOriginal = (Array.isArray(rows) ? rows : [])
+            .map(function (r) { return r.imagen; })
+            .filter(function (img) { return typeof img === 'string' && img.startsWith('data:'); });
+    } catch (e) { console.warn('GECKO: no se pudieron copiar las imágenes del presupuesto original', e); }
+
+    window._gpmDuplicarDatos = {
+        cliente: original.cliente || '',
+        titulo: (original.titulo || 'Presupuesto') + ' (Copia)',
+        categoria: original.categoria || 'Gráfica',
+        notasInternas: original.notasInternas || '',
+        condiciones: original.condiciones || '',
+        items: JSON.parse(JSON.stringify(original.items || [])),
+        descuento: original.descuento || 0,
+        tipoDescuento: original.tipoDescuento || 'pct',
+        motivoDescuento: original.motivoDescuento || '',
+        conIva: original.conIva || false,
+        mostrarPrecios: original.mostrarPrecios !== false,
+        imagenes: imagenesOriginal
+    };
+
+    if (typeof window.switchMenu === 'function') window.switchMenu('presupuestoManual');
+    window._gpmAbrirManualReal(null);
 };
 
 window.reutilizarPresupuesto = function (id) {
@@ -7528,6 +7568,10 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
         // Limpiar draft solo si se abre en blanco explícitamente
         localStorage.removeItem('gecko_gpm_editing_id');
         // NO resetear _gpmItemsDesdeCotzador aquí, se consume después de renderizar
+        if (window._gpmDuplicarDatos) {
+            datosEdicion = window._gpmDuplicarDatos;
+            window._gpmDuplicarDatos = null;
+        }
     }
 
     const clienteInicial = datosEdicion?.cliente || '';
@@ -7796,9 +7840,14 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
     // Al abrir en blanco (no edición), forzar Cliente vacío pase lo que
     // pase — corta de raíz cualquier resabio de un borrador automático
     // viejo que se haya guardado de más.
-    if (!presupuestoEditId) {
+    if (!presupuestoEditId && !datosEdicion) {
         const clienteElBlanco = document.getElementById('gpmCliente');
         if (clienteElBlanco) clienteElBlanco.value = '';
+    }
+    if (!presupuestoEditId && datosEdicion?.imagenes?.length) {
+        window._gpmImagenes = datosEdicion.imagenes;
+        window._gpmImagenesListo = true;
+        if (typeof window._gpmRenderPreviewImagenes === 'function') window._gpmRenderPreviewImagenes();
     }
 
     // Cargar ítems
