@@ -7820,7 +7820,7 @@ window._gpmAbrirManualReal = function (presupuestoEditId = null) {
 
       <!-- Footer acciones -->
       <div style="display:flex;justify-content:flex-end;align-items:center;padding:20px 0;gap:10px;">
-        ${datosEdicion ? `
+        ${presupuestoEditId ? `
           <button id="gpmBtnGuardar" onclick="window._gpmGuardar('${datosEdicion.status || 'Cotizado'}')" class="gecko-btn-primary" style="flex:none;width:auto;${window._gpmImagenesListo ? '' : 'opacity:0.5;cursor:not-allowed;'}" ${window._gpmImagenesListo ? '' : 'disabled'}>
             ${datosEdicion.status === 'OT' ? 'Actualizar OT' : 'Actualizar Presupuesto'}
           </button>
