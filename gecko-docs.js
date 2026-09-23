@@ -306,16 +306,16 @@ window.generarDocPresupuesto = async function (p) {
             <div class="totales-row final"><span class="lbl">TOTAL FINAL</span><span class="val">${fmtMoney(totalFinal)}</span></div>
         </div>
     </div>
-    ${condicionesCliente ? `
-    <div style="background:rgba(241,90,36,0.07);border:1px solid rgba(241,90,36,0.35);border-left:4px solid #F15A24;border-radius:8px;padding:14px 18px;margin-bottom:18px;">
-        <label style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#F15A24;margin-bottom:5px;">⚠ Condiciones para el cliente</label>
-        <p style="margin:0;font-size:13px;font-weight:700;color:#3a3a3a;line-height:1.5;white-space:pre-line;">${condicionesCliente}</p>
-    </div>` : ''}
     <div class="doc-condiciones">
         <div class="cond-item"><label>Condiciones de pago</label><p>Adelanto del 60% del valor. &nbsp;|&nbsp; ${fmtMoney(totalFinal * 0.6)}<br>Resto, contra entrega. &nbsp;|&nbsp; ${fmtMoney(totalFinal * 0.4)}</p></div>
         <div class="cond-item"><label>Condición IVA</label><p>${conIva ? 'IVA 21% incluido.' : 'No incluye IVA · Monotributo.<br>Emitimos Factura C.'}</p></div>
         ${nota ? `<div class="cond-item" style="grid-column:1/-1"><label>Notas adicionales</label><p>${nota}</p></div>` : ''}
     </div>
+    ${condicionesCliente ? `
+    <div style="background:rgba(241,90,36,0.07);border:1px solid rgba(241,90,36,0.35);border-left:4px solid #F15A24;border-radius:8px;padding:10px 14px;margin-top:12px;">
+        <label style="display:block;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#F15A24;margin-bottom:4px;">⚠ Condiciones para el cliente</label>
+        <p style="margin:0;font-size:11px;font-weight:700;color:#3a3a3a;line-height:1.4;white-space:pre-line;">${condicionesCliente}</p>
+    </div>` : ''}
   </div>
   <div class="doc-footer">
     <span>✉ ${GECKO_BRAND.mail}</span><span class="sep">|</span>
