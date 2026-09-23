@@ -2770,10 +2770,9 @@
 
                 <div>
                     <label class="gecko-label">Monto</label>
-                    <div class="gecko-input-group mt-1">
-                        <span class="gecko-input-prefix">$</span>
-                        <input id="nuevoMovMonto" class="gecko-input-num" type="number" placeholder="0" min="0"
-                            style="padding-left: 16px !important;">
+                    <div class="gecko-money-wrap">
+                        <span class="gecko-money-prefix">$</span>
+                        <input type="text" inputmode="numeric" id="nuevoMovMonto" oninput="window._formatearInputDinero(this)">
                     </div>
                 </div>
 
