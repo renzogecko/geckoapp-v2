@@ -8404,6 +8404,8 @@ window._gpmInitSortable = function () {
         animation: 150,
         ghostClass: 'sortable-ghost',
         handle: undefined,
+        filter: 'input, textarea, button',
+        preventOnFilter: false,
         onEnd: function () {
             window._gpmRenumerar();
             window._gpmCalc();
