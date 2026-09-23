@@ -8269,10 +8269,10 @@ window._gpmAgregarItem = function (datos = null, opciones = null) {
             onfocus="this.closest('.gpm-item').style.borderColor='#333333'"
             placeholder="Título del trabajo" />
           <div style="display:flex;align-items:center;gap:6px;">
-            <input type="text" class="gpm-item-desc" value="${desc}"
+            <textarea class="gpm-item-desc" rows="1"
               placeholder="Descripción detallada (dimensiones, material, acabado...)"
-              oninput="window._gpmCalc()"
-              style="background:transparent !important;border:none !important;border-bottom:none !important;outline:none !important;font-size:12px !important;font-weight:400 !important;color:#71717a !important;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;" />
+              oninput="window._gpmCalc(); this.style.height='auto'; this.style.height=this.scrollHeight+'px';"
+              style="background:transparent !important;border:none !important;border-bottom:none !important;outline:none !important;font-size:12px !important;font-weight:400 !important;color:#71717a !important;font-family:inherit;padding:2px 0;width:100%;box-sizing:border-box;resize:none;overflow:hidden;line-height:1.4;">${(desc || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
           </div>
         </div>
 
@@ -8335,6 +8335,11 @@ window._gpmAgregarItem = function (datos = null, opciones = null) {
     }
     if (!datos) div.querySelector('.gpm-item-title').focus();
     else if (esSublinea && !datos?.descripcion) div.querySelector('.gpm-item-desc')?.focus();
+    const _descTextarea = div.querySelector('.gpm-item-desc');
+    if (_descTextarea) {
+        _descTextarea.style.height = 'auto';
+        _descTextarea.style.height = _descTextarea.scrollHeight + 'px';
+    }
     window._gpmRenumerar();
     window._gpmCalc();
     return div;
