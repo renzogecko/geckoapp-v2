@@ -5632,7 +5632,7 @@ window.addEventListener('load', function () {
             const desc = document.getElementById('nuevoMovDesc');
             const monto = document.getElementById('nuevoMovMonto');
             if (desc) desc.value = '';
-            if (monto) monto.value = '';
+            if (monto) { monto.value = ''; monto.dataset.raw = ''; }
         };
 
         window.abrirModalTransferencia = function () {
@@ -5970,7 +5970,7 @@ window.addEventListener('load', function () {
         window.guardarNuevoMovimiento = async function () {
             const tipo = document.getElementById('nuevoMovTipo')?.value || 'ingreso';
             const desc = document.getElementById('nuevoMovDesc')?.value?.trim();
-            const monto = parseFloat(document.getElementById('nuevoMovMonto')?.value) || 0;
+            const monto = window._getMoneyValue(document.getElementById('nuevoMovMonto'));
             const caja = document.getElementById('nuevoMovCaja')?.value;
             if (!desc || monto <= 0) { alert('Completá descripción y monto.'); return; }
             if (!caja) { alert('Seleccioná una caja.'); return; }
@@ -7087,7 +7087,7 @@ window.cerrarModalMovimiento = function () {
     // Limpiar campos para que no queden con datos sucios
     ['nuevoMovFecha', 'nuevoMovMonto', 'nuevoMovDesc'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.value = '';
+        if (el) { el.value = ''; delete el.dataset.raw; }
     });
     const movTipo = document.getElementById('nuevoMovTipo');
     if (movTipo) movTipo.value = 'ingreso';
