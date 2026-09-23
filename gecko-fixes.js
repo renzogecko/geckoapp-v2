@@ -6451,6 +6451,9 @@ window.addEventListener('load', function () {
                 const opts = cajas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
                 sel.innerHTML = `<option value="">Seleccionar caja...</option>` + opts;
             }
+
+            const fechaEl = document.getElementById('cobroFecha');
+            if (fechaEl) fechaEl.value = new Date().toLocaleDateString('en-CA');
         };
 
         // Alias para compatibilidad con el código existente que use abrirModalPagoGlobal
@@ -6459,6 +6462,7 @@ window.addEventListener('load', function () {
         window.confirmarCobro = function () {
             const montoOriginal = window._parseMiles(document.getElementById('cobroMonto')?.value);
             const cajaNombre = document.getElementById('cobroCaja')?.value || '';
+            const fechaCobro = window._geckoFechaInputAFormato('cobroFecha');
 
             if (montoOriginal <= 0) { alert('Ingresá un monto válido.'); return; }
             if (!cajaNombre) { alert('Seleccioná una caja.'); return; }
@@ -6471,11 +6475,11 @@ window.addEventListener('load', function () {
             if (pends.length === 0) { alert('Este cliente no tiene deudas pendientes.'); return; }
 
             document.getElementById('modalCobro').style.display = 'none';
-            window._abrirModalAsignacionPago(cliente, cajaNombre, montoOriginal, pends);
+            window._abrirModalAsignacionPago(cliente, cajaNombre, montoOriginal, pends, fechaCobro);
         };
 
-        window._abrirModalAsignacionPago = function (cliente, cajaNombre, montoOriginal, pends) {
-            window._geckoAsignacion = { cliente, cajaNombre, montoOriginal, pends };
+        window._abrirModalAsignacionPago = function (cliente, cajaNombre, montoOriginal, pends, fechaCobro) {
+            window._geckoAsignacion = { cliente, cajaNombre, montoOriginal, pends, fechaCobro };
 
             // Redondeado para evitar que un decimal de más (por cómo se
             // parseó el monto ingresado) deje afuera al último trabajo
@@ -6616,7 +6620,7 @@ window.addEventListener('load', function () {
                 [{ nombre: cajaNombre, delta: montoOriginal }],
                 [{
                     accion: 'insert', id: movId,
-                    fecha: new Date().toLocaleDateString('es-AR'), detalle: `Pago Cta. Cte. - ${cliente}`,
+                    fecha: st.fechaCobro || new Date().toLocaleDateString('es-AR'), detalle: `Pago Cta. Cte. - ${cliente}`,
                     caja: cajaNombre, tipo: 'Ingreso', monto: montoOriginal, categoria: 'Cobro Cliente',
                     otsAfectadas: otsAfectadas,
                     creado_por: window.GECKO_USER?.nombre || null
