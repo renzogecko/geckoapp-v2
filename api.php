@@ -346,6 +346,23 @@ try {
 
         if ($method === 'PUT') {
             $d = $body;
+
+            // Traer el metadata ya guardado y mezclarlo con el nuevo, para
+            // que una actualización parcial (que no mande, por ejemplo, el
+            // título) no lo borre — solo se pisan los campos que este PUT
+            // realmente trae.
+            $metaPrev = [];
+            $stmtPrev = $pdo->prepare("SELECT metadata FROM presupuestos WHERE id = ?");
+            $stmtPrev->execute([$d['id'] ?? '']);
+            $metaPrevRaw = $stmtPrev->fetchColumn();
+            if ($metaPrevRaw) {
+                $decoded = json_decode($metaPrevRaw, true);
+                if (is_array($decoded)) $metaPrev = $decoded;
+            }
+            $metaNueva = json_decode(presupuesto_metadata($d), true);
+            if (!is_array($metaNueva)) $metaNueva = [];
+            $metaFinal = array_merge($metaPrev, $metaNueva);
+
             $stmt = $pdo->prepare("REPLACE INTO presupuestos
                 (id, cliente, fecha, total, status, sena, estado_ot, items, metodo_pago, metadata)
                 VALUES (?,?,?,?,?,?,?,?,?,?)");
@@ -354,7 +371,7 @@ try {
                 $d['total'] ?? 0, $d['status'] ?? 'Presupuesto',
                 $d['sena'] ?? 0, $d['estado_ot'] ?? '',
                 json_encode($d['items'] ?? []), $d['metodo_pago'] ?? '',
-                presupuesto_metadata($d)
+                json_encode($metaFinal, JSON_UNESCAPED_UNICODE)
             ]);
             responder(["success" => true, "message" => "Presupuesto actualizado."]);
         }
