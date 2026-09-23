@@ -42,6 +42,8 @@ const GECKO_PRINT_STYLES = `
     .td-desc strong { font-weight: 700; display: block; margin-bottom: 2px; }
     .td-desc small { color: #666; font-size: 10px; }
     .td-precio { text-align: right; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .td-desc-sub { padding-left: 16px; color: #444; }
+    .td-desc-sub .bullet { color: #999; margin-right: 4px; }
     .doc-referencias { padding: 12px 36px; border-top: 1px solid #eee; margin-top: 8px; }
     .sec-titulo { font-size: 7.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #F15A24; margin-bottom: 8px; }
     .referencias-grid { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
@@ -188,9 +190,21 @@ window.generarDocPresupuesto = async function (p) {
 
     const titulo = p.titulo || '';
 
-    const itemsHTML = items.length > 0 ? items.map((it, i) => `
+    const gruposCount = {};
+    items.forEach(it => { if (it.grupoId) gruposCount[it.grupoId] = (gruposCount[it.grupoId] || 0) + 1; });
+
+    let numUnidad = 0;
+    let grupoAnterior = null;
+    const itemsHTML = items.length > 0 ? items.map((it) => {
+        const gid = it.grupoId || null;
+        const esGrupo = gid && gruposCount[gid] >= 2;
+
+        if (!esGrupo) {
+            grupoAnterior = null;
+            numUnidad++;
+            return `
         <tr>
-            <td class="td-num">${String(i + 1).padStart(2, '0')}</td>
+            <td class="td-num">${String(numUnidad).padStart(2, '0')}</td>
             <td class="td-desc">
                 <strong>${it.nombre || it.textoOpciones || 'Ítem'}</strong>
                 ${it.otDetalle ? `<small>${it.otDetalle}</small>` : ''}
@@ -199,8 +213,34 @@ window.generarDocPresupuesto = async function (p) {
             <td class="td-precio">
                 ${mostrarPrecios && it.costo ? fmtMoney(it.costo) : (mostrarPrecios ? '<span style="color:#ccc">—</span>' : '')}
             </td>
-        </tr>
-    `).join('') : `<tr><td colspan="4" style="padding:20px 6px;color:#aaa;text-align:center;font-style:italic;">Sin ítems cargados</td></tr>`;
+        </tr>`;
+        }
+
+        const esPrimeraDelGrupo = grupoAnterior !== gid;
+        grupoAnterior = gid;
+        const filaDetalle = `
+        <tr>
+            <td class="td-num"></td>
+            <td class="td-desc td-desc-sub"><span class="bullet">•</span>${it.otDetalle || it.descripcion || ''}</td>
+            <td class="td-precio" style="text-align:center;">${it.cantidad || 1}</td>
+            <td class="td-precio">
+                ${mostrarPrecios && it.costo ? fmtMoney(it.costo) : (mostrarPrecios ? '<span style="color:#ccc">—</span>' : '')}
+            </td>
+        </tr>`;
+
+        if (esPrimeraDelGrupo) {
+            numUnidad++;
+            return `
+        <tr>
+            <td class="td-num">${String(numUnidad).padStart(2, '0')}</td>
+            <td class="td-desc"><strong>${it.nombre || it.textoOpciones || 'Ítem'}</strong></td>
+            <td class="td-precio" style="text-align:center;"></td>
+            <td class="td-precio"></td>
+        </tr>${filaDetalle}`;
+        }
+
+        return filaDetalle;
+    }).join('') : `<tr><td colspan="4" style="padding:20px 6px;color:#aaa;text-align:center;font-style:italic;">Sin ítems cargados</td></tr>`;
 
     const refsHTML = imagenes.length > 0 ? `
         <div class="doc-referencias">
@@ -308,17 +348,22 @@ window.generarDocOT = async function (p) {
         return detalle.split('|').map(seg => seg.trim()).filter(Boolean).join('<br>');
     };
 
-    const renderFichaItem = (it, i) => {
-        const numReal = (it._otIndexReal ?? i) + 1;
+    const renderFichaItem = (it, i, opciones = {}) => {
+        const { ocultarEncabezado = false, numeroForzado = null } = opciones;
+        const numReal = numeroForzado ?? ((it._otIndexReal ?? i) + 1);
         const f = it.otFicha || (typeof window._otParsearDetalleAFicha === 'function' ? window._otParsearDetalleAFicha(it.otDetalle) : null);
         const tieneFicha = f && typeof f === 'object' &&
             Object.keys(f).some(k => k !== 'imagenes' && k !== 'iluminacion' && f[k]);
 
+        const etiquetaFila = ocultarEncabezado
+            ? `<span class="spec-label" style="color:#999;">•</span>`
+            : `<span class="spec-label">Ítem ${String(numReal).padStart(2, '0')}</span>`;
+
         if (!tieneFicha) {
             return `
             <div class="spec-row">
-                <span class="spec-label">Ítem ${String(numReal).padStart(2, '0')}</span>
-                <span class="spec-value"><strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>${formatOtDetalle(it.otDetalle)}</span>
+                ${etiquetaFila}
+                <span class="spec-value">${ocultarEncabezado ? '' : `<strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>`}${formatOtDetalle(it.otDetalle)}</span>
             </div>`;
         }
 
@@ -348,14 +393,14 @@ window.generarDocOT = async function (p) {
         if (filas.length === 0 && filasIlum.length === 0) {
             return `
             <div class="spec-row">
-                <span class="spec-label">Ítem ${String(numReal).padStart(2, '0')}</span>
-                <span class="spec-value"><strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>${formatOtDetalle(it.otDetalle)}</span>
+                ${etiquetaFila}
+                <span class="spec-value">${ocultarEncabezado ? '' : `<strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong><br>`}${formatOtDetalle(it.otDetalle)}</span>
             </div>`;
         }
 
         return `
         <div class="ficha-item-tabla">
-            <div class="ficha-item-header">Ítem ${String(numReal).padStart(2, '0')} — ${it.nombre || it.textoOpciones || 'Trabajo'}</div>
+            <div class="ficha-item-header">${ocultarEncabezado ? 'Detalle adicional' : `Ítem ${String(numReal).padStart(2, '0')} — ${it.nombre || it.textoOpciones || 'Trabajo'}`}</div>
             ${filas.length > 0 ? `
             <table class="tabla-datos">
                 <tr><td colspan="2" class="tabla-titulo-seccion">DATOS DEL TRABAJO</td></tr>
@@ -369,8 +414,37 @@ window.generarDocOT = async function (p) {
         </div>`;
     };
 
+    const gruposCountOT = {};
+    items.forEach(it => { if (it.grupoId) gruposCountOT[it.grupoId] = (gruposCountOT[it.grupoId] || 0) + 1; });
+
+    let numUnidadOT = 0;
+    let grupoAnteriorOT = null;
     const specsHTML = items.length > 0
-        ? items.map((it, i) => renderFichaItem(it, i)).join('')
+        ? items.map((it, i) => {
+            const gid = it.grupoId || null;
+            const esGrupo = gid && gruposCountOT[gid] >= 2;
+
+            if (!esGrupo) {
+                grupoAnteriorOT = null;
+                numUnidadOT++;
+                return renderFichaItem(it, i, { numeroForzado: numUnidadOT });
+            }
+
+            const esPrimeraDelGrupo = grupoAnteriorOT !== gid;
+            grupoAnteriorOT = gid;
+
+            if (esPrimeraDelGrupo) {
+                numUnidadOT++;
+                const encabezadoGrupo = `
+                <div class="spec-row">
+                    <span class="spec-label">Ítem ${String(numUnidadOT).padStart(2, '0')}</span>
+                    <span class="spec-value"><strong>${it.nombre || it.textoOpciones || 'Trabajo'}</strong></span>
+                </div>`;
+                return encabezadoGrupo + renderFichaItem(it, i, { ocultarEncabezado: true, numeroForzado: numUnidadOT });
+            }
+
+            return renderFichaItem(it, i, { ocultarEncabezado: true, numeroForzado: numUnidadOT });
+        }).join('')
         : '<div class="spec-row"><span class="spec-label">Sin ítems</span><span class="spec-value" style="color:#aaa">—</span></div>';
 
     const grupos = [];
@@ -478,7 +552,7 @@ window.generarDocListaPrecios = function (data) {
         <tr>
             <td class="td-desc">
                 <strong>${it.nombre || ''}</strong>
-                ${it.detalle ? `<small>${it.detalle}</small>` : ''}
+                ${it.detalle ? `<small style="white-space:pre-line;display:block;">${it.detalle}</small>` : ''}
             </td>
             <td class="td-precio" style="text-align:center;">${it.ancho || ''}</td>
             <td class="td-precio"${it.precioTexto === 'Consultar valor' ? ' style="color:#F15A24"' : ''}>${it.precioTexto || ''}${it.unidad ? ` <span style="font-size:9px;color:#71717a;">/${it.unidad}</span>` : ''}</td>
