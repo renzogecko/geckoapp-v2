@@ -207,7 +207,7 @@ window.generarDocPresupuesto = async function (p) {
             <td class="td-num">${String(numUnidad).padStart(2, '0')}</td>
             <td class="td-desc">
                 <strong>${it.nombre || it.textoOpciones || 'Ítem'}</strong>
-                ${it.otDetalle ? `<small>${it.otDetalle}</small>` : ''}
+                ${it.otDetalle || it.descripcion ? `<small style="white-space:pre-line;display:block;">${it.otDetalle || it.descripcion}</small>` : ''}
             </td>
             <td class="td-precio" style="text-align:center;">${it.cantidad || 1}</td>
             <td class="td-precio">
@@ -221,7 +221,7 @@ window.generarDocPresupuesto = async function (p) {
         const filaDetalle = `
         <tr>
             <td class="td-num"></td>
-            <td class="td-desc td-desc-sub"><span class="bullet">•</span>${it.otDetalle || it.descripcion || ''}</td>
+            <td class="td-desc td-desc-sub" style="white-space:pre-line;"><span class="bullet">•</span>${it.otDetalle || it.descripcion || ''}</td>
             <td class="td-precio" style="text-align:center;">${it.cantidad || 1}</td>
             <td class="td-precio">
                 ${mostrarPrecios && it.costo ? fmtMoney(it.costo) : (mostrarPrecios ? '<span style="color:#ccc">—</span>' : '')}
@@ -552,7 +552,7 @@ window.generarDocListaPrecios = function (data) {
         <tr>
             <td class="td-desc">
                 <strong>${it.nombre || ''}</strong>
-                ${it.detalle ? `<small style="white-space:pre-line;display:block;">${it.detalle}</small>` : ''}
+                ${it.detalle ? `<small>${it.detalle}</small>` : ''}
             </td>
             <td class="td-precio" style="text-align:center;">${it.ancho || ''}</td>
             <td class="td-precio"${it.precioTexto === 'Consultar valor' ? ' style="color:#F15A24"' : ''}>${it.precioTexto || ''}${it.unidad ? ` <span style="font-size:9px;color:#71717a;">/${it.unidad}</span>` : ''}</td>
