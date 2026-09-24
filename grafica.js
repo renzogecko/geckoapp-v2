@@ -359,11 +359,12 @@ window.GeckoGrafica = {
         // Refilado
         if (this.isTermActive('checkRefilado')) {
             const ml = parseFloat(document.getElementById('valRefilado')?.value) || 1;
-            const sub = ml * 1800;
+            const precioRefilado = window.GECKO_SETTINGS?.precioRefilado || 1800;
+            const sub = ml * precioRefilado;
             serviciosCostos += sub;
             activeTerms.push('Refilado');
             this.safeSetText('priceRefilado', fmt(sub));
-            this.safeSetText('auditorRefilado', `Unit: $1.800/ml`);
+            this.safeSetText('auditorRefilado', `Config: $${Math.round(precioRefilado).toLocaleString('es-AR')}/ml`);
         } else {
             this.safeSetText('priceRefilado', '$0');
             this.safeSetText('auditorRefilado', '');
@@ -372,11 +373,12 @@ window.GeckoGrafica = {
         // Bolsillo
         if (this.isTermActive('checkBolsillo')) {
             const ml = parseFloat(document.getElementById('valBolsillo')?.value) || 1;
-            const sub = ml * 3000;
+            const precioBolsillo = window.GECKO_SETTINGS?.precioBolsillo || 3000;
+            const sub = ml * precioBolsillo;
             serviciosCostos += sub;
             activeTerms.push('Bolsillo');
             this.safeSetText('priceBolsillo', fmt(sub));
-            this.safeSetText('auditorBolsillo', `Unit: $3.000/ml`);
+            this.safeSetText('auditorBolsillo', `Config: $${Math.round(precioBolsillo).toLocaleString('es-AR')}/ml`);
         } else {
             this.safeSetText('priceBolsillo', '$0');
             this.safeSetText('auditorBolsillo', '');
@@ -385,11 +387,12 @@ window.GeckoGrafica = {
         // Ojales
         if (this.isTermActive('checkOjales')) {
             const cant = parseFloat(document.getElementById('valOjales')?.value) || 1;
-            const sub = cant * 800;
+            const precioOjales = window.GECKO_SETTINGS?.precioOjales || 800;
+            const sub = cant * precioOjales;
             serviciosCostos += sub;
             activeTerms.push('Ojales');
             this.safeSetText('priceOjales', fmt(sub));
-            this.safeSetText('auditorOjales', `Unit: $800/u`);
+            this.safeSetText('auditorOjales', `Config: $${Math.round(precioOjales).toLocaleString('es-AR')}/u`);
         } else {
             this.safeSetText('priceOjales', '$0');
             this.safeSetText('auditorOjales', '');
@@ -621,15 +624,18 @@ window.GeckoGrafica = {
                 const termActivas = [];
                 if (this.isTermActive('checkRefilado')) {
                     const ml = parseFloat(document.getElementById('valRefilado')?.value) || 1;
-                    termActivas.push({ label: 'Refilado', detalle: `${ml}ml × $1.800/ml`, valor: ml * 1800 });
+                    const precioRefilado = window.GECKO_SETTINGS?.precioRefilado || 1800;
+                    termActivas.push({ label: 'Refilado', detalle: `${ml}ml × $${Math.round(precioRefilado).toLocaleString('es-AR')}/ml`, valor: ml * precioRefilado });
                 }
                 if (this.isTermActive('checkBolsillo')) {
                     const ml = parseFloat(document.getElementById('valBolsillo')?.value) || 1;
-                    termActivas.push({ label: 'Bolsillo', detalle: `${ml}ml × $3.000/ml`, valor: ml * 3000 });
+                    const precioBolsillo = window.GECKO_SETTINGS?.precioBolsillo || 3000;
+                    termActivas.push({ label: 'Bolsillo', detalle: `${ml}ml × $${Math.round(precioBolsillo).toLocaleString('es-AR')}/ml`, valor: ml * precioBolsillo });
                 }
                 if (this.isTermActive('checkOjales')) {
                     const cant = parseFloat(document.getElementById('valOjales')?.value) || 1;
-                    termActivas.push({ label: 'Ojales', detalle: `${cant}u × $800/u`, valor: cant * 800 });
+                    const precioOjales = window.GECKO_SETTINGS?.precioOjales || 800;
+                    termActivas.push({ label: 'Ojales', detalle: `${cant}u × $${Math.round(precioOjales).toLocaleString('es-AR')}/u`, valor: cant * precioOjales });
                 }
                 if (this.isTermActive('checkLaminado')) {
                     const m2Lam = parseFloat(document.getElementById('graficaLaminadoMt2')?.value) || 0;
