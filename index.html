@@ -3170,8 +3170,8 @@
                                 </div>
                                 <div>
                                     <label class="gecko-label">$ / ML</label>
-                                    <input type="number" id="matCortePrecioML" placeholder="0" min="0"
-                                        class="gecko-input-line" onwheel="this.blur()">
+                                    <input type="text" inputmode="numeric" id="matCortePrecioML" placeholder="0"
+                                        class="gecko-input-line" oninput="window._formatearInputDinero(this)">
                                 </div>
                             </div>
                         </div>
