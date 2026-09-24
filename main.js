@@ -627,6 +627,9 @@ window.initConfiguracion = function () {
         v('cfgFactorAreaPintura3D', s.factorAreaPintura3D || 0.00025);
         v('cfgFactorPesoFrente3D', s.factorPesoFrente3D || 400);
         vMoney('cfgPrecioKm', s.precioKm || 0);
+        vMoney('cfgPrecioRefilado', s.precioRefilado || 1800);
+        vMoney('cfgPrecioBolsillo', s.precioBolsillo || 3000);
+        vMoney('cfgPrecioOjales', s.precioOjales || 800);
         const cond = document.getElementById('cfgCondicionesVenta');
         if (cond) cond.value = s.condicionesVenta || '';
         const chkOcultar = document.getElementById('cfgOcultarSaldosUsuario');
@@ -681,6 +684,9 @@ window.guardarConfiguracion = function () {
         factorAreaPintura3D: g('cfgFactorAreaPintura3D'),
         factorPesoFrente3D: g('cfgFactorPesoFrente3D'),
         precioKm: gMoney('cfgPrecioKm'),
+        precioRefilado: gMoney('cfgPrecioRefilado'),
+        precioBolsillo: gMoney('cfgPrecioBolsillo'),
+        precioOjales: gMoney('cfgPrecioOjales'),
         condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || '',
         ocultarSaldosUsuario: document.getElementById('cfgOcultarSaldosUsuario')?.checked || false
     };
