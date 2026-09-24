@@ -577,8 +577,8 @@ window.geckoFetchCotizacionDolar = async function () {
         const venta = data?.venta;
         if (!venta || isNaN(venta)) return;
         // Solo actualiza si el campo está vacío o tiene el valor por defecto
-        if (!input.value || parseFloat(input.value) === 0) {
-            input.value = venta;
+        if (!input.value || window._getMoneyValue(input) === 0) {
+            window._setMoneyValue(input, venta);
         }
         if (chip) {
             chip.textContent = `BNA Oficial · Venta $${venta.toLocaleString('es-AR')} · actualizado hoy`;
@@ -613,19 +613,20 @@ window.switchConfigTab = function (tab) {
 window.initConfiguracion = function () {
     const aplicarSettings = (s) => {
         const v = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
-        v('cfgCotizacionDolar', s.cotizacionDolar || 1420);
+        const vMoney = (id, val) => { const el = document.getElementById(id); if (el && typeof window._setMoneyValue === 'function') window._setMoneyValue(el, val); };
+        vMoney('cfgCotizacionDolar', s.cotizacionDolar || 1420);
         v('cfgIva', s.iva || 21);
         v('cfgMultGlobal', s.multiplicadorGlobal || 2.0);
-        v('cfgNivelBronce', s.nivelBronce || 150000);
-        v('cfgNivelPlata', s.nivelPlata || 300000);
-        v('cfgNivelOro', s.nivelOro || 500000);
-        v('cfgHoraHombre', s.valorHoraHombre || 0);
-        v('cfgHoraLaser', s.minutoLaser || 0);
-        v('cfgHoraCNC', s.minutoRouter || 0);
-        v('cfgHora3D', s.costoHora3D || 0);
+        vMoney('cfgNivelBronce', s.nivelBronce || 150000);
+        vMoney('cfgNivelPlata', s.nivelPlata || 300000);
+        vMoney('cfgNivelOro', s.nivelOro || 500000);
+        vMoney('cfgHoraHombre', s.valorHoraHombre || 0);
+        vMoney('cfgHoraLaser', s.minutoLaser || 0);
+        vMoney('cfgHoraCNC', s.minutoRouter || 0);
+        vMoney('cfgHora3D', s.costoHora3D || 0);
         v('cfgFactorAreaPintura3D', s.factorAreaPintura3D || 0.00025);
         v('cfgFactorPesoFrente3D', s.factorPesoFrente3D || 400);
-        v('cfgPrecioKm', s.precioKm || 0);
+        vMoney('cfgPrecioKm', s.precioKm || 0);
         const cond = document.getElementById('cfgCondicionesVenta');
         if (cond) cond.value = s.condicionesVenta || '';
         const chkOcultar = document.getElementById('cfgOcultarSaldosUsuario');
@@ -651,34 +652,35 @@ window.initConfiguracion = function () {
 
 window.guardarConfiguracion = function () {
     const g = (id) => parseFloat(document.getElementById(id)?.value) || 0;
+    const gMoney = (id) => (typeof window._getMoneyValue === 'function') ? window._getMoneyValue(document.getElementById(id)) : g(id);
 
     // ── Validaciones antes de guardar (no bloquean, solo advierten) ──
     const advertencias = [];
     const tabActiva = document.querySelector('[id^="cfgTab-"].border-gecko')?.id?.replace('cfgTab-', '') || '';
 
     if (tabActiva === 'finanzas' || !tabActiva) {
-        if (g('cfgCotizacionDolar') === 0) advertencias.push('Cotización Dólar está en $0 — los materiales importados no se calcularán correctamente.');
+        if (gMoney('cfgCotizacionDolar') === 0) advertencias.push('Cotización Dólar está en $0 — los materiales importados no se calcularán correctamente.');
         if (g('cfgMultGlobal') === 0) advertencias.push('Multiplicador Global está en 0 — todos los precios de venta quedarán en $0.');
     }
     if (tabActiva === 'operativos' || !tabActiva) {
-        if (g('cfgHoraHombre') === 0) advertencias.push('Hora Hombre está en $0 — los presupuestos que incluyan mano de obra no tendrán ese costo.');
+        if (gMoney('cfgHoraHombre') === 0) advertencias.push('Hora Hombre está en $0 — los presupuestos que incluyan mano de obra no tendrán ese costo.');
     }
 
     GECKO_SETTINGS = {
         ...GECKO_SETTINGS,
-        cotizacionDolar: g('cfgCotizacionDolar'),
+        cotizacionDolar: gMoney('cfgCotizacionDolar'),
         iva: g('cfgIva'),
         multiplicadorGlobal: g('cfgMultGlobal'),
-        nivelBronce: g('cfgNivelBronce'),
-        nivelPlata: g('cfgNivelPlata'),
-        nivelOro: g('cfgNivelOro'),
-        valorHoraHombre: g('cfgHoraHombre'),
-        minutoLaser: g('cfgHoraLaser'),
-        minutoRouter: g('cfgHoraCNC'),
-        costoHora3D: g('cfgHora3D'),
+        nivelBronce: gMoney('cfgNivelBronce'),
+        nivelPlata: gMoney('cfgNivelPlata'),
+        nivelOro: gMoney('cfgNivelOro'),
+        valorHoraHombre: gMoney('cfgHoraHombre'),
+        minutoLaser: gMoney('cfgHoraLaser'),
+        minutoRouter: gMoney('cfgHoraCNC'),
+        costoHora3D: gMoney('cfgHora3D'),
         factorAreaPintura3D: g('cfgFactorAreaPintura3D'),
         factorPesoFrente3D: g('cfgFactorPesoFrente3D'),
-        precioKm: g('cfgPrecioKm'),
+        precioKm: gMoney('cfgPrecioKm'),
         condicionesVenta: document.getElementById('cfgCondicionesVenta')?.value || '',
         ocultarSaldosUsuario: document.getElementById('cfgOcultarSaldosUsuario')?.checked || false
     };
