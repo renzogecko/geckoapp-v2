@@ -10769,3 +10769,28 @@ document.addEventListener('geckoDB_ready', function () {
         window.renderizarMovimientos();
     }
 });
+
+// ── Corrección final de formato: $/ML con puntos de miles ──
+// IMPORTANTE: gecko-fixes.js se ejecuta ANTES que main.js (main.js usa
+// defer, este archivo no), así que envolver window.editarMaterial de
+// forma inmediata acá no sirve — main.js todavía no existe en ese momento
+// y lo pisaría igual apenas cargue. Por eso esto va adentro de
+// window.addEventListener('load', ...) con un setTimeout, igual que ya
+// hacen los otros dos parches de editarMaterial en este mismo archivo,
+// para asegurarnos de envolver la versión que main.js ya dejó puesta.
+window.addEventListener('load', function () {
+    setTimeout(function () {
+        var _origEditarMaterialFmt = window.editarMaterial;
+        if (typeof _origEditarMaterialFmt !== 'function') return;
+        window.editarMaterial = function (id) {
+            _origEditarMaterialFmt(id);
+            setTimeout(function () {
+                var el = document.getElementById('matCortePrecioML');
+                if (el && el.value !== '' && typeof window._setMoneyValue === 'function') {
+                    var n = parseFloat(String(el.value).replace(/\./g, '').replace(',', '.'));
+                    if (!isNaN(n)) window._setMoneyValue(el, n);
+                }
+            }, 300);
+        };
+    }, 2000);
+});
