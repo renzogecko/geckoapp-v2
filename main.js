@@ -3646,7 +3646,7 @@ function editarMaterial(id) {
         if (tieneCorte) {
             if (document.getElementById('matCorteSpeed')) document.getElementById('matCorteSpeed').value = material.corteSpeed || '';
             if (document.getElementById('matCortePower')) document.getElementById('matCortePower').value = material.cortePower || '';
-            if (document.getElementById('matCortePrecioML')) document.getElementById('matCortePrecioML').value = material.cortePrecioML || '';
+            if (document.getElementById('matCortePrecioML')) window._setMoneyValue(document.getElementById('matCortePrecioML'), material.cortePrecioML || 0);
         }
     }
 
@@ -3969,7 +3969,7 @@ if (formMaterial) {
             const tieneCorte = document.getElementById('switch-params-corte')?.checked || false;
             const corteSpeed = parseFloat(document.getElementById('matCorteSpeed')?.value) || 0;
             const cortePower = parseFloat(document.getElementById('matCortePower')?.value) || 0;
-            const cortePrecioML = parseFloat(document.getElementById('matCortePrecioML')?.value) || 0;
+            const cortePrecioML = window._getMoneyValue(document.getElementById('matCortePrecioML'));
 
             const nuevoMat = {
                 id: editId || Date.now(),
