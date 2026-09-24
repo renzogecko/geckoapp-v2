@@ -3485,11 +3485,12 @@ window._formatearInputDinero = function (input) {
     input.value = raw ? Number(raw).toLocaleString('es-AR') : '';
 };
 
-// Devuelve el valor numérico real de un input formateado con puntos
+// Devuelve el valor numérico real de un input formateado con puntos.
+// Lee siempre el valor visible: dataset.raw puede quedar desfasado si el
+// input se limpia con form.reset() o se escribe .value directo (borradores).
 window._getMoneyValue = function (input) {
     if (!input) return 0;
-    if (input.dataset.raw !== undefined) return parseInt(input.dataset.raw, 10) || 0;
-    return parseFloat(String(input.value).replace(/\./g, '')) || 0;
+    return parseInt(String(input.value).replace(/\D/g, ''), 10) || 0;
 };
 
 // Setea el valor de un input de dinero formateado desde JS (no desde el usuario)
