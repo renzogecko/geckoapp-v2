@@ -197,7 +197,7 @@ window.setCorpModo = function (modo) {
                             </div>
                             <div class="col-span-4">
                                 <label class="block text-[11px] text-zinc-400 mb-2">Precio ($)</label>
-                                <input type="number" id="pinturaPrecio" class="gecko-input w-full" value="0" oninput="window.calcularCostoPolifan()" onwheel="this.blur()">
+                                <input type="text" inputmode="numeric" id="pinturaPrecio" class="gecko-input w-full" value="0" oninput="window._formatearInputDinero(this); window.calcularCostoPolifan()" onwheel="this.blur()">
                             </div>
                         </div>
                     </div>
@@ -1185,7 +1185,7 @@ window.calcularCostoPolifan = function () {
     let costoPintura = 0;
     const llevaPintura = document.getElementById('chkLlevaPintura')?.checked;
     if (llevaPintura) {
-        costoPintura = parseFloat(document.getElementById('pinturaPrecio')?.value) || 0;
+        costoPintura = window._getMoneyValue(document.getElementById('pinturaPrecio')) || 0;
     }
 
     // 5. Totales
