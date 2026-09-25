@@ -10,7 +10,7 @@
 ### [BUG-002] Presupetador - IVA
 - **Sección:** presupetador 
 - **Descripción:** En el presupuestador manual, cuando activo el toggle de IVA , se suma 21% al total, pero cuando guardo el presupusto, no se suma en el pdf. 
-- **Estado:** 🔴 Pendiente
+- **Estado:** ✅ Resuelto 14/07/2026 (ver MEJ-018 más abajo). Marcado como resuelto en la revisión del 25/09/2026.
 
 ### [BUG-003] Valor de cotizacion de dolar - en confoguraciones y en modal de materiales,
 - **Sección:** configuracion - modal Materiales
@@ -45,7 +45,7 @@ Por el lado del modal de materiales , en la seccion de costo que tiene una calcu
 ### [MEJ-004] Blindar tablas `servicios` y `clientes`
 - **Sección:** gecko-api.js
 - **Descripción:** aplicar misma protección que ya tiene `gecko_materiales` (agregar al array `GECKO_CATALOG_KEYS`).
-- **Estado:** 🔵 Pendiente
+- **Estado:** ✅ Resuelto — verificado en el código el 25/09/2026: `GECKO_CATALOG_KEYS = ['gecko_materiales', 'geckoServicios', 'clientes']` en gecko-api.js.
 
 ### [MEJ-005] Materiales
 - **Sección:** Materiales
@@ -1766,3 +1766,66 @@ pendiente, sesión de diseño aparte.
   sincronización con el servidor, para que el filtro de categorías no
   quede incompleto si se abre la pantalla apenas carga la página.
 - **Estado:** ✅ Resuelto - en producción.
+
+---
+
+### Sesión 25/09/2026 — Formato de miles (Etapas 1-4), Cuenta Corriente y pagos de OT
+
+## Resuelto en esta sesión (y en los días previos, sin documentar hasta hoy)
+
+### Formato de separador de miles (auditoría en curso)
+- Etapa 1: 9 campos de Configuración (cfgCotizacionDolar, cfgNivelBronce/Plata/Oro, cfgHoraHombre/Laser/CNC/3D).
+- Etapa 2: matCortePrecioML (Materiales → Corte láser).
+- Etapa 3: nueva sección "Terminaciones de Gráfica" en Configuración (cfgPrecioRefilado, cfgPrecioBolsillo, cfgPrecioOjales), antes hardcodeados en grafica.js.
+- Etapa 4: Precio de Pintura en Corpóreos (pinturaPrecio).
+- **Estado:** ✅ Resuelto - en producción.
+
+### Ficha de cliente: desplegables de estado trabados — commit 32dfd51
+- **Causa:** la lista de OTs (Pedidos) y la ficha del cliente dibujaban desplegables con el mismo id (estado-ot-dropdown-XXXX); getElementById agarraba el de la lista oculta.
+- **Fix:** _toggleEstadoDropdown usa el desplegable al lado del botón clickeado; _seleccionarEstadoOT actualiza todas las copias; _archivarOT refresca la ficha si está abierta.
+- **Estado:** ✅ Resuelto - en producción.
+
+### Archivar OTs saldadas después de un Cobro de Cuenta Corriente — commit 32dfd51
+- **Fix:** nuevo modal window._geckoPreguntarArchivarSaldadas con casilleros (tildadas de entrada solo las OTs en "Entregado"); las tildadas pasan a Finalizado con PUT directo a MySQL antes de recargar. No aparece si falló la actualización de la deuda de alguna OT.
+- **Estado:** ✅ Resuelto - en producción.
+
+### Borrar un pago no devolvía la deuda de la OT en MySQL — commit 785b955
+- **Causa:** eliminarMovimiento corregía la caja (endpoint atómico) pero la seña de la OT solo se cambiaba en localStorage; la página se recargaba antes de la sincronización automática (2 seg) y el cambio se perdía.
+- **Fix:** PUT directo a api.php?endpoint=presupuestos por cada OT afectada; si falla, aviso visible y sin recargar.
+- **Estado:** ✅ Resuelto - en producción (probado con la OT #1441 de Johanna).
+
+### Historial de caja borraba con el método viejo — commit 785b955
+- **Causa:** _eliminarMovimientoDesdeHistorial restaba la caja solo en localStorage (patrón de los descuadres).
+- **Fix:** ahora delega en window.eliminarMovimiento (atómico, deuda de OT, crédito y gastos fijos). Versión vieja eliminada.
+- **Estado:** ✅ Resuelto - en producción.
+
+### Modal de pago de OT: total "pegado" en el Pago 1 — commit 785b955
+- **Causa:** al pasar de "Saldo Final" a "Seña / Parcial", el Pago 1 quedaba con el saldo total autocompletado (caso Johanna: $107.200 en MP en vez de $7.200). Además el tipo de pago quedaba pegado de un pago anterior sin verse en pantalla.
+- **Fix:** el Pago 1 se vacía al volver a Seña; el modal abre siempre en Seña; aviso "El pago supera el saldo" antes de registrar si el total cobrado supera el saldo de la OT.
+- **Estado:** ✅ Resuelto - en producción.
+
+### Datos corregidos a mano
+- OT #1249 (Fede Ramos): seña fantasma de $185.150 puesta en 0 por SQL (no había pagos reales detrás).
+- OT #1441 (Johanna): seña corregida por SQL tras borrar los movimientos mal cargados; pago recargado correctamente ($7.200 MP Renzo + $100.000 Efectivo).
+
+## Pendientes anotados en esta sesión
+
+### [BUG-008] Borrar un pago que generó crédito a favor no revierte el crédito en MySQL
+- **Sección:** Finanzas — eliminarMovimiento
+- **Causa probable:** el ledger de crédito del cliente se revierte solo en localStorage ('clientes') y la página se recarga antes de la sincronización automática (mismo patrón que el bug de la seña de la OT).
+- **Reportado:** 25/09/2026
+- **Estado:** 🟡 Pendiente
+
+### [MEJ-035] Limpieza de código muerto — modal viejo "Cobro Final"
+- **Sección:** main.js + index.html
+- **Descripción:** abrirPagoFinal, liquidarSaldoTotal, togglePagoCombinado y el modal #modalPagoFinal no los llama ningún botón (el cobro real va por window.abrirModalSena en gecko-fixes.js). Confirmar que nada más los usa y eliminarlos.
+- **Estado:** 🔵 Pendiente
+
+### Formato de miles — campos que faltan
+- Modal de Servicios: termCosto y termPrecio (checklist de impacto ya armado; SÍ se modifica).
+- gpmDescVal (descuento "monto fijo" en Presupuesto Manual).
+- sena1DescValor, sena2DescValor (descuento "$ fijo" en el modal de pago de OT).
+- editCajaSaldo, filtroMovMontoExacto, prendaCostoUnit (Textil).
+- Diferido a sesión dedicada: matPrecioVentaManual y matPrecioGremio (se usan en 15+ lugares).
+- NO tocar: matCostUSD y matCostARS (funcionan bien así, decisión de Renzo).
+- **Estado:** 🔵 Pendiente
