@@ -2206,12 +2206,21 @@ window.abrirModalSena = function (id) {
     document.body.appendChild(modal);
 
     // Marcar "Seña/Parcial" como seleccionado visualmente por defecto al abrir
-    window._tipoPagoActual = window._tipoPagoActual || 'seña';
+    // Siempre abrir en "Seña / Parcial", que es lo que se ve marcado en pantalla
+    // (antes quedaba pegado el tipo del pago anterior, invisible para el usuario)
+    window._tipoPagoActual = 'seña';
     window._senaPendiente = totalPendiente;
 };
 
 window._toggleTipoPago = function (tipo) {
+    const tipoAnterior = window._tipoPagoActual;
     window._tipoPagoActual = tipo;
+    // Si se vuelve de "Saldo Final" a "Seña / Parcial", vaciar el Pago 1:
+    // tenía autocompletado el saldo total y quedaba cargado sin querer.
+    if (tipo === 'seña' && tipoAnterior === 'saldo') {
+        const m1Reset = document.getElementById('sena1Monto');
+        if (m1Reset) m1Reset.value = '';
+    }
     const btnSeña = document.getElementById('tipoPagoSeña');
     const btnSaldo = document.getElementById('tipoPagoSaldo');
     const btnSegundoPago = document.getElementById('btnToggleSegundoPago');
@@ -2443,6 +2452,17 @@ window._registrarSena = async function (id) {
     let lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
     const idx = lista.findIndex(x => String(x.id) === String(id));
     if (idx === -1) return;
+
+    // Aviso si el pago supera lo que se debe de la OT (ej: total tipeado de más)
+    const saldoPendienteOT = window.calcularSaldoOT(lista[idx]);
+    if (totalPago > saldoPendienteOT + 1) {
+        const seguir = await window._geckoConfirmModal(
+            'El pago supera el saldo',
+            `Estás registrando $${Math.round(totalPago).toLocaleString('es-AR')} y el saldo pendiente de la OT#${id} es $${Math.round(Math.max(saldoPendienteOT, 0)).toLocaleString('es-AR')}.\n\nRevisá los montos de Pago 1 y Pago 2. ¿Querés registrarlo igual?`,
+            'Registrar igual'
+        );
+        if (!seguir) return;
+    }
 
     const desc = tipo === 'saldo' ? 'Saldo final' : 'Seña';
     const cliente = lista[idx].cliente || 'Cliente';
@@ -2681,75 +2701,14 @@ window.toggleVisibilidadCajas = function () {
 };
 
 window._eliminarMovimientoDesdeHistorial = function (cajaId, movId) {
-    const movs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
+    // Usa exactamente el mismo camino seguro que la lista de Movimientos
+    // (caja + movimiento atómico en MySQL, deuda de OTs, crédito y gastos fijos).
+    // La versión vieja tocaba la caja solo en el navegador y podía descuadrarla.
+    const movs = window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
     const mov = movs.find(m => String(m.id) === String(movId));
     if (!mov) return;
-
-    document.getElementById('_geckoConfirmElimMovHist')?.remove();
-    const modal = document.createElement('div');
-    modal.id = '_geckoConfirmElimMovHist';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:10003;background:rgba(10,12,20,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;';
-    modal.innerHTML = `
-        <div style="background:#141417;border:1px solid #27272a;border-radius:24px;width:100%;max-width:400px;padding:32px;text-align:center;">
-            <div style="width:56px;height:56px;background:rgba(239,68,68,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </div>
-            <h3 style="color:white;font-size:18px;font-weight:900;margin:0 0 8px 0;">Eliminar movimiento</h3>
-            <p style="color:#71717a;font-size:13px;margin:0 0 28px 0;">Se eliminará <strong style="color:white;">${mov.detalle}</strong> y se revertirá el saldo en la caja.</p>
-            <div style="display:flex;gap:10px;">
-                <button onclick="document.getElementById('_geckoConfirmElimMovHist').remove()"
-                    style="flex:1;padding:13px;background:transparent;border:1px solid #27272a;color:#71717a;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Cancelar</button>
-                <button id="_geckoElimMovHistOk"
-                    style="flex:1;padding:13px;background:#ef4444;border:none;color:white;border-radius:12px;font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;">Eliminar</button>
-            </div>
-        </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-
-    document.getElementById('_geckoElimMovHistOk').onclick = function () {
-        modal.remove();
-        const cajas = JSON.parse(localStorage.getItem('gecko_cajas') || '[]');
-        const cajaObj = cajas.find(c => c.nombre === mov.caja);
-        if (cajaObj) {
-            if (mov.tipo === 'Ingreso') { cajaObj.saldo -= mov.monto; } else { cajaObj.saldo += mov.monto; }
-            localStorage.setItem('gecko_cajas', JSON.stringify(cajas));
-            window.LISTA_CAJAS = cajas;
-        }
-
-        if (mov.otsAfectadas && mov.otsAfectadas.length > 0) {
-            const listaOts = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-            mov.otsAfectadas.forEach(function (item) {
-                const ot = listaOts.find(function (o) { return String(o.id) === String(item.id); });
-                if (ot) { ot.sena = (ot.sena || 0) - item.monto; }
-            });
-            localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaOts));
-            try { listaPresupuestos = listaOts; } catch (e) { window.listaPresupuestos = listaOts; }
-            if (typeof window.renderOts === 'function') window.renderOts();
-        }
-
-        let bdClientesRevertir = JSON.parse(localStorage.getItem('clientes') || '[]');
-        const idxCliRevertir = bdClientesRevertir.findIndex(c => (Array.isArray(c.creditoLedger) ? c.creditoLedger : []).some(l => l.movId === mov.id));
-        if (idxCliRevertir !== -1) {
-            const cliRevertir = bdClientesRevertir[idxCliRevertir];
-            cliRevertir.creditoLedger = (Array.isArray(cliRevertir.creditoLedger) ? cliRevertir.creditoLedger : []).filter(l => l.movId !== mov.id);
-            cliRevertir.creditoDisponible = cliRevertir.creditoLedger.reduce((s, m) => s + m.monto, 0);
-            localStorage.setItem('clientes', JSON.stringify(bdClientesRevertir));
-            localStorage.setItem('gecko_clientes', JSON.stringify(bdClientesRevertir));
-            window.LISTA_CLIENTES = bdClientesRevertir;
-        }
-
-        const dbMovs = JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-        const dbIndex = dbMovs.findIndex(m => String(m.id) === String(mov.id));
-        if (dbIndex !== -1) {
-            dbMovs.splice(dbIndex, 1);
-            localStorage.setItem('gecko_movimientos', JSON.stringify(dbMovs));
-            window.LISTA_MOVIMIENTOS = dbMovs;
-        }
-        if (typeof window.renderizarFinanzas === 'function') window.renderizarFinanzas();
-        if (typeof window.renderizarMovimientos === 'function') window.renderizarMovimientos();
-        if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado', '¡Listo!');
-        window._verHistorialCaja(cajaId);
-    };
+    document.getElementById('modalHistorialCaja')?.remove();
+    window.eliminarMovimiento(mov);
 };
 
 window._verHistorialCaja = function (cajaId) {
@@ -6127,7 +6086,9 @@ window.addEventListener('load', function () {
 
         window.eliminarMovimiento = function (index) {
             const movs = window._geckoMovsDisplayed || window.LISTA_MOVIMIENTOS || JSON.parse(localStorage.getItem('gecko_movimientos') || '[]');
-            const mov = movs[index];
+            // Acepta el número de fila (lista de Movimientos) o el movimiento
+            // completo (historial de caja)
+            const mov = (index && typeof index === 'object') ? index : movs[index];
             if (!mov) return;
 
             // 1. Crear Modal Dinámico estilo GECKO
@@ -6168,14 +6129,28 @@ window.addEventListener('load', function () {
                 );
                 if (!ok) return;
 
-                // Devolver la deuda a la(s) OT(s) que recibieron este pago (si el
-                // movimiento tiene el detalle guardado)
+                // Devolver la deuda a la(s) OT(s) que recibieron este pago.
+                // Se guarda DIRECTO en MySQL (PUT), porque la página se recarga
+                // enseguida y la sincronización automática (2 seg) no llegaba.
+                const erroresOT = [];
                 if (mov.otsAfectadas && mov.otsAfectadas.length > 0) {
                     const listaOts = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
-                    mov.otsAfectadas.forEach(function (item) {
+                    for (const item of mov.otsAfectadas) {
                         const ot = listaOts.find(function (o) { return String(o.id) === String(item.id); });
-                        if (ot) { ot.sena = (ot.sena || 0) - item.monto; }
-                    });
+                        if (!ot) continue;
+                        ot.sena = (ot.sena || 0) - item.monto;
+                        try {
+                            const resOT = await fetch('/app/api.php?endpoint=presupuestos', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(ot)
+                            });
+                            const dataOT = await resOT.json();
+                            if (!dataOT.success) throw new Error(dataOT.message || 'Error desconocido');
+                        } catch (e) {
+                            erroresOT.push(`OT #${item.id}: ${e.message}`);
+                        }
+                    }
                     localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(listaOts));
                     try { listaPresupuestos = listaOts; } catch (e) { window.listaPresupuestos = listaOts; }
                 }
@@ -6245,6 +6220,11 @@ window.addEventListener('load', function () {
                     }
                 }
 
+                if (erroresOT.length > 0) {
+                    console.error('🦎 GECKO: no se pudo devolver la deuda de', erroresOT);
+                    window._geckoAvisoModal('Se borró el movimiento y se corrigió la caja, pero no se pudo devolver la deuda de:\n\n' + erroresOT.join('\n') + '\n\nRevisá esas OTs manualmente.', 'Atención', true);
+                    return; // sin recargar, para que se pueda leer el aviso
+                }
                 if (typeof window.mostrarExito === 'function') window.mostrarExito('Movimiento eliminado.' + gfMensajeExtra, '¡Listo!');
                 window.location.reload();
             };
