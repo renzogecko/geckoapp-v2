@@ -525,13 +525,19 @@ window._tagCategoria = function (doc) {
 window._toggleEstadoDropdown = function (id, event) {
     event.stopPropagation();
 
+    // Usar SIEMPRE el desplegable que está al lado del botón clickeado.
+    // La lista de OTs y la ficha del cliente repiten el mismo id, y buscar
+    // por id agarraba el de la lista oculta (la ficha se trababa).
+    const trigger = event.currentTarget;
+    const dd = (trigger && trigger.parentElement)
+        ? trigger.parentElement.querySelector('[id^="estado-ot-dropdown-"]')
+        : document.getElementById('estado-ot-dropdown-' + id);
+    if (!dd) return;
+
     // Cerrar todos los demás dropdowns abiertos
     document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => {
-        if (d.id !== 'estado-ot-dropdown-' + id) d.style.display = 'none';
+        if (d !== dd) d.style.display = 'none';
     });
-
-    const dd = document.getElementById('estado-ot-dropdown-' + id);
-    if (!dd) return;
 
     const isOpen = dd.style.display === 'block';
     if (isOpen) {
@@ -540,7 +546,6 @@ window._toggleEstadoDropdown = function (id, event) {
     }
 
     // Calcular posición del trigger en pantalla
-    const trigger = event.currentTarget;
     const rect = trigger.getBoundingClientRect();
 
     // Posicionar el dropdown con fixed para que salga de cualquier contenedor con overflow
@@ -564,8 +569,8 @@ window._toggleEstadoDropdown = function (id, event) {
 };
 
 window._seleccionarEstadoOT = function (id, nuevoEstado) {
-    const dd = document.getElementById('estado-ot-dropdown-' + id);
-    if (dd) dd.style.display = 'none';
+    // Cerrar todos los desplegables (puede haber copias con el mismo id)
+    document.querySelectorAll('[id^="estado-ot-dropdown-"]').forEach(d => d.style.display = 'none');
 
     const COLORES = {
         'En Proceso': '#F15A24',
@@ -690,17 +695,17 @@ window._seleccionarEstadoOT = function (id, nuevoEstado) {
     try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
 
     const color = COLORES[nuevoEstado] || '#F15A24';
-    const wrapper = document.getElementById('estado-ot-' + id);
-    if (wrapper) {
+    // Actualizar TODAS las copias del desplegable de esta OT (lista y ficha)
+    document.querySelectorAll('[id="estado-ot-' + id + '"]').forEach(wrapper => {
         const trigger = wrapper.querySelector('div');
         if (trigger) {
             trigger.style.background = color + '22';
             trigger.style.borderColor = color + '55';
             trigger.querySelectorAll('span').forEach(s => s.style.color = color);
         }
-        const label = document.getElementById('estado-ot-label-' + id);
+        const label = wrapper.querySelector('[id^="estado-ot-label-"]');
         if (label) label.textContent = nuevoEstado;
-    }
+    });
     setTimeout(() => {
         if (typeof window.renderOts === 'function') window.renderOts();
         if (typeof window.abrirFichaCliente === 'function' && document.getElementById('modalFichaCliente')?.style.display === 'flex') {
@@ -719,7 +724,105 @@ window._archivarOT = function (id) {
         try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
     }
     if (typeof window.mostrarExito === 'function') window.mostrarExito('OT archivada correctamente.', '¡Listo!');
-    setTimeout(() => { if (typeof window.renderOts === 'function') window.renderOts(); }, 300);
+    setTimeout(() => {
+        if (typeof window.renderOts === 'function') window.renderOts();
+        // Si la ficha del cliente está abierta, refrescarla también
+        if (typeof window.abrirFichaCliente === 'function' && document.getElementById('modalFichaCliente')?.style.display === 'flex') {
+            let _cliFicha; try { _cliFicha = clienteActualFicha; } catch (e) { _cliFicha = window.clienteActualFicha; }
+            if (_cliFicha) window.abrirFichaCliente(_cliFicha);
+        }
+    }, 300);
+};
+
+// ── Después de un Cobro de Cta. Cte.: preguntar qué OTs saldadas archivar ──
+// Vienen tildadas de entrada solo las que están en "Entregado".
+// Las tildadas pasan a "Finalizado" y se guardan directo en MySQL
+// (PUT a api.php) ANTES de recargar la página.
+window._geckoPreguntarArchivarSaldadas = function (otsSaldadas, mensaje) {
+    document.getElementById('_geckoModalArchivarSaldadas')?.remove();
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const filas = otsSaldadas.map(ot => {
+        const detalle = ot.titulo || (ot.items || []).map(it => it.textoOpciones || it.nombre).filter(Boolean).join(' · ') || 'Sin título';
+        const estado = ot.estado_ot || 'En Proceso';
+        const tildada = estado === 'Entregado' ? 'checked' : '';
+        return `
+            <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #27272a;cursor:pointer;text-align:left;">
+                <input type="checkbox" class="_geckoChkArchivarSaldada" value="${esc(ot.id)}" ${tildada}
+                    style="width:18px;height:18px;accent-color:#F15A24;cursor:pointer;flex-shrink:0;">
+                <div style="flex:1;min-width:0;">
+                    <p style="color:white;font-size:12px;font-weight:900;margin:0;">#${esc(ot.id)}</p>
+                    <p style="color:#a1a1aa;font-size:11px;margin:2px 0 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(detalle)}</p>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                    <p style="color:white;font-size:12px;font-weight:900;margin:0;">$${Math.round(ot.total || 0).toLocaleString('es-AR')}</p>
+                    <p style="color:#71717a;font-size:9px;font-weight:900;text-transform:uppercase;margin:2px 0 0 0;">${esc(estado)}</p>
+                </div>
+            </label>`;
+    }).join('');
+
+    const btnStyle = 'width:100%;padding:15px;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;';
+    const modal = document.createElement('div');
+    modal.id = '_geckoModalArchivarSaldadas';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:1000000;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,0.82);backdrop-filter:blur(5px);padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#1e1f20;border:1px solid #2a2a2e;border-radius:22px;width:100%;max-width:480px;padding:32px;text-align:center;">
+            <div style="width:52px;height:52px;background:rgba(16,185,129,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <p style="color:#F15A24;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 8px 0;">¡Cobro Exitoso!</p>
+            <h3 style="color:white;font-size:19px;font-weight:900;margin:0 0 10px 0;text-transform:uppercase;">¿Archivar trabajos saldados?</h3>
+            <p style="color:#71717a;font-size:13px;margin:0 0 20px 0;line-height:1.6;">${esc(mensaje || '')} Tildá las OTs que querés archivar como Finalizadas.</p>
+            <div style="background:#131314;border:1px solid #27272a;border-radius:14px;max-height:300px;overflow-y:auto;margin:0 0 24px 0;">
+                ${filas}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button id="_geckoArchivarSaldadasOk" style="${btnStyle}background:#F15A24;border:none;color:white;">Archivar seleccionadas</button>
+                <button id="_geckoArchivarSaldadasNo" style="${btnStyle}background:#1c1c1f;border:1px solid #27272a;color:#71717a;">No archivar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+
+    document.getElementById('_geckoArchivarSaldadasNo').onclick = function () {
+        modal.remove();
+        window.location.reload();
+    };
+
+    document.getElementById('_geckoArchivarSaldadasOk').onclick = async function () {
+        const btn = this;
+        const ids = Array.from(modal.querySelectorAll('._geckoChkArchivarSaldada:checked')).map(c => c.value);
+        if (ids.length === 0) { modal.remove(); window.location.reload(); return; }
+        btn.disabled = true;
+        btn.textContent = 'Archivando...';
+
+        const lista = JSON.parse(localStorage.getItem('gecko_listaPresupuestos') || '[]');
+        const errores = [];
+        for (const id of ids) {
+            const ot = lista.find(x => String(x.id) === String(id));
+            if (!ot) continue;
+            ot.estado_ot = 'Finalizado';
+            try {
+                const res = await fetch('/app/api.php?endpoint=presupuestos', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ot)
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Error desconocido');
+            } catch (e) {
+                errores.push(`OT #${id}: ${e.message}`);
+            }
+        }
+        localStorage.setItem('gecko_listaPresupuestos', JSON.stringify(lista));
+        try { listaPresupuestos = lista; } catch (e) { window.listaPresupuestos = lista; }
+        modal.remove();
+
+        if (errores.length > 0) {
+            console.error('🦎 GECKO: no se pudieron archivar', errores);
+            window._geckoAvisoModal('No se pudieron archivar estas OTs:\n\n' + errores.join('\n') + '\n\nArchivalas a mano desde su desplegable de estado.', 'Atención', true);
+            return; // sin recargar, para que se pueda leer el aviso
+        }
+        window.location.reload();
+    };
 };
 
 window._desarchivarOT = function (id) {
@@ -6668,12 +6771,16 @@ window.addEventListener('load', function () {
             document.getElementById('_geckoModalAsignacionPago')?.remove();
             window._geckoAsignacion = null;
 
-            if (typeof window.mostrarExito === 'function') {
-                let msg = `Se aplicaron $${montoOriginal.toLocaleString('es-AR')} a la deuda de ${cliente}.`;
-                if (otsSaldadas.length > 0) msg += ` Se saldaron por completo ${otsSaldadas.length} OT${otsSaldadas.length > 1 ? 's' : ''}.`;
-                if (creditoGenerado > 0) msg += ` Se generaron $${creditoGenerado.toLocaleString('es-AR')} de crédito a favor.`;
-                window.mostrarExito(msg, '¡Cobro Exitoso!');
+            let msg = `Se aplicaron $${montoOriginal.toLocaleString('es-AR')} a la deuda de ${cliente}.`;
+            if (otsSaldadas.length > 0) msg += ` Se saldaron por completo ${otsSaldadas.length} OT${otsSaldadas.length > 1 ? 's' : ''}.`;
+            if (creditoGenerado > 0) msg += ` Se generaron $${creditoGenerado.toLocaleString('es-AR')} de crédito a favor.`;
+
+            // Si el pago saldó OTs, preguntar cuáles archivar ANTES de recargar
+            if (otsSaldadas.length > 0 && errores.length === 0 && typeof window._geckoPreguntarArchivarSaldadas === 'function') {
+                window._geckoPreguntarArchivarSaldadas(otsSaldadas, msg);
+                return;
             }
+            if (typeof window.mostrarExito === 'function') window.mostrarExito(msg, '¡Cobro Exitoso!');
             window.location.reload();
         };
 
